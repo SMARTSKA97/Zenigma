@@ -7,9 +7,9 @@ android {
         applicationId "uk.ska97homelab.zenigma"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // The release workflow passes -PversionName and -PversionCode (from the android-vX.Y.Z tag).
-        versionCode (project.findProperty("versionCode") ?: "1").toInteger()
-        versionName (project.findProperty("versionName") ?: "0.1.0")
+        // The release workflow passes -PzenVersionName and -PzenVersionCode (from the android-vX.Y.Z tag).
+        versionCode Integer.parseInt((rootProject.findProperty("zenVersionCode") ?: "1").toString())
+        versionName (rootProject.findProperty("zenVersionName") ?: "0.1.0").toString()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

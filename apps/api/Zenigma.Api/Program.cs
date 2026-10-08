@@ -27,7 +27,11 @@ builder.Services
     .AddIdentityCore<ApplicationUser>(o =>
     {
         o.Password.RequiredLength = 8;
+        // Length matters more than character mix (NIST guidance): 8+ characters, no composition rules.
         o.Password.RequireNonAlphanumeric = false;
+        o.Password.RequireUppercase = false;
+        o.Password.RequireLowercase = false;
+        o.Password.RequireDigit = false;
         o.User.RequireUniqueEmail = true;
         o.Lockout.MaxFailedAccessAttempts = 8;
         o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);

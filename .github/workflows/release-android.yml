@@ -61,7 +61,7 @@ jobs:
           ZENIGMA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon -PversionName=${{ steps.v.outputs.version }} -PversionCode=${{ steps.v.outputs.code }}
+          ./gradlew assembleRelease --no-daemon -PzenVersionName=${{ steps.v.outputs.version }} -PzenVersionCode=${{ steps.v.outputs.code }}
 
       - name: Publish release
         env:
