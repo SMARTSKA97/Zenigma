@@ -9,6 +9,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.*" />
   </ItemGroup>
   <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Zenigma.Api/Zenigma.Api.csproj" />
   </ItemGroup>
 </Project>
