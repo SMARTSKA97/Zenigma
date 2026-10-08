@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main, phase-*]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (build, migrate, test)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: zenigma
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ZENIGMA_TEST_DB: Host=localhost;Port=5432;Database=zenigma;Username=postgres;Password=postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: apps/api/global.json
+      - name: Apply migrations with Flyway
+        run: >
+          docker run --rm --network host -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          flyway/flyway:11 -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres -password=postgres migrate
+      - run: dotnet build apps/api/Zenigma.slnx -c Release
+      - run: dotnet test apps/api/Zenigma.slnx -c Release --no-build --logger "trx;LogFileName=results.trx"
+
+  web:
+    name: Web (test, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npx ng test --watch=false
+      - run: npx ng build
+
+  android:
+    name: Android (debug build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - name: Build web assets and sync into the Android project
+        working-directory: apps/web
+        run: |
+          npm ci
+          npx ng build
+          npx cap sync android
+      - name: Assemble debug APK
+        working-directory: apps/web/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zenigma-debug-apk
+          path: apps/web/android/app/build/outputs/apk/debug/*.apk
+          retention-days: 7
