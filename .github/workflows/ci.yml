@@ -40,8 +40,8 @@ jobs:
         run: >
           docker run --rm --network host -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
           flyway/flyway:11 -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres -password=postgres migrate
-      - run: dotnet build apps/api/Zenigma.slnx -c Release
-      - run: dotnet test apps/api/Zenigma.slnx -c Release --no-build --logger "trx;LogFileName=results.trx"
+      - run: .github/scripts/run-annotated.sh dotnet build apps/api/Zenigma.slnx -c Release
+      - run: .github/scripts/run-annotated.sh dotnet test apps/api/Zenigma.slnx -c Release --no-build
 
   web:
     name: Web (test, build)
@@ -88,7 +88,7 @@ jobs:
         working-directory: apps/web/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ../../../.github/scripts/run-annotated.sh ./gradlew assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: zenigma-debug-apk
