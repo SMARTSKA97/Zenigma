@@ -21,7 +21,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust # throwaway container, reachable only from this job
           POSTGRES_DB: zenigma
         ports: ['5432:5432']
         options: >-
@@ -30,7 +30,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      ZENIGMA_TEST_DB: Host=localhost;Port=5432;Database=zenigma;Username=postgres;Password=postgres
+      ZENIGMA_TEST_DB: Host=localhost;Port=5432;Database=zenigma;Username=postgres
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -39,7 +39,7 @@ jobs:
       - name: Apply migrations with Flyway
         run: >
           docker run --rm --network host -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
-          flyway/flyway:11 -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres -password=postgres migrate
+          flyway/flyway:11 -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres migrate
       - run: .github/scripts/run-annotated.sh dotnet build apps/api/Zenigma.slnx -c Release
       - run: .github/scripts/run-annotated.sh dotnet test apps/api/Zenigma.slnx -c Release --no-build
 

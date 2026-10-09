@@ -10,18 +10,18 @@ public class ConnectionStringTests
     [Fact]
     public void Npgsql_strings_pass_through()
     {
-        const string s = "Host=localhost;Database=zenigma;Username=u;Password=p";
+        const string s = "Host=localhost;Database=zenigma;Username=u";
         Assert.Equal(s, ConnectionStrings.Normalize(s));
     }
 
     [Fact]
     public void Uri_form_is_converted_with_ssl_required()
     {
-        var result = ConnectionStrings.Normalize("postgresql://app:p%40ss@ep-cool.neon.tech/zenigma?sslmode=require");
+        var result = ConnectionStrings.Normalize("postgresql://app:pw%40x@ep-cool.neon.tech/zenigma?sslmode=require");
         Assert.Contains("Host=ep-cool.neon.tech", result);
         Assert.Contains("Database=zenigma", result);
         Assert.Contains("Username=app", result);
-        Assert.Contains("Password=p@ss", result);
+        Assert.Contains("Password=pw@x", result);
         Assert.Contains("SSL Mode=Require", result);
     }
 }

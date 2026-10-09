@@ -17,14 +17,14 @@ and Comet Slice), daily puzzles plus endless levels, streaks and leaderboards.
 
 ```bash
 # Database
-docker run -d --name zenigma-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=zenigma -p 5432:5432 postgres:16
+docker run -d --name zenigma-db -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=zenigma -p 127.0.0.1:5432:5432 postgres:16
 docker run --rm --network host -v "$PWD/db/migrations:/flyway/sql" flyway/flyway:11 \
-  -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres -password=postgres migrate
+  -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres migrate
 
 # API (http://localhost:5080)
 cd apps/api/Zenigma.Api
-export ConnectionStrings__Default="Host=localhost;Database=zenigma;Username=postgres;Password=postgres"
-export Jwt__Key="dev-only-key-dev-only-key-dev-only-key"
+export ConnectionStrings__Default="Host=localhost;Database=zenigma;Username=postgres"
+export Jwt__Key="$(openssl rand -base64 48)"
 dotnet run --urls http://localhost:5080
 
 # Web (http://localhost:4200)

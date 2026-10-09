@@ -21,13 +21,14 @@ public class ApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Default", Environment.GetEnvironmentVariable("ZENIGMA_TEST_DB") ?? "Host=unused");
-        builder.UseSetting("Jwt:Key", "test-signing-key-test-signing-key-123456");
+        builder.UseSetting("Jwt:Key", Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)));
     }
 }
 
 public class ApiTests : IClassFixture<ApiFactory>
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private static readonly string ValidPassword = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(12));
     private readonly ApiFactory _factory;
 
     public ApiTests(ApiFactory factory) => _factory = factory;
@@ -41,7 +42,7 @@ public class ApiTests : IClassFixture<ApiFactory>
         var response = await client.PostAsJsonAsync("/auth/register", new
         {
             email = $"{Guid.NewGuid():N}@example.com",
-            password = "correct-horse-battery",
+            password = ValidPassword,
             displayName = "Tester",
             deviceId = device,
         });
@@ -68,11 +69,11 @@ public class ApiTests : IClassFixture<ApiFactory>
     {
         var client = _factory.CreateClient();
         var email = $"{Guid.NewGuid():N}@example.com";
-        var weak = await client.PostAsJsonAsync("/auth/register", new { email, password = "short" });
+        var weak = await client.PostAsJsonAsync("/auth/register", new { email, password = "x" });
         Assert.Equal(HttpStatusCode.BadRequest, weak.StatusCode);
 
-        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/register", new { email, password = "long-enough-1" })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/auth/register", new { email, password = "long-enough-1" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/register", new { email, password = ValidPassword })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/auth/register", new { email, password = ValidPassword })).StatusCode);
     }
 
     [DbFact]
@@ -80,10 +81,10 @@ public class ApiTests : IClassFixture<ApiFactory>
     {
         var client = _factory.CreateClient();
         var email = $"{Guid.NewGuid():N}@example.com";
-        await client.PostAsJsonAsync("/auth/register", new { email, password = "long-enough-1" });
+        await client.PostAsJsonAsync("/auth/register", new { email, password = ValidPassword });
 
-        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/login", new { email, password = "long-enough-1" })).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/login", new { email, password = "wrong-password" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/login", new { email, password = ValidPassword })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/login", new { email, password = ValidPassword + "x" })).StatusCode);
     }
 
     [DbFact]
