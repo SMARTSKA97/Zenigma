@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Zenigma</string>
+    <string name="title_activity_main">Zenigma</string>
+    <string name="package_name">uk.ska97homelab.zenigma</string>
+    <string name="custom_url_scheme">uk.ska97homelab.zenigma</string>
+</resources>

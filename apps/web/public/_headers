@@ -1,0 +1,12 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/ngsw-worker.js
+  Cache-Control: no-cache
+
+/ngsw.json
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Zenigma.Api/Zenigma.Api.csproj" />
+  <Project Path="Zenigma.Api.Tests/Zenigma.Api.Tests.csproj" />
+</Solution>
