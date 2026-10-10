@@ -1,0 +1,120 @@
+{
+  "description": "evaluate(guess, answer). c = correct (green), p = present (yellow), a = absent (grey). Repeated letters are marked by count.",
+  "cases": [
+    {
+      "answer": "crane",
+      "guess": "crane",
+      "marks": "ccccc"
+    },
+    {
+      "answer": "crane",
+      "guess": "slate",
+      "marks": "aacac"
+    },
+    {
+      "answer": "abbey",
+      "guess": "babes",
+      "marks": "ppcca"
+    },
+    {
+      "answer": "abbey",
+      "guess": "kebab",
+      "marks": "apcpp"
+    },
+    {
+      "answer": "speed",
+      "guess": "erase",
+      "marks": "paapp"
+    },
+    {
+      "answer": "speed",
+      "guess": "abide",
+      "marks": "aaapp"
+    },
+    {
+      "answer": "allay",
+      "guess": "llama",
+      "marks": "pcpap"
+    },
+    {
+      "answer": "apple",
+      "guess": "paper",
+      "marks": "ppcpa"
+    },
+    {
+      "answer": "geese",
+      "guess": "eerie",
+      "marks": "pcaac"
+    },
+    {
+      "answer": "tacit",
+      "guess": "attic",
+      "marks": "pppcp"
+    },
+    {
+      "answer": "mamma",
+      "guess": "mommy",
+      "marks": "cacca"
+    },
+    {
+      "answer": "stove",
+      "guess": "ghost",
+      "marks": "aacpp"
+    },
+    {
+      "answer": "robot",
+      "guess": "floor",
+      "marks": "aapcp"
+    },
+    {
+      "answer": "hello",
+      "guess": "world",
+      "marks": "apaca"
+    },
+    {
+      "answer": "cigar",
+      "guess": "civic",
+      "marks": "ccaaa"
+    },
+    {
+      "answer": "salad",
+      "guess": "salsa",
+      "marks": "cccap"
+    },
+    {
+      "answer": "aroma",
+      "guess": "mamma",
+      "marks": "apacc"
+    },
+    {
+      "answer": "level",
+      "guess": "lever",
+      "marks": "cccca"
+    },
+    {
+      "answer": "daddy",
+      "guess": "added",
+      "marks": "ppcap"
+    },
+    {
+      "answer": "eagle",
+      "guess": "eerie",
+      "marks": "caaac"
+    },
+    {
+      "answer": "error",
+      "guess": "refer",
+      "marks": "ppaac"
+    },
+    {
+      "answer": "swiss",
+      "guess": "sassy",
+      "marks": "capca"
+    },
+    {
+      "answer": "sissy",
+      "guess": "swiss",
+      "marks": "capcp"
+    }
+  ]
+}

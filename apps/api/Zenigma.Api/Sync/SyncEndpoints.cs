@@ -51,12 +51,8 @@ public static partial class SyncEndpoints
             var platform = request.Platform is { Length: > 0 and <= 16 } p ? p : "web";
 
             // Register the device, or refresh it. A device id owned by another account is refused.
-            var deviceRows = await db.Database.ExecuteSqlInterpolatedAsync($"""
-                INSERT INTO devices (id, user_id, platform) VALUES ({request.DeviceId.Value}, {userId}, {platform})
-                ON CONFLICT (id) DO UPDATE SET last_seen_at = now(), platform = EXCLUDED.platform
-                WHERE devices.user_id = EXCLUDED.user_id
-                """, ct);
-            if (deviceRows == 0) return Results.Forbid();
+            var deviceOk = await DeviceRegistry.RegisterAsync(db, userId, request.DeviceId.Value, platform, ct);
+            if (!deviceOk) return Results.Forbid();
 
             var accepted = new List<Guid>();
             var duplicates = new List<Guid>();

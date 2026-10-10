@@ -40,3 +40,26 @@ public class RefreshToken
     public DateTimeOffset? RevokedAt { get; set; }
     public Guid? ReplacedBy { get; set; }
 }
+
+public class DailyPuzzle
+{
+    public string Game { get; set; } = "";
+    public DateOnly PuzzleDate { get; set; }
+    public JsonDocument Puzzle { get; set; } = null!;
+}
+
+public class DailyAttempt
+{
+    public Guid Id { get; set; }
+    public string UserId { get; set; } = "";
+    public string Game { get; set; } = "";
+    public DateOnly PuzzleDate { get; set; }
+    public Guid DeviceId { get; set; }
+    public bool Hard { get; set; }
+    public string Status { get; set; } = "playing";
+    public List<string> Guesses { get; set; } = [];
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? FirstGuessAt { get; set; }
+    public DateTimeOffset LastActiveAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
+}

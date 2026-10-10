@@ -1,0 +1,29 @@
+# Local development database. Credentials come from .env (copy .env.example to .env first).
+#   docker compose up -d db           start Postgres on localhost:5432
+#   docker compose run --rm migrate   apply db/migrations with Flyway
+services:
+  db:
+    image: postgres:16
+    env_file: .env
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - zenigma-db:/var/lib/postgresql/data
+
+  migrate:
+    image: flyway/flyway:11
+    profiles: ['tools']
+    depends_on:
+      - db
+    env_file: .env
+    volumes:
+      - ./db/migrations:/flyway/sql:ro
+    # Flyway reads its settings from FLYWAY_* variables; map them from the same .env the database uses.
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - >
+        export FLYWAY_URL="jdbc:postgresql://db:5432/$$POSTGRES_DB" FLYWAY_USER="$$POSTGRES_USER"
+        FLYWAY_PASSWORD="$$POSTGRES_PASSWORD" FLYWAY_CONNECT_RETRIES=10 && flyway migrate
+
+volumes:
+  zenigma-db:

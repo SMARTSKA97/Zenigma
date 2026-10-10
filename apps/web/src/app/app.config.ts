@@ -16,6 +16,7 @@ import { IndexedDbStore } from './core/indexeddb-store';
 import { LocalStore } from './core/local-store';
 import { MemoryStore } from './core/memory-store';
 import { SyncService } from './core/sync.service';
+import { PrefsService } from './core/prefs.service';
 import { ThemeService } from './core/theme.service';
 
 export const appConfig: ApplicationConfig = {
@@ -35,9 +36,11 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(async () => {
       // inject() only works before the first await, so resolve everything up front.
       const theme = inject(ThemeService);
+      const prefs = inject(PrefsService);
       const auth = inject(AuthService);
       const sync = inject(SyncService);
       theme.apply();
+      prefs.apply();
       await auth.restore();
       void sync.init();
     }),

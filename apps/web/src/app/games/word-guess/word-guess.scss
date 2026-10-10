@@ -1,0 +1,321 @@
+:host {
+  display: block;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+}
+
+.back {
+  text-decoration: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  color: var(--text);
+}
+
+.switch {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  input {
+    accent-color: var(--accent);
+    width: 1.1rem;
+    height: 1.1rem;
+    min-height: 0;
+  }
+}
+
+.toast {
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  span {
+    background: var(--text);
+    color: var(--bg);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.9rem;
+    border-radius: 999px;
+    animation: rise 0.2s var(--ease) backwards;
+  }
+}
+
+.center {
+  text-align: center;
+}
+
+/* Board: tiles are sized from the available width AND height so it never overflows on short phones. */
+.board {
+  --tile: min(3.6rem, calc((100vw - 2rem - 4 * 0.35rem) / 5), calc((100dvh - 22rem) / 6));
+  display: grid;
+  gap: 0.35rem;
+}
+
+.row-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, var(--tile));
+  gap: 0.35rem;
+}
+
+.tile {
+  --mark-color: var(--surface);
+  width: var(--tile);
+  height: var(--tile);
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--tile) * 0.55);
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.12s var(--ease);
+  user-select: none;
+
+  &.filled:not(.flip) {
+    border-color: var(--muted);
+    animation: pop 0.12s var(--ease);
+  }
+
+  &[data-mark='correct'] {
+    --mark-color: var(--mark-correct);
+  }
+  &[data-mark='present'] {
+    --mark-color: var(--mark-present);
+  }
+  &[data-mark='absent'] {
+    --mark-color: var(--mark-absent);
+  }
+
+  &.flip {
+    border-color: transparent;
+    color: #fff;
+    animation: flip 0.5s var(--ease) both;
+    animation-delay: calc(var(--i) * 0.3s);
+  }
+
+  &.win {
+    animation:
+      flip 0.5s var(--ease) both,
+      hop 0.6s var(--ease) both;
+    animation-delay: calc(var(--i) * 0.3s), calc(1.6s + var(--i) * 0.08s);
+  }
+}
+
+.shake {
+  animation: shake 0.45s;
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* The colour changes at the half-way point, when the tile is edge-on, like a real flip. */
+@keyframes flip {
+  0% {
+    transform: rotateX(0);
+    background: var(--surface);
+    border-color: var(--muted);
+    color: var(--text);
+  }
+  49% {
+    transform: rotateX(90deg);
+    background: var(--surface);
+    border-color: var(--muted);
+    color: var(--text);
+  }
+  50% {
+    transform: rotateX(90deg);
+    background: var(--mark-color);
+    border-color: transparent;
+    color: #fff;
+  }
+  100% {
+    transform: rotateX(0);
+    background: var(--mark-color);
+    border-color: transparent;
+    color: #fff;
+  }
+}
+
+@keyframes hop {
+  30% {
+    transform: translateY(-0.6rem);
+  }
+  60% {
+    transform: translateY(0.1rem);
+  }
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.keyboard {
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.keys {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.key {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 2.8rem;
+  height: clamp(2.6rem, 7.5dvh, 3.4rem);
+  padding: 0;
+  display: grid;
+  place-items: center;
+  text-transform: uppercase;
+  font-size: 1rem;
+  background: var(--key-bg);
+  color: var(--text);
+  border: 0;
+  border-radius: 8px;
+  transition:
+    background-color 0.25s var(--ease),
+    transform 0.12s var(--ease);
+
+  &.wide {
+    flex: 1.6 1 0;
+    max-width: 4.4rem;
+    font-size: clamp(0.6rem, 2.6vw, 0.75rem);
+    white-space: nowrap;
+  }
+  &[data-mark='correct'] {
+    background: var(--mark-correct);
+    color: #fff;
+  }
+  &[data-mark='present'] {
+    background: var(--mark-present);
+    color: #fff;
+  }
+  &[data-mark='absent'] {
+    background: var(--mark-absent);
+    color: #fff;
+  }
+}
+
+.result {
+  width: 100%;
+  display: grid;
+  gap: 0.75rem;
+
+  h2,
+  p {
+    margin: 0;
+  }
+}
+
+.dist {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.dist-row {
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.dist-bar {
+  display: block;
+  width: var(--w);
+  min-width: 1.5rem;
+  padding: 0 0.4rem;
+  text-align: right;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 4px;
+  transform-origin: left;
+  animation: grow 0.5s var(--ease) backwards;
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.modes {
+  display: flex;
+  padding: 0.2rem;
+  gap: 0.2rem;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  button {
+    flex: 1;
+    min-height: 38px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 999px;
+    padding-block: 0.3rem;
+
+    &.on {
+      background: var(--accent);
+      color: var(--accent-contrast);
+    }
+  }
+}
+
+.date {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.panel {
+  width: 100%;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+
+  h2,
+  p {
+    margin: 0;
+  }
+}
