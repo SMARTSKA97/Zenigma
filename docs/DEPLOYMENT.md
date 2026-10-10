@@ -68,6 +68,7 @@ Create an environment named `production` and add:
 | `RENDER_DEPLOY_HOOK_URL` | api job |
 | `CLOUDFLARE_API_TOKEN` (Pages: Edit), `CLOUDFLARE_ACCOUNT_ID` | web job |
 | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | release-android workflow |
+| `PUZZLE_SEED`, `PUZZLE_DATABASE_URL` | puzzle-batch workflow |
 
 Branch protection on `main`: require the three CI jobs (API, Web, Android) and pull requests.
 
@@ -103,12 +104,24 @@ never be updated** (Android refuses an update signed with a different key); user
 - Neon keeps point-in-time history on the free tier for a short window; before any destructive migration, create a
   Neon branch of production first.
 
-## Daily puzzles (Phase 2 onward)
+## Daily puzzles
 
-A scheduled GitHub Action (`puzzle-batch.yml`, added with the first game) generates the next days' puzzles with the
-tools in `tools/generators` and loads them with a Flyway-style versioned data file or a guarded SQL step, ahead of
-time (for example 14 days). Daily rollover is 00:00 IST, decided by the server clock (`GET /time`), so no cron is
-needed inside the database and an idle service costs nothing.
+The `Puzzle batch` workflow (`.github/workflows/puzzle-batch.yml`) runs weekly and loads the next 21 days of puzzles
+into `daily_puzzles` (existing days are never touched, so re-running is safe). It uses
+`tools/generators/words/schedule.mjs`, which orders the answer pool with a **secret seed**, so nobody can read
+upcoming answers from the public repository.
+
+Two more GitHub `production` secrets are needed:
+
+| Secret | Value |
+|---|---|
+| `PUZZLE_SEED` | 32+ random characters (`openssl rand -base64 32`). **Never change it** once players are active: it would reshuffle every future day. Back it up with the keystore. |
+| `PUZZLE_DATABASE_URL` | Neon connection string (`postgresql://...?sslmode=require`) for a role allowed to insert into `daily_puzzles` (the migrator role is fine). |
+
+Run it once manually (Actions, Puzzle batch, Run workflow) right after the first deploy; until it has run, the daily
+screen shows "no puzzle scheduled". Rollover is 00:00 IST, decided by the server clock (`GET /time`), so no cron is
+needed inside the database and an idle service costs nothing. The daily game is played online only; the practice
+mode works fully offline.
 
 ## Cold starts and offline behaviour
 

@@ -1,0 +1,87 @@
+{
+  "description": "Hard mode: revealed hints must be reused. problem is null when the guess is legal.",
+  "cases": [
+    {
+      "answer": "crane",
+      "previous": [],
+      "next": "slate",
+      "problem": null
+    },
+    {
+      "answer": "crane",
+      "previous": [
+        "slate"
+      ],
+      "next": "trace",
+      "problem": null
+    },
+    {
+      "answer": "crane",
+      "previous": [
+        "slate"
+      ],
+      "next": "about",
+      "problem": {
+        "reason": "position",
+        "letter": "a",
+        "index": 3
+      }
+    },
+    {
+      "answer": "crane",
+      "previous": [
+        "slate"
+      ],
+      "next": "braid",
+      "problem": {
+        "reason": "position",
+        "letter": "e",
+        "index": 5
+      }
+    },
+    {
+      "answer": "abbey",
+      "previous": [
+        "kebab"
+      ],
+      "next": "abbey",
+      "problem": null
+    },
+    {
+      "answer": "abbey",
+      "previous": [
+        "kebab"
+      ],
+      "next": "bubby",
+      "problem": {
+        "reason": "missing",
+        "letter": "e"
+      }
+    },
+    {
+      "answer": "speed",
+      "previous": [
+        "erase"
+      ],
+      "next": "steed",
+      "problem": null
+    },
+    {
+      "answer": "speed",
+      "previous": [
+        "erase"
+      ],
+      "next": "sweep",
+      "problem": null
+    },
+    {
+      "answer": "speed",
+      "previous": [
+        "erase",
+        "steed"
+      ],
+      "next": "speed",
+      "problem": null
+    }
+  ]
+}

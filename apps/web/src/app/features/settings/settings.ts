@@ -1,5 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
+import { PrefsService } from '../../core/prefs.service';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { UpdaterService } from '../../core/updater.service';
 
@@ -23,6 +24,10 @@ import { UpdaterService } from '../../core/updater.service';
           </button>
         }
       </div>
+      <label class="check">
+        <input type="checkbox" [checked]="prefs.highContrast()" (change)="prefs.setHighContrast($any($event.target).checked)" />
+        Colour-blind friendly colours (orange and blue)
+      </label>
     </section>
 
     @if (updater.supported) {
@@ -93,6 +98,20 @@ import { UpdaterService } from '../../core/updater.service';
       background: var(--accent);
       color: var(--accent-contrast);
     }
+    .check {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 1rem;
+      color: var(--text);
+    }
+    .check input {
+      width: 1.1rem;
+      height: 1.1rem;
+      min-height: 0;
+      accent-color: var(--accent);
+    }
     .notes {
       white-space: pre-wrap;
       font: inherit;
@@ -119,6 +138,7 @@ import { UpdaterService } from '../../core/updater.service';
 export class Settings implements OnInit {
   protected readonly theme = inject(ThemeService);
   protected readonly updater = inject(UpdaterService);
+  protected readonly prefs = inject(PrefsService);
   protected readonly options: ThemeMode[] = ['system', 'light', 'dark'];
 
   ngOnInit(): void {

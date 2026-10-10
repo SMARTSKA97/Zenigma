@@ -1,5 +1,7 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { AuthService } from './core/auth.service';
 import { SyncService } from './core/sync.service';
 
@@ -9,7 +11,7 @@ import { SyncService } from './core/sync.service';
   template: `
     <header>
       <a class="brand" routerLink="/">Zenigma</a>
-      <nav>
+      <nav [class.hide-on-phone]="immersive()">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
         <a routerLink="/sync-test" routerLinkActive="active">Sync test</a>
         <a routerLink="/account" routerLinkActive="active">Account</a>
@@ -25,7 +27,7 @@ import { SyncService } from './core/sync.service';
         }
       </div>
     </header>
-    <main>
+    <main [class.immersive]="immersive()">
       <router-outlet />
     </main>
   `,
@@ -138,10 +140,26 @@ import { SyncService } from './core/sync.service';
       main {
         padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
       }
+      /* Game screens take the whole screen; their own back arrow replaces the tab bar. */
+      nav.hide-on-phone {
+        display: none;
+      }
+      main.immersive {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+      }
     }
   `,
 })
 export class App {
   protected readonly sync = inject(SyncService);
   protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+  protected readonly immersive = computed(() => this.url().startsWith('/games/'));
 }

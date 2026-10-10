@@ -1,13 +1,16 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 interface GamePlan {
   name: string;
   blurb: string;
   phase: number;
+  route?: string;
 }
 
 @Component({
   selector: 'app-home',
+  imports: [RouterLink],
   template: `
     <h1>Daily puzzles and endless levels</h1>
     <p class="muted">
@@ -16,11 +19,19 @@ interface GamePlan {
     </p>
     <div class="grid">
       @for (game of games; track game.name) {
-        <div class="card">
-          <h3>{{ game.name }}</h3>
-          <p class="muted">{{ game.blurb }}</p>
-          <span class="phase">Phase {{ game.phase }}</span>
-        </div>
+        @if (game.route) {
+          <a class="card game-card live" [routerLink]="game.route">
+            <h3>{{ game.name }}</h3>
+            <p class="muted">{{ game.blurb }}</p>
+            <span class="phase">Play</span>
+          </a>
+        } @else {
+          <div class="card game-card">
+            <h3>{{ game.name }}</h3>
+            <p class="muted">{{ game.blurb }}</p>
+            <span class="phase">Phase {{ game.phase }}</span>
+          </div>
+        }
       }
     </div>
   `,
@@ -38,11 +49,31 @@ interface GamePlan {
     p {
       margin: 0 0 0.75rem;
     }
+    .game-card {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+    .game-card:not(.live) {
+      opacity: 0.65;
+    }
+    .live {
+      transition:
+        transform 0.2s var(--ease),
+        border-color 0.2s var(--ease);
+    }
+    .live:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+    .live:active {
+      transform: scale(0.98);
+    }
   `,
 })
 export class Home {
   protected readonly games: GamePlan[] = [
-    { name: 'Word Guess', blurb: 'Guess the five-letter word in six tries.', phase: 2 },
+    { name: 'Word Guess', blurb: 'Guess the five-letter word in six tries.', phase: 2, route: '/games/word-guess' },
     { name: 'Queens', blurb: 'One queen per row, column and colour region.', phase: 3 },
     { name: 'Tango', blurb: 'Fill the grid with two symbols, no three in a row.', phase: 3 },
     { name: 'Mini Sudoku', blurb: 'A 6x6 Sudoku with 2x3 boxes.', phase: 3 },

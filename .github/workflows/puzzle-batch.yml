@@ -1,0 +1,35 @@
+name: Puzzle batch
+
+# Loads the next three weeks of daily puzzles into the production database. Safe to re-run: existing days are
+# never changed (ON CONFLICT DO NOTHING). Runs weekly, so the database is always at least two weeks ahead.
+# No daily cron is needed: the API picks the puzzle by India Standard Time date and a sleeping API costs nothing.
+on:
+  schedule:
+    - cron: '30 2 * * 1' # Mondays 08:00 IST
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Days to schedule from today (IST)
+        default: '21'
+
+permissions:
+  contents: read
+
+jobs:
+  schedule:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Generate and load puzzles
+        working-directory: tools/generators/words
+        env:
+          PUZZLE_SEED: ${{ secrets.PUZZLE_SEED }}
+          DATABASE_URL: ${{ secrets.PUZZLE_DATABASE_URL }}
+          DAYS: ${{ inputs.days || '21' }}
+        run: |
+          node schedule.mjs --days "$DAYS" > puzzles.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f puzzles.sql

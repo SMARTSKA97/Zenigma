@@ -8,8 +8,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Zenigma.Api.Auth;
 using Zenigma.Api.Data;
+using Zenigma.Api.Games.WordGuess;
 using Zenigma.Api.Infrastructure;
 using Zenigma.Api.Sync;
+
+// Local development: read secrets from the git-ignored .env (see .env.example). Production uses real environment variables.
+if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Production", StringComparison.OrdinalIgnoreCase)
+    && DotEnv.Find(Directory.GetCurrentDirectory()) is { } envFile)
+{
+    DotEnv.Load(envFile);
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +49,7 @@ builder.Services
     .AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddSingleton<WordList>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -99,6 +108,7 @@ app.MapGet("/time", (TimeProvider clock) =>
 
 app.MapAuth();
 app.MapSync();
+app.MapDaily();
 
 app.Run();
 

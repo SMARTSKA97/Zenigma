@@ -81,3 +81,31 @@ public class PushValidationTests
         Assert.NotNull(SyncEndpoints.Validate(Make(payload: big)));
     }
 }
+
+public class DotEnvTests
+{
+    [Theory]
+    [InlineData("KEY=value", "KEY", "value")]
+    [InlineData("  KEY = value  ", "KEY", "value")]
+    [InlineData("export KEY=value", "KEY", "value")]
+    [InlineData("KEY=\"quoted value\"", "KEY", "quoted value")]
+    [InlineData("KEY='single'", "KEY", "single")]
+    [InlineData("KEY=value # trailing comment", "KEY", "value")]
+    [InlineData("Host=a;Password=x=y", "Host", "a;Password=x=y")]
+    public void Parses_assignments(string line, string key, string value)
+    {
+        Assert.Equal((key, value), Zenigma.Api.Infrastructure.DotEnv.Parse(line));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("# comment")]
+    [InlineData("NOEQUALS")]
+    [InlineData("BLANK=")]
+    [InlineData("=value")]
+    public void Skips_comments_blanks_and_placeholders(string line)
+    {
+        Assert.Null(Zenigma.Api.Infrastructure.DotEnv.Parse(line));
+    }
+}

@@ -15,20 +15,21 @@ and Comet Slice), daily puzzles plus endless levels, streaks and leaderboards.
 
 ## Develop
 
-```bash
-# Database
-docker run -d --name zenigma-db -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=zenigma -p 127.0.0.1:5432:5432 postgres:16
-docker run --rm --network host -v "$PWD/db/migrations:/flyway/sql" flyway/flyway:11 \
-  -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres migrate
+Secrets live in a git-ignored `.env` file, never in source. Start from the template:
 
-# API (http://localhost:5080)
-cd apps/api/Zenigma.Api
-export ConnectionStrings__Default="Host=localhost;Database=zenigma;Username=postgres"
-export Jwt__Key="$(openssl rand -base64 48)"
-dotnet run --urls http://localhost:5080
+```bash
+cp .env.example .env        # then fill in the blanks; generate values with: openssl rand -base64 48
+docker compose up -d db                 # local Postgres (uses POSTGRES_* from .env)
+docker compose run --rm migrate         # apply db/migrations with Flyway
+
+# API (http://localhost:5080): reads .env automatically in development
+cd apps/api/Zenigma.Api && dotnet run --urls http://localhost:5080
 
 # Web (http://localhost:4200)
 cd apps/web && npm ci && npx ng serve
 ```
 
-Tests: `dotnet test apps/api/Zenigma.slnx` (set `ZENIGMA_TEST_DB` to run the database tests) and `cd apps/web && npx ng test`.
+The API's `ConnectionStrings__Default` password must match `POSTGRES_PASSWORD`. In production the same names are set as
+environment variables (Render) and GitHub secrets; see `docs/DEPLOYMENT.md`.
+
+Tests: `dotnet test apps/api/Zenigma.slnx` (set `ZENIGMA_TEST_DB` in `.env` to run the database tests) and `cd apps/web && npx ng test`.
