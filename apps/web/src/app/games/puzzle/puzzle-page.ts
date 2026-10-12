@@ -1,11 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { formatDuration } from '../../core/leaderboard.service';
 import { LocalStore } from '../../core/local-store';
 import { SyncService } from '../../core/sync.service';
+import { Confetti } from '../../shared/confetti';
 import { Loader } from '../../shared/loader';
 import { Sheet } from '../../shared/sheet';
 import { gameInfo, isPuzzleGame, PuzzleGameId } from '../catalog';
@@ -21,7 +22,7 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
 /** One screen for every grid puzzle, in practice (endless levels, offline) or daily (one attempt, timed by the server) mode. */
 @Component({
   selector: 'app-puzzle-page',
-  imports: [NgTemplateOutlet, RouterLink, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard],
+  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -94,8 +95,6 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
           <span class="time" aria-label="Time">{{ time() }}</span>
           @if (message()) {
             <span class="toast">{{ message() }}</span>
-          } @else if (conflicts().size) {
-            <span class="hint bad">{{ conflicts().size }} to fix</span>
           }
         </div>
 
@@ -121,6 +120,10 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
         </div>
       }
     </ng-template>
+
+    @if (resultOpen()) {
+      <app-confetti />
+    }
 
     @if (helpOpen()) {
       <app-sheet label="How to play" (closed)="helpOpen.set(false)">
@@ -217,11 +220,13 @@ export class PuzzlePage {
   private serverStart = 0;
   private readonly checking = signal(false);
 
-  protected readonly conflicts = computed(() => {
+  /** Rule breaks, calculated at once but only shown once the player pauses (so a move in progress is never flagged). */
+  private readonly found = computed(() => {
     const p = this.puzzle();
     const s = this.state();
     return p && s ? ADAPTERS[this.game()].conflicts(p, s) : new Set<number>();
   });
+  protected readonly conflicts = signal<Set<number>>(new Set());
   protected readonly touched = computed(() => {
     const p = this.puzzle();
     const s = this.state();
@@ -261,6 +266,7 @@ export class PuzzlePage {
 
   private heartbeat?: ReturnType<typeof setInterval>;
   private saveTimer?: ReturnType<typeof setTimeout>;
+  private showTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     const tick = setInterval(() => this.now.set(Date.now()), 500);
@@ -274,6 +280,14 @@ export class PuzzlePage {
       const game = this.game();
       const daily = this.daily();
       queueMicrotask(() => void (daily ? this.loadDaily() : this.loadPractice(game)));
+    });
+    effect(() => {
+      const found = this.found();
+      untracked(() => {
+        clearTimeout(this.showTimer);
+        this.conflicts.set(new Set());
+        if (found.size) this.showTimer = setTimeout(() => this.conflicts.set(found), 1600);
+      });
     });
     // Pause the practice clock while the page is hidden.
     const onVisibility = () => {
@@ -428,8 +442,16 @@ export class PuzzlePage {
     const p = this.puzzle();
     const s = this.state();
     const game = this.game();
-    if (!p || !s || !ADAPTERS[game].isSolved(p, s)) return;
+    if (!p || !s) return;
     const solution = ADAPTERS[game].solution(p, s);
+    if (!ADAPTERS[game].isSolved(p, s)) {
+      // A full board that is wrong: say so right away and point at the mistakes.
+      if (solution !== null) {
+        this.flash('Not quite. Check the highlighted cells.');
+        this.conflicts.set(this.found());
+      }
+      return;
+    }
 
     if (this.daily()) {
       this.checking.set(true);

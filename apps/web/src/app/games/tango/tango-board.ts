@@ -5,6 +5,18 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
   selector: 'app-tango-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <svg class="defs" width="0" height="0" aria-hidden="true">
+      <defs>
+        <radialGradient id="sun-core" cx="40%" cy="35%" r="70%">
+          <stop offset="0" stop-color="#ffe083" />
+          <stop offset="1" stop-color="#f08a12" />
+        </radialGradient>
+        <linearGradient id="moon-body" x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0" stop-color="#9aa7ff" />
+          <stop offset="1" stop-color="#4f5fe0" />
+        </linearGradient>
+      </defs>
+    </svg>
     <div class="wrap">
       <div class="grid" role="grid" aria-label="Tango board">
         @for (cell of cells(); track cell.i) {
@@ -21,18 +33,26 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
             (click)="tap(cell.i)"
           >
             @if (cell.value === 's') {
-              <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="5" />
-                <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1" />
+              <svg class="sun" viewBox="0 0 48 48" aria-hidden="true">
+                <g class="rays">
+                  @for (a of rays; track a) {
+                    <rect x="22" y="2.5" width="4" height="8" rx="2" [attr.transform]="'rotate(' + a + ' 24 24)'" />
+                  }
+                </g>
+                <circle cx="24" cy="24" r="10.5" fill="url(#sun-core)" />
               </svg>
             } @else if (cell.value === 'm') {
-              <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z" /></svg>
+              <svg class="moon" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M37.5 29.5A16.5 16.5 0 0 1 18.5 10.5a16.5 16.5 0 1 0 19 19z" fill="url(#moon-body)" />
+                <circle cx="33" cy="12" r="1.6" class="star" />
+                <circle cx="38.5" cy="19" r="1" class="star" />
+              </svg>
             }
           </button>
         }
       </div>
       @for (edge of edges(); track edge.key) {
-        <span class="sign" [style.left.%]="edge.x" [style.top.%]="edge.y" aria-hidden="true">{{ edge.kind === '=' ? '=' : '×' }}</span>
+        <span class="sign" [class.diff]="edge.kind !== '='" [style.left.%]="edge.x" [style.top.%]="edge.y" aria-hidden="true">{{ edge.kind === '=' ? '=' : '×' }}</span>
       }
     </div>
   `,
@@ -40,75 +60,88 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
     :host {
       display: block;
     }
+    .defs {
+      position: absolute;
+    }
     .wrap {
-      --side: min(100%, 26rem, calc(100dvh - 21rem));
+      --side: min(100%, 26rem, calc(100dvh - 20rem));
       position: relative;
       width: var(--side);
       aspect-ratio: 1;
       margin: 0 auto;
     }
     .grid {
+      --line: color-mix(in srgb, var(--ink) 18%, var(--bg));
       display: grid;
       grid-template-columns: repeat(6, 1fr);
+      gap: 1px;
       width: 100%;
       height: 100%;
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
+      border: 2.5px solid var(--ink);
+      border-radius: 16px;
       overflow: hidden;
-      background: var(--surface);
+      background: var(--line);
+      box-shadow: var(--shadow);
     }
-    .cell {
+    :host .cell {
       display: grid;
       place-items: center;
+      min-width: 0;
       min-height: 0;
       padding: 0;
       border: 0;
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
       border-radius: 0;
+      overflow: visible;
       background: var(--surface);
       color: var(--text);
       transition: background-color 0.2s var(--ease);
+      touch-action: manipulation;
     }
-    .cell:nth-child(6n) {
-      border-right: 0;
-    }
-    .cell:nth-child(n + 31) {
-      border-bottom: 0;
-    }
-    .cell:hover:not(:disabled) {
+    :host .cell:hover:not(:disabled) {
       box-shadow: none;
       background: var(--surface-2);
     }
-    .cell:disabled {
+    :host .cell:disabled {
       opacity: 1;
       cursor: default;
     }
-    .given {
+    :host .given {
       background: var(--surface-2);
     }
-    .bad {
-      background: color-mix(in srgb, var(--bad) 18%, var(--surface));
+    :host .bad {
+      background: color-mix(in srgb, var(--bad) 22%, var(--surface));
     }
-    svg {
-      width: 62%;
-      height: 62%;
-      animation: pop 0.26s var(--spring);
+    .sun,
+    .moon {
+      width: 82%;
+      height: 82%;
+      overflow: visible;
+      filter: drop-shadow(0 1.5px 1.5px rgb(0 0 0 / 0.2));
     }
     .sun {
-      fill: var(--sun);
-      stroke: var(--sun);
-      stroke-width: 1.6;
-      stroke-linecap: round;
+      animation: sun-in 0.5s var(--spring);
     }
     .moon {
-      fill: var(--moon);
-      stroke: var(--moon);
-      stroke-width: 1.2;
-      stroke-linejoin: round;
+      animation: moon-in 0.5s var(--spring);
     }
-    .win svg {
-      animation: cheer 0.6s var(--spring) both;
+    .rays rect {
+      fill: #f5a623;
+    }
+    .rays {
+      transform-origin: 24px 24px;
+      animation: spin 24s linear infinite;
+    }
+    .star {
+      fill: #fff;
+      opacity: 0.85;
+    }
+    .bad .sun,
+    .bad .moon {
+      animation: shake 0.4s;
+    }
+    .win .sun,
+    .win .moon {
+      animation: cheer 0.7s var(--spring) both;
       animation-delay: var(--d);
     }
     .sign {
@@ -116,27 +149,56 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
       z-index: 1;
       display: grid;
       place-items: center;
-      width: 1.35rem;
-      height: 1.35rem;
+      width: 1.55rem;
+      height: 1.55rem;
       transform: translate(-50%, -50%);
       border-radius: 50%;
       background: var(--surface);
-      border: 1px solid var(--muted);
-      color: var(--text);
+      border: 1.5px solid var(--ink);
+      color: var(--ink);
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       line-height: 1;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
       pointer-events: none;
     }
-    @keyframes pop {
+    .sign.diff {
+      background: var(--ink);
+      color: var(--ink-contrast);
+    }
+    @keyframes sun-in {
       from {
-        transform: scale(0.4);
+        transform: scale(0.2) rotate(-120deg);
         opacity: 0;
+      }
+    }
+    @keyframes moon-in {
+      from {
+        transform: scale(0.2) rotate(90deg);
+        opacity: 0;
+      }
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    @keyframes shake {
+      20%,
+      60% {
+        transform: translateX(-3px);
+      }
+      40%,
+      80% {
+        transform: translateX(3px);
       }
     }
     @keyframes cheer {
       40% {
-        transform: scale(1.25) rotate(-8deg);
+        transform: scale(1.25) rotate(-10deg);
+      }
+      70% {
+        transform: scale(0.95);
       }
     }
   `,
@@ -149,12 +211,14 @@ export class TangoBoard {
   readonly solved = input(false);
   readonly boardChange = output<TangoCell[]>();
 
+  protected readonly rays = [0, 45, 90, 135, 180, 225, 270, 315];
+
   protected readonly cells = computed(() => {
     const puzzle = this.puzzle();
     const bad = this.bad();
     return this.board().map((value, i) => ({
       i,
-      delay: ((i % 6) + Math.floor(i / 6)) * 0.05 + 's',
+      delay: ((i % SIZE) + Math.floor(i / SIZE)) * 0.05 + 's',
       value,
       given: puzzle.givens[i] !== '.',
       bad: bad.has(i),

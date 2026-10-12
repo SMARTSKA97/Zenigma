@@ -14,8 +14,8 @@ export const QUEEN = 2;
 
 export const emptyBoard = (puzzle: QueensPuzzle): QueensCell[] => new Array<QueensCell>(puzzle.size * puzzle.size).fill(EMPTY);
 
-/** The cell a tap moves to: empty, then a mark, then a queen, then back to empty. */
-export const nextCell = (cell: QueensCell): QueensCell => ((cell + 1) % 3) as QueensCell;
+/** The cell a tap moves to: empty, then a queen, then a mark, then back to empty. */
+export const nextCell = (cell: QueensCell): QueensCell => (cell === EMPTY ? QUEEN : cell === QUEEN ? MARK : EMPTY);
 
 /** Cells holding a queen that breaks a rule (shares a row, column or region with another queen, or touches one). */
 export function conflicts(puzzle: QueensPuzzle, board: QueensCell[]): Set<number> {

@@ -24,7 +24,7 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
     isSolved: (p, s) => queens.isSolved(p as queens.QueensPuzzle, s as queens.QueensCell[]),
     solution: (p, s) => queens.solutionOf(p as queens.QueensPuzzle, s as queens.QueensCell[]),
     touched: (_, s) => (s as queens.QueensCell[]).some((c) => c !== 0),
-    help: 'Place one queen in every row, column and colour. Queens cannot touch, not even diagonally. Tap once to mark a cell, twice for a queen.',
+    help: 'Place one queen in every row, column and colour. Queens cannot touch, not even diagonally. Tap once for a queen, twice for a ✕ that marks a cell where no queen can go, three times to clear.',
   },
   tango: {
     levels: () => import('../tango/levels.data').then((m) => m.LEVELS),

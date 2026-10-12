@@ -1,13 +1,21 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { borders, nextCell, QUEEN, MARK, QueensCell, QueensPuzzle } from './engine';
 
-/** Region colours: hues spread around the wheel; the thick outlines mean colour is never the only clue. */
+/** Region colours: hues spread around the wheel; thick outlines mean colour is never the only clue. */
 const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
 
 @Component({
   selector: 'app-queens-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <svg class="defs" width="0" height="0" aria-hidden="true">
+      <defs>
+        <linearGradient id="crown-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffe083" />
+          <stop offset="1" stop-color="#f0a21a" />
+        </linearGradient>
+      </defs>
+    </svg>
     <div class="grid" role="grid" aria-label="Queens board" [style.--n]="puzzle().size">
       @for (cell of cells(); track cell.i) {
         <button
@@ -16,6 +24,7 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
           class="cell"
           [class.bad]="cell.bad"
           [class.win]="solved()"
+          [class.has-queen]="cell.value === QUEEN"
           [disabled]="locked()"
           [style.--h]="cell.hue"
           [style.--d]="cell.delay"
@@ -24,9 +33,15 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
           (click)="tap(cell.i)"
         >
           @if (cell.value === QUEEN) {
-            <svg class="queen" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.5l-1-11 5 4 4.5-7 4.5 7 5-4-1 11z" /><path d="M4.5 21h15" /></svg>
+            <svg class="queen" viewBox="0 0 24 24" aria-hidden="true">
+              <path class="body" d="M3.2 19 2 7.5l5.2 4.3L12 4l4.8 7.8L22 7.5 20.8 19z" />
+              <path class="band" d="M4 21.2h16" />
+              <circle cx="12" cy="3.6" r="1.3" class="gem" />
+              <circle cx="2" cy="6.6" r="1.1" class="gem" />
+              <circle cx="22" cy="6.6" r="1.1" class="gem" />
+            </svg>
           } @else if (cell.value === MARK) {
-            <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" /></svg>
+            <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9" /></svg>
           }
         </button>
       }
@@ -36,97 +51,143 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
     :host {
       display: block;
     }
+    .defs {
+      position: absolute;
+    }
     .grid {
-      --side: min(100%, 26rem, calc(100dvh - 21rem));
+      --side: min(100%, 26rem, calc(100dvh - 20rem));
+      --line: color-mix(in srgb, var(--ink) 34%, var(--bg));
       display: grid;
       grid-template-columns: repeat(var(--n), 1fr);
       width: var(--side);
       aspect-ratio: 1;
       margin: 0 auto;
-      border-radius: 14px;
+      border: 2.5px solid var(--ink);
+      border-radius: 16px;
       overflow: hidden;
-      --line: color-mix(in srgb, var(--ink) 78%, var(--bg));
       background: var(--line);
-      padding: 2px;
-      gap: 0;
+      gap: 1px;
+      box-shadow: var(--shadow);
     }
-    .cell {
+    :host .cell {
       position: relative;
       display: grid;
       place-items: center;
+      min-width: 0;
       min-height: 0;
       padding: 0;
       border: 0;
       border-radius: 0;
+      overflow: visible;
       background: oklch(var(--cell-l) var(--cell-c) calc(var(--h) * 1deg));
       color: var(--text);
-      font: inherit;
-      transition: background-color 0.2s var(--ease);
-      -webkit-tap-highlight-color: transparent;
+      transition:
+        background-color 0.2s var(--ease),
+        filter 0.2s var(--ease);
+      touch-action: manipulation;
     }
-    .cell:hover:not(:disabled) {
+    :host .cell:hover:not(:disabled) {
+      filter: brightness(1.05);
       box-shadow: none;
-      filter: brightness(1.04);
     }
-    .cell:disabled {
+    :host .cell:disabled {
       opacity: 1;
       cursor: default;
     }
     .queen {
-      width: 66%;
-      height: 66%;
-      fill: var(--ink);
-      stroke: var(--ink);
-      stroke-width: 1.5;
+      width: 74%;
+      height: 74%;
+      overflow: visible;
+      filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.28));
+      animation: drop 0.42s var(--spring);
+    }
+    .queen .body {
+      fill: url(#crown-gold);
+      stroke: #6b4300;
+      stroke-width: 1.2;
       stroke-linejoin: round;
+    }
+    .queen .band {
+      stroke: #6b4300;
+      stroke-width: 1.6;
       stroke-linecap: round;
-      animation: drop 0.28s var(--spring);
+    }
+    .queen .gem {
+      fill: #ffe083;
+      stroke: #6b4300;
+      stroke-width: 0.8;
+    }
+    /* A ring that ripples out where a queen lands. */
+    .has-queen::before {
+      content: '';
+      position: absolute;
+      inset: 18%;
+      border-radius: 50%;
+      border: 2px solid #f0a21a;
+      opacity: 0;
+      animation: ripple 0.55s var(--ease);
     }
     .mark {
-      width: 38%;
-      height: 38%;
+      width: 50%;
+      height: 50%;
       fill: none;
       stroke: var(--text);
-      stroke-width: 2.4;
+      stroke-width: 2.6;
       stroke-linecap: round;
-      opacity: 0.45;
-      animation: fade 0.18s var(--ease);
-    }
-    .bad .queen {
-      fill: var(--bad);
-      stroke: var(--bad);
-      animation: shake 0.35s;
+      opacity: 0.55;
+      animation: fade 0.2s var(--spring);
     }
     .bad {
-      background: color-mix(in srgb, var(--bad) 22%, oklch(var(--cell-l) var(--cell-c) calc(var(--h) * 1deg)));
+      background: color-mix(in srgb, var(--bad) 30%, oklch(var(--cell-l) var(--cell-c) calc(var(--h) * 1deg)));
+    }
+    .bad .queen {
+      animation: shake 0.4s;
+    }
+    .bad .queen .body {
+      stroke: var(--bad);
     }
     .win .queen {
-      animation: cheer 0.6s var(--spring) both;
+      animation: cheer 0.7s var(--spring) both;
       animation-delay: var(--d);
     }
     @keyframes drop {
       from {
-        transform: translateY(-40%) scale(0.5);
+        transform: translateY(-60%) scale(0.4);
+        opacity: 0;
+      }
+    }
+    @keyframes ripple {
+      from {
+        inset: 30%;
+        opacity: 0.9;
+      }
+      to {
+        inset: -8%;
         opacity: 0;
       }
     }
     @keyframes fade {
       from {
         opacity: 0;
-        transform: scale(0.6);
+        transform: scale(0.4) rotate(-40deg);
       }
     }
     @keyframes shake {
-      25% {
+      20%,
+      60% {
         transform: translateX(-3px);
       }
-      75% {
+      40%,
+      80% {
         transform: translateX(3px);
       }
     }
     @keyframes cheer {
       40% {
-        transform: scale(1.25) rotate(-6deg);
+        transform: translateY(-14%) scale(1.22) rotate(-6deg);
+      }
+      70% {
+        transform: scale(0.95);
       }
     }
   `,
@@ -149,11 +210,11 @@ export class QueensBoard {
     return board.map((value, i) => {
       const b = borders(puzzle, i);
       const sides: string[] = [];
-      // The "region edge" is drawn as an inset line on each side that borders another region (or the board edge).
-      if (b.top) sides.push('inset 0 2px 0 0 var(--line)');
-      if (b.bottom) sides.push('inset 0 -2px 0 0 var(--line)');
-      if (b.left) sides.push('inset 2px 0 0 0 var(--line)');
-      if (b.right) sides.push('inset -2px 0 0 0 var(--line)');
+      // Region outlines: an inset line on every side that borders another region.
+      if (b.top) sides.push('inset 0 2px 0 0 var(--ink)');
+      if (b.bottom) sides.push('inset 0 -2px 0 0 var(--ink)');
+      if (b.left) sides.push('inset 2px 0 0 0 var(--ink)');
+      if (b.right) sides.push('inset -2px 0 0 0 var(--ink)');
       const row = Math.floor(i / puzzle.size) + 1;
       const col = (i % puzzle.size) + 1;
       return {
