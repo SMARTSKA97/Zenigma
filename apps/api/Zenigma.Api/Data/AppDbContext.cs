@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<DailyPuzzle> DailyPuzzles => Set<DailyPuzzle>();
     public DbSet<DailyAttempt> DailyAttempts => Set<DailyAttempt>();
+    public DbSet<PuzzleAttempt> PuzzleAttempts => Set<PuzzleAttempt>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -84,6 +85,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.FirstGuessAt).HasColumnName("first_guess_at");
             e.Property(x => x.LastActiveAt).HasColumnName("last_active_at");
             e.Property(x => x.FinishedAt).HasColumnName("finished_at");
+        });
+
+        b.Entity<PuzzleAttempt>(e =>
+        {
+            e.ToTable("puzzle_attempts");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Game).HasColumnName("game").HasMaxLength(32);
+            e.Property(x => x.PuzzleDate).HasColumnName("puzzle_date");
+            e.Property(x => x.DeviceId).HasColumnName("device_id");
+            e.Property(x => x.Status).HasColumnName("status").HasMaxLength(16);
+            e.Property(x => x.StartedAt).HasColumnName("started_at");
+            e.Property(x => x.LastActiveAt).HasColumnName("last_active_at");
+            e.Property(x => x.FinishedAt).HasColumnName("finished_at");
+            e.Property(x => x.ElapsedMs).HasColumnName("elapsed_ms");
         });
     }
 }

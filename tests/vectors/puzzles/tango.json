@@ -1,0 +1,402 @@
+[
+ {
+  "name": "extra 0 valid",
+  "puzzle": {
+   "givens": "...s......ss.m...........s..........",
+   "edges": [
+    [
+     0,
+     1,
+     "="
+    ],
+    [
+     1,
+     7,
+     "="
+    ],
+    [
+     14,
+     20,
+     "x"
+    ],
+    [
+     22,
+     28,
+     "x"
+    ],
+    [
+     24,
+     30,
+     "x"
+    ]
+   ]
+  },
+  "solution": "ssmsmmmsmmssmmssmssmmssmmssmmssmsmsm",
+  "valid": true
+ },
+ {
+  "name": "extra 0 flipped cell",
+  "puzzle": {
+   "givens": "...s......ss.m...........s..........",
+   "edges": [
+    [
+     0,
+     1,
+     "="
+    ],
+    [
+     1,
+     7,
+     "="
+    ],
+    [
+     14,
+     20,
+     "x"
+    ],
+    [
+     22,
+     28,
+     "x"
+    ],
+    [
+     24,
+     30,
+     "x"
+    ]
+   ]
+  },
+  "solution": "msmsmmmsmmssmmssmssmmssmmssmmssmsmsm",
+  "valid": false
+ },
+ {
+  "name": "extra 0 all suns",
+  "puzzle": {
+   "givens": "...s......ss.m...........s..........",
+   "edges": [
+    [
+     0,
+     1,
+     "="
+    ],
+    [
+     1,
+     7,
+     "="
+    ],
+    [
+     14,
+     20,
+     "x"
+    ],
+    [
+     22,
+     28,
+     "x"
+    ],
+    [
+     24,
+     30,
+     "x"
+    ]
+   ]
+  },
+  "solution": "ssssssssssssssssssssssssssssssssssss",
+  "valid": false
+ },
+ {
+  "name": "extra 0 unfinished",
+  "puzzle": {
+   "givens": "...s......ss.m...........s..........",
+   "edges": [
+    [
+     0,
+     1,
+     "="
+    ],
+    [
+     1,
+     7,
+     "="
+    ],
+    [
+     14,
+     20,
+     "x"
+    ],
+    [
+     22,
+     28,
+     "x"
+    ],
+    [
+     24,
+     30,
+     "x"
+    ]
+   ]
+  },
+  "solution": "ssmsmmmsmmssmmssmssmmssmmssmmssmsms.",
+  "valid": false
+ },
+ {
+  "name": "extra 0 wrong length",
+  "puzzle": {
+   "givens": "...s......ss.m...........s..........",
+   "edges": [
+    [
+     0,
+     1,
+     "="
+    ],
+    [
+     1,
+     7,
+     "="
+    ],
+    [
+     14,
+     20,
+     "x"
+    ],
+    [
+     22,
+     28,
+     "x"
+    ],
+    [
+     24,
+     30,
+     "x"
+    ]
+   ]
+  },
+  "solution": "ssmsmmmsmmssmmssmssmmssmmssmmssmsmsms",
+  "valid": false
+ },
+ {
+  "name": "extra 3 valid",
+  "puzzle": {
+   "givens": "..............s.........m...s....ss.",
+   "edges": [
+    [
+     0,
+     6,
+     "x"
+    ],
+    [
+     14,
+     15,
+     "="
+    ],
+    [
+     15,
+     21,
+     "="
+    ],
+    [
+     18,
+     19,
+     "="
+    ],
+    [
+     24,
+     30,
+     "="
+    ],
+    [
+     7,
+     13,
+     "x"
+    ],
+    [
+     5,
+     11,
+     "="
+    ]
+   ]
+  },
+  "solution": "smsmmsmsmmsssmssmmssmsmmmmsmssmsmssm",
+  "valid": true
+ },
+ {
+  "name": "extra 3 flipped cell",
+  "puzzle": {
+   "givens": "..............s.........m...s....ss.",
+   "edges": [
+    [
+     0,
+     6,
+     "x"
+    ],
+    [
+     14,
+     15,
+     "="
+    ],
+    [
+     15,
+     21,
+     "="
+    ],
+    [
+     18,
+     19,
+     "="
+    ],
+    [
+     24,
+     30,
+     "="
+    ],
+    [
+     7,
+     13,
+     "x"
+    ],
+    [
+     5,
+     11,
+     "="
+    ]
+   ]
+  },
+  "solution": "mmsmmsmsmmsssmssmmssmsmmmmsmssmsmssm",
+  "valid": false
+ },
+ {
+  "name": "extra 3 all suns",
+  "puzzle": {
+   "givens": "..............s.........m...s....ss.",
+   "edges": [
+    [
+     0,
+     6,
+     "x"
+    ],
+    [
+     14,
+     15,
+     "="
+    ],
+    [
+     15,
+     21,
+     "="
+    ],
+    [
+     18,
+     19,
+     "="
+    ],
+    [
+     24,
+     30,
+     "="
+    ],
+    [
+     7,
+     13,
+     "x"
+    ],
+    [
+     5,
+     11,
+     "="
+    ]
+   ]
+  },
+  "solution": "ssssssssssssssssssssssssssssssssssss",
+  "valid": false
+ },
+ {
+  "name": "extra 3 unfinished",
+  "puzzle": {
+   "givens": "..............s.........m...s....ss.",
+   "edges": [
+    [
+     0,
+     6,
+     "x"
+    ],
+    [
+     14,
+     15,
+     "="
+    ],
+    [
+     15,
+     21,
+     "="
+    ],
+    [
+     18,
+     19,
+     "="
+    ],
+    [
+     24,
+     30,
+     "="
+    ],
+    [
+     7,
+     13,
+     "x"
+    ],
+    [
+     5,
+     11,
+     "="
+    ]
+   ]
+  },
+  "solution": "smsmmsmsmmsssmssmmssmsmmmmsmssmsmss.",
+  "valid": false
+ },
+ {
+  "name": "extra 3 wrong length",
+  "puzzle": {
+   "givens": "..............s.........m...s....ss.",
+   "edges": [
+    [
+     0,
+     6,
+     "x"
+    ],
+    [
+     14,
+     15,
+     "="
+    ],
+    [
+     15,
+     21,
+     "="
+    ],
+    [
+     18,
+     19,
+     "="
+    ],
+    [
+     24,
+     30,
+     "="
+    ],
+    [
+     7,
+     13,
+     "x"
+    ],
+    [
+     5,
+     11,
+     "="
+    ]
+   ]
+  },
+  "solution": "smsmmsmsmmsssmssmmssmsmmmmsmssmsmssms",
+  "valid": false
+ }
+]

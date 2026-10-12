@@ -8,7 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Zenigma.Api.Auth;
 using Zenigma.Api.Data;
+using Zenigma.Api.Games.Puzzles;
 using Zenigma.Api.Games.WordGuess;
+using Zenigma.Api.Leaderboards;
 using Zenigma.Api.Infrastructure;
 using Zenigma.Api.Sync;
 
@@ -50,6 +52,8 @@ builder.Services
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddSingleton<WordList>();
+builder.Services.AddSingleton<PracticeLevels>();
+builder.Services.AddSingleton<PracticeRecorder>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -109,6 +113,8 @@ app.MapGet("/time", (TimeProvider clock) =>
 app.MapAuth();
 app.MapSync();
 app.MapDaily();
+app.MapPuzzleDaily();
+app.MapLeaderboards();
 
 app.Run();
 

@@ -1,0 +1,114 @@
+[
+ {
+  "game": "queens",
+  "level": 1,
+  "solution": [
+   1,
+   3,
+   0,
+   4,
+   2
+  ]
+ },
+ {
+  "game": "queens",
+  "level": 2,
+  "solution": [
+   4,
+   2,
+   0,
+   3,
+   1
+  ]
+ },
+ {
+  "game": "queens",
+  "level": 3,
+  "solution": [
+   1,
+   4,
+   2,
+   0,
+   3
+  ]
+ },
+ {
+  "game": "queens",
+  "level": 150,
+  "solution": [
+   5,
+   0,
+   7,
+   1,
+   3,
+   6,
+   4,
+   2
+  ]
+ },
+ {
+  "game": "queens",
+  "level": 200,
+  "solution": [
+   6,
+   8,
+   3,
+   1,
+   4,
+   2,
+   7,
+   0,
+   5
+  ]
+ },
+ {
+  "game": "tango",
+  "level": 1,
+  "solution": "mmssmsssmsmmsmsmsmmsmsmsssmmsmmmsmss"
+ },
+ {
+  "game": "tango",
+  "level": 2,
+  "solution": "ssmsmmsmmsmsmmsmssmsmssmsmsmmsmssmsm"
+ },
+ {
+  "game": "tango",
+  "level": 3,
+  "solution": "mmssmssmmsmsssmmsmmssmsmmmssmsssmmsm"
+ },
+ {
+  "game": "tango",
+  "level": 150,
+  "solution": "smsmsmssmsmmmsmsmsmmsmssssmmsmmmssms"
+ },
+ {
+  "game": "tango",
+  "level": 200,
+  "solution": "smmssmmmsmssssmsmmsmmssmmssmmsmssmms"
+ },
+ {
+  "game": "mini-sudoku",
+  "level": 1,
+  "solution": "632451145236213645456123321564564312"
+ },
+ {
+  "game": "mini-sudoku",
+  "level": 2,
+  "solution": "413526256134142653365241531462624315"
+ },
+ {
+  "game": "mini-sudoku",
+  "level": 3,
+  "solution": "132564456123213645564231321456645312"
+ },
+ {
+  "game": "mini-sudoku",
+  "level": 150,
+  "solution": "461523235146123654546231312465654312"
+ },
+ {
+  "game": "mini-sudoku",
+  "level": 200,
+  "solution": "543126126345251463364251415632632514"
+ }
+]
