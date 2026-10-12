@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApkPromoService } from '../../core/apk-promo.service';
 import { AuthService } from '../../core/auth.service';
@@ -578,6 +578,7 @@ export class Home implements OnInit {
   protected readonly promo = inject(ApkPromoService);
   protected readonly updater = inject(UpdaterService);
   private readonly statsApi = inject(StatsService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly liveGames = GAMES.filter((g) => g.live);
   protected readonly stats = signal<Stats | null>(null);
@@ -585,6 +586,11 @@ export class Home implements OnInit {
   ngOnInit(): void {
     void this.community.load();
     void this.promo.load();
+    // Keep the counts fresh while this screen is open and visible.
+    const timer = setInterval(() => {
+      if (!document.hidden) void this.community.load();
+    }, 30_000);
+    this.destroyRef.onDestroy(() => clearInterval(timer));
   }
 
   constructor() {

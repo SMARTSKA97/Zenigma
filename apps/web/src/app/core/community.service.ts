@@ -17,8 +17,8 @@ export class CommunityService {
   private loadedAt = 0;
 
   async load(): Promise<void> {
-    // The server caches for five minutes anyway; asking more often than once a minute is pointless.
-    if (Date.now() - this.loadedAt < 60_000) return;
+    // The server caches for 15 seconds, so asking more often is pointless.
+    if (Date.now() - this.loadedAt < 15_000) return;
     this.loadedAt = Date.now();
     try {
       this.counts.set(await firstValueFrom(this.http.get<Community>(`${environment.apiBaseUrl}/public/community`)));

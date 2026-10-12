@@ -7,11 +7,11 @@ public record CommunityDto(int Players, int ActiveToday, int ActiveWeek);
 
 /// <summary>
 /// Public, anonymous totals for the home screen: how many people have an account and how many were around lately.
-/// Counts only, nothing about any person. Cached for a few minutes, so a busy home page costs the database one query now and then.
+/// Counts only, nothing about any person. Cached for 15 seconds, so a busy home page costs the database a few cheap queries a minute at most.
 /// </summary>
 public static class CommunityEndpoints
 {
-    private static readonly TimeSpan Fresh = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan Fresh = TimeSpan.FromSeconds(15);
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static (DateTimeOffset At, CommunityDto Value)? _cached;
 
