@@ -14,6 +14,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<DailyPuzzle> DailyPuzzles => Set<DailyPuzzle>();
     public DbSet<DailyAttempt> DailyAttempts => Set<DailyAttempt>();
     public DbSet<PuzzleAttempt> PuzzleAttempts => Set<PuzzleAttempt>();
+    public DbSet<StreakFreeze> StreakFreezes => Set<StreakFreeze>();
+    public DbSet<UserReward> UserRewards => Set<UserReward>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -101,6 +103,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.LastActiveAt).HasColumnName("last_active_at");
             e.Property(x => x.FinishedAt).HasColumnName("finished_at");
             e.Property(x => x.ElapsedMs).HasColumnName("elapsed_ms");
+        });
+
+        b.Entity<StreakFreeze>(e =>
+        {
+            e.ToTable("streak_freezes");
+            e.HasKey(x => new { x.UserId, x.Game, x.CoveredDate });
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Game).HasColumnName("game").HasMaxLength(32);
+            e.Property(x => x.CoveredDate).HasColumnName("covered_date");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        b.Entity<UserReward>(e =>
+        {
+            e.ToTable("user_rewards");
+            e.HasKey(x => x.UserId);
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Freezes).HasColumnName("freezes");
+            e.Property(x => x.LastAwardWeek).HasColumnName("last_award_week");
         });
     }
 }

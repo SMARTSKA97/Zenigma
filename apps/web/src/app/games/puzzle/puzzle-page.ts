@@ -15,6 +15,7 @@ import { SudokuBoard } from '../sudoku/sudoku-board';
 import { TangoBoard } from '../tango/tango-board';
 import { ADAPTERS } from './adapters';
 import { LEVEL_COUNT, PracticeStore } from './practice.store';
+import { shareCard } from './share';
 import { PuzzleAttempt, PuzzleDailyService, PuzzleDailyState } from './puzzle-daily.service';
 
 type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playing' | 'blocked' | 'finished' | 'practice';
@@ -184,6 +185,7 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
             }
             <div class="actions">
               <button type="button" (click)="nextLevel()">Next level</button>
+              <button type="button" class="secondary" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
               <button type="button" class="secondary" (click)="openLevel(level())">Replay</button>
             </div>
           }
@@ -515,9 +517,16 @@ export class PuzzlePage {
   }
 
   protected async share(): Promise<void> {
-    const name = this.info()?.name ?? 'Zenigma';
-    const rank = this.attempt()?.rank;
-    const text = `${name} · ${this.dateLabel()}\n${this.fmt(this.finalMs() || this.attempt()?.elapsedMs || 0)}${rank ? ` · #${rank}` : ''}\nhttps://zenigma.ska97homelab.uk`;
+    const game = this.game();
+    const text = shareCard({
+      game,
+      name: this.info()?.name ?? 'Zenigma',
+      label: this.daily() ? `Daily ${this.dateLabel()}` : `Level ${this.level()}`,
+      puzzle: this.puzzle(),
+      state: this.state(),
+      ms: this.finalMs() || this.attempt()?.elapsedMs || 0,
+      rank: this.daily() ? this.attempt()?.rank : null,
+    });
     try {
       if (navigator.share) await navigator.share({ text });
       else await navigator.clipboard.writeText(text);

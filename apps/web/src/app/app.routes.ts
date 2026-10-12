@@ -10,6 +10,8 @@ export const routes: Routes = [
   { path: 'daily/:game', loadComponent: puzzle, data: { mode: 'daily' } },
   { path: 'daily', loadComponent: () => import('./features/daily/daily-hub').then((m) => m.DailyHub) },
   { path: 'ranks', loadComponent: () => import('./features/ranks/ranks').then((m) => m.Ranks) },
+  { path: 'stats', loadComponent: () => import('./features/stats/stats').then((m) => m.StatsPage) },
+  { path: 'changelog', loadComponent: () => import('./features/changelog/changelog').then((m) => m.Changelog) },
   { path: '', pathMatch: 'full', loadComponent: () => import('./features/home/home').then((m) => m.Home) },
   { path: 'sync-test', loadComponent: () => import('./features/sync-test/sync-test').then((m) => m.SyncTest) },
   { path: 'account', loadComponent: () => import('./features/account/account').then((m) => m.Account) },

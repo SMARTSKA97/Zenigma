@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { DailyGameStatus, DailyHub as Hub, formatDuration, LeaderboardService } from '../../core/leaderboard.service';
+import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { DAILY_GAMES } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
@@ -15,6 +16,13 @@ import { Glyph } from '../../shared/glyph';
       <p class="eyebrow">Daily challenge</p>
       <h1>{{ doneCount() }} of {{ games.length }} done today</h1>
       <p class="lede">One puzzle per game, the same for everyone. Next set in <strong>{{ untilNext() }}</strong>.</p>
+      @if (stats(); as s) {
+        <a class="chips" routerLink="/stats" aria-label="Your streaks and stats">
+          <span>❄ {{ s.rewards.freezes }} {{ s.rewards.freezes === 1 ? 'freeze' : 'freezes' }}</span>
+          <span>{{ s.rewards.weekSolved }}/{{ s.rewards.weekGoal }} this week</span>
+          <span class="go">Stats ›</span>
+        </a>
+      }
       <div class="dots" aria-hidden="true">
         @for (g of games; track g.id) {
           <i [class.on]="statusOf(g.id)?.status === 'solved' || statusOf(g.id)?.status === 'won' || statusOf(g.id)?.status === 'lost'"></i>
@@ -54,6 +62,11 @@ import { Glyph } from '../../shared/glyph';
               <p class="muted">{{ describe(st) }}</p>
             </div>
             <div class="end">
+              @if (streakOf(g.id); as n) {
+                <span class="flame" [attr.aria-label]="n + ' day streak'">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.5 3-1.5 4.7-3 6.4-1.3 1.5-2.3 3-2.3 5.2a5.3 5.3 0 0 0 10.6 0c0-1.7-.6-3-1.5-4.2-.3 1.2-1 1.9-1.8 2.2.4-3.2-.5-6.5-2-9.6z" /></svg>{{ n }}
+                </span>
+              }
               @if (st?.rank) {
                 <a class="rank" [routerLink]="['/ranks']" [queryParams]="{ game: g.id, kind: 'daily' }" aria-label="Leaderboard">#{{ st!.rank }}</a>
               }
@@ -80,6 +93,8 @@ export class DailyHub implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);
   private readonly api = inject(LeaderboardService);
+  private readonly statsApi = inject(StatsService);
+  protected readonly stats = signal<Stats | null>(null);
 
   protected readonly games = DAILY_GAMES;
   protected readonly hub = signal<Hub | null>(null);
@@ -103,6 +118,10 @@ export class DailyHub implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     clearInterval(this.tick);
+  }
+
+  protected streakOf(id: string): number {
+    return this.stats()?.games.find((g) => g.game === id)?.current ?? 0;
   }
 
   protected statusOf(id: string): DailyGameStatus | undefined {
@@ -133,6 +152,7 @@ export class DailyHub implements OnInit, OnDestroy {
       this.failed.set(true);
       return;
     }
+    if (this.auth.signedIn()) void this.statsApi.load().then((s) => this.stats.set(s)).catch(() => undefined);
     try {
       this.hub.set(await this.api.dailyHub());
     } catch {

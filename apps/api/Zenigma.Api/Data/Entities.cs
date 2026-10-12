@@ -77,3 +77,18 @@ public class PuzzleAttempt
     public DateTimeOffset? FinishedAt { get; set; }
     public int? ElapsedMs { get; set; }
 }
+
+public class StreakFreeze
+{
+    public string UserId { get; set; } = "";
+    public string Game { get; set; } = "";
+    public DateOnly CoveredDate { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public class UserReward
+{
+    public string UserId { get; set; } = "";
+    public int Freezes { get; set; }
+    public DateOnly? LastAwardWeek { get; set; }
+}

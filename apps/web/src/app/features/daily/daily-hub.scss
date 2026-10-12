@@ -113,3 +113,37 @@
   text-align: center;
   font-size: 0.9rem;
 }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.1rem;
+  color: inherit;
+  text-decoration: none;
+  span {
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--ink-contrast) 14%, transparent);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .go {
+    margin-left: auto;
+    background: var(--ink-contrast);
+    color: var(--ink);
+  }
+}
+.flame {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: #e07a00;
+  font-family: var(--font-display);
+  font-weight: 650;
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: currentColor;
+  }
+}

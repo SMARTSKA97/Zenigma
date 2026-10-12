@@ -19,7 +19,12 @@ import { UpdaterService } from '../../core/updater.service';
       <div class="gap"></div>
       <app-switch [checked]="prefs.highContrast()" (checkedChange)="prefs.setHighContrast($event)">
         Colour-blind friendly colours
-        <small>Orange and blue instead of green and yellow.</small>
+        <small>Orange and blue, plus letters on Queens regions.</small>
+      </app-switch>
+      <div class="gap"></div>
+      <app-switch [checked]="prefs.reduceMotion()" (checkedChange)="prefs.setReduceMotion($event)">
+        Reduce motion
+        <small>Turns off board animations and confetti.</small>
       </app-switch>
     </section>
 
@@ -54,6 +59,12 @@ import { UpdaterService } from '../../core/updater.service';
         }
       </section>
     }
+
+    <section class="card">
+      <h2>Version history</h2>
+      <p class="muted">See what changed in every release.</p>
+      <a class="button secondary" routerLink="/changelog">Open version history</a>
+    </section>
 
     <section class="card">
       <h2>Diagnostics</h2>

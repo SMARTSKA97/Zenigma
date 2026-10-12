@@ -10,7 +10,7 @@ export function parseNotes(source: string): NoteLine[] {
   const lines: NoteLine[] = [];
   for (const raw of source.split(/\r?\n/)) {
     const line = raw.trim();
-    if (!line) continue;
+    if (!line || line.startsWith('<!--')) continue;
     const clean = (t: string) => t.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`(.+?)`/g, '$1');
     if (/^#{1,6}\s/.test(line)) lines.push({ kind: 'heading', text: clean(line.replace(/^#{1,6}\s+/, '')) });
     else if (/^[-*•]\s+/.test(line)) lines.push({ kind: 'item', text: clean(line.replace(/^[-*•]\s+/, '')) });

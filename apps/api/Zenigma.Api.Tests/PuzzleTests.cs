@@ -196,6 +196,30 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
     }
 
     [DbFact]
+    public async Task Stats_count_a_solved_daily_and_start_a_streak()
+    {
+        var (puzzle, solution) = ValidVector("queens");
+        await SeedTodayAsync("queens", puzzle);
+        var (client, device) = await SignUpAsync("Streaker");
+        await client.PostAsJsonAsync("/daily/queens/start", new { deviceId = device });
+        await client.PostAsJsonAsync("/daily/queens/submit", new { deviceId = device, solution });
+
+        var stats = await client.GetFromJsonAsync<JsonElement>("/stats", Json);
+        var queens = stats.GetProperty("games").EnumerateArray().First(g => g.GetProperty("game").GetString() == "queens");
+        Assert.Equal(1, queens.GetProperty("solved").GetInt32());
+        Assert.Equal(1, queens.GetProperty("current").GetInt32());
+        Assert.Equal(1, queens.GetProperty("recent").GetArrayLength());
+        Assert.Equal(0, stats.GetProperty("rewards").GetProperty("freezes").GetInt32());
+    }
+
+    [DbFact]
+    public async Task Stats_need_a_signed_in_player()
+    {
+        var response = await _factory.CreateClient().GetAsync("/stats");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [DbFact]
     public async Task Practice_solves_count_only_when_the_solution_is_real()
     {
         var (client, device) = await SignUpAsync("Grinder");

@@ -178,6 +178,7 @@ public static class DailyEndpoints
 
             await db.SaveChangesAsync(ct);
             if (attempt.Status != "playing") await RecordResultAsync(db, attempt, now, ct);
+            if (attempt.Status == "won") await Streaks.StreakService.OnSolvedAsync(db, attempt.UserId, attempt.Game, attempt.PuzzleDate, ct);
             await tx.CommitAsync(ct);
 
             return Results.Ok(new GuessResponse(

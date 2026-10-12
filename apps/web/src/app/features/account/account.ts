@@ -2,12 +2,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { AuthService } from '../../core/auth.service';
 import { SyncService } from '../../core/sync.service';
+import { RouterLink } from '@angular/router';
 import { Loader } from '../../shared/loader';
 import { Segmented, SegmentOption } from '../../shared/segmented';
 
 @Component({
   selector: 'app-account',
-  imports: [Loader, Segmented],
+  imports: [Loader, Segmented, RouterLink],
   template: `
     @if (auth.user(); as user) {
       <section class="profile">
@@ -35,6 +36,8 @@ import { Segmented, SegmentOption } from '../../shared/segmented';
             <strong>{{ sync.online() ? 'Online' : 'Offline' }}</strong>
           </div>
         </div>
+
+        <a class="button secondary stats-link" routerLink="/stats">Streaks and stats</a>
 
         @if (sync.pendingCount() > 0) {
           <p class="error warning">Signing out deletes {{ sync.pendingCount() }} item(s) that have not synced yet.</p>
@@ -215,6 +218,9 @@ import { Segmented, SegmentOption } from '../../shared/segmented';
       font-weight: 700;
       text-transform: uppercase;
       animation: rise 0.4s var(--spring) backwards;
+    }
+    .stats-link {
+      margin-bottom: 1rem;
     }
     .stats {
       width: 100%;

@@ -32,6 +32,7 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
           [attr.aria-label]="cell.label"
           (click)="tap(cell.i)"
         >
+          <b class="rl" aria-hidden="true">{{ cell.letter }}</b>
           @if (cell.value === QUEEN) {
             <svg class="queen" viewBox="0 0 24 24" aria-hidden="true">
               <path class="body" d="M3.2 19 2 7.5l5.2 4.3L12 4l4.8 7.8L22 7.5 20.8 19z" />
@@ -56,6 +57,7 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
     }
     .grid {
       --line: color-mix(in srgb, var(--ink) 34%, var(--bg));
+      container-type: inline-size;
       display: grid;
       grid-template-columns: repeat(var(--n), minmax(0, 1fr));
       grid-template-rows: repeat(var(--n), minmax(0, 1fr));
@@ -126,6 +128,20 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
       border: 2px solid #f0a21a;
       opacity: 0;
       animation: ripple 0.55s var(--ease);
+    }
+    /* Region letters, shown in colour-blind mode so colour is never the only clue. */
+    .rl {
+      display: none;
+      position: absolute;
+      top: 3px;
+      left: 5px;
+      font-size: clamp(0.6rem, 3.4cqw, 0.9rem);
+      font-weight: 700;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+    :host-context([data-contrast='high']) .rl {
+      display: block;
     }
     .mark {
       width: 50%;
@@ -223,6 +239,7 @@ export class QueensBoard {
         value,
         bad: bad.has(i),
         hue: HUES[puzzle.regions[i] % HUES.length],
+        letter: String.fromCharCode(65 + puzzle.regions[i]),
         outline: sides.join(', ') || 'none',
         label: `Row ${row}, column ${col}, ${value === QUEEN ? 'queen' : value === MARK ? 'marked' : 'empty'}`,
       };

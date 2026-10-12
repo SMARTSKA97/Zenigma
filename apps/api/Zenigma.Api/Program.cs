@@ -10,6 +10,7 @@ using Zenigma.Api.Auth;
 using Zenigma.Api.Data;
 using Zenigma.Api.Games.Puzzles;
 using Zenigma.Api.Games.WordGuess;
+using Zenigma.Api.Streaks;
 using Zenigma.Api.Leaderboards;
 using Zenigma.Api.Infrastructure;
 using Zenigma.Api.Sync;
@@ -115,6 +116,7 @@ app.MapSync();
 app.MapDaily();
 app.MapPuzzleDaily();
 app.MapLeaderboards();
+app.MapStats();
 
 app.Run();
 

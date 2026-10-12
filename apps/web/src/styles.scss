@@ -316,6 +316,21 @@ label {
   }
 }
 
+/* The same, when the person turns on "Reduce motion" in Settings. */
+:root[data-motion='reduced'] {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+  app-confetti {
+    display: none;
+  }
+}
+
 /* ---------------------------------------------------------------------------------------------------------------
    Android: Material 3. Tonal surfaces without borders or shadows, a primary-coloured filled button, a state layer on
    press, 56dp outlined fields, Roboto (the system font) and a full-width navigation bar with a pill indicator.

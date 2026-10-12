@@ -45,7 +45,7 @@ jobs:
           # The release notes ship inside the app so "What's new" works offline after an update.
           cp "../../mobile/release-notes/${{ steps.v.outputs.version }}.md" public/whats-new.md
           npm ci
-          npx ng build
+          npm run build
           npx cap sync android
 
       - name: Restore signing key

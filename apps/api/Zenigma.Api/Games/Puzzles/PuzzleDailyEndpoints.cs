@@ -173,6 +173,7 @@ public static class PuzzleDailyEndpoints
             attempt.LastActiveAt = now;
             await db.SaveChangesAsync(ct);
             await RecordResultAsync(db, attempt, now, ct);
+            await Streaks.StreakService.OnSolvedAsync(db, attempt.UserId, game, attempt.PuzzleDate, ct);
             await tx.CommitAsync(ct);
 
             return Results.Ok(await StateAsync(db, game, date, now, attempt, puzzle, request.DeviceId, ct));

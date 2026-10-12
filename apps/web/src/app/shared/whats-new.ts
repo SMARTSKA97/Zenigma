@@ -1,4 +1,5 @@
 import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject, Injectable, OnInit, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { UpdaterService } from '../core/updater.service';
@@ -48,7 +49,7 @@ export class WhatsNewService {
 
 @Component({
   selector: 'app-whats-new',
-  imports: [Notes, Sheet],
+  imports: [Notes, Sheet, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (service.open()) {
@@ -63,6 +64,7 @@ export class WhatsNewService {
           </div>
         </div>
         <div class="whats"><app-notes [text]="service.notes()" /></div>
+        <a class="history" routerLink="/changelog" (click)="service.open.set(false)">Full version history</a>
         <button type="button" class="done" (click)="service.open.set(false)">Got it</button>
       </app-sheet>
     }
@@ -74,6 +76,12 @@ export class WhatsNewService {
     }
     p {
       margin: 0;
+    }
+    .history {
+      display: block;
+      margin: 0.5rem 0 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
     }
     .head {
       display: flex;
