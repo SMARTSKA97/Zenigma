@@ -73,6 +73,14 @@ export class AuthService {
     this.sessionExpired.set(false);
   }
 
+  /** Deletes the account on the server (it needs the password), then clears this device like a sign out. Throws if refused. */
+  async deleteAccount(password: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/delete-account`, { password }));
+    await this.store.reset(KEEP_ON_SIGN_OUT);
+    this.session.set(null);
+    this.sessionExpired.set(false);
+  }
+
   private async doRefresh(): Promise<AuthSession | null> {
     const current = this.session();
     if (!current) return null;

@@ -50,7 +50,7 @@ public class PuzzleRulesTests
     public void Every_shipped_level_set_is_complete()
     {
         var levels = new PracticeLevels();
-        foreach (var game in PuzzleRules.Games) Assert.Equal(1000, levels.Count(game));
+        foreach (var track in PuzzleRules.Tracks) Assert.Equal(1000, levels.Count(track));
     }
 
     [Fact]
@@ -61,8 +61,9 @@ public class PuzzleRulesTests
         foreach (var c in doc.RootElement.EnumerateArray())
         {
             var game = c.GetProperty("game").GetString()!;
+            var track = c.GetProperty("track").GetString()!;
             var level = c.GetProperty("level").GetInt32();
-            Assert.True(PuzzleRules.Verify(game, levels.Get(game, level)!.Value, c.GetProperty("solution")), $"{game} level {level}");
+            Assert.True(PuzzleRules.Verify(game, levels.Get(track, level)!.Value, c.GetProperty("solution")), $"{track} level {level}");
         }
     }
 
@@ -226,6 +227,8 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(VectorsDir, "practice-levels.json")));
         var known = doc.RootElement.EnumerateArray().First(c => c.GetProperty("game").GetString() == "queens" && c.GetProperty("level").GetInt32() == 1);
 
+        var mini = doc.RootElement.EnumerateArray().First(c => c.GetProperty("track").GetString() == "sudoku-mini" && c.GetProperty("level").GetInt32() == 1);
+
         object Solved(JsonElement solution, int level) => new
         {
             id = Guid.NewGuid(),
@@ -245,6 +248,20 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
                 new
                 {
                     id = Guid.NewGuid(),
+                    kind = "puzzle.practice.solved",
+                    payload = new { game = "sudoku", variant = "mini", level = 1, solution = mini.GetProperty("solution"), elapsedMs = 90_000 },
+                    clientCreatedAt = DateTimeOffset.UtcNow,
+                },
+                new
+                {
+                    id = Guid.NewGuid(),
+                    kind = "puzzle.practice.solved",
+                    payload = new { game = "sudoku", variant = "classic", level = 1, solution = mini.GetProperty("solution"), elapsedMs = 90_000 },   // a mini solution is not a classic one
+                    clientCreatedAt = DateTimeOffset.UtcNow,
+                },
+                new
+                {
+                    id = Guid.NewGuid(),
                     kind = "wordguess.finished",
                     payload = new { mode = "practice", answer = "crane", guesses = new[] { "slate", "crane" }, status = "won", hard = false },
                     clientCreatedAt = DateTimeOffset.UtcNow,
@@ -257,8 +274,22 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         var mine = queens.GetProperty("entries").EnumerateArray().First(e => e.GetProperty("isMe").GetBoolean());
         Assert.Equal(1, mine.GetProperty("value").GetInt64());
 
+        var sudoku = await client.GetFromJsonAsync<JsonElement>("/leaderboards/sudoku?kind=practice&period=all", Json);
+        Assert.Equal(1, sudoku.GetProperty("me").GetProperty("value").GetInt64());
+
         var words = await client.GetFromJsonAsync<JsonElement>("/leaderboards/word-guess?kind=practice&period=week", Json);
         Assert.Equal(1, words.GetProperty("me").GetProperty("value").GetInt64());
+    }
+
+    [DbFact]
+    public async Task Community_counts_are_public_and_anonymous()
+    {
+        await SignUpAsync("Counted");
+        var anonymous = _factory.CreateClient();
+        var counts = await anonymous.GetFromJsonAsync<JsonElement>("/public/community", Json);
+        Assert.True(counts.GetProperty("players").GetInt32() >= 1);
+        Assert.True(counts.GetProperty("activeToday").GetInt32() >= 1);
+        Assert.True(counts.GetProperty("activeWeek").GetInt32() >= counts.GetProperty("activeToday").GetInt32());
     }
 
     [DbFact]

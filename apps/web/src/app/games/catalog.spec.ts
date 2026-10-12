@@ -1,0 +1,31 @@
+import { mapLink, playLink, PRACTICE_TRACKS, practiceEntry, trackOf, variantsOf } from './catalog';
+
+describe('practice tracks', () => {
+  it('names a track after its game and variant', () => {
+    expect(trackOf('sudoku', 'mini')).toBe('sudoku-mini');
+    expect(trackOf('queens')).toBe('queens');
+    expect(trackOf('queens', null)).toBe('queens');
+  });
+
+  it('gives Sudoku a classic and a mini variant, and no other game variants', () => {
+    expect(variantsOf('sudoku').map((v) => v.id)).toEqual(['classic', 'mini']);
+    expect(variantsOf('queens')).toEqual([]);
+    expect(variantsOf('word-guess')).toEqual([]);
+  });
+
+  it('lists one track per variant', () => {
+    expect(PRACTICE_TRACKS.map((t) => t.track)).toEqual(['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip']);
+  });
+
+  it('links to the map and the game', () => {
+    expect(mapLink('sudoku', 'mini')).toEqual(['/games', 'sudoku', 'mini', 'levels']);
+    expect(mapLink('zip')).toEqual(['/games', 'zip', 'levels']);
+    expect(playLink('sudoku', 'classic')).toEqual(['/games', 'sudoku', 'classic']);
+  });
+
+  it('sends Sudoku to the chooser and other games straight to their map', () => {
+    expect(practiceEntry('sudoku')).toEqual(['/games', 'sudoku']);
+    expect(practiceEntry('queens')).toEqual(['/games', 'queens', 'levels']);
+    expect(practiceEntry('word-guess')).toEqual(['/games', 'word-guess']);
+  });
+});

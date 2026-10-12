@@ -1,0 +1,107 @@
+:host {
+  display: block;
+}
+.sub {
+  margin: -0.4rem 0 1.25rem;
+  font-size: 0.9rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.9rem;
+}
+.game {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'art name'
+    'art blurb'
+    'tag tag';
+  column-gap: 1rem;
+  row-gap: 0.1rem;
+  align-items: center;
+  align-content: start;
+  padding: 1rem;
+  color: inherit;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease),
+    border-color 0.25s var(--ease);
+}
+.art {
+  grid-area: art;
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0.6rem;
+  border-radius: 16px;
+  background: oklch(var(--tile-l) var(--tile-c) calc(var(--h) * 1deg));
+  color: oklch(var(--glyph-l) var(--glyph-c) calc(var(--h) * 1deg));
+}
+.name {
+  grid-area: name;
+  align-self: end;
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+.blurb {
+  grid-area: blurb;
+  align-self: start;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+.tag {
+  grid-area: tag;
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.game:not(.live) .art {
+  opacity: 0.6;
+}
+.live .play-tag {
+  color: var(--accent);
+}
+.live:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.live:active {
+  transform: scale(0.985);
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+  }
+  .game {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'art' 'name' 'blurb' 'tag';
+    padding: 0.9rem;
+    row-gap: 0.15rem;
+  }
+  .art {
+    margin-bottom: 0.6rem;
+  }
+  .blurb {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+@media (max-width: 380px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

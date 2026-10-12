@@ -13,6 +13,7 @@ import {
 import { filter, map } from 'rxjs';
 import { AuthService } from './core/auth.service';
 import { SyncService } from './core/sync.service';
+import { ReminderService } from './core/reminder.service';
 import { UpdaterService } from './core/updater.service';
 import { Loader } from './shared/loader';
 import { UpdateSheet } from './shared/update-sheet';
@@ -32,20 +33,20 @@ import { WhatsNew } from './shared/whats-new';
 
       <nav aria-label="Main">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></svg>
-          <span>Games</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5" /><path d="M6 10v9.5h12V10" /></svg>
+          <span>Home</span>
         </a>
         <a routerLink="/daily" routerLinkActive="active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /><path d="M9 15l2 2 4-4" /></svg>
           <span>Daily</span>
         </a>
+        <a routerLink="/practice" routerLinkActive="active">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></svg>
+          <span>Practice</span>
+        </a>
         <a routerLink="/ranks" routerLinkActive="active">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20v-8M12 20V4M17 20v-5" /></svg>
           <span>Ranks</span>
-        </a>
-        <a routerLink="/account" routerLinkActive="active">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.75" /><path d="M4.5 20c.9-3.6 3.8-5.5 7.5-5.5s6.6 1.9 7.5 5.5" /></svg>
-          <span>Account</span>
         </a>
         <a routerLink="/settings" routerLinkActive="active">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2.25" /><circle cx="9" cy="17" r="2.25" /></svg>
@@ -300,8 +301,10 @@ export class App {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly updater = inject(UpdaterService);
+  private readonly reminder = inject(ReminderService);
 
   constructor() {
+    void this.reminder.restore();
     // Android: look for a new version when the app opens (the update sheet appears only if there is one).
     this.updater.startAutoCheck();
   }

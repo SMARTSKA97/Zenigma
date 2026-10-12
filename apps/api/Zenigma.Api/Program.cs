@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Zenigma.Api.Auth;
+using Zenigma.Api.Community;
 using Zenigma.Api.Data;
 using Zenigma.Api.Games.Puzzles;
 using Zenigma.Api.Games.WordGuess;
@@ -118,6 +119,7 @@ app.MapPuzzleDaily();
 app.MapLeaderboards();
 app.MapStats();
 app.MapCircles();
+app.MapCommunity();
 
 app.Run();
 

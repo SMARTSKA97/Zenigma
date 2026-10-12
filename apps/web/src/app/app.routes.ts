@@ -1,18 +1,27 @@
-import { Routes } from '@angular/router';
+import { CanMatchFn, Routes } from '@angular/router';
+import { variantsOf } from './games/catalog';
 
 const wordGuess = () => import('./games/word-guess/word-guess').then((m) => m.WordGuess);
 const puzzle = () => import('./games/puzzle/puzzle-page').then((m) => m.PuzzlePage);
 
+const hasVariants: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.path ?? '').length > 0;
+
 export const routes: Routes = [
   { path: 'games/word-guess', loadComponent: wordGuess, data: { mode: 'practice' } },
   { path: 'games/:game/levels', loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
+  { path: 'games/:game/:variant/levels', loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
+  { path: 'games/:game/:variant', loadComponent: puzzle, data: { mode: 'practice' } },
+  { path: 'games/:game', canMatch: [hasVariants], loadComponent: () => import('./features/practice/variant-picker').then((m) => m.VariantPicker) },
   { path: 'games/:game', loadComponent: puzzle, data: { mode: 'practice' } },
+  { path: 'practice', loadComponent: () => import('./features/practice/practice').then((m) => m.Practice) },
   { path: 'daily/word-guess', loadComponent: wordGuess, data: { mode: 'daily' } },
   { path: 'daily/:game', loadComponent: puzzle, data: { mode: 'daily' } },
   { path: 'daily', loadComponent: () => import('./features/daily/daily-hub').then((m) => m.DailyHub) },
   { path: 'ranks/circles', loadComponent: () => import('./features/circles/circles').then((m) => m.Circles) },
   { path: 'ranks', loadComponent: () => import('./features/ranks/ranks').then((m) => m.Ranks) },
   { path: 'stats', loadComponent: () => import('./features/stats/stats').then((m) => m.StatsPage) },
+  { path: 'about', loadComponent: () => import('./features/about/about').then((m) => m.About) },
+  { path: 'privacy', loadComponent: () => import('./features/about/privacy').then((m) => m.Privacy) },
   { path: 'changelog', loadComponent: () => import('./features/changelog/changelog').then((m) => m.Changelog) },
   { path: '', pathMatch: 'full', loadComponent: () => import('./features/home/home').then((m) => m.Home) },
   { path: 'sync-test', loadComponent: () => import('./features/sync-test/sync-test').then((m) => m.SyncTest) },

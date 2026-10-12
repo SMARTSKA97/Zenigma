@@ -44,6 +44,45 @@ export const PUZZLE_GAMES = ['queens', 'tango', 'sudoku', 'zip'] as const;
 export type PuzzleGameId = (typeof PUZZLE_GAMES)[number];
 export const isPuzzleGame = (id: string): id is PuzzleGameId => (PUZZLE_GAMES as readonly string[]).includes(id);
 
+export interface Variant {
+  id: string;
+  name: string;
+  blurb: string;
+}
+
+/** Games that offer more than one kind of practice. Each variant has its own levels, map and progress. Add a variant here to add one. */
+export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
+  sudoku: [
+    { id: 'classic', name: 'Classic', blurb: 'The 9 by 9 grid, numbers 1 to 9.' },
+    { id: 'mini', name: 'Mini', blurb: 'A quick 6 by 6 grid, numbers 1 to 6.' },
+  ],
+};
+
+export const variantsOf = (game: string): Variant[] => (isPuzzleGame(game) ? VARIANTS[game] ?? [] : []);
+
+/** The key practice progress and levels are stored under: the game, plus its variant when it has one. */
+export const trackOf = (game: string, variant?: string | null): string => (variant ? `${game}-${variant}` : game);
+
+/** Router link to the level map of a game (and variant). */
+export const mapLink = (game: string, variant?: string | null): string[] => ['/games', game, ...(variant ? [variant] : []), 'levels'];
+
+/** Router link to play a practice level of a game (and variant). */
+export const playLink = (game: string, variant?: string | null): string[] => ['/games', game, ...(variant ? [variant] : [])];
+
+/** Where a practice tile leads: the level map, the variant chooser (Sudoku), or the game itself. */
+export const practiceEntry = (id: string): string[] => (!isPuzzleGame(id) ? ['/games', id] : VARIANTS[id] ? ['/games', id] : mapLink(id));
+
+/** Every practice track (a game, or a game's variant) with its game, for loading progress. */
+export interface PracticeTrack {
+  track: string;
+  game: PuzzleGameId;
+  variant: string | null;
+}
+export const PRACTICE_TRACKS: PracticeTrack[] = PUZZLE_GAMES.flatMap((game): PracticeTrack[] => {
+  const variants = VARIANTS[game];
+  return variants ? variants.map((v) => ({ track: trackOf(game, v.id), game, variant: v.id })) : [{ track: game, game, variant: null }];
+});
+
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const LEVELS = ['Easy', 'Easy', 'Medium', 'Medium', 'Hard', 'Hard', 'Expert'];
 

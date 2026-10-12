@@ -71,10 +71,11 @@ public sealed class PracticeRecorder(WordList words, PracticeLevels levels)
         {
             var game = p.GetProperty("game").GetString() ?? "";
             var level = p.GetProperty("level").GetInt32();
-            if (!PuzzleRules.IsPuzzleGame(game) || levels.Get(game, level) is not { } puzzle) return null;
+            var variant = p.TryGetProperty("variant", out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+            if (!PuzzleRules.IsPuzzleGame(game) || levels.Get(PuzzleRules.TrackOf(game, variant), level) is not { } puzzle) return null;
             if (!PuzzleRules.Verify(game, puzzle, p.GetProperty("solution"))) return null;
             int? elapsed = p.TryGetProperty("elapsedMs", out var e) && e.ValueKind == JsonValueKind.Number ? Math.Clamp(e.GetInt32(), 0, 86_400_000) : null;
-            return (game, level.ToString(), elapsed);
+            return (game, variant is null ? level.ToString() : $"{variant}:{level}", elapsed);
         }
         catch (Exception e) when (e is InvalidOperationException or KeyNotFoundException or JsonException or FormatException)
         {

@@ -88,6 +88,17 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [DbFact]
+    public async Task Deleting_an_account_needs_the_password_and_removes_the_login()
+    {
+        var (client, session, _) = await SignUpAsync();
+        var email = session.User.GetProperty("email").GetString()!;
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/auth/delete-account", new { password = ValidPassword + "x" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/auth/delete-account", new { password = ValidPassword })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await _factory.CreateClient().PostAsJsonAsync("/auth/login", new { email, password = ValidPassword })).StatusCode);
+    }
+
+    [DbFact]
     public async Task Refresh_rotates_the_token_and_old_one_stops_working()
     {
         var (client, session, device) = await SignUpAsync();

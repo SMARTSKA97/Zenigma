@@ -91,6 +91,21 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
         @if (board().finished() && !board().revealing()) {
           <section class="card result">
             <h2>{{ board().status() === 'won' ? 'Solved' : 'The word was ' + (board().answer() ?? '').toUpperCase() }}</h2>
+            <div class="recap">
+              <div class="grid" role="img" [attr.aria-label]="'Your guesses: ' + submittedRows().length + ' of 6'">
+                @for (row of submittedRows(); track $index) {
+                  <div class="gr">
+                    @for (m of row.marks; track $index) {
+                      <i [attr.data-mark]="m"></i>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="score">
+                <strong>{{ board().status() === 'won' ? submittedRows().length + '/6' : 'X/6' }}</strong>
+                <span class="muted">{{ board().status() === 'won' ? (submittedRows().length === 1 ? 'Got it first try' : 'Solved in ' + submittedRows().length) : 'Better luck next time' }}</span>
+              </div>
+            </div>
             <p class="muted">Played {{ board().stats().played }} &middot; Won {{ board().stats().won }}</p>
             <div class="dist" aria-label="Guess distribution">
               @for (n of board().stats().distribution; track $index) {
@@ -224,6 +239,11 @@ export class WordGuess implements OnInit, OnDestroy {
   protected label(letter: string | undefined, mark: Mark | undefined): string {
     if (!letter) return 'empty';
     return mark ? `${letter}, ${mark === 'correct' ? 'correct' : mark === 'present' ? 'in word, wrong place' : 'not in word'}` : letter;
+  }
+
+  /** The guesses made so far, as coloured squares for the result card and the share text. */
+  protected submittedRows() {
+    return this.board().rows().filter((r) => r.submitted);
   }
 
   protected barWidth(count: number): string {

@@ -6,7 +6,7 @@ import { PuzzleGameId } from '../catalog';
 
 /** What the generic puzzle page needs from each game; boards and rules stay in the game's own engine. */
 export interface PuzzleAdapter {
-  levels(): Promise<unknown[]>;
+  levels(variant?: string | null): Promise<unknown[]>;
   blank(puzzle: unknown): unknown;
   conflicts(puzzle: unknown, state: unknown): Set<number>;
   isSolved(puzzle: unknown, state: unknown): boolean;
@@ -39,7 +39,8 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
     help: 'Fill the grid with suns and moons. No more than two of a kind in a row, three of each in every row and column. = means the same, × means different.',
   },
   'sudoku': {
-    levels: () => import('../sudoku/levels.data').then((m) => m.LEVELS),
+    levels: (variant) =>
+      variant === 'mini' ? import('../sudoku/levels-mini.data').then((m) => m.LEVELS) : import('../sudoku/levels-classic.data').then((m) => m.LEVELS),
     blank: (p) => sudoku.boardFrom(p as sudoku.SudokuPuzzle),
     conflicts: (_, s) => sudoku.conflicts(s as number[]),
     isSolved: (p, s) => sudoku.isSolved(p as sudoku.SudokuPuzzle, s as number[]),

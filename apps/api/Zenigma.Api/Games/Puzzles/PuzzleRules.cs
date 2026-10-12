@@ -16,6 +16,11 @@ public static class PuzzleRules
 
     public static readonly string[] Games = [Queens, Tango, Sudoku, Zip];
 
+    /// <summary>Practice tracks, each with its own 1000 levels (a game can have several variants, like Sudoku's classic and mini grids).</summary>
+    public static readonly string[] Tracks = [Queens, Tango, "sudoku-classic", "sudoku-mini", Zip];
+
+    public static string TrackOf(string game, string? variant) => string.IsNullOrEmpty(variant) ? game : $"{game}-{variant}";
+
     public static bool IsPuzzleGame(string game) => Array.IndexOf(Games, game) >= 0;
 
     /// <summary>The fastest a person could plausibly solve a puzzle after it was revealed. Faster submissions are refused.</summary>

@@ -1,6 +1,7 @@
 [
  {
   "game": "queens",
+  "track": "queens",
   "level": 1,
   "solution": [
    1,
@@ -12,6 +13,7 @@
  },
  {
   "game": "queens",
+  "track": "queens",
   "level": 2,
   "solution": [
    4,
@@ -23,6 +25,7 @@
  },
  {
   "game": "queens",
+  "track": "queens",
   "level": 3,
   "solution": [
    1,
@@ -34,6 +37,7 @@
  },
  {
   "game": "queens",
+  "track": "queens",
   "level": 10,
   "solution": [
    1,
@@ -46,6 +50,7 @@
  },
  {
   "game": "queens",
+  "track": "queens",
   "level": 11,
   "solution": [
    1,
@@ -57,6 +62,7 @@
  },
  {
   "game": "queens",
+  "track": "queens",
   "level": 150,
   "solution": [
    6,
@@ -70,6 +76,7 @@
  },
  {
   "game": "queens",
+  "track": "queens",
   "level": 500,
   "solution": [
    1,
@@ -85,6 +92,7 @@
  },
  {
   "game": "queens",
+  "track": "queens",
   "level": 1000,
   "solution": [
    3,
@@ -100,86 +108,151 @@
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 1,
   "solution": "mmssmsssmsmmsmsmsmmsmsmsssmmsmmmsmss"
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 2,
   "solution": "ssmsmmsmmsmsmmsmssmsmssmsmsmmsmssmsm"
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 3,
   "solution": "mmssmssmmsmsssmmsmmssmsmmmssmsssmmsm"
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 10,
   "solution": "ssmsmmmmsmssmmsmssssmsmmmmssmsssmmsm"
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 11,
   "solution": "mssmmsmmsmsssmmssmmssmmsssmsmmsmmssm"
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 150,
   "solution": "smsmsmssmsmmmsmsmsmmsmssssmmsmmmssms"
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 500,
   "solution": "mmssmsssmmsmmssmmsmmssmssmmssmssmmsm"
  },
  {
   "game": "tango",
+  "track": "tango",
   "level": 1000,
   "solution": "mmssmsmssmmsssmmsmsmssmmmsmmsssmmssm"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 1,
-  "solution": "341526256431432165615243523614164352"
+  "solution": "568791432347862519129345876836174925254936781791528643413689257685217394972453168"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 2,
-  "solution": "753849162861523497429617853538961724192754386647238519276485931384196275915372648"
+  "solution": "687512439543879126192436587875243691429681753316795842734128965958367214261954378"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 3,
-  "solution": "253164641352362415514623426531135246"
+  "solution": "463815972821679345759342861386524719275198436194736258632481597548967123917253684"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 10,
-  "solution": "763284951859761423421593876548627139297138564316945782935476218674812395182359647"
+  "solution": "527136489861794253943825617278451936356289174194367825632548791789613542415972368"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 11,
-  "solution": "846571293931462785752938461469713852128654379375829614693147528514286937287395146"
+  "solution": "237584961654193827189627543526941738941378652378265419412859376865732194793416285"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 150,
-  "solution": "832574961967321854154968372379186425281745693645293718723819546596432187418657239"
+  "solution": "936425781742816935581793426457132869829564317163978254394251678275689143618347592"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 500,
-  "solution": "321465456231214653563142145326632514"
+  "solution": "126834579958617234374952618695481327213795846847263951539176482762548193481329765"
  },
  {
   "game": "sudoku",
+  "track": "sudoku-classic",
   "level": 1000,
-  "solution": "458196372126753849973842165814527693562931487397468251239685714641279538785314926"
+  "solution": "921678345486359172357412869834765921695231487172894536548126793769543218213987654"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 1,
+  "solution": "136245254316312564645132563421421653"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 2,
+  "solution": "614235352164123546546312261453435621"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 3,
+  "solution": "213564645213436152152436321645564321"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 10,
+  "solution": "135462624531562143341625256314413256"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 11,
+  "solution": "641235352614165423234156516342423561"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 150,
+  "solution": "146352235164614523352641461235523416"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 500,
+  "solution": "653421124536531642246315315264462153"
+ },
+ {
+  "game": "sudoku",
+  "track": "sudoku-mini",
+  "level": 1000,
+  "solution": "346152125463431526652341214635563214"
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 1,
   "solution": [
    6,
@@ -211,6 +284,7 @@
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 2,
   "solution": [
    18,
@@ -242,6 +316,7 @@
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 3,
   "solution": [
    6,
@@ -273,6 +348,7 @@
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 10,
   "solution": [
    0,
@@ -315,6 +391,7 @@
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 11,
   "solution": [
    8,
@@ -346,6 +423,7 @@
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 150,
   "solution": [
    19,
@@ -388,6 +466,7 @@
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 500,
   "solution": [
    34,
@@ -443,6 +522,7 @@
  },
  {
   "game": "zip",
+  "track": "zip",
   "level": 1000,
   "solution": [
    36,

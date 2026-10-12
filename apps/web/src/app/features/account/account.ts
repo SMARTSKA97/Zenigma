@@ -10,6 +10,7 @@ import { Segmented, SegmentOption } from '../../shared/segmented';
   selector: 'app-account',
   imports: [Loader, Segmented, RouterLink],
   template: `
+    <a class="back" routerLink="/settings">‹ Settings</a>
     @if (auth.user(); as user) {
       <section class="profile">
         <div class="avatar" aria-hidden="true">{{ initial(user) }}</div>
@@ -48,6 +49,18 @@ import { Segmented, SegmentOption } from '../../shared/segmented';
           }
           Sign out
         </button>
+
+        <details class="danger" (toggle)="deleteError.set(null)">
+          <summary>Delete my account</summary>
+          <p class="muted">This permanently removes your account, results, streaks and circles. It cannot be undone. Enter your password to confirm.</p>
+          <form (submit)="deleteAccount($event)">
+            <input type="password" name="confirm" autocomplete="current-password" placeholder="Password" [value]="deletePassword()" (input)="deletePassword.set($any($event.target).value)" />
+            @if (deleteError(); as message) {
+              <p class="alert" role="alert">{{ message }}</p>
+            }
+            <button type="submit" class="delete" [disabled]="deleting() || !deletePassword()">Delete account for good</button>
+          </form>
+        </details>
       </section>
     } @else {
       <section class="auth">
@@ -116,6 +129,34 @@ import { Segmented, SegmentOption } from '../../shared/segmented';
   styles: `
     :host {
       display: block;
+    }
+    .back {
+      display: inline-block;
+      margin-bottom: 0.5rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .danger {
+      width: 100%;
+      margin-top: 1.5rem;
+      text-align: left;
+    }
+    .danger summary {
+      cursor: pointer;
+      color: var(--bad);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .danger form {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .delete {
+      color: #fff;
+      background: var(--bad);
+      border-color: var(--bad);
     }
     .auth,
     .profile {
@@ -276,6 +317,26 @@ export class Account {
       this.error.set(this.message(error));
     } finally {
       this.busy.set(false);
+    }
+  }
+
+  protected readonly deletePassword = signal('');
+  protected readonly deleteError = signal<string | null>(null);
+  protected readonly deleting = signal(false);
+
+  protected async deleteAccount(event: Event): Promise<void> {
+    event.preventDefault();
+    this.deleting.set(true);
+    this.deleteError.set(null);
+    try {
+      await this.auth.deleteAccount(this.deletePassword());
+      this.deletePassword.set('');
+    } catch (error) {
+      this.deleteError.set(
+        error instanceof HttpErrorResponse && error.status === 403 ? 'That password is not right.' : 'Could not delete the account. Check your connection and try again.',
+      );
+    } finally {
+      this.deleting.set(false);
     }
   }
 

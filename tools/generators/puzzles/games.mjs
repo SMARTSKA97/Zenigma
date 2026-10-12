@@ -5,6 +5,9 @@ import { generateTango, solveTango } from './tango.mjs';
 import { rngFrom } from './rng.mjs';
 
 export const GAMES = ['queens', 'tango', 'sudoku', 'zip'];
+/** Practice tracks: each has its own 1000 levels. A game can have several (Sudoku: classic 9x9 and mini 6x6), and more can be added. */
+export const TRACKS = ['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip'];
+export const gameOfTrack = (track) => track.split('-')[0];
 export const LEVELS_PER_GAME = 1000;
 
 export const LEVELS_PER_ZONE = 10;
@@ -24,8 +27,9 @@ export function hardness(level) {
 }
 
 /** Difficulty ramps with the level number; level 1 is the gentlest. */
-export function practiceLevel(game, level) {
-  const rng = rngFrom(`zenigma-practice:${game}:${level}`);
+export function practiceLevel(track, level) {
+  const game = track;
+  const rng = rngFrom(`zenigma-practice:${track}:${level}`);
   const h = hardness(level);
   switch (game) {
     case 'queens': {
@@ -34,11 +38,10 @@ export function practiceLevel(game, level) {
     }
     case 'tango':
       return generateTango(rng, Math.round(6 * (1 - h))); // extra clues left in
-    case 'sudoku': {
-      // Practice mixes both sizes: roughly two levels in five are the mini 6x6 grid.
-      const mini = rngFrom(`zenigma-practice-kind:sudoku:${level}`).int(5) < 2;
-      return mini ? generateSudoku(rng, Math.round(20 - 8 * h), 6) : generateSudoku(rng, Math.round(46 - 20 * h));
-    }
+    case 'sudoku-classic':
+      return generateSudoku(rng, Math.round(46 - 20 * h)); // numbers left in the 9x9 grid
+    case 'sudoku-mini':
+      return generateSudoku(rng, Math.round(20 - 8 * h), 6); // numbers left in the 6x6 grid
     case 'zip': {
       const size = h < 0.35 ? 5 : h < 0.7 ? 6 : 7;
       return generateZip(size, rng, Math.max(5, Math.round(9 - 4 * h))); // numbers shown
@@ -79,7 +82,8 @@ export function dailyPuzzle(game, seed, weekday = 3) {
 }
 
 /** The one solution of a puzzle, in the format the API and the apps accept. */
-export function solve(game, puzzle) {
+export function solve(track, puzzle) {
+  const game = gameOfTrack(track);
   switch (game) {
     case 'queens':
       return solveQueens(puzzle, 2);

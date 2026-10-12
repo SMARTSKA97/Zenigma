@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, afterNextRender, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { gameInfo, isPuzzleGame, PuzzleGameId } from '../../games/catalog';
+import { gameInfo, isPuzzleGame, playLink, PuzzleGameId, trackOf, variantsOf } from '../../games/catalog';
 import { ADAPTERS } from '../../games/puzzle/adapters';
 import { difficultyOf, parMs, starsFor } from '../../games/puzzle/par';
 import { LEVEL_COUNT, PracticeStore, ZONE_SIZE } from '../../games/puzzle/practice.store';
@@ -77,11 +77,11 @@ const noise = (zone: number, slot: number): number => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="top">
-      <a class="round" routerLink="/" aria-label="Home">
+      <a class="round" [routerLink]="backLink()" aria-label="Back">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
       </a>
       <div class="title">
-        <h1>{{ info()?.name }}</h1>
+        <h1>{{ info()?.name }}@if (variantName()) { <span class="variant">· {{ variantName() }}</span> }</h1>
         <p class="muted">Level {{ frontier() }} · {{ solvedCount() }} solved</p>
       </div>
       <a class="round" [routerLink]="['/ranks']" [queryParams]="{ game: game(), kind: 'practice' }" aria-label="Leaderboard">
@@ -170,7 +170,7 @@ const noise = (zone: number, slot: number): number => {
       <p class="more muted">{{ moreText() }}</p>
     </div>
 
-    <a class="play" [routerLink]="['/games', game()]" [queryParams]="{ level: frontier() }">Play level {{ frontier() }}</a>
+    <a class="play" [routerLink]="playLink()" [queryParams]="{ level: frontier() }">Play level {{ frontier() }}</a>
 
     @if (picked(); as p) {
       <app-sheet [label]="'Level ' + p.level" (closed)="picked.set(null)">
@@ -211,20 +211,27 @@ export class LevelMap {
     const id = this.params()?.get('game') ?? '';
     return isPuzzleGame(id) ? id : 'queens';
   });
+  protected readonly variant = computed(() => this.params()?.get('variant') ?? null);
+  /** What practice progress and levels are stored under. */
+  private readonly track = computed(() => trackOf(this.game(), this.variant()));
   protected readonly info = computed(() => gameInfo(this.game()));
+  protected readonly variantName = computed(() => variantsOf(this.game()).find((v) => v.id === this.variant())?.name ?? null);
+  protected readonly backLink = computed(() => (this.variant() ? ['/games', this.game()] : ['/practice']));
+  protected readonly playLink = computed(() => playLink(this.game(), this.variant()));
   private readonly levels = signal<unknown[]>([]);
   protected readonly picked = signal<{ level: number; hard: boolean; difficulty: string; locked: boolean; stars: number; best: number | null; par: number } | null>(null);
   private readonly ready = signal(false);
 
-  protected readonly solvedCount = computed(() => (this.ready() ? this.practice.solvedLevels(this.game())().size : 0));
-  protected readonly frontier = computed(() => (this.ready() ? this.practice.frontier(this.game()) : 1));
+  protected readonly solvedCount = computed(() => (this.ready() ? this.practice.solvedLevels(this.track())().size : 0));
+  protected readonly frontier = computed(() => (this.ready() ? this.practice.frontier(this.track()) : 1));
 
   /** Zones shown: every one up to the current level's, and a few locked ones beyond so the road visibly goes on. */
   protected readonly zones = computed<ZoneView[]>(() => {
     if (!this.ready()) return [];
     const game = this.game();
+    const track = this.track();
     const frontier = this.frontier();
-    const solved = this.practice.solvedLevels(game)();
+    const solved = this.practice.solvedLevels(track)();
     const levels = this.levels();
     const lastZone = Math.min(LEVEL_COUNT / ZONE_SIZE - 1, Math.floor((frontier - 1) / ZONE_SIZE) + 2);
     const zones: ZoneView[] = [];
@@ -239,7 +246,7 @@ export class LevelMap {
         const x = xOf(level);
         pts.push([x, y]);
         const isDone = solved.has(level);
-        const best = this.practice.bestMs(game, level);
+        const best = this.practice.bestMs(track, level);
         const puzzle = levels[level - 1];
         nodes.push({
           level,
@@ -273,8 +280,8 @@ export class LevelMap {
   constructor() {
     void (async () => {
       const game = this.game();
-      await this.practice.load(game);
-      this.levels.set(await ADAPTERS[game].levels());
+      await this.practice.load(this.track());
+      this.levels.set(await ADAPTERS[game].levels(this.variant()));
       this.ready.set(true);
     })();
     afterNextRender(() => {
@@ -309,17 +316,17 @@ export class LevelMap {
   }
 
   protected pick(level: number): void {
-    const game = this.game();
+    const game = this.track();
     const puzzle = this.levels()[level - 1];
     const locked = level > this.frontier();
     const best = this.practice.bestMs(game, level);
-    const par = puzzle ? parMs(game, puzzle) : 60_000;
+    const par = puzzle ? parMs(this.game(), puzzle) : 60_000;
     this.picked.set({ level, hard: (level - 1) % ZONE_SIZE === ZONE_SIZE - 1, difficulty: difficultyOf(level), locked, stars: this.practice.isSolved(game, level) ? starsFor(best, par) || 1 : 0, best, par });
   }
 
   protected play(level: number): void {
     this.picked.set(null);
-    void this.router.navigate(['/games', this.game()], { queryParams: { level } });
+    void this.router.navigate(playLink(this.game(), this.variant()), { queryParams: { level } });
   }
 
   protected playFrontier(): void {

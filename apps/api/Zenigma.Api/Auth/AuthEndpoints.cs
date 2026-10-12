@@ -10,6 +10,7 @@ public record RegisterRequest(string? Email, string? Password, string? DisplayNa
 public record LoginRequest(string? Email, string? Password, Guid? DeviceId);
 public record RefreshRequest(string? RefreshToken, Guid? DeviceId);
 public record LogoutRequest(string? RefreshToken);
+public record DeleteAccountRequest(string? Password);
 
 public static class AuthEndpoints
 {
@@ -88,6 +89,17 @@ public static class AuthEndpoints
             if (!string.IsNullOrEmpty(request.RefreshToken)) await tokens.RevokeAsync(request.RefreshToken, ct);
             return Results.NoContent();
         });
+
+        // Deletes the account and everything tied to it (results, streaks, circles it owns, devices). The password confirms it.
+        group.MapPost("/delete-account", async (DeleteAccountRequest request, ClaimsPrincipal principal, UserManager<ApplicationUser> users) =>
+        {
+            var user = await users.FindByIdAsync(UserIds.Get(principal));
+            if (user is null) return Results.Unauthorized();
+            if (string.IsNullOrEmpty(request.Password) || !await users.CheckPasswordAsync(user, request.Password))
+                return Results.Problem(statusCode: StatusCodes.Status403Forbidden, title: "That password is not right.");
+            var result = await users.DeleteAsync(user);
+            return result.Succeeded ? Results.NoContent() : Results.Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Could not delete the account.");
+        }).RequireAuthorization();
 
         group.MapGet("/me", async (ClaimsPrincipal principal, UserManager<ApplicationUser> users) =>
         {

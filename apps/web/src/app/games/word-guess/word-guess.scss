@@ -231,9 +231,12 @@
   gap: 0.3rem;
 }
 
-.key {
+/* `:host` raises the specificity above Android's global Material button styles (padding, min-height, overflow). */
+:host .key {
   flex: 1 1 0;
   min-width: 0;
+  min-height: 0;
+  overflow: visible;
   max-width: 3.2rem;
   height: clamp(2.8rem, 7.5dvh, 3.7rem);
   padding: 0;
@@ -313,6 +316,42 @@
   p {
     margin: 0;
   }
+}
+
+.recap {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+.recap .grid {
+  display: grid;
+  gap: 0.25rem;
+}
+.recap .gr {
+  display: flex;
+  gap: 0.25rem;
+}
+.recap i {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 0.35rem;
+  background: var(--mark-absent);
+  animation: pop 0.3s var(--spring) backwards;
+}
+.recap i[data-mark='correct'] {
+  background: var(--mark-correct);
+}
+.recap i[data-mark='present'] {
+  background: var(--mark-present);
+}
+.score {
+  display: grid;
+  gap: 0.1rem;
+}
+.score strong {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: -0.03em;
 }
 
 .dist {

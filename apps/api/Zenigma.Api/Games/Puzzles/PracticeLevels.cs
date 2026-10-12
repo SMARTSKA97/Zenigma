@@ -12,7 +12,7 @@ public sealed class PracticeLevels
 
     public PracticeLevels()
     {
-        foreach (var game in PuzzleRules.Games)
+        foreach (var game in PuzzleRules.Tracks)
         {
             using var stream = typeof(PracticeLevels).Assembly.GetManifestResourceStream($"levels/{game}.json")
                 ?? throw new InvalidOperationException($"levels/{game}.json is not embedded.");

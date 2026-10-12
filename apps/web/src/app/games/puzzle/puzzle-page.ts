@@ -10,7 +10,7 @@ import { SyncService } from '../../core/sync.service';
 import { Confetti } from '../../shared/confetti';
 import { Loader } from '../../shared/loader';
 import { Sheet } from '../../shared/sheet';
-import { dailyDifficulty, gameInfo, isPuzzleGame, PuzzleGameId } from '../catalog';
+import { dailyDifficulty, gameInfo, isPuzzleGame, mapLink, PuzzleGameId, trackOf } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
 import { ZipBoard } from '../zip/zip-board';
@@ -137,7 +137,7 @@ const WARN_DELAY_MS = 1600;
               <span>Reset</span>
             </button>
             @if (!daily()) {
-              <a class="tool" [routerLink]="['/games', game(), 'levels']">
+              <a class="tool" [routerLink]="mapLink()">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
                 <span>Map</span>
               </a>
@@ -187,7 +187,7 @@ const WARN_DELAY_MS = 1600;
             }
             <div class="actions">
               <button type="button" (click)="nextLevel()">Next level</button>
-              <a class="button secondary" [routerLink]="['/games', game(), 'levels']" (click)="resultOpen.set(false)">Map</a>
+              <a class="button secondary" [routerLink]="mapLink()" (click)="resultOpen.set(false)">Map</a>
               <button type="button" class="secondary" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
               <button type="button" class="secondary" (click)="openLevel(level())">Replay</button>
             </div>
@@ -215,6 +215,11 @@ export class PuzzlePage {
     const id = this.params()?.get('game') ?? '';
     return isPuzzleGame(id) ? id : 'queens';
   });
+  /** Sudoku and any other game with variants: classic, mini... (practice only; the daily has one kind). */
+  protected readonly variant = computed(() => (this.daily() ? null : this.params()?.get('variant') ?? null));
+  /** What practice progress and levels are stored under. */
+  private readonly track = computed(() => trackOf(this.game(), this.variant()));
+  protected readonly mapLink = computed(() => mapLink(this.game(), this.variant()));
   protected readonly daily = computed(() => this.data()?.['mode'] === 'daily');
   protected readonly info = computed(() => gameInfo(this.game()));
   protected readonly help = computed(() => ADAPTERS[this.game()].help);
@@ -265,7 +270,7 @@ export class PuzzlePage {
     const p = this.puzzle();
     return p ? starsFor(this.finalMs(), parMs(this.game(), p)) : 0;
   });
-  protected readonly bestMs = computed(() => this.practiceStore.bestMs(this.game(), this.level()));
+  protected readonly bestMs = computed(() => this.practiceStore.bestMs(this.track(), this.level()));
 
   protected readonly difficulty = computed(() => dailyDifficulty(this.dateLabel()));
   protected readonly subtitle = computed(() => (this.daily() ? `Daily · ${this.dateLabel() || 'today'}` : `Practice · Level ${this.level()}`));
@@ -307,6 +312,7 @@ export class PuzzlePage {
     effect(() => {
       const game = this.game();
       const daily = this.daily();
+      this.variant();
       queueMicrotask(() => void (daily ? this.loadDaily() : this.loadPractice(game)));
     });
     effect(() => {
@@ -345,10 +351,11 @@ export class PuzzlePage {
     this.phase.set('loading');
     this.solved.set(false);
     this.resultOpen.set(false);
-    await this.practiceStore.load(game);
-    const saved = await this.practiceStore.loadBoard(game);
+    const track = this.track();
+    await this.practiceStore.load(track);
+    const saved = await this.practiceStore.loadBoard(track);
     const asked = Number(this.route.snapshot.queryParamMap.get('level'));
-    const frontier = this.practiceStore.frontier(game);
+    const frontier = this.practiceStore.frontier(track);
     // A level asked for on the map, else the one in progress, else the next one to play. Levels not unlocked yet stay closed.
     const level = asked >= 1 && asked <= frontier ? asked : saved && saved.level <= frontier ? saved.level : frontier;
     await this.openLevel(level, saved?.level === level ? saved : undefined);
@@ -356,8 +363,8 @@ export class PuzzlePage {
 
   protected async openLevel(level: number, saved?: { state: unknown; elapsedMs: number }): Promise<void> {
     const game = this.game();
-    if (!this.practiceStore.isUnlocked(game, level)) return;
-    const levels = await ADAPTERS[game].levels();
+    if (!this.practiceStore.isUnlocked(this.track(), level)) return;
+    const levels = await ADAPTERS[game].levels(this.variant());
     const puzzle = levels[level - 1];
     if (!puzzle) return;
     this.resultOpen.set(false);
@@ -471,7 +478,7 @@ export class PuzzlePage {
       if (this.phase() === 'playing') await this.store.setMeta(this.dailyKey(), { state });
     } else if (this.phase() === 'practice') {
       const elapsedMs = this.baseMs + (Date.now() - this.stretchStart);
-      await this.practiceStore.saveBoard(game, { level: this.level(), state, elapsedMs });
+      await this.practiceStore.saveBoard(this.track(), { level: this.level(), state, elapsedMs });
     }
   }
 
@@ -526,9 +533,9 @@ export class PuzzlePage {
     this.solved.set(true);
     this.haptics.success();
     const level = this.level();
-    await this.practiceStore.markSolved(game as PuzzleGameId, level, elapsedMs);
-    await this.practiceStore.clearBoard(game);
-    await this.sync.record('puzzle.practice.solved', { game, level, solution, elapsedMs });
+    await this.practiceStore.markSolved(this.track(), level, elapsedMs);
+    await this.practiceStore.clearBoard(this.track());
+    await this.sync.record('puzzle.practice.solved', { game, variant: this.variant() ?? undefined, level, solution, elapsedMs });
     setTimeout(() => this.resultOpen.set(true), 900);
   }
 
