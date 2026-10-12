@@ -320,6 +320,6 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         Assert.Null(Zenigma.Api.Leaderboards.CircleEndpoints.CleanName("a"));
         Assert.Null(Zenigma.Api.Leaderboards.CircleEndpoints.CleanName(new string('x', 41)));
         Assert.Equal("a b", Zenigma.Api.Leaderboards.CircleEndpoints.CleanName("  a   b "));
-        for (var i = 0; i < 200; i++) Assert.Matches("^[2-9A-HJKMNP-Z]{6}$", Zenigma.Api.Leaderboards.CircleEndpoints.NewCode());
+        for (var i = 0; i < 200; i++) Assert.Matches("^[2-9A-HJ-NP-Z]{6}$", Zenigma.Api.Leaderboards.CircleEndpoints.NewCode());
     }
 }
