@@ -24,7 +24,9 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
       (pointerdown)="down($event)"
       (pointermove)="move($event)"
       (pointerup)="up($event)"
-      (pointercancel)="cancel()"
+      (pointercancel)="up($event)"
+      (lostpointercapture)="up($event)"
+      (contextmenu)="$event.preventDefault()"
     >
       @for (cell of cells(); track cell.i) {
         <button
@@ -84,6 +86,7 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
       touch-action: none; /* dragging across cells must not scroll the page */
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
     :host .cell {
       position: relative;
@@ -288,6 +291,7 @@ export class QueensBoard {
     if (this.locked() || (event.pointerType === 'mouse' && event.button !== 0)) return;
     const index = this.cellAt(event);
     if (index < 0) return;
+    this.finish(); // never carry a half-finished drag over (a lost pointerup would otherwise leave the board stuck)
     if (isGiven(this.puzzle(), index)) return;
     this.start = index;
     this.last = index;
@@ -297,12 +301,19 @@ export class QueensBoard {
 
   protected move(event: PointerEvent): void {
     if (this.start < 0) return;
+    // A mouse button released outside the board never reports pointerup here: stop the drag instead of painting on hover.
+    if (event.pointerType === 'mouse' && event.buttons === 0) return this.up(event);
     const index = this.cellAt(event);
     if (index < 0 || index === this.last) return;
     this.last = index;
     if (!this.dragged) {
       // The drag has really begun: it covers the cell it started on as well.
       this.dragged = true;
+      try {
+        (event.currentTarget as HTMLElement | null)?.setPointerCapture(event.pointerId);
+      } catch {
+        /* capture is a nicety; dragging works without it */
+      }
       this.draft.set([...this.board()]);
       this.paint(this.start);
     }
@@ -312,21 +323,19 @@ export class QueensBoard {
   protected up(event: PointerEvent): void {
     if (this.start < 0) return;
     const start = this.start;
-    this.start = -1;
-    if (!this.dragged) {
-      this.tap(start);
-      return;
-    }
-    const finished = this.draft();
-    this.draft.set(null);
-    if (finished && finished.some((c, i) => c !== this.board()[i])) this.boardChange.emit(finished);
-    event.preventDefault();
+    const wasDrag = this.dragged;
+    this.finish();
+    if (!wasDrag && event.type === 'pointerup') this.tap(start);
   }
 
-  protected cancel(): void {
+  /** Ends any drag in progress, handing a finished one over as a single move (so Undo takes it back in one step). */
+  private finish(): void {
+    const finished = this.dragged ? this.draft() : null;
     this.start = -1;
+    this.last = -1;
     this.dragged = false;
     this.draft.set(null);
+    if (finished && finished.some((c, i) => c !== this.board()[i])) this.boardChange.emit(finished);
   }
 
   /** Crosses only go on empty cells and only come off crosses; queens are never touched by a drag. */
