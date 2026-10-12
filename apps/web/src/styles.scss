@@ -44,6 +44,11 @@
   --tile-c: 0.035;
   --glyph-l: 0.4;
   --glyph-c: 0.15;
+  /* Queens regions, and the Tango symbols. */
+  --cell-l: 0.9;
+  --cell-c: 0.08;
+  --sun: #f0a21a;
+  --moon: #4f63e6;
 
   --mark-correct: #2f9e5f;
   --mark-present: #c9a227;
@@ -74,6 +79,10 @@
   --tile-c: 0.045;
   --glyph-l: 0.82;
   --glyph-c: 0.11;
+  --cell-l: 0.42;
+  --cell-c: 0.085;
+  --sun: #f5b43a;
+  --moon: #8c9bff;
   --mark-correct: #2f8a57;
   --mark-present: #a8851c;
   --mark-absent: #39434a;

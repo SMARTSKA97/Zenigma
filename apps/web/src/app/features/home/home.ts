@@ -1,15 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
-import { Glyph, GameId } from '../../shared/glyph';
-
-interface GamePlan {
-  id: GameId;
-  name: string;
-  blurb: string;
-  hue: number;
-  route?: string;
-}
+import { GAMES, isPuzzleGame, PUZZLE_GAMES } from '../../games/catalog';
+import { LEVEL_COUNT, PracticeStore } from '../../games/puzzle/practice.store';
+import { Glyph } from '../../shared/glyph';
 
 @Component({
   selector: 'app-home',
@@ -18,8 +12,8 @@ interface GamePlan {
     <section class="hero">
       <div class="copy">
         <h1>{{ greeting() }}</h1>
-        <p class="lede">Your puzzles for today. Offline works too; everything syncs when you are back online.</p>
-        <a class="button play" routerLink="/games/word-guess">Play Word Guess</a>
+        <p class="lede">Today's daily challenge is waiting: one puzzle per game, the same for everyone.</p>
+        <a class="button play" routerLink="/daily">Play today's challenge</a>
       </div>
       <div class="preview" aria-hidden="true">
         @for (tile of preview; track $index) {
@@ -28,15 +22,16 @@ interface GamePlan {
       </div>
     </section>
 
-    <h2 class="section">All games</h2>
+    <h2 class="section">Practice</h2>
+    <p class="muted sub">Endless levels, no pressure. Works offline.</p>
     <div class="grid">
       @for (game of games; track game.id) {
-        @if (game.route) {
-          <a class="game live" [routerLink]="game.route" [style.--h]="game.hue">
+        @if (game.live) {
+          <a class="game live" [routerLink]="['/games', game.id]" [style.--h]="game.hue">
             <span class="art"><app-glyph [game]="game.id" /></span>
             <span class="name">{{ game.name }}</span>
             <span class="blurb">{{ game.blurb }}</span>
-            <span class="tag play-tag">Play</span>
+            <span class="tag play-tag">{{ progress(game.id) }}</span>
           </a>
         } @else {
           <div class="game" [style.--h]="game.hue">
@@ -114,6 +109,10 @@ interface GamePlan {
       }
     }
 
+    .sub {
+      margin: -0.6rem 0 1rem;
+      font-size: 0.9rem;
+    }
     .section {
       margin: 2.5rem 0 1rem;
       font-size: 1.1rem;
@@ -230,8 +229,21 @@ interface GamePlan {
     }
   `,
 })
-export class Home {
+export class Home implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly practice = inject(PracticeStore);
+
+  protected readonly games = GAMES;
+
+  ngOnInit(): void {
+    for (const game of PUZZLE_GAMES) void this.practice.load(game);
+  }
+
+  protected progress(id: string): string {
+    if (!isPuzzleGame(id)) return 'Play';
+    const done = this.practice.solvedLevels(id)().size;
+    return done ? `${done} of ${LEVEL_COUNT} solved` : 'Play';
+  }
 
   protected readonly greeting = computed(() => {
     const hour = new Date().getHours();
@@ -246,18 +258,5 @@ export class Home {
     { letter: 'L', mark: 'correct' },
     { letter: 'V', mark: 'absent' },
     { letter: 'E', mark: 'correct' },
-  ];
-
-  protected readonly games: GamePlan[] = [
-    { id: 'word-guess', name: 'Word Guess', blurb: 'Five letters, six tries.', hue: 160, route: '/games/word-guess' },
-    { id: 'queens', name: 'Queens', blurb: 'One queen per row, column and colour.', hue: 330 },
-    { id: 'tango', name: 'Tango', blurb: 'Two symbols, never three in a row.', hue: 55 },
-    { id: 'mini-sudoku', name: 'Mini Sudoku', blurb: 'A 6 by 6 grid with 2 by 3 boxes.', hue: 250 },
-    { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25 },
-    { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300 },
-    { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200 },
-    { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95 },
-    { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275 },
-    { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice comets, dodge bombs, keep your lives.', hue: 15 },
   ];
 }

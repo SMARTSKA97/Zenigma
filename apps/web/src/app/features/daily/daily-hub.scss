@@ -1,0 +1,115 @@
+:host {
+  display: block;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+.hero {
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border-radius: 28px;
+  background: var(--ink);
+  color: var(--ink-contrast);
+  margin-bottom: 1rem;
+  h1 {
+    margin-bottom: 0.4rem;
+  }
+}
+.eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+.lede {
+  margin: 0 0 1.25rem;
+  opacity: 0.8;
+}
+.dots {
+  display: flex;
+  gap: 0.4rem;
+  i {
+    flex: 1;
+    max-width: 3rem;
+    height: 6px;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--ink-contrast) 22%, transparent);
+    transition: background-color 0.4s var(--ease);
+    &.on {
+      background: var(--ink-contrast);
+    }
+  }
+}
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  h2,
+  p {
+    margin: 0;
+  }
+}
+.list {
+  display: grid;
+  gap: 0.65rem;
+}
+.row-skeleton {
+  height: 4.75rem;
+  border-radius: var(--radius);
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  animation: rise 0.4s var(--ease) backwards;
+  h3,
+  p {
+    margin: 0;
+  }
+  p {
+    font-size: 0.85rem;
+  }
+}
+.art {
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0.55rem;
+  border-radius: 16px;
+  background: oklch(var(--tile-l) var(--tile-c) calc(var(--h) * 1deg));
+  color: oklch(var(--glyph-l) var(--glyph-c) calc(var(--h) * 1deg));
+}
+.info {
+  flex: 1;
+  min-width: 0;
+}
+.end {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  .button {
+    min-height: 40px;
+    padding: 0.4rem 1.1rem;
+  }
+}
+.rank {
+  font-family: var(--font-display);
+  font-weight: 650;
+  color: var(--accent);
+  text-decoration: none;
+}
+.small {
+  font-size: 0.8rem;
+}
+.foot {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+}

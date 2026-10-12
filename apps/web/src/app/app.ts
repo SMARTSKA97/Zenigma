@@ -34,6 +34,14 @@ import { WhatsNew } from './shared/whats-new';
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></svg>
           <span>Games</span>
         </a>
+        <a routerLink="/daily" routerLinkActive="active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /><path d="M9 15l2 2 4-4" /></svg>
+          <span>Daily</span>
+        </a>
+        <a routerLink="/ranks" routerLinkActive="active">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20v-8M12 20V4M17 20v-5" /></svg>
+          <span>Ranks</span>
+        </a>
         <a routerLink="/account" routerLinkActive="active">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.75" /><path d="M4.5 20c.9-3.6 3.8-5.5 7.5-5.5s6.6 1.9 7.5 5.5" /></svg>
           <span>Account</span>
@@ -297,7 +305,7 @@ export class App {
     ),
     { initialValue: this.router.url },
   );
-  protected readonly immersive = computed(() => this.url().startsWith('/games/'));
+  protected readonly immersive = computed(() => /^\/(games|daily)\/[^/?]+/.test(this.url()));
 
   /** True while a screen is loading, so slow connections never look frozen. */
   protected readonly navigating = toSignal(

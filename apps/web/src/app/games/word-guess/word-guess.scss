@@ -26,6 +26,18 @@
   }
 }
 
+.title {
+  flex: 1;
+  min-width: 0;
+  h1 {
+    margin: 0;
+  }
+}
+.sub {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
 .back {
   display: grid;
   place-items: center;
