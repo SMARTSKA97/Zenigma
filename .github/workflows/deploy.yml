@@ -28,6 +28,27 @@ jobs:
           -url="${{ secrets.FLYWAY_URL }}" -user="${{ secrets.FLYWAY_USER }}" -password="${{ secrets.FLYWAY_PASSWORD }}"
           -connectRetries=10 migrate
 
+  puzzles:
+    name: Load upcoming daily puzzles
+    needs: migrate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Safe on every deploy: days that already exist are never changed. This keeps the daily screen from ever
+      # running dry if the weekly "Puzzle batch" has not run yet.
+      - name: Generate and load puzzles
+        working-directory: tools/generators/words
+        env:
+          PUZZLE_SEED: ${{ secrets.PUZZLE_SEED }}
+          DATABASE_URL: ${{ secrets.PUZZLE_DATABASE_URL }}
+        run: |
+          node schedule.mjs --days 21 > puzzles.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f puzzles.sql
+
   api:
     name: Deploy API (Render)
     needs: migrate
