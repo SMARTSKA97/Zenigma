@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { borders, nextCell, QUEEN, MARK, QueensCell, QueensPuzzle } from './engine';
+import { borders, isGiven, nextCell, QUEEN, MARK, QueensCell, QueensPuzzle } from './engine';
 
 /** Region colours: hues spread around the wheel; thick outlines mean colour is never the only clue. */
 const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
@@ -34,7 +34,8 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
           [class.bad]="cell.bad"
           [class.win]="solved()"
           [class.has-queen]="cell.value === QUEEN"
-          [disabled]="locked()"
+          [disabled]="locked() || cell.given"
+          [class.given]="cell.given"
           [style.--h]="cell.hue"
           [style.--d]="cell.delay"
           [style.box-shadow]="cell.outline"
@@ -108,6 +109,15 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
     :host .cell:disabled {
       opacity: 1;
       cursor: default;
+    }
+    /* A queen that came with the puzzle: it cannot be moved, so it wears a ring. */
+    :host .given::after {
+      content: '';
+      position: absolute;
+      inset: 10%;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--ink) 55%, transparent);
+      pointer-events: none;
     }
     .queen {
       width: 74%;
@@ -250,11 +260,12 @@ export class QueensBoard {
         i,
         delay: ((i % puzzle.size) + Math.floor(i / puzzle.size)) * 0.04 + 's',
         value,
+        given: isGiven(puzzle, i),
         bad: bad.has(i),
         hue: HUES[puzzle.regions[i] % HUES.length],
         letter: String.fromCharCode(65 + puzzle.regions[i]),
         outline: sides.join(', ') || 'none',
-        label: `Row ${row}, column ${col}, ${value === QUEEN ? 'queen' : value === MARK ? 'marked' : 'empty'}`,
+        label: `Row ${row}, column ${col}, ${value === QUEEN ? (isGiven(puzzle, i) ? 'queen, fixed' : 'queen') : value === MARK ? 'marked' : 'empty'}`,
       };
     });
   });
@@ -277,6 +288,7 @@ export class QueensBoard {
     if (this.locked() || (event.pointerType === 'mouse' && event.button !== 0)) return;
     const index = this.cellAt(event);
     if (index < 0) return;
+    if (isGiven(this.puzzle(), index)) return;
     this.start = index;
     this.last = index;
     this.dragged = false;
@@ -322,6 +334,7 @@ export class QueensBoard {
     this.draft.update((board) => {
       if (!board) return board;
       const next = [...board];
+      if (isGiven(this.puzzle(), index)) return next;
       if (this.erasing) {
         if (next[index] === MARK) next[index] = 0;
       } else if (next[index] === 0) next[index] = MARK;
@@ -335,7 +348,7 @@ export class QueensBoard {
   }
 
   protected tap(index: number): void {
-    if (this.locked()) return;
+    if (this.locked() || isGiven(this.puzzle(), index)) return;
     const next = [...this.board()];
     next[index] = nextCell(next[index]);
     this.boardChange.emit(next);

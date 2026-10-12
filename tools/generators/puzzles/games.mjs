@@ -12,7 +12,7 @@ export function practiceLevel(game, level) {
   switch (game) {
     case 'queens': {
       const size = level <= 25 ? 5 : level <= 60 ? 6 : level <= 100 ? 7 : level <= 150 ? 8 : 9;
-      return generateQueens(size, rng);
+      return generateQueens(size, rng, Math.max(1, 3 - Math.floor((level - 1) / 50)));
     }
     case 'tango':
       return generateTango(rng, Math.max(0, 6 - Math.floor((level - 1) / 30)));
@@ -29,6 +29,7 @@ export function practiceLevel(game, level) {
  */
 export const DAILY_RAMP = {
   queens: [6, 6, 7, 7, 8, 8, 9], // board size
+  queensGivens: [2, 2, 1, 1, 1, 0, 0], // queens already placed (fewer is harder)
   tango: [6, 5, 4, 3, 2, 1, 0], // extra clues left in (fewer is harder)
   sudoku: [42, 38, 34, 31, 29, 27, 26], // numbers left in the grid (fewer is harder)
 };
@@ -41,7 +42,7 @@ export function dailyPuzzle(game, seed, weekday = 3) {
   if (level === undefined) throw new Error(`Unknown game ${game}`);
   switch (game) {
     case 'queens':
-      return generateQueens(level, rng);
+      return generateQueens(level, rng, DAILY_RAMP.queensGivens[weekday]);
     case 'tango':
       return generateTango(rng, level);
     case 'sudoku':

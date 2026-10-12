@@ -26,3 +26,28 @@ describe('puzzle rules (shared vectors, also run by the API)', () => {
     }
   }
 });
+
+import { emptyBoard, isGiven } from '../queens/engine';
+import { fitsPuzzle } from './puzzle-page';
+
+describe('queens givens and saved boards', () => {
+  const puzzle = { size: 5, regions: Array.from({ length: 25 }, (_, i) => Math.floor(i / 5)), givens: [7] };
+
+  it('starts with the given queens in place', () => {
+    const board = emptyBoard(puzzle);
+    expect(board[7]).toBe(2);
+    expect(board.filter((c) => c !== 0)).toHaveLength(1);
+    expect(isGiven(puzzle, 7)).toBe(true);
+    expect(isGiven(puzzle, 8)).toBe(false);
+  });
+
+  it('only reuses a saved board that fits the puzzle', () => {
+    const fresh = emptyBoard(puzzle);
+    expect(fitsPuzzle(fresh, [...fresh])).toBe(true);
+    expect(fitsPuzzle(fresh, [0, 1, 2])).toBe(false);
+    expect(fitsPuzzle(fresh, new Array(25).fill(0))).toBe(false); // lost the given queen
+    expect(fitsPuzzle(fresh, undefined)).toBe(false);
+    expect(fitsPuzzle(['.', '.'], ['s', 'm'])).toBe(true);
+    expect(fitsPuzzle(['.', '.'], [0, 0])).toBe(false);
+  });
+});

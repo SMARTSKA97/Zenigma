@@ -4,6 +4,8 @@ export interface QueensPuzzle {
   size: number;
   /** Region number of every cell, row by row. */
   regions: number[];
+  /** Cells that start with a queen already on them (they cannot be changed). */
+  givens?: number[];
 }
 
 /** What a cell holds: nothing, a note that no queen can go here, or a queen. */
@@ -12,7 +14,13 @@ export const EMPTY = 0;
 export const MARK = 1;
 export const QUEEN = 2;
 
-export const emptyBoard = (puzzle: QueensPuzzle): QueensCell[] => new Array<QueensCell>(puzzle.size * puzzle.size).fill(EMPTY);
+export const emptyBoard = (puzzle: QueensPuzzle): QueensCell[] => {
+  const board = new Array<QueensCell>(puzzle.size * puzzle.size).fill(EMPTY);
+  for (const i of puzzle.givens ?? []) board[i] = QUEEN;
+  return board;
+};
+
+export const isGiven = (puzzle: QueensPuzzle, index: number): boolean => puzzle.givens?.includes(index) ?? false;
 
 /** The cell a tap moves to, as in the original game: empty, then a mark, then a queen, then back to empty. */
 export const nextCell = (cell: QueensCell): QueensCell => ((cell + 1) % 3) as QueensCell;

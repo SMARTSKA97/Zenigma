@@ -355,9 +355,11 @@ export class PuzzlePage {
     this.solved.set(false);
     this.level.set(level);
     this.puzzle.set(puzzle);
-    this.state.set(saved?.state ?? ADAPTERS[game].blank(puzzle));
+    const fresh = ADAPTERS[game].blank(puzzle);
+    const keep = saved && fitsPuzzle(fresh, saved.state);
+    this.state.set(keep ? saved.state : fresh);
     this.history.set([]);
-    this.baseMs = saved?.elapsedMs ?? 0;
+    this.baseMs = keep ? saved.elapsedMs : 0;
     this.stretchStart = Date.now();
     this.phase.set('practice');
     await this.persist();
@@ -537,4 +539,13 @@ export class PuzzlePage {
       /* cancelled */
     }
   }
+}
+
+/** A board saved earlier is only reused when it still has this puzzle's shape and keeps its fixed cells (older app versions saved other shapes). */
+export function fitsPuzzle(fresh: unknown, saved: unknown): boolean {
+  if (!Array.isArray(fresh) || !Array.isArray(saved) || fresh.length !== saved.length) return false;
+  return fresh.every((cell, i) => {
+    const empty = cell === 0 || cell === '.';
+    return typeof saved[i] === typeof cell && (empty || saved[i] === cell);
+  });
 }

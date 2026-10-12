@@ -61,7 +61,15 @@ export function solveQueens(puzzle, limit = 2) {
   return { count, solution: first };
 }
 
-export function generateQueens(size, rng) {
+/** Pre-placed queens: `count` cells of the one solution are given, drawn after the layout so the layout itself never changes. */
+export function withGivens(puzzle, rng, count) {
+  if (!count) return puzzle;
+  const { solution } = solveQueens(puzzle, 2);
+  const rows = rng.shuffle([...Array(puzzle.size).keys()]).slice(0, Math.min(count, puzzle.size - 1)).sort((a, b) => a - b);
+  return { ...puzzle, givens: rows.map((r) => r * puzzle.size + solution[r]) };
+}
+
+export function generateQueens(size, rng, givens = 0) {
   for (let attempt = 0; attempt < 2000; attempt++) {
     // 1. A random valid queen layout.
     const queens = [];
@@ -110,7 +118,7 @@ export function generateQueens(size, rng) {
       if (next === 0 || next > count) regions[cell] = from; // worse: undo
       else count = next;
     }
-    if (count === 1) return puzzle;
+    if (count === 1) return withGivens(puzzle, rng, givens);
   }
   throw new Error(`Could not generate a ${size}x${size} Queens puzzle`);
 }

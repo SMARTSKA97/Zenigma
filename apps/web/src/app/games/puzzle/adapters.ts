@@ -23,7 +23,7 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
     conflicts: (p, s) => queens.conflicts(p as queens.QueensPuzzle, s as queens.QueensCell[]),
     isSolved: (p, s) => queens.isSolved(p as queens.QueensPuzzle, s as queens.QueensCell[]),
     solution: (p, s) => queens.solutionOf(p as queens.QueensPuzzle, s as queens.QueensCell[]),
-    touched: (_, s) => (s as queens.QueensCell[]).some((c) => c !== 0),
+    touched: (p, s) => (s as queens.QueensCell[]).join('') !== queens.emptyBoard(p as queens.QueensPuzzle).join(''),
     help: 'Place one queen in every row, column and colour. Queens cannot touch, not even diagonally. Tap once to mark a cell with ✕ (no queen can go here), twice to place a queen, three times to clear it.',
   },
   tango: {
