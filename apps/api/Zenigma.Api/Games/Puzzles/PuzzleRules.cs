@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace Zenigma.Api.Games.Puzzles;
 
 /// <summary>
-/// Checks a finished Queens, Tango or Mini Sudoku solution against the rules of the puzzle. Every puzzle has exactly one
+/// Checks a finished Queens, Tango or Sudoku solution against the rules of the puzzle. Every puzzle has exactly one
 /// solution, so no answer is stored anywhere: a submission is correct if it satisfies every rule.
 /// The TypeScript engines in the web app implement the same rules and run against the same vectors (tests/vectors/puzzles).
 /// </summary>
@@ -11,9 +11,9 @@ public static class PuzzleRules
 {
     public const string Queens = "queens";
     public const string Tango = "tango";
-    public const string MiniSudoku = "mini-sudoku";
+    public const string Sudoku = "sudoku";
 
-    public static readonly string[] Games = [Queens, Tango, MiniSudoku];
+    public static readonly string[] Games = [Queens, Tango, Sudoku];
 
     public static bool IsPuzzleGame(string game) => Array.IndexOf(Games, game) >= 0;
 
@@ -22,7 +22,7 @@ public static class PuzzleRules
     {
         Queens => 5_000,
         Tango => 6_000,
-        MiniSudoku => 8_000,
+        Sudoku => 40_000,
         _ => 5_000,
     };
 
@@ -34,7 +34,7 @@ public static class PuzzleRules
             {
                 Queens => VerifyQueens(puzzle, solution),
                 Tango => VerifyTango(puzzle, solution),
-                MiniSudoku => VerifySudoku(puzzle, solution),
+                Sudoku => VerifySudoku(puzzle, solution),
                 _ => false,
             };
         }
@@ -109,14 +109,14 @@ public static class PuzzleRules
         return true;
     }
 
-    // Mini Sudoku: 36 digits, boxes are 2 rows by 3 columns.
+    // Sudoku: 81 digits, boxes are 3 by 3.
     private static bool VerifySudoku(JsonElement puzzle, JsonElement solution)
     {
-        const int n = 6;
+        const int n = 9;
         var cells = solution.ValueKind == JsonValueKind.String ? solution.GetString()! : "";
         var givens = puzzle.GetProperty("givens").GetString()!;
         if (cells.Length != n * n || givens.Length != n * n) return false;
-        if (cells.Any(c => c is < '1' or > '6')) return false;
+        if (cells.Any(c => c is < '1' or > '9')) return false;
 
         for (var i = 0; i < n * n; i++)
         {
@@ -137,7 +137,7 @@ public static class PuzzleRules
         {
             var r = i / n;
             var c = i % n;
-            var box = r / 2 * 2 + c / 3;
+            var box = r / 3 * 3 + c / 3;
             if (!rows[r].Add(cells[i]) || !cols[c].Add(cells[i]) || !boxes[box].Add(cells[i])) return false;
         }
 

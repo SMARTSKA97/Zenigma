@@ -42,31 +42,32 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
   write('tango', cases);
 }
 
-// Mini Sudoku: solution is 36 digits.
+// Sudoku: solution is 81 digits.
 {
   const cases = [];
-  for (const clues of [20, 13]) {
+  for (const clues of [40, 28]) {
     const puzzle = generateSudoku(rngFrom(`vector-sudoku-${clues}`), clues);
     const solution = solveSudoku(puzzle).solution;
     cases.push({ name: `${clues} clues valid`, puzzle, solution, valid: true });
     const changed = [...solution];
-    changed[0] = String((Number(changed[0]) % 6) + 1);
+    changed[0] = String((Number(changed[0]) % 9) + 1);
     cases.push({ name: `${clues} clues changed digit`, puzzle, solution: changed.join(''), valid: false });
     const given = puzzle.givens.split('').findIndex((c) => c !== '0');
     const swapped = [...solution];
-    const other = (given + 1) % 36;
+    const other = (given + 1) % 81;
     [swapped[given], swapped[other]] = [swapped[other], swapped[given]];
     cases.push({ name: `${clues} clues swapped cells`, puzzle, solution: swapped.join(''), valid: false });
     cases.push({ name: `${clues} clues zero`, puzzle, solution: solution.slice(1) + '0', valid: false });
     cases.push({ name: `${clues} clues wrong length`, puzzle, solution: solution.slice(1), valid: false });
+    cases.push({ name: `${clues} clues digit ten`, puzzle, solution: ':' + solution.slice(1), valid: false });
   }
-  write('mini-sudoku', cases);
+  write('sudoku', cases);
 }
 // The first levels of every game with their solutions: proves the API accepts the exact levels shipped in the app.
 {
   const { practiceLevel, solve } = await import('./games.mjs');
   const cases = [];
-  for (const game of ['queens', 'tango', 'mini-sudoku']) {
+  for (const game of ['queens', 'tango', 'sudoku']) {
     for (const level of [1, 2, 3, 150, 200]) {
       cases.push({ game, level, solution: solve(game, practiceLevel(game, level)).solution });
     }

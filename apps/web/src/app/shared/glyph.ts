@@ -24,7 +24,7 @@ import { GameId } from '../games/catalog';
           <circle cx="15" cy="24" r="9" fill="currentColor" stroke="none" />
           <circle cx="33" cy="24" r="9" />
         }
-        @case ('mini-sudoku') {
+        @case ('sudoku') {
           <rect x="7" y="7" width="34" height="34" rx="5" />
           <path d="M18.5 7 V41 M29.5 7 V41 M7 18.5 H41 M7 29.5 H41" stroke-width="1.8" />
           <circle cx="24" cy="24" r="3" fill="currentColor" stroke="none" />

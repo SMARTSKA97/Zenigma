@@ -1,4 +1,4 @@
-// Prints SQL that loads upcoming daily puzzles for Queens, Tango and Mini Sudoku.
+// Prints SQL that loads upcoming daily puzzles for Queens, Tango and Sudoku.
 //   PUZZLE_SEED=<secret> node schedule-puzzles.mjs [--from 2026-10-12] [--days 21] | psql "$DATABASE_URL"
 // Each day's puzzle is generated from an HMAC of the secret seed, so the public code cannot reveal future puzzles.
 // The database stores the puzzle only; the API checks submissions against the rules, so no answer is stored.

@@ -64,16 +64,16 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
       position: absolute;
     }
     .wrap {
-      --side: min(100%, 26rem, calc(100dvh - 20rem));
       position: relative;
-      width: var(--side);
+      width: var(--board, min(100%, 26rem));
       aspect-ratio: 1;
       margin: 0 auto;
     }
     .grid {
       --line: color-mix(in srgb, var(--ink) 18%, var(--bg));
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-rows: repeat(6, minmax(0, 1fr));
       gap: 1px;
       width: 100%;
       height: 100%;
@@ -91,7 +91,7 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
       padding: 0;
       border: 0;
       border-radius: 0;
-      overflow: visible;
+      overflow: hidden;
       background: var(--surface);
       color: var(--text);
       transition: background-color 0.2s var(--ease);

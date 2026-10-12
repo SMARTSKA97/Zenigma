@@ -1,7 +1,7 @@
 # Zenigma
 
 Offline-first puzzle and brain-game app: Android (Capacitor) and web (installable PWA), with an ASP.NET Core API on
-PostgreSQL. Ten games (Word Guess, LinkedIn's Queens, Tango, Mini Sudoku, Zip, Patches, Pinpoint, Crossclimb, Wend,
+PostgreSQL. Ten games (Word Guess, LinkedIn's Queens, Tango, Sudoku, Zip, Patches, Pinpoint, Crossclimb, Wend,
 and Comet Slice), daily puzzles plus endless levels, streaks and leaderboards.
 
 | Path | What |

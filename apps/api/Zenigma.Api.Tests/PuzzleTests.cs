@@ -180,17 +180,17 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
     [DbFact]
     public async Task Faster_solves_rank_higher()
     {
-        var (puzzle, solution) = ValidVector("mini-sudoku");
-        await SeedTodayAsync("mini-sudoku", puzzle);
+        var (puzzle, solution) = ValidVector("sudoku");
+        await SeedTodayAsync("sudoku", puzzle);
         var (a, deviceA) = await SignUpAsync("Quick");
         var (b, deviceB) = await SignUpAsync("Slow");
-        await a.PostAsJsonAsync("/daily/mini-sudoku/start", new { deviceId = deviceA });
-        await a.PostAsJsonAsync("/daily/mini-sudoku/submit", new { deviceId = deviceA, solution });
-        await b.PostAsJsonAsync("/daily/mini-sudoku/start", new { deviceId = deviceB });
+        await a.PostAsJsonAsync("/daily/sudoku/start", new { deviceId = deviceA });
+        await a.PostAsJsonAsync("/daily/sudoku/submit", new { deviceId = deviceA, solution });
+        await b.PostAsJsonAsync("/daily/sudoku/start", new { deviceId = deviceB });
         await Task.Delay(600);
-        await b.PostAsJsonAsync("/daily/mini-sudoku/submit", new { deviceId = deviceB, solution });
+        await b.PostAsJsonAsync("/daily/sudoku/submit", new { deviceId = deviceB, solution });
 
-        var board = await a.GetFromJsonAsync<JsonElement>("/leaderboards/mini-sudoku?kind=daily&period=today", Json);
+        var board = await a.GetFromJsonAsync<JsonElement>("/leaderboards/sudoku?kind=daily&period=today", Json);
         var names = board.GetProperty("entries").EnumerateArray().Select(e => e.GetProperty("name").GetString()).ToList();
         Assert.True(names.IndexOf("Quick") < names.IndexOf("Slow"));
     }

@@ -1,44 +1,50 @@
-// Mini Sudoku: a 6x6 grid with 2-row by 3-column boxes. Every row, column and box holds 1 to 6 once.
+// Sudoku: the classic 9x9 grid with 3x3 boxes. Every row, column and box holds 1 to 9 once.
 
-export const SUDOKU_SIZE = 6;
-const N = 6;
-const BOX_ROWS = 2;
-const BOX_COLS = 3;
+export const SUDOKU_SIZE = 9;
+const N = 9;
+const ALL = 0x3fe; // bits 1..9
 
-const boxOf = (r, c) => Math.floor(r / BOX_ROWS) * (N / BOX_COLS) + Math.floor(c / BOX_COLS);
+const boxOf = (r, c) => Math.floor(r / 3) * 3 + Math.floor(c / 3);
+const bitCount = (x) => {
+  let n = 0;
+  for (; x; x &= x - 1) n++;
+  return n;
+};
 
-export function solveSudoku(puzzle, limit = 2) {
-  const cells = [...puzzle.givens].map(Number);
-  const rows = Array.from({ length: N }, () => new Set());
-  const cols = Array.from({ length: N }, () => new Set());
-  const boxes = Array.from({ length: N }, () => new Set());
+/** Counts solutions (up to `limit`) with bitmasks and "fewest options first" search. `order` randomises digit order. */
+function search(cells, limit, order) {
+  const rows = new Array(N).fill(0);
+  const cols = new Array(N).fill(0);
+  const boxes = new Array(N).fill(0);
   for (let i = 0; i < N * N; i++) {
-    if (!cells[i]) continue;
+    const v = cells[i];
+    if (!v) continue;
+    const bit = 1 << v;
     const r = Math.floor(i / N);
     const c = i % N;
-    const v = cells[i];
-    if (rows[r].has(v) || cols[c].has(v) || boxes[boxOf(r, c)].has(v)) return { count: 0, solution: null };
-    rows[r].add(v);
-    cols[c].add(v);
-    boxes[boxOf(r, c)].add(v);
+    if (rows[r] & bit || cols[c] & bit || boxes[boxOf(r, c)] & bit) return { count: 0, solution: null };
+    rows[r] |= bit;
+    cols[c] |= bit;
+    boxes[boxOf(r, c)] |= bit;
   }
   let count = 0;
   let first = null;
   const solve = () => {
     if (count >= limit) return;
-    // Pick the empty cell with the fewest options.
     let best = -1;
-    let bestOptions = null;
+    let bestMask = 0;
+    let bestCount = 99;
     for (let i = 0; i < N * N; i++) {
       if (cells[i]) continue;
       const r = Math.floor(i / N);
       const c = i % N;
-      const options = [];
-      for (let v = 1; v <= N; v++) if (!rows[r].has(v) && !cols[c].has(v) && !boxes[boxOf(r, c)].has(v)) options.push(v);
-      if (best === -1 || options.length < bestOptions.length) {
+      const mask = ALL & ~(rows[r] | cols[c] | boxes[boxOf(r, c)]);
+      const k = bitCount(mask);
+      if (k < bestCount) {
         best = i;
-        bestOptions = options;
-        if (options.length <= 1) break;
+        bestMask = mask;
+        bestCount = k;
+        if (k <= 1) break;
       }
     }
     if (best === -1) {
@@ -46,38 +52,44 @@ export function solveSudoku(puzzle, limit = 2) {
       first ??= cells.join('');
       return;
     }
+    if (bestCount === 0) return;
     const r = Math.floor(best / N);
     const c = best % N;
-    for (const v of bestOptions) {
+    const b = boxOf(r, c);
+    for (const v of order) {
+      const bit = 1 << v;
+      if (!(bestMask & bit)) continue;
       cells[best] = v;
-      rows[r].add(v);
-      cols[c].add(v);
-      boxes[boxOf(r, c)].add(v);
+      rows[r] |= bit;
+      cols[c] |= bit;
+      boxes[b] |= bit;
       solve();
-      rows[r].delete(v);
-      cols[c].delete(v);
-      boxes[boxOf(r, c)].delete(v);
+      rows[r] &= ~bit;
+      cols[c] &= ~bit;
+      boxes[b] &= ~bit;
       cells[best] = 0;
+      if (count >= limit) return;
     }
   };
   solve();
   return { count, solution: first };
 }
 
-function randomFullGrid(rng) {
-  for (;;) {
-    // Randomise by pre-filling the first row, then solving.
-    const row = rng.shuffle([1, 2, 3, 4, 5, 6]);
-    const puzzle = { givens: row.join('') + '0'.repeat(N * N - N) };
-    const { solution } = solveSudoku(puzzle, 1);
-      if (solution) return solution;
-  }
+export function solveSudoku(puzzle, limit = 2) {
+  return search([...puzzle.givens].map(Number), limit, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
 }
 
-/** `clues` is how many numbers to leave in the grid; fewer clues is harder (the minimum that stays unique is about 8). */
+function randomFullGrid(rng) {
+  const order = rng.shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  const cells = new Array(N * N).fill(0);
+  // Seeding the first row randomly gives every seed a different grid; the search then completes it.
+  rng.shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).forEach((v, i) => (cells[i] = v));
+  return search(cells, 1, order).solution;
+}
+
+/** `clues` is how many numbers to leave in the grid: fewer is harder (about 24 is the practical floor for random removal). */
 export function generateSudoku(rng, clues) {
-  const full = randomFullGrid(rng);
-  const cells = full.split('');
+  const cells = randomFullGrid(rng).split('');
   let remaining = N * N;
   for (const i of rng.shuffle([...Array(N * N).keys()])) {
     if (remaining <= clues) break;

@@ -3,7 +3,7 @@ import { generateSudoku, solveSudoku } from './sudoku.mjs';
 import { generateTango, solveTango } from './tango.mjs';
 import { rngFrom } from './rng.mjs';
 
-export const GAMES = ['queens', 'tango', 'mini-sudoku'];
+export const GAMES = ['queens', 'tango', 'sudoku'];
 export const LEVELS_PER_GAME = 200;
 
 /** Difficulty ramps with the level number; level 1 is the gentlest. */
@@ -16,8 +16,8 @@ export function practiceLevel(game, level) {
     }
     case 'tango':
       return generateTango(rng, Math.max(0, 6 - Math.floor((level - 1) / 30)));
-    case 'mini-sudoku':
-      return generateSudoku(rng, Math.max(13, 22 - Math.floor((level - 1) / 22)));
+    case 'sudoku':
+      return generateSudoku(rng, Math.max(27, 46 - Math.floor((level - 1) / 10)));
     default:
       throw new Error(`Unknown game ${game}`);
   }
@@ -31,8 +31,8 @@ export function dailyPuzzle(game, seed) {
       return generateQueens(8, rng);
     case 'tango':
       return generateTango(rng, 4);
-    case 'mini-sudoku':
-      return generateSudoku(rng, 14);
+    case 'sudoku':
+      return generateSudoku(rng, 30);
     default:
       throw new Error(`Unknown game ${game}`);
   }
@@ -45,7 +45,7 @@ export function solve(game, puzzle) {
       return solveQueens(puzzle, 2);
     case 'tango':
       return solveTango(puzzle, 2);
-    case 'mini-sudoku':
+    case 'sudoku':
       return solveSudoku(puzzle, 2);
     default:
       throw new Error(`Unknown game ${game}`);

@@ -11,7 +11,7 @@ import { Loader } from '../../shared/loader';
 import { Sheet } from '../../shared/sheet';
 import { gameInfo, isPuzzleGame, PuzzleGameId } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
-import { SudokuBoard } from '../mini-sudoku/sudoku-board';
+import { SudokuBoard } from '../sudoku/sudoku-board';
 import { TangoBoard } from '../tango/tango-board';
 import { ADAPTERS } from './adapters';
 import { LEVEL_COUNT, PracticeStore } from './practice.store';
@@ -25,7 +25,7 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
   imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="page">
+    <div class="page" [attr.data-game]="game()">
       <header class="bar">
         <a routerLink="/" class="back" aria-label="Back to games">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
@@ -91,32 +91,52 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
 
     <ng-template #playing>
       @if (puzzle(); as p) {
-        <div class="status" role="status" aria-live="polite">
-          <span class="time" aria-label="Time">{{ time() }}</span>
-          @if (message()) {
-            <span class="toast">{{ message() }}</span>
-          }
-        </div>
+        <div class="layout">
+          <div class="status" role="status" aria-live="polite">
+            <div class="clock">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5" /><path d="M12 9v4l2.5 1.5M9.5 3h5" /></svg>
+              <span class="time" aria-label="Time">{{ time() }}</span>
+            </div>
+            <span class="pill">{{ daily() ? 'Daily' : 'Level ' + level() }}</span>
+            @if (message()) {
+              <span class="toast">{{ message() }}</span>
+            }
+          </div>
 
-        @switch (game()) {
-          @case ('queens') {
-            <app-queens-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
-          }
-          @case ('tango') {
-            <app-tango-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
-          }
-          @case ('mini-sudoku') {
-            <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
-          }
-        }
+          <div class="stage">
+            @switch (game()) {
+              @case ('queens') {
+                <app-queens-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
+              }
+              @case ('tango') {
+                <app-tango-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
+              }
+              @case ('sudoku') {
+                <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
+              }
+            }
+          </div>
 
-        <div class="tools">
-          <button type="button" class="secondary" [disabled]="!history().length || locked()" (click)="undo()">Undo</button>
-          <button type="button" class="secondary" [disabled]="!touched() || locked()" (click)="clear()">Clear</button>
-          <button type="button" class="secondary" (click)="helpOpen.set(true)">How to play</button>
-          @if (!daily()) {
-            <button type="button" class="secondary" (click)="pickerOpen.set(true)">Levels</button>
-          }
+          <div class="tools" role="toolbar" aria-label="Tools">
+            <button type="button" class="tool" [disabled]="!history().length || locked()" (click)="undo()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
+              <span>Undo</span>
+            </button>
+            <button type="button" class="tool" [disabled]="!touched() || locked()" (click)="clear()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5" /></svg>
+              <span>Reset</span>
+            </button>
+            @if (!daily()) {
+              <button type="button" class="tool" (click)="pickerOpen.set(true)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
+                <span>Levels</span>
+              </button>
+            }
+            <button type="button" class="tool" (click)="helpOpen.set(true)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M9.7 9.5a2.4 2.4 0 1 1 3.4 2.2c-.7.4-1.1.8-1.1 1.6M12 16.8v.1" /></svg>
+              <span>Rules</span>
+            </button>
+          </div>
         </div>
       }
     </ng-template>

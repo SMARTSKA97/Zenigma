@@ -2,12 +2,16 @@
   display: block;
 }
 .page {
+  /* The board is as big as the screen allows: width first, then whatever height is left under the header and tools. */
+  --board: min(100%, 32rem, calc(100dvh - 18rem));
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: 0.9rem;
-  max-width: 30rem;
+  max-width: 34rem;
   margin: 0 auto;
+}
+.page[data-game='sudoku'] {
+  --board: min(100%, 32rem, calc(100dvh - 25rem));
 }
 .bar {
   display: flex;
@@ -51,50 +55,115 @@
     transform: scale(0.94);
   }
 }
+
+/* Playing: status, board and tools stack on a phone and become board + side panel on a wide screen. */
+.layout {
+  display: grid;
+  grid-template-areas: 'status' 'stage' 'tools';
+  gap: 0.9rem;
+}
 .status {
+  grid-area: status;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  min-height: 2.25rem;
+  gap: 0.6rem;
+  min-height: 2.5rem;
+  flex-wrap: wrap;
+}
+.clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.9rem 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 }
 .time {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
-.toast,
-.hint {
-  font-size: 0.85rem;
+.pill {
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
   font-weight: 600;
-  padding: 0.35rem 0.9rem;
+}
+.toast {
+  margin-left: auto;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
   border-radius: 999px;
   background: var(--ink);
   color: var(--ink-contrast);
   animation: rise 0.25s var(--spring) backwards;
 }
-.hint.bad {
-  background: color-mix(in srgb, var(--bad) 16%, var(--surface));
-  color: var(--bad);
+.stage {
+  grid-area: stage;
 }
 .tools {
-  display: flex;
-  flex-wrap: wrap;
+  grid-area: tools;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 0.5rem;
-  justify-content: center;
-  margin-top: 0.25rem;
-  button {
-    min-height: 40px;
-    padding: 0.4rem 1rem;
-    font-size: 0.875rem;
+  padding: 0.4rem;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+:host .tool {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.55rem 0.25rem 0.45rem;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  box-shadow: none;
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 }
+:host .tool:hover:not(:disabled) {
+  background: var(--surface-2);
+  box-shadow: none;
+}
+:host .tool:disabled {
+  opacity: 0.35;
+}
 .board-skeleton {
-  width: min(100%, 26rem);
+  width: var(--board);
   aspect-ratio: 1;
   margin: 0 auto;
-  border-radius: 14px;
+  border-radius: 16px;
 }
 .center {
   text-align: center;
@@ -146,6 +215,59 @@
   }
   &.now {
     border-color: var(--accent);
+  }
+}
+
+@media (min-width: 900px) {
+  .page {
+    --board: min(100%, 40rem, calc(100dvh - 9rem));
+    max-width: 62rem;
+  }
+  .page[data-game='sudoku'] {
+    --board: min(100%, 40rem, calc(100dvh - 9rem));
+    max-width: 70rem;
+  }
+  .page[data-game='sudoku'] .layout {
+    grid-template-columns: minmax(0, 1fr) 14rem;
+  }
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 'stage status' 'stage tools';
+    gap: 1.25rem 2rem;
+    align-items: start;
+  }
+  .status {
+    padding: 1.1rem;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    gap: 0.75rem;
+    .clock {
+      border: 0;
+      background: transparent;
+      padding: 0;
+    }
+    .time {
+      font-size: 2rem;
+    }
+    .toast {
+      margin: 0;
+      width: 100%;
+      text-align: center;
+    }
+  }
+  .tools {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+  }
+  :host .tool {
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
   }
 }
 @keyframes pop {

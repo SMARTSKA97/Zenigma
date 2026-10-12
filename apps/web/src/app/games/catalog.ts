@@ -2,7 +2,7 @@ export type GameId =
   | 'word-guess'
   | 'queens'
   | 'tango'
-  | 'mini-sudoku'
+  | 'sudoku'
   | 'zip'
   | 'patches'
   | 'pinpoint'
@@ -26,7 +26,7 @@ export const GAMES: GameInfo[] = [
   { id: 'word-guess', name: 'Word Guess', blurb: 'Five letters, six tries.', hue: 160, live: true, daily: true },
   { id: 'queens', name: 'Queens', blurb: 'One queen per row, column and colour.', hue: 330, live: true, daily: true },
   { id: 'tango', name: 'Tango', blurb: 'Suns and moons, never three in a row.', hue: 55, live: true, daily: true },
-  { id: 'mini-sudoku', name: 'Mini Sudoku', blurb: 'A 6 by 6 grid with 2 by 3 boxes.', hue: 250, live: true, daily: true },
+  { id: 'sudoku', name: 'Sudoku', blurb: 'The classic: 1 to 9, once per row, column and box.', hue: 250, live: true, daily: true },
   { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25, live: false, daily: false },
   { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: false, daily: false },
   { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: false, daily: false },
@@ -40,6 +40,6 @@ export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => 
 /** Games with a daily challenge and leaderboards. */
 export const DAILY_GAMES = GAMES.filter((g) => g.daily);
 
-export const PUZZLE_GAMES = ['queens', 'tango', 'mini-sudoku'] as const;
+export const PUZZLE_GAMES = ['queens', 'tango', 'sudoku'] as const;
 export type PuzzleGameId = (typeof PUZZLE_GAMES)[number];
 export const isPuzzleGame = (id: string): id is PuzzleGameId => (PUZZLE_GAMES as readonly string[]).includes(id);

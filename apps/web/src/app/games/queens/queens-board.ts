@@ -55,11 +55,11 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
       position: absolute;
     }
     .grid {
-      --side: min(100%, 26rem, calc(100dvh - 20rem));
       --line: color-mix(in srgb, var(--ink) 34%, var(--bg));
       display: grid;
-      grid-template-columns: repeat(var(--n), 1fr);
-      width: var(--side);
+      grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+      grid-template-rows: repeat(var(--n), minmax(0, 1fr));
+      width: var(--board, min(100%, 26rem));
       aspect-ratio: 1;
       margin: 0 auto;
       border: 2.5px solid var(--ink);
@@ -78,7 +78,7 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
       padding: 0;
       border: 0;
       border-radius: 0;
-      overflow: visible;
+      overflow: hidden;
       background: oklch(var(--cell-l) var(--cell-c) calc(var(--h) * 1deg));
       color: var(--text);
       transition:
