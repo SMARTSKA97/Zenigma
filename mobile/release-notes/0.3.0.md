@@ -1,0 +1,8 @@
+## New look
+- A fresh, calmer design across the app, with light and dark themes
+- Bottom navigation that follows Android's Material 3 style
+- New Zenigma loading animation on sign-in, game screens and updates
+
+## Updates
+- See what changed before you update, with a live download progress bar
+- A "What's new" sheet after every update

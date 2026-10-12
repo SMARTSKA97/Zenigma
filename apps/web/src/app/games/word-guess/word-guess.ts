@@ -5,6 +5,9 @@ import { PrefsService } from '../../core/prefs.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController } from './board';
 import { DailyStore } from './daily.store';
+import { Loader } from '../../shared/loader';
+import { Segmented, SegmentOption } from '../../shared/segmented';
+import { Switch } from '../../shared/switch';
 import { Mark } from './engine';
 import { WordGuessStore } from './word-guess.store';
 
@@ -12,31 +15,18 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 @Component({
   selector: 'app-word-guess',
-  imports: [RouterLink],
+  imports: [RouterLink, Loader, Segmented, Switch],
   template: `
     <div class="game">
       <header class="bar">
-        <a routerLink="/" class="back" aria-label="Back to games">&larr;</a>
+        <a routerLink="/" class="back" aria-label="Back to games">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+        </a>
         <h1>Word Guess</h1>
-        <label class="switch">
-          <input
-            type="checkbox"
-            [checked]="hardChecked()"
-            [disabled]="hardDisabled()"
-            (change)="prefs.setHardMode($any($event.target).checked)"
-          />
-          <span>Hard</span>
-        </label>
+        <app-switch [checked]="hardChecked()" [disabled]="hardDisabled()" (checkedChange)="prefs.setHardMode($event)">Hard</app-switch>
       </header>
 
-      <div class="modes" role="tablist" aria-label="Mode">
-        <button type="button" role="tab" [attr.aria-selected]="mode() === 'daily'" [class.on]="mode() === 'daily'" (click)="setMode('daily')">
-          Daily
-        </button>
-        <button type="button" role="tab" [attr.aria-selected]="mode() === 'practice'" [class.on]="mode() === 'practice'" (click)="setMode('practice')">
-          Practice
-        </button>
-      </div>
+      <app-segmented class="modes" label="Mode" [options]="modeOptions" [value]="mode()" (valueChange)="setMode($event)" />
 
       <div class="toast" role="status" aria-live="polite">
         @if (board().message(); as text) {
@@ -45,18 +35,38 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
       </div>
 
       @if (panel(); as p) {
-        <section class="card panel">
-          <h2>{{ p.title }}</h2>
-          <p class="muted">{{ p.text }}</p>
-          @if (p.action === 'signin') {
-            <a class="button" routerLink="/account">Sign in</a>
-          } @else if (p.action === 'retry') {
-            <button type="button" (click)="daily.load()">Try again</button>
-          } @else if (p.action === 'start') {
-            <button type="button" [disabled]="daily.busy()" (click)="daily.start()">Start today's puzzle</button>
-          }
-          <button type="button" class="secondary" (click)="setMode('practice')">Play practice instead</button>
-        </section>
+        @if (p.loading) {
+          <div class="board" aria-busy="true" aria-label="Loading">
+            @for (r of [0, 1, 2, 3, 4, 5]; track r) {
+              <div class="row-tiles">
+                @for (c of cols; track c) {
+                  <div class="tile skeleton" [style.animation-delay]="(r + c) * 0.06 + 's'"></div>
+                }
+              </div>
+            }
+          </div>
+          <p class="muted loading"><app-loader [size]="16" /> {{ p.title }}</p>
+        } @else {
+          <section class="card panel">
+            <h2>{{ p.title }}</h2>
+            <p class="muted">{{ p.text }}</p>
+            <div class="actions">
+              @if (p.action === 'signin') {
+                <a class="button" routerLink="/account">Sign in</a>
+              } @else if (p.action === 'retry') {
+                <button type="button" (click)="daily.load()">Try again</button>
+              } @else if (p.action === 'start') {
+                <button type="button" [disabled]="daily.busy()" (click)="daily.start()">
+                  @if (daily.busy()) {
+                    <app-loader [size]="16" />
+                  }
+                  Start today's puzzle
+                </button>
+              }
+              <button type="button" class="secondary" (click)="setMode('practice')">Play practice</button>
+            </div>
+          </section>
+        }
       } @else {
         @if (mode() === 'daily' && daily.date()) {
           <p class="muted date">Daily &middot; {{ daily.date() }}{{ daily.hard() ? ' &middot; Hard' : '' }}</p>
@@ -136,6 +146,10 @@ export class WordGuess implements OnInit, OnDestroy {
   private readonly sync = inject(SyncService);
 
   protected readonly cols = [0, 1, 2, 3, 4];
+  protected readonly modeOptions: SegmentOption<'daily' | 'practice'>[] = [
+    { value: 'daily', label: 'Daily' },
+    { value: 'practice', label: 'Practice' },
+  ];
   protected readonly keyRows = KEY_ROWS.map((r) => [...r]);
   protected readonly copied = signal(false);
   protected readonly mode = signal<'daily' | 'practice'>('practice');
@@ -154,10 +168,10 @@ export class WordGuess implements OnInit, OnDestroy {
 
   /** In daily mode, the message shown instead of the board when the puzzle cannot be played right now. */
   protected readonly panel = computed(() => {
-    if (this.mode() === 'practice') return this.practice.loading() ? { title: 'Loading words...', text: '', action: null } : null;
+    if (this.mode() === 'practice') return this.practice.loading() ? { title: 'Loading words', text: '', action: null, loading: true } : null;
     switch (this.daily.phase()) {
       case 'loading':
-        return { title: 'Loading today\'s puzzle...', text: '', action: null };
+        return { title: 'Loading today\'s puzzle', text: '', action: null, loading: true };
       case 'signin':
         return { title: 'Sign in to play the daily puzzle', text: 'Everyone gets the same word each day, and your result is saved to your account.', action: 'signin' };
       case 'offline':

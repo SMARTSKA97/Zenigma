@@ -1,116 +1,93 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { Loader } from '../../shared/loader';
+import { Segmented, SegmentOption } from '../../shared/segmented';
+import { Switch } from '../../shared/switch';
 import { PrefsService } from '../../core/prefs.service';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { UpdaterService } from '../../core/updater.service';
 
 @Component({
   selector: 'app-settings',
+  imports: [RouterLink, Loader, Segmented, Switch],
   template: `
     <h1>Settings</h1>
 
     <section class="card">
       <h2>Appearance</h2>
-      <div class="segmented" role="radiogroup" aria-label="Theme">
-        @for (option of options; track option) {
-          <button
-            type="button"
-            role="radio"
-            [attr.aria-checked]="theme.mode() === option"
-            [class.on]="theme.mode() === option"
-            (click)="theme.set(option)"
-          >
-            {{ option }}
-          </button>
-        }
-      </div>
-      <label class="check">
-        <input type="checkbox" [checked]="prefs.highContrast()" (change)="prefs.setHighContrast($any($event.target).checked)" />
-        Colour-blind friendly colours (orange and blue)
-      </label>
+      <app-segmented label="Theme" [options]="themes" [value]="theme.mode()" (valueChange)="theme.set($event)" />
+      <div class="gap"></div>
+      <app-switch [checked]="prefs.highContrast()" (checkedChange)="prefs.setHighContrast($event)">
+        Colour-blind friendly colours
+        <small>Orange and blue instead of green and yellow.</small>
+      </app-switch>
     </section>
 
     @if (updater.supported) {
       <section class="card">
         <h2>App updates</h2>
-        <p class="muted">Version {{ updater.currentVersion() ?? '-' }}. Updates come from GitHub Releases.</p>
+        <p class="muted">Version {{ updater.currentVersion() ?? '-' }}</p>
 
         @switch (updater.state()) {
           @case ('checking') {
-            <p class="muted">Checking...</p>
+            <p class="status"><app-loader [size]="18" /> Checking for updates</p>
           }
           @case ('upToDate') {
-            <p>You are on the latest version.</p>
+            <p class="status ok">You are on the latest version.</p>
           }
           @case ('available') {
             <p>
-              <strong>Version {{ updater.update()?.version }}</strong> is available.
+              <strong>Version {{ updater.update()?.version }}</strong> is ready to install.
             </p>
-            @if (updater.update()?.notes) {
-              <pre class="notes">{{ updater.update()?.notes }}</pre>
-            }
-            <button type="button" (click)="updater.install()">Download and install</button>
-          }
-          @case ('downloading') {
-            <div class="bar" role="progressbar" [attr.aria-valuenow]="(updater.progress() * 100) | number: '1.0-0'">
-              <span [style.transform]="'scaleX(' + updater.progress() + ')'"></span>
-            </div>
-          }
-          @case ('needsPermission') {
-            <p>Android needs your permission to install updates from Zenigma.</p>
-            <button type="button" (click)="updater.allowInstalls()">Open settings</button>
           }
           @case ('error') {
-            <p class="error">{{ updater.message() }}</p>
+            @if (!updater.sheetOpen()) {
+              <p class="error">{{ updater.message() }}</p>
+            }
           }
         }
 
-        @if (updater.state() !== 'checking' && updater.state() !== 'downloading') {
+        @if (updater.state() === 'available' && !updater.sheetOpen()) {
+          <button type="button" (click)="updater.sheetOpen.set(true)">See what's new</button>
+        } @else if (updater.state() !== 'checking' && updater.state() !== 'downloading' && updater.state() !== 'installing') {
           <button type="button" class="secondary" (click)="updater.check()">Check for updates</button>
         }
       </section>
     }
+
+    <section class="card">
+      <h2>Diagnostics</h2>
+      <p class="muted">See the local event log and test sync with the server.</p>
+      <a class="button secondary" routerLink="/sync-test">Open sync test</a>
+    </section>
   `,
   styles: `
+    :host {
+      display: block;
+      max-width: 36rem;
+      margin: 0 auto;
+    }
     section + section {
       margin-top: 1rem;
     }
-    .segmented {
-      display: flex;
-      max-width: 22rem;
-      padding: 0.2rem;
-      gap: 0.2rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 999px;
+    h2 {
+      margin-bottom: 1rem;
     }
-    .segmented button {
-      text-transform: capitalize;
-      white-space: nowrap;
-      padding-inline: 0.9rem;
-      border: 0;
-      background: transparent;
+    .gap {
+      height: 1.25rem;
+    }
+    small {
+      display: block;
       color: var(--muted);
-      border-radius: 999px;
-      flex: 1;
+      font-size: 0.8rem;
     }
-    .segmented button.on {
-      background: var(--accent);
-      color: var(--accent-contrast);
-    }
-    .check {
+    .status {
       display: flex;
-      flex-direction: row;
       align-items: center;
       gap: 0.6rem;
-      margin-top: 1rem;
-      color: var(--text);
     }
-    .check input {
-      width: 1.1rem;
-      height: 1.1rem;
-      min-height: 0;
-      accent-color: var(--accent);
+    .status.ok {
+      color: var(--good);
     }
     .notes {
       white-space: pre-wrap;
@@ -119,27 +96,39 @@ import { UpdaterService } from '../../core/updater.service';
       margin: 0 0 1rem;
     }
     .bar {
-      height: 6px;
+      height: 8px;
       border-radius: 99px;
-      background: var(--border);
+      background: var(--surface-2);
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
     .bar span {
       display: block;
       height: 100%;
       background: var(--accent);
+      border-radius: 99px;
       transform-origin: left;
       transition: transform 0.25s ease-out;
     }
+    p + button,
+    p + a,
+    pre + button {
+      margin-top: 0.25rem;
+    }
+    button + button {
+      margin-left: 0.5rem;
+    }
   `,
-  imports: [DecimalPipe],
 })
 export class Settings implements OnInit {
   protected readonly theme = inject(ThemeService);
   protected readonly updater = inject(UpdaterService);
   protected readonly prefs = inject(PrefsService);
-  protected readonly options: ThemeMode[] = ['system', 'light', 'dark'];
+  protected readonly themes: SegmentOption<ThemeMode>[] = [
+    { value: 'system', label: 'System' },
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+  ];
 
   ngOnInit(): void {
     void this.updater.loadVersion();

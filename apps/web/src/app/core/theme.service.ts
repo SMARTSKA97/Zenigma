@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 const KEY = 'zenigma.theme';
@@ -20,6 +21,9 @@ export class ThemeService {
 
   apply(): void {
     const root = document.documentElement;
+    // The Android app follows Material 3; `?ui=android` previews it in a desktop browser.
+    const android = Capacitor.getPlatform() === 'android' || new URLSearchParams(location.search).get('ui') === 'android';
+    if (android) root.setAttribute('data-platform', 'android');
     if (this.mode() === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', this.mode());
   }

@@ -1,62 +1,94 @@
+/* Zenigma design tokens.
+   Direction: ink on stone. A cool, quiet surface, one deep ink-blue accent, and colour reserved for the games. */
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bricolage';
+  src: url('/fonts/bricolage.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+
 :root {
-  --bg: #fafafa;
+  --bg: #f2f4f3;
   --surface: #ffffff;
-  --text: #111113;
-  --muted: #6b6b76;
-  --border: #e8e8ec;
-  --accent: #4f46e5;
+  --surface-2: #eaeeed;
+  --thumb: #ffffff;
+  --text: #0f1618;
+  --muted: #5d6b6f;
+  --border: #dfe5e4;
+  --accent: #2b3dae;
+  --accent-soft: #e4e8fb;
   --accent-contrast: #ffffff;
-  --good: #15803d;
-  --warn: #b45309;
-  --bad: #dc2626;
-  --radius: 14px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.04);
+  --ink: #0f1618;
+  --ink-contrast: #f6f8f7;
+  --good: #167a46;
+  --warn: #9a5b06;
+  --bad: #c42b2b;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 1px 2px rgb(15 22 24 / 0.05), 0 8px 24px -8px rgb(15 22 24 / 0.1);
+  --shadow-lift: 0 2px 4px rgb(15 22 24 / 0.06), 0 16px 32px -12px rgb(15 22 24 / 0.2);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --font-display: 'Bricolage', 'Geist', system-ui, sans-serif;
+  --font-body: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Game tiles: each game has a hue; lightness flips with the theme. */
+  --tile-l: 0.94;
+  --tile-c: 0.035;
+  --glyph-l: 0.4;
+  --glyph-c: 0.15;
+
   --mark-correct: #2f9e5f;
   --mark-present: #c9a227;
-  --mark-absent: #787c86;
-  --key-bg: #e6e6eb;
+  --mark-absent: #7a828a;
+  --key-bg: #e4e9e8;
   color-scheme: light;
+}
+
+@mixin dark-tokens {
+  --bg: #0b1012;
+  --surface: #141b1e;
+  --surface-2: #1c2528;
+  --thumb: #2f3c41;
+  --text: #eef2f1;
+  --muted: #8fa0a4;
+  --border: #243034;
+  --accent: #93a2ff;
+  --accent-soft: #1c2250;
+  --accent-contrast: #0b1012;
+  --ink: #eef2f1;
+  --ink-contrast: #0b1012;
+  --good: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.4), 0 16px 32px -12px rgb(0 0 0 / 0.7);
+  --tile-l: 0.27;
+  --tile-c: 0.045;
+  --glyph-l: 0.82;
+  --glyph-c: 0.11;
+  --mark-correct: #2f8a57;
+  --mark-present: #a8851c;
+  --mark-absent: #39434a;
+  --key-bg: #26313a;
+  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #0c0c0f;
-    --surface: #16161b;
-    --text: #f3f3f6;
-    --muted: #9b9ba8;
-    --border: #26262e;
-    --accent: #8b85ff;
-    --accent-contrast: #0c0c0f;
-    --good: #4ade80;
-    --warn: #fbbf24;
-    --bad: #f87171;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-    --mark-correct: #2f8a57;
-    --mark-present: #a8851c;
-    --mark-absent: #3c3d46;
-    --key-bg: #2a2a33;
-    color-scheme: dark;
+    @include dark-tokens;
   }
 }
 
 :root[data-theme='dark'] {
-  --bg: #0c0c0f;
-  --surface: #16161b;
-  --text: #f3f3f6;
-  --muted: #9b9ba8;
-  --border: #26262e;
-  --accent: #8b85ff;
-  --accent-contrast: #0c0c0f;
-  --good: #4ade80;
-  --warn: #fbbf24;
-  --bad: #f87171;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --mark-correct: #2f8a57;
-  --mark-present: #a8851c;
-  --mark-absent: #3c3d46;
-  --key-bg: #2a2a33;
-  color-scheme: dark;
+  @include dark-tokens;
 }
 
 /* Colour-blind friendly palette: orange and blue instead of green and yellow. */
@@ -75,7 +107,7 @@ body {
   min-height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -83,31 +115,45 @@ body {
   overflow-wrap: anywhere;
 }
 
-h1 {
-  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.1rem);
-  letter-spacing: -0.02em;
-}
-
 h1,
 h2,
 h3 {
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-weight: 650;
+  line-height: 1.15;
   margin: 0 0 0.5rem;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 1.2rem + 2.4vw, 2.6rem);
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-size: 1.15rem;
+  letter-spacing: -0.015em;
+}
+
+h3 {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0 0 0.75rem;
+  text-wrap: pretty;
 }
 
 a {
   color: var(--accent);
 }
 
-h2 {
-  font-size: 1.1rem;
-}
-
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1rem 1.25rem;
+  padding: 1.25rem;
   box-shadow: var(--shadow);
 }
 
@@ -122,40 +168,61 @@ h2 {
   align-items: center;
 }
 
+/* Buttons: ink-filled pills for the main action, quiet outlined ones for the rest. */
 button,
 .button {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border-radius: 10px;
-  padding: 0.6rem 1.1rem;
-  min-height: 44px; /* comfortable touch target */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--ink-contrast);
+  border-radius: 999px;
+  padding: 0.65rem 1.35rem;
+  min-height: 46px;
+  text-decoration: none;
   transition:
-    transform 0.15s var(--ease),
+    transform 0.18s var(--ease),
     background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
     opacity 0.2s var(--ease);
 }
 
-button:active:not(:disabled) {
+button:hover:not(:disabled),
+.button:hover {
+  box-shadow: var(--shadow-lift);
+}
+
+button:active:not(:disabled),
+.button:active {
   transform: scale(0.97);
 }
 
-button.secondary {
+button.secondary,
+.button.secondary {
   background: transparent;
-  color: var(--accent);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+button.secondary:hover:not(:disabled) {
+  border-color: var(--muted);
+  box-shadow: none;
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 input,
@@ -165,21 +232,30 @@ select {
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.6rem 0.8rem;
-  min-height: 44px;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem;
+  min-height: 50px;
   min-width: 0;
-  transition: border-color 0.2s var(--ease);
+  transition:
+    border-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+input:hover {
+  border-color: var(--muted);
 }
 
 input:focus {
+  outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 label {
   display: grid;
-  gap: 0.25rem;
-  font-size: 0.9rem;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--muted);
 }
 
@@ -187,22 +263,32 @@ label {
   color: var(--bad);
 }
 
-/* Smooth page changes (View Transitions) and entrance for each screen. */
+/* Smooth page changes (View Transitions). */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.22s;
+  animation-duration: 0.24s;
   animation-timing-function: var(--ease);
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
 }
 
-.card {
-  animation: rise 0.35s var(--ease) backwards;
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Placeholder blocks shown while content loads. */
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(100deg, var(--surface-2) 30%, color-mix(in srgb, var(--surface-2) 55%, var(--surface)) 50%, var(--surface-2) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -218,5 +304,110 @@ label {
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Android: Material 3. Tonal surfaces without borders or shadows, a primary-coloured filled button, a state layer on
+   press, 56dp outlined fields, Roboto (the system font) and a full-width navigation bar with a pill indicator.
+   --------------------------------------------------------------------------------------------------------------- */
+:root[data-platform='android'] {
+  --font-display: system-ui, 'Roboto', sans-serif;
+  --font-body: system-ui, 'Roboto', sans-serif;
+  --radius: 24px;
+  --shadow: none;
+  --shadow-lift: 0 1px 3px rgb(0 0 0 / 0.2), 0 4px 12px rgb(0 0 0 / 0.12);
+  --ink: var(--accent);
+  --ink-contrast: var(--accent-contrast);
+  --surface: #f9fbfa;
+  --surface-2: #e9eeed;
+  --thumb: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-platform='android']:not([data-theme='light']) {
+    --surface: #141b1e;
+    --surface-2: #232d31;
+    --thumb: #3a474c;
+  }
+}
+:root[data-platform='android'][data-theme='dark'] {
+  --surface: #141b1e;
+  --surface-2: #232d31;
+  --thumb: #3a474c;
+}
+
+:root[data-platform='android'] {
+  h1,
+  h2,
+  h3 {
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+  h1 {
+    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.25rem);
+  }
+
+  .card {
+    background: var(--surface-2);
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  button,
+  .button {
+    position: relative;
+    overflow: hidden;
+    min-height: 40px;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    border-color: var(--accent);
+  }
+  button::after,
+  .button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s var(--ease);
+  }
+  button:active:not(:disabled)::after,
+  .button:active::after {
+    opacity: 0.14;
+    transition: none;
+  }
+  button:active:not(:disabled),
+  .button:active {
+    transform: none;
+  }
+  button:hover:not(:disabled),
+  .button:hover {
+    box-shadow: none;
+  }
+  /* Tonal and text buttons for secondary actions. */
+  button.secondary,
+  .button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--border);
+  }
+
+  input,
+  select {
+    min-height: 56px;
+    border-radius: 14px;
+    border-color: var(--muted);
+    background: transparent;
+  }
+  input:focus {
+    border-width: 1px;
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  label {
+    font-weight: 400;
   }
 }

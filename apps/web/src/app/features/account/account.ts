@@ -2,70 +2,234 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { AuthService } from '../../core/auth.service';
 import { SyncService } from '../../core/sync.service';
+import { Loader } from '../../shared/loader';
+import { Segmented, SegmentOption } from '../../shared/segmented';
 
 @Component({
   selector: 'app-account',
+  imports: [Loader, Segmented],
   template: `
-    <h1>Account</h1>
-
     @if (auth.user(); as user) {
-      <div class="card">
-        <p>
-          Signed in as <strong>{{ user.displayName || user.email }}</strong>
-          @if (user.displayName) {
-            <span class="muted">({{ user.email }})</span>
-          }
-        </p>
-        <button class="secondary" (click)="signOut()">Sign out</button>
-        @if (sync.pendingCount() > 0) {
-          <p class="error">Signing out deletes {{ sync.pendingCount() }} item(s) that have not synced yet.</p>
+      <section class="profile">
+        <div class="avatar" aria-hidden="true">{{ initial(user) }}</div>
+        <h1>{{ user.displayName || user.email }}</h1>
+        @if (user.displayName) {
+          <p class="muted">{{ user.email }}</p>
         }
-      </div>
-    } @else {
-      @if (auth.sessionExpired()) {
-        <p class="card">Your session has ended. Sign in again; nothing on this device was lost.</p>
-      }
-      <p class="muted">Guest mode works fully offline. Create an account to sync your history across devices.</p>
 
-      <form class="card form" (submit)="submit($event)">
-        <div class="row">
-          <button type="button" [class.secondary]="mode() !== 'signin'" (click)="mode.set('signin')">Sign in</button>
-          <button type="button" [class.secondary]="mode() !== 'register'" (click)="mode.set('register')">Create account</button>
+        <div class="card stats">
+          <div>
+            <span class="label">Sync</span>
+            <strong>
+              @if (sync.syncing()) {
+                Syncing
+              } @else if (sync.pendingCount() > 0) {
+                {{ sync.pendingCount() }} waiting
+              } @else {
+                Up to date
+              }
+            </strong>
+          </div>
+          <div>
+            <span class="label">Connection</span>
+            <strong>{{ sync.online() ? 'Online' : 'Offline' }}</strong>
+          </div>
         </div>
-        @if (mode() === 'register') {
-          <label>
-            Display name
-            <input name="displayName" autocomplete="nickname" [value]="displayName()" (input)="displayName.set($any($event.target).value)" />
-          </label>
+
+        @if (sync.pendingCount() > 0) {
+          <p class="error warning">Signing out deletes {{ sync.pendingCount() }} item(s) that have not synced yet.</p>
         }
-        <label>
-          Email
-          <input name="email" type="email" autocomplete="email" required [value]="email()" (input)="email.set($any($event.target).value)" />
-        </label>
-        <label>
-          Password
-          <input
-            name="password"
-            type="password"
-            required
-            minlength="8"
-            [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
-            [value]="password()"
-            (input)="password.set($any($event.target).value)"
+        <button type="button" class="secondary" [disabled]="signingOut()" (click)="signOut()">
+          @if (signingOut()) {
+            <app-loader [size]="16" />
+          }
+          Sign out
+        </button>
+      </section>
+    } @else {
+      <section class="auth">
+        <app-loader class="mark" [size]="40" [animate]="busy()" />
+        <h1>{{ mode() === 'register' ? 'Create your account' : 'Welcome back' }}</h1>
+        <p class="muted lede">
+          Guest mode works fully offline. An account keeps your streaks and history in sync across devices.
+        </p>
+
+        @if (auth.sessionExpired()) {
+          <p class="notice">Your session has ended. Sign in again; nothing on this device was lost.</p>
+        }
+
+        <form class="card form" [class.busy]="busy()" (submit)="submit($event)">
+          <app-segmented
+            label="Sign in or create account"
+            [options]="modes"
+            [value]="mode()"
+            (valueChange)="mode.set($event)"
           />
-        </label>
-        @if (error(); as message) {
-          <p class="error">{{ message }}</p>
-        }
-        <button type="submit" [disabled]="busy()">{{ mode() === 'register' ? 'Create account' : 'Sign in' }}</button>
-      </form>
+
+          @if (mode() === 'register') {
+            <label>
+              Display name
+              <input name="displayName" autocomplete="nickname" [value]="displayName()" (input)="displayName.set($any($event.target).value)" />
+            </label>
+          }
+          <label>
+            Email
+            <input name="email" type="email" inputmode="email" autocomplete="email" required [value]="email()" (input)="email.set($any($event.target).value)" />
+          </label>
+          <label>
+            Password
+            <span class="password">
+              <input
+                name="password"
+                [type]="reveal() ? 'text' : 'password'"
+                required
+                minlength="8"
+                [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
+                [value]="password()"
+                (input)="password.set($any($event.target).value)"
+              />
+              <button type="button" class="reveal" (click)="reveal.set(!reveal())" [attr.aria-pressed]="reveal()">
+                {{ reveal() ? 'Hide' : 'Show' }}
+              </button>
+            </span>
+          </label>
+
+          @if (error(); as message) {
+            <p class="alert" role="alert">{{ message }}</p>
+          }
+
+          <button type="submit" class="submit" [disabled]="busy()">
+            @if (busy()) {
+              <app-loader [size]="18" />
+              {{ mode() === 'register' ? 'Creating account' : 'Signing in' }}
+            } @else {
+              {{ mode() === 'register' ? 'Create account' : 'Sign in' }}
+            }
+          </button>
+        </form>
+      </section>
     }
   `,
   styles: `
+    :host {
+      display: block;
+    }
+    .auth,
+    .profile {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      max-width: 26rem;
+      margin: clamp(0rem, 4vh, 2.5rem) auto 0;
+    }
+    .mark {
+      margin-bottom: 1.25rem;
+    }
+    .auth h1,
+    .profile h1 {
+      font-size: clamp(1.6rem, 1.2rem + 1.8vw, 2.1rem);
+    }
+    .lede {
+      max-width: 34ch;
+      margin-bottom: 1.5rem;
+    }
+    .notice {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-size: 0.9rem;
+    }
     .form {
+      width: 100%;
       display: grid;
       gap: 1rem;
-      max-width: 24rem;
+      text-align: left;
+      padding: 1.25rem;
+      transition: opacity 0.25s var(--ease);
+    }
+    .form.busy {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .password {
+      position: relative;
+      display: block;
+    }
+    .password input {
+      width: 100%;
+      padding-right: 4.5rem;
+    }
+    .reveal {
+      position: absolute;
+      top: 50%;
+      right: 0.35rem;
+      transform: translateY(-50%);
+      min-height: 36px;
+      padding: 0 0.8rem;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.85rem;
+      box-shadow: none !important;
+    }
+    .reveal:active:not(:disabled) {
+      transform: translateY(-50%) scale(0.95);
+    }
+    .alert {
+      margin: 0;
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--bad) 12%, transparent);
+      color: var(--bad);
+      font-size: 0.9rem;
+      animation: nudge 0.4s var(--ease);
+    }
+    @keyframes nudge {
+      20%,
+      60% {
+        transform: translateX(-5px);
+      }
+      40%,
+      80% {
+        transform: translateX(5px);
+      }
+    }
+    .submit {
+      width: 100%;
+      min-height: 52px;
+    }
+
+    .avatar {
+      width: 5rem;
+      height: 5rem;
+      display: grid;
+      place-items: center;
+      margin-bottom: 1rem;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--ink-contrast);
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      animation: rise 0.4s var(--spring) backwards;
+    }
+    .stats {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin: 1.25rem 0;
+      text-align: left;
+    }
+    .stats .label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .warning {
+      margin-bottom: 1rem;
     }
   `,
 })
@@ -79,6 +243,16 @@ export class Account {
   protected readonly displayName = signal('');
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly reveal = signal(false);
+  protected readonly signingOut = signal(false);
+  protected readonly modes: SegmentOption<'signin' | 'register'>[] = [
+    { value: 'signin', label: 'Sign in' },
+    { value: 'register', label: 'Create account' },
+  ];
+
+  protected initial(user: { displayName?: string | null; email: string }): string {
+    return (user.displayName || user.email).trim().charAt(0);
+  }
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();
@@ -100,8 +274,13 @@ export class Account {
   }
 
   protected async signOut(): Promise<void> {
-    await this.auth.logout();
-    await this.sync.refreshLocal();
+    this.signingOut.set(true);
+    try {
+      await this.auth.logout();
+      await this.sync.refreshLocal();
+    } finally {
+      this.signingOut.set(false);
+    }
   }
 
   private message(error: unknown): string {

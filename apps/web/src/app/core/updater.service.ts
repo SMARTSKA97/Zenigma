@@ -37,7 +37,15 @@ export interface AvailableUpdate {
   sha256?: string;
 }
 
-export type UpdateState = 'idle' | 'checking' | 'upToDate' | 'available' | 'downloading' | 'needsPermission' | 'error';
+export type UpdateState =
+  | 'idle'
+  | 'checking'
+  | 'upToDate'
+  | 'available'
+  | 'downloading'
+  | 'installing'
+  | 'needsPermission'
+  | 'error';
 
 const TAG_PREFIX = 'android-v';
 
@@ -65,6 +73,11 @@ export class UpdaterService {
   readonly currentVersion = signal<string | null>(null);
   readonly update = signal<AvailableUpdate | null>(null);
   readonly progress = signal(0);
+  /** Bytes downloaded and expected, for "12.4 of 29.8 MB". */
+  readonly received = signal(0);
+  readonly total = signal(0);
+  /** Whether the update sheet is showing. Opened by a check that finds an update; closed by "Later". */
+  readonly sheetOpen = signal(false);
   readonly message = signal<string | null>(null);
 
   async loadVersion(): Promise<void> {
@@ -101,6 +114,7 @@ export class UpdaterService {
         sha256: apk.digest?.replace('sha256:', ''),
       });
       this.state.set('available');
+      this.sheetOpen.set(true);
     } catch {
       this.message.set('Could not check for updates. Are you online?');
       this.state.set('error');
@@ -116,16 +130,24 @@ export class UpdaterService {
         return;
       }
       this.progress.set(0);
+      this.received.set(0);
+      this.total.set(0);
       this.state.set('downloading');
-      const handle = await ApkInstaller.addListener('downloadProgress', (p) =>
-        this.progress.set(p.total > 0 ? Math.min(1, p.received / p.total) : 0),
-      );
+      const handle = await ApkInstaller.addListener('downloadProgress', (p) => {
+        this.received.set(p.received);
+        this.total.set(p.total);
+        const done = p.total > 0 ? Math.min(1, p.received / p.total) : 0;
+        this.progress.set(done);
+        // Everything is on the device: from here Android verifies and opens its own installer.
+        if (done >= 1) this.state.set('installing');
+      });
       try {
         await ApkInstaller.downloadAndInstall({ url: update.url, sha256: update.sha256 });
       } finally {
         await handle.remove();
       }
       this.state.set('available');
+      this.sheetOpen.set(false);
     } catch (error) {
       this.message.set(error instanceof Error ? error.message : 'The update failed.');
       this.state.set('error');
