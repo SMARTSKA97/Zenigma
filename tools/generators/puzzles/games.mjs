@@ -1,12 +1,13 @@
 import { generateQueens, solveQueens } from './queens.mjs';
 import { generateSudoku, solveSudoku } from './sudoku.mjs';
 import { generateZip, solveZip } from './zip.mjs';
+import { generatePatches, solvePatches } from './patches.mjs';
 import { generateTango, solveTango } from './tango.mjs';
 import { rngFrom } from './rng.mjs';
 
-export const GAMES = ['queens', 'tango', 'sudoku', 'zip'];
+export const GAMES = ['queens', 'tango', 'sudoku', 'zip', 'patches'];
 /** Practice tracks: each has its own 1000 levels. A game can have several (Sudoku: classic 9x9 and mini 6x6), and more can be added. */
-export const TRACKS = ['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip'];
+export const TRACKS = ['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip', 'patches'];
 export const gameOfTrack = (track) => track.split('-')[0];
 export const LEVELS_PER_GAME = 1000;
 
@@ -46,6 +47,10 @@ export function practiceLevel(track, level) {
       const size = h < 0.35 ? 5 : h < 0.7 ? 6 : 7;
       return generateZip(size, rng, Math.max(5, Math.round(9 - 4 * h))); // numbers shown
     }
+    case 'patches': {
+      const size = h < 0.25 ? 5 : h < 0.5 ? 6 : h < 0.75 ? 7 : 8;
+      return generatePatches(size, rng, Math.round(3 * (1 - h))); // shape hints shown beyond the needed ones
+    }
     default:
       throw new Error(`Unknown game ${game}`);
   }
@@ -61,6 +66,7 @@ export const DAILY_RAMP = {
   zip: [[5, 8], [5, 6], [6, 8], [6, 6], [6, 5], [7, 8], [7, 6]], // [board size, numbers shown] (fewer numbers is harder)
   tango: [6, 5, 4, 3, 2, 1, 0], // extra clues left in (fewer is harder)
   sudoku: [20, 18, 16, 15, 14, 13, 12], // numbers left in the mini 6x6 grid (fewer is harder)
+  patches: [[5, 3], [5, 2], [6, 2], [6, 1], [7, 1], [7, 0], [8, 0]], // [board size, extra shape hints] (fewer is harder)
 };
 
 export const weekdayOf = (date) => (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
@@ -78,6 +84,8 @@ export function dailyPuzzle(game, seed, weekday = 3) {
       return generateSudoku(rng, level, 6); // the daily is the mini 6x6 grid
     case 'zip':
       return generateZip(level[0], rng, level[1]);
+    case 'patches':
+      return generatePatches(level[0], rng, level[1]);
   }
 }
 
@@ -93,6 +101,8 @@ export function solve(track, puzzle) {
       return solveSudoku(puzzle, 2);
     case 'zip':
       return solveZip(puzzle, 2);
+    case 'patches':
+      return solvePatches(puzzle, 2);
     default:
       throw new Error(`Unknown game ${game}`);
   }

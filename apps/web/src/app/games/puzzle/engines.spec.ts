@@ -2,6 +2,8 @@ import sudoku from '../../../../../../tests/vectors/puzzles/sudoku.json';
 import queens from '../../../../../../tests/vectors/puzzles/queens.json';
 import tango from '../../../../../../tests/vectors/puzzles/tango.json';
 import zip from '../../../../../../tests/vectors/puzzles/zip.json';
+import patches from '../../../../../../tests/vectors/puzzles/patches.json';
+import { verify as verifyPatches, place as patchPlace, fits as patchFits } from '../patches/engine';
 import { verify as verifyZip, step as zipStep, blankPath, fits as zipFits } from '../zip/engine';
 import { verify as verifyQueens } from '../queens/engine';
 import { verify as verifySudoku } from '../sudoku/engine';
@@ -20,6 +22,7 @@ describe('puzzle rules (shared vectors, also run by the API)', () => {
     ['tango', tango as Case[], verifyTango],
     ['sudoku', sudoku as Case[], verifySudoku],
     ['zip', zip as Case[], verifyZip],
+    ['patches', patches as Case[], verifyPatches],
   ];
   for (const [game, cases, verify] of suites) {
     for (const c of cases) {
@@ -97,5 +100,20 @@ describe('level difficulty labels and stars', () => {
     expect(starsFor(50_000, 30_000)).toBe(2);
     expect(starsFor(90_000, 30_000)).toBe(1);
     expect(parMs('queens', { size: 5, regions: [] })).toBe(30_000);
+  });
+});
+
+describe('patches moves', () => {
+  const valid = (patches as Case[])[0];
+
+  it('replaces the rectangles a new one overlaps', () => {
+    const next = patchPlace([[0, 0, 1, 1], [3, 3, 3, 3]], [1, 1, 2, 2]);
+    expect(next).toEqual([[3, 3, 3, 3], [1, 1, 2, 2]]);
+  });
+
+  it('accepts the answer as a saved board and rejects one from a bigger grid', () => {
+    expect(patchFits(valid.puzzle, valid.solution)).toBe(true);
+    expect(patchFits(valid.puzzle, [[0, 0, 9, 9]])).toBe(false);
+    expect(patchFits(valid.puzzle, [[0, 0, 1, 1], [1, 1, 2, 2]])).toBe(false);
   });
 });

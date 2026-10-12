@@ -49,17 +49,27 @@ interface ZoneView {
 /** Where level n sits across the width (0 to 360): a lazy S-curve that carries on between zones. */
 const xOf = (level: number): number => W / 2 + 112 * Math.sin(level * 0.78 + 0.6);
 
-/** A smooth curve through the points (Catmull-Rom turned into cubic Béziers). */
-function smooth(points: [number, number][]): string {
+/** Where the road crosses the line between level `level` and the next one: the same spot for both zones, so the road is one piece. */
+const crossingX = (level: number): number => (xOf(level) + xOf(level + 1)) / 2;
+
+/**
+ * A smooth curve through the points (Catmull-Rom turned into cubic Béziers). With `vertical`, the first and last
+ * point are on a zone's edge and the road meets it heading straight up or down, so neighbouring zones join without a kink.
+ */
+function smooth(points: [number, number][], vertical: { start: boolean; end: boolean }): string {
   if (points.length < 2) return '';
+  const last = points.length - 2;
   let d = `M${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`;
-  for (let i = 0; i < points.length - 1; i++) {
+  for (let i = 0; i <= last; i++) {
     const p0 = points[i - 1] ?? points[i];
     const p1 = points[i];
     const p2 = points[i + 1];
     const p3 = points[i + 2] ?? p2;
-    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
-    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    let c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    let c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    const reach = Math.abs(p2[1] - p1[1]) * 0.45;
+    if (i === 0 && vertical.start) c1 = [p1[0], p1[1] - reach]; // leaves the bottom edge heading up
+    if (i === last && vertical.end) c2 = [p2[0], p2[1] + reach]; // arrives at the top edge heading up
     d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
   }
   return d;
@@ -239,7 +249,7 @@ export class LevelMap {
       const first = z * ZONE_SIZE + 1;
       const nodes: NodeView[] = [];
       const pts: [number, number][] = [];
-      if (first > 1) pts.push([xOf(first - 1), H + GAP / 2]);
+      if (first > 1) pts.push([crossingX(first - 1), H]);
       for (let i = 0; i < ZONE_SIZE; i++) {
         const level = first + i;
         const y = H - (i + 0.5) * GAP;
@@ -258,13 +268,13 @@ export class LevelMap {
         });
       }
       const lastLevel = first + ZONE_SIZE - 1;
-      if (lastLevel < LEVEL_COUNT) pts.push([xOf(lastLevel + 1), TOP - GAP / 2]);
+      if (lastLevel < LEVEL_COUNT) pts.push([crossingX(lastLevel), 0]);
       zones.push({
         index: z,
         name: ZONE_NAMES[z % ZONE_NAMES.length] + (z >= ZONE_NAMES.length ? ' ' + (Math.floor(z / ZONE_NAMES.length) + 1) : ''),
         hue: (140 + z * 47) % 360,
         nodes,
-        path: smooth(pts),
+        path: smooth(pts, { start: first > 1, end: lastLevel < LEVEL_COUNT }),
         decor: this.decorFor(z, nodes),
         done: nodes.filter((n) => n.state === 'done').length / ZONE_SIZE,
       });

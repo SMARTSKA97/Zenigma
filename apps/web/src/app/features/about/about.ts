@@ -16,7 +16,7 @@ import { UpdaterService } from '../../core/updater.service';
     <section class="card">
       <h2>What is inside</h2>
       <p>
-        Word Guess, Queens, Tango, Sudoku (classic and mini) and Zip, with more on the way. Every day brings one puzzle per game, the same for everyone,
+        Word Guess, Queens, Tango, Sudoku (classic and mini), Zip and Patches, with more on the way. Every day brings one puzzle per game, the same for everyone,
         resetting at midnight India time. Practice has endless levels, and every level is identical for every player.
       </p>
     </section>

@@ -34,7 +34,17 @@ export function shareCard(input: ShareInput): string {
     for (let r = 0; r < 6; r++) lines.push(board.slice(r * 6, r * 6 + 6).map((v) => (v === 's' ? '🌞' : '🌙')).join(''));
   }
 
-  else if (input.game === 'zip') {
+  else if (input.game === 'patches') {
+    // Each patch gets a colour, so the cut of the grid shows without giving the clues away.
+    const puzzle = input.puzzle as { size: number };
+    const rects = input.state as number[][];
+    const colours = ['🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '🟫'];
+    const grid = new Array<string>(puzzle.size * puzzle.size).fill('⬜');
+    rects.forEach((r, k) => {
+      for (let row = r[0]; row <= r[2]; row++) for (let col = r[1]; col <= r[3]; col++) grid[row * puzzle.size + col] = colours[k % colours.length];
+    });
+    for (let r = 0; r < puzzle.size; r++) lines.push(grid.slice(r * puzzle.size, r * puzzle.size + puzzle.size).join(''));
+  } else if (input.game === 'zip') {
     // The path as colours from start (blue) to finish (red): the shape of the route without its turns.
     const puzzle = input.puzzle as { size: number };
     const path = input.state as number[];

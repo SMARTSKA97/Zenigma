@@ -8,13 +8,13 @@ describe('practice tracks', () => {
   });
 
   it('gives Sudoku a classic and a mini variant, and no other game variants', () => {
-    expect(variantsOf('sudoku').map((v) => v.id)).toEqual(['classic', 'mini']);
+    expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini']);
     expect(variantsOf('queens')).toEqual([]);
     expect(variantsOf('word-guess')).toEqual([]);
   });
 
   it('lists one track per variant', () => {
-    expect(PRACTICE_TRACKS.map((t) => t.track)).toEqual(['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip']);
+    expect(PRACTICE_TRACKS.map((t) => t.track)).toEqual(['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip', 'patches']);
   });
 
   it('links to the map and the game', () => {

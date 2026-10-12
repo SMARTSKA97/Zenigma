@@ -21,12 +21,21 @@ import { ChangeDetectionStrategy, Component, input, model } from '@angular/core'
       color: var(--text);
       font-size: 0.95rem;
     }
-    input {
+    label {
+      position: relative;
+    }
+    /* Raised above Android's global 56dp text-field style, which would otherwise stretch this hidden input over the rows around it and swallow taps. */
+    :host input {
       position: absolute;
+      inset: 0 auto auto 0;
       opacity: 0;
       width: 1px;
       height: 1px;
       min-height: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      pointer-events: none;
     }
     .track {
       position: relative;

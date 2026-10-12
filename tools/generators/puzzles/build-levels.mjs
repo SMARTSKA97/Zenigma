@@ -1,5 +1,6 @@
 // Generates the practice levels shipped inside the app and the API (so both agree on every level).
-//   node build-levels.mjs
+//   node build-levels.mjs            (every track)
+//   node build-levels.mjs patches    (only the named tracks)
 // Output is deterministic: running it again changes nothing unless the generator changes.
 // Levels are generated in parallel worker threads (Zip's bigger boards take a while).
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -17,9 +18,11 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const root = new URL('../../../', import.meta.url);
+  const only = process.argv.slice(2);
+  const tracks = only.length ? TRACKS.filter((t) => only.includes(t)) : TRACKS;
   const workers = Math.max(1, availableParallelism());
   const jobs = [];
-  for (const game of TRACKS) {
+  for (const game of tracks) {
     // Interleaved chunks, so every worker gets a similar mix of easy and hard levels.
     for (let w = 0; w < workers; w++) {
       const levels = [];
@@ -34,7 +37,7 @@ if (!isMainThread) {
     }
   }
   const results = await Promise.all(jobs);
-  for (const game of TRACKS) {
+  for (const game of tracks) {
     const levels = new Array(LEVELS_PER_GAME);
     for (const r of results.filter((x) => x.game === game)) r.levels.forEach((level, i) => (levels[level - 1] = r.puzzles[i]));
     const json = JSON.stringify(levels);

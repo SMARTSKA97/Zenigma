@@ -6,6 +6,7 @@ import { generateQueens, solveQueens } from './queens.mjs';
 import { generateTango, solveTango } from './tango.mjs';
 import { generateZip, solveZip } from './zip.mjs';
 import { generateSudoku, solveSudoku } from './sudoku.mjs';
+import { generatePatches, solvePatches } from './patches.mjs';
 
 const out = new URL('../../../tests/vectors/puzzles/', import.meta.url);
 mkdirSync(out, { recursive: true });
@@ -83,11 +84,25 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
   }
   write('zip', cases);
 }
+// Patches: solution is the list of rectangles [row0, col0, row1, col1] (inclusive) that cut the grid.
+{
+  const cases = [];
+  for (const [size, extra] of [[5, 1], [7, 0]]) {
+    const puzzle = generatePatches(size, rngFrom(`vector-patches-${size}`), extra);
+    const solution = solvePatches(puzzle).solution;
+    cases.push({ name: `${size}x${size} valid`, puzzle, solution, valid: true });
+    cases.push({ name: `${size}x${size} one patch dropped`, puzzle, solution: solution.slice(1), valid: false });
+    cases.push({ name: `${size}x${size} patches overlap`, puzzle, solution: solution.map((r, i) => (i === 0 ? [r[0], r[1], Math.min(size - 1, r[2] + 1), r[3]] : r)), valid: false });
+    cases.push({ name: `${size}x${size} one big patch`, puzzle, solution: [[0, 0, size - 1, size - 1]], valid: false });
+    cases.push({ name: `${size}x${size} patch out of the grid`, puzzle, solution: solution.map((r, i) => (i === 0 ? [r[0], r[1], r[2], size] : r)), valid: false });
+  }
+  write('patches', cases);
+}
 // The first levels of every game with their solutions: proves the API accepts the exact levels shipped in the app.
 {
   const { practiceLevel, solve } = await import('./games.mjs');
   const cases = [];
-  for (const track of ['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip']) {
+  for (const track of ['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip', 'patches']) {
     const game = track.split('-')[0];
     for (const level of [1, 2, 3, 10, 11, 150, 500, 1000]) {
       cases.push({ game, track, level, solution: solve(track, practiceLevel(track, level)).solution });

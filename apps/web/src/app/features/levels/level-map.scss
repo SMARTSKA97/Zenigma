@@ -173,8 +173,11 @@
   display: grid;
   justify-items: center;
 }
-.node {
+:host .node {
   position: relative;
+  overflow: visible;
+  white-space: nowrap;
+  line-height: 1;
   display: grid;
   place-items: center;
   width: 15.5cqw;

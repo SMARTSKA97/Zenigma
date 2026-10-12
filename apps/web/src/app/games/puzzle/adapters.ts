@@ -2,6 +2,7 @@ import * as queens from '../queens/engine';
 import * as tango from '../tango/engine';
 import * as sudoku from '../sudoku/engine';
 import * as zip from '../zip/engine';
+import * as patches from '../patches/engine';
 import { PuzzleGameId } from '../catalog';
 
 /** What the generic puzzle page needs from each game; boards and rules stay in the game's own engine. */
@@ -57,5 +58,15 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
     touched: (_, s) => (s as zip.ZipPath).length > 1,
     fits: (p, s) => zip.fits(p as zip.ZipPuzzle, s),
     help: 'Draw one path through every cell. Start on 1 and reach the numbers in order; the path ends on the highest number. Drag to draw, drag back to undo a step, or press a cell on the path to cut it back there.',
+  },
+  patches: {
+    levels: () => import('../patches/levels.data').then((m) => m.LEVELS),
+    blank: () => patches.blankBoard(),
+    conflicts: (p, s) => patches.conflicts(p as patches.PatchesPuzzle, s as patches.Rect[]),
+    isSolved: (p, s) => patches.isSolved(p as patches.PatchesPuzzle, s as patches.Rect[]),
+    solution: (p, s) => patches.solutionOf(p as patches.PatchesPuzzle, s as patches.Rect[]),
+    touched: (_, s) => (s as patches.Rect[]).length > 0,
+    fits: (p, s) => patches.fits(p as patches.PatchesPuzzle, s),
+    help: 'Cut the grid into rectangles. Every rectangle holds exactly one number, and its area (number of cells) must equal that number. A shape beside the number means the rectangle is wide, tall or square. Drag across cells to draw one; tap a rectangle to remove it.',
   },
 };

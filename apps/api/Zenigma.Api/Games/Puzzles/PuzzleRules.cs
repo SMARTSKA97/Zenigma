@@ -13,11 +13,12 @@ public static class PuzzleRules
     public const string Tango = "tango";
     public const string Sudoku = "sudoku";
     public const string Zip = "zip";
+    public const string Patches = "patches";
 
-    public static readonly string[] Games = [Queens, Tango, Sudoku, Zip];
+    public static readonly string[] Games = [Queens, Tango, Sudoku, Zip, Patches];
 
     /// <summary>Practice tracks, each with its own 1000 levels (a game can have several variants, like Sudoku's classic and mini grids).</summary>
-    public static readonly string[] Tracks = [Queens, Tango, "sudoku-classic", "sudoku-mini", Zip];
+    public static readonly string[] Tracks = [Queens, Tango, "sudoku-classic", "sudoku-mini", Zip, Patches];
 
     public static string TrackOf(string game, string? variant) => string.IsNullOrEmpty(variant) ? game : $"{game}-{variant}";
 
@@ -30,6 +31,7 @@ public static class PuzzleRules
         Tango => 6_000,
         Sudoku => puzzle.TryGetProperty("givens", out var g) && g.GetString()?.Length == 36 ? 12_000 : 40_000, // mini 6x6 or classic 9x9
         Zip => 4_000,
+        Patches => 6_000,
         _ => 5_000,
     };
 
@@ -43,6 +45,7 @@ public static class PuzzleRules
                 Tango => VerifyTango(puzzle, solution),
                 Sudoku => VerifySudoku(puzzle, solution),
                 Zip => VerifyZip(puzzle, solution),
+                Patches => VerifyPatches(puzzle, solution),
                 _ => false,
             };
         }
@@ -107,6 +110,45 @@ public static class PuzzleRules
         }
 
         return top >= 2 && expected == top + 1 && numbers[path[total - 1]] == top;
+    }
+
+    // Patches: the solution is a list of rectangles [row0, col0, row1, col1] (inclusive). Together they must cover every cell exactly
+    // once, and each must hold exactly one clue, have that clue's area, and match its shape (1 wide, 2 tall, 3 square, 0 any).
+    private static bool VerifyPatches(JsonElement puzzle, JsonElement solution)
+    {
+        var size = puzzle.GetProperty("size").GetInt32();
+        var clues = puzzle.GetProperty("clues").EnumerateArray().Select(c => c.EnumerateArray().Select(x => x.GetInt32()).ToArray()).ToArray();
+        if (size < 2 || size > 12 || solution.ValueKind != JsonValueKind.Array || solution.GetArrayLength() != clues.Length) return false;
+
+        var owner = new int[size * size];
+        var id = 0;
+        foreach (var rect in solution.EnumerateArray())
+        {
+            id++;
+            if (rect.ValueKind != JsonValueKind.Array || rect.GetArrayLength() != 4) return false;
+            var v = rect.EnumerateArray().Select(x => x.ValueKind == JsonValueKind.Number ? x.GetInt32() : -1).ToArray();
+            var (r0, c0, r1, c1) = (v[0], v[1], v[2], v[3]);
+            if (r0 < 0 || c0 < 0 || r1 < r0 || c1 < c0 || r1 >= size || c1 >= size) return false;
+
+            for (var r = r0; r <= r1; r++)
+            {
+                for (var c = c0; c <= c1; c++)
+                {
+                    if (owner[r * size + c] != 0) return false; // overlap
+                    owner[r * size + c] = id;
+                }
+            }
+
+            var (w, h) = (c1 - c0 + 1, r1 - r0 + 1);
+            var inside = clues.Where(k => k[0] / size >= r0 && k[0] / size <= r1 && k[0] % size >= c0 && k[0] % size <= c1).ToArray();
+            if (inside.Length != 1) return false;
+            var (area, shape) = (inside[0][1], inside[0][2]);
+            if (area != w * h) return false;
+            var actual = w == h ? 3 : w > h ? 1 : 2;
+            if (shape != 0 && shape != actual) return false;
+        }
+
+        return owner.All(o => o != 0); // nothing left uncovered
     }
 
     // Tango: 36 characters of 's' and 'm'.

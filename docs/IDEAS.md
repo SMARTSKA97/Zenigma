@@ -60,3 +60,27 @@
 - **Keyboard play**: arrow keys and number keys on Sudoku/Tango/Queens, `Z` for undo.
 - **Wide-screen layout**: board in the centre, rules and leaderboard beside it.
 - **Shareable result image** (OG card) so a link shows the grid in chat apps.
+
+## More ideas (round 2)
+
+### Games
+- **Patches variants**: rectangles with no shape hints (harder), or a "shape only" mode where the clue shows the shape and the player works out the area.
+- **Daily "Perfect" badge** for finishing every daily in a day with no mistakes and no hints; a rare cosmetic.
+- **Sudoku championship kinds** (already listed as coming soon): build Killer, Thermo and Jigsaw first. They are the most familiar and need only new rules in the engine and verifier.
+- **Mini-games from the same engine**: a "speed round" of 5 easy levels against a 3-minute clock, with its own leaderboard.
+- **Puzzle of the week**: one extra-hard puzzle open for 7 days, any number of tries, ranked by fewest mistakes.
+
+### Social
+- **Challenge a friend**: send a link to one specific level; the friend sees your time and tries to beat it.
+- **Circle seasons**: a month-long circle leaderboard that resets, with a podium on Home at the end.
+- **Daily streak share card**: an image of the week strip and flame for sharing.
+
+### Retention (kind, not pushy)
+- **Streak rescue**: the reminder that day mentions a freeze that is about to be used.
+- **Comeback gift**: after a week away, one free hint and a gentle level.
+- **Skill-based difficulty**: after three quick 3-star wins, offer to "skip ahead 5 levels" on the map.
+
+### Quality
+- **Daily puzzle preview** at midnight India time: a 5-second countdown animation when the next set arrives.
+- **Accessibility**: larger-numbers mode for Sudoku/Queens, and a screen-reader description for every board.
+- **Offline daily**: download tomorrow's puzzle when online so the daily works on a flight (the clock still starts when you press start).

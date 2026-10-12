@@ -5,7 +5,7 @@ import { AuthService } from '../../core/auth.service';
 import { CommunityService } from '../../core/community.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { UpdaterService } from '../../core/updater.service';
-import { gameInfo, GAMES, GameId, practiceEntry } from '../../games/catalog';
+import { GAMES, practiceEntry } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
 
 @Component({
@@ -75,11 +75,17 @@ import { Glyph } from '../../shared/glyph';
           </div>
           <span class="go">Details ›</span>
         </div>
-        <div class="per">
-          @for (g of streakGames(); track g.game) {
-            <span class="pg" [class.live]="g.current > 0" [style.--h]="g.hue">
-              <app-glyph [game]="g.game" />
-              <b>{{ g.current }}</b>
+        <div class="week" role="img" [attr.aria-label]="weekLabel()">
+          @for (d of week(); track d.date) {
+            <span class="day" [class.done]="d.state === 'done'" [class.frozen]="d.state === 'frozen'" [class.today]="d.today" [class.future]="d.state === 'future'">
+              <span class="dot">
+                @if (d.state === 'done') {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                } @else if (d.state === 'frozen') {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.5 7.5l15 9M19.5 7.5l-15 9" /></svg>
+                }
+              </span>
+              <span class="dl">{{ d.label }}</span>
             </span>
           }
         </div>
@@ -407,9 +413,9 @@ import { Glyph } from '../../shared/glyph';
       display: flex;
       flex-wrap: wrap;
       gap: 0.4rem;
-      flex: 1;
     }
     .chips span {
+      white-space: nowrap;
       padding: 0.25rem 0.6rem;
       font-size: 0.78rem;
       font-weight: 600;
@@ -430,34 +436,58 @@ import { Glyph } from '../../shared/glyph';
       grid-template-columns: 1fr auto;
       align-items: center;
     }
-    .per {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
+    .week {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.25rem;
     }
-    .pg {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding: 0.2rem 0.55rem 0.2rem 0.3rem;
-      border-radius: 99px;
-      background: var(--surface-2);
-      color: var(--muted);
-      font-size: 0.8rem;
+    .day {
+      display: grid;
+      justify-items: center;
+      gap: 0.25rem;
     }
-    .pg app-glyph {
-      width: 1.35rem;
-      height: 1.35rem;
-      padding: 0.2rem;
+    .dot {
+      display: grid;
+      place-items: center;
+      width: min(2.2rem, 100%);
+      aspect-ratio: 1;
       border-radius: 50%;
-      background: oklch(var(--tile-l) var(--tile-c) calc(var(--h) * 1deg));
-      color: oklch(var(--glyph-l) var(--glyph-c) calc(var(--h) * 1deg));
+      border: 2px solid var(--border);
+      color: var(--accent-contrast);
+      background: transparent;
     }
-    .pg.live {
+    .dot svg {
+      width: 62%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .day.done .dot {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .day.frozen .dot {
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-color: var(--accent-soft);
+    }
+    .day.today .dot {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .day.future .dot {
+      border-style: dashed;
+      opacity: 0.5;
+    }
+    .dl {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .day.today .dl {
       color: var(--text);
-    }
-    .pg:not(.live) app-glyph {
-      opacity: 0.55;
     }
 
     .community {
@@ -612,9 +642,22 @@ export class Home implements OnInit {
   /** The longest running daily streak across games. */
   protected readonly bestStreak = computed(() => Math.max(0, ...(this.stats()?.games.map((g) => g.current) ?? [])));
 
-  protected readonly streakGames = computed(() =>
-    (this.stats()?.games ?? []).map((g) => ({ game: g.game as GameId, current: g.current, hue: gameInfo(g.game)?.hue ?? 250 })),
-  );
+  /** This week, Monday to Sunday: a day is done when any daily was solved, frozen when a freeze covered it. */
+  protected readonly week = computed(() => {
+    const stats = this.stats();
+    if (!stats) return [];
+    const today = new Date(`${stats.date}T00:00:00Z`);
+    const monday = new Date(today.getTime() - ((today.getUTCDay() + 6) % 7) * 86_400_000);
+    const solved = new Set(stats.games.flatMap((g) => g.recent));
+    const frozen = new Set(stats.games.flatMap((g) => g.frozen));
+    return ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, i) => {
+      const date = new Date(monday.getTime() + i * 86_400_000).toISOString().slice(0, 10);
+      const state = solved.has(date) ? 'done' : frozen.has(date) ? 'frozen' : date > stats.date ? 'future' : 'open';
+      return { date, label, state, today: date === stats.date };
+    });
+  });
+
+  protected readonly weekLabel = computed(() => `${this.week().filter((d) => d.state === 'done').length} days played this week`);
 
   protected readonly greeting = computed(() => {
     const hour = new Date().getHours();

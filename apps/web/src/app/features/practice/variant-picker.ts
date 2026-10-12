@@ -15,7 +15,7 @@ import { Glyph } from '../../shared/glyph';
     <h1>{{ info()?.name }}</h1>
     <p class="muted">Choose a kind. Each has its own levels and progress.</p>
     <div class="list">
-      @for (v of variants(); track v.id) {
+      @for (v of playable(); track v.id) {
         <a class="card" [routerLink]="link(v.id)" [style.--h]="info()?.hue">
           <span class="art"><app-glyph [game]="game()" /></span>
           <span class="text">
@@ -27,6 +27,19 @@ import { Glyph } from '../../shared/glyph';
         </a>
       }
     </div>
+
+    @if (soon().length) {
+      <h2 class="soon-title">Coming soon</h2>
+      <p class="muted">More kinds, as played at Sudoku championships.</p>
+      <div class="soon">
+        @for (v of soon(); track v.id) {
+          <div class="chip">
+            <strong>{{ v.name }}</strong>
+            <span class="muted">{{ v.blurb }}</span>
+          </div>
+        }
+      </div>
+    }
   `,
   styles: `
     :host {
@@ -85,6 +98,24 @@ import { Glyph } from '../../shared/glyph';
       font-weight: 600;
       color: var(--accent);
     }
+    .soon-title {
+      margin: 2rem 0 0.25rem;
+      font-size: 1.05rem;
+    }
+    .soon {
+      display: grid;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .chip {
+      display: grid;
+      gap: 0.1rem;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.85rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm, 12px);
+      opacity: 0.85;
+    }
     .go {
       font-size: 1.6rem;
       color: var(--muted);
@@ -98,9 +129,11 @@ export class VariantPicker implements OnInit {
   protected readonly game = computed(() => (this.params()?.get('game') ?? 'sudoku') as 'sudoku');
   protected readonly info = computed(() => gameInfo(this.game()));
   protected readonly variants = computed(() => variantsOf(this.game()));
+  protected readonly playable = computed(() => this.variants().filter((v) => !v.soon));
+  protected readonly soon = computed(() => this.variants().filter((v) => v.soon));
 
   ngOnInit(): void {
-    for (const v of this.variants()) void this.practice.load(trackOf(this.game(), v.id));
+    for (const v of this.playable()) void this.practice.load(trackOf(this.game(), v.id));
   }
 
   protected link(variant: string): string[] {

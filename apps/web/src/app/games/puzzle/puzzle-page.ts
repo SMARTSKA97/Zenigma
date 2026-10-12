@@ -14,6 +14,7 @@ import { dailyDifficulty, gameInfo, isPuzzleGame, mapLink, PuzzleGameId, trackOf
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
 import { ZipBoard } from '../zip/zip-board';
+import { PatchesBoard } from '../patches/patches-board';
 import { TangoBoard } from '../tango/tango-board';
 import { ADAPTERS } from './adapters';
 import { LEVEL_COUNT, PracticeStore } from './practice.store';
@@ -29,7 +30,7 @@ const WARN_DELAY_MS = 1600;
 
 @Component({
   selector: 'app-puzzle-page',
-  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard],
+  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page" [attr.data-game]="game()">
@@ -120,6 +121,9 @@ const WARN_DELAY_MS = 1600;
               }
               @case ('zip') {
                 <app-zip-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
+              }
+              @case ('patches') {
+                <app-patches-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
               }
               @case ('sudoku') {
                 <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />

@@ -28,7 +28,7 @@ export const GAMES: GameInfo[] = [
   { id: 'tango', name: 'Tango', blurb: 'Suns and moons, never three in a row.', hue: 55, live: true, daily: true },
   { id: 'sudoku', name: 'Sudoku', blurb: 'The classic: 1 to 9, once per row, column and box.', hue: 250, live: true, daily: true },
   { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25, live: true, daily: true },
-  { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: false, daily: false },
+  { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: true, daily: true },
   { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: false, daily: false },
   { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: false, daily: false },
   { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: false, daily: false },
@@ -40,7 +40,7 @@ export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => 
 /** Games with a daily challenge and leaderboards. */
 export const DAILY_GAMES = GAMES.filter((g) => g.daily);
 
-export const PUZZLE_GAMES = ['queens', 'tango', 'sudoku', 'zip'] as const;
+export const PUZZLE_GAMES = ['queens', 'tango', 'sudoku', 'zip', 'patches'] as const;
 export type PuzzleGameId = (typeof PUZZLE_GAMES)[number];
 export const isPuzzleGame = (id: string): id is PuzzleGameId => (PUZZLE_GAMES as readonly string[]).includes(id);
 
@@ -48,6 +48,8 @@ export interface Variant {
   id: string;
   name: string;
   blurb: string;
+  /** Not playable yet: shown as "coming soon" on the chooser, and has no levels. */
+  soon?: boolean;
 }
 
 /** Games that offer more than one kind of practice. Each variant has its own levels, map and progress. Add a variant here to add one. */
@@ -55,6 +57,16 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
   sudoku: [
     { id: 'classic', name: 'Classic', blurb: 'The 9 by 9 grid, numbers 1 to 9.' },
     { id: 'mini', name: 'Mini', blurb: 'A quick 6 by 6 grid, numbers 1 to 6.' },
+    // The kinds seen at Sudoku championships (World Sudoku and Puzzle Championships), on the way.
+    { id: 'killer', name: 'Killer', blurb: 'Cages with a sum: the digits in each cage add up to its number, with no repeats.', soon: true },
+    { id: 'thermo', name: 'Thermo', blurb: 'Digits climb along every thermometer, from the bulb to the tip.', soon: true },
+    { id: 'jigsaw', name: 'Jigsaw', blurb: 'Boxes are irregular shapes instead of squares.', soon: true },
+    { id: 'arrow', name: 'Arrow', blurb: 'The digits along an arrow add up to the number in its circle.', soon: true },
+    { id: 'sandwich', name: 'Sandwich', blurb: 'Clues give the sum of the digits caught between the 1 and the 9 in a row or column.', soon: true },
+    { id: 'consecutive', name: 'Consecutive', blurb: 'A bar between two cells means their digits differ by exactly 1.', soon: true },
+    { id: 'even-odd', name: 'Even-Odd', blurb: 'Shaded cells hold only even digits (squares) or only odd digits (circles).', soon: true },
+    { id: 'anti-knight', name: 'Anti-Knight', blurb: 'No digit repeats a chess knight\'s move apart.', soon: true },
+    { id: 'x', name: 'Diagonal', blurb: 'Both long diagonals hold 1 to 9 as well.', soon: true },
   ],
 };
 
@@ -80,7 +92,7 @@ export interface PracticeTrack {
 }
 export const PRACTICE_TRACKS: PracticeTrack[] = PUZZLE_GAMES.flatMap((game): PracticeTrack[] => {
   const variants = VARIANTS[game];
-  return variants ? variants.map((v) => ({ track: trackOf(game, v.id), game, variant: v.id })) : [{ track: game, game, variant: null }];
+  return variants ? variants.filter((v) => !v.soon).map((v) => ({ track: trackOf(game, v.id), game, variant: v.id })) : [{ track: game, game, variant: null }];
 });
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

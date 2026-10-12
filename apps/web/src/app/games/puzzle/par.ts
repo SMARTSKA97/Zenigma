@@ -14,6 +14,10 @@ export function parMs(game: PuzzleGameId, puzzle: unknown): number {
       const blanks = [...givens].filter((c) => c === '0').length;
       return blanks * (givens.length === 36 ? 3000 : 4500);
     }
+    case 'patches': {
+      const size = (puzzle as { size: number }).size;
+      return size * size * 1400;
+    }
     case 'zip': {
       const size = (puzzle as { size: number }).size;
       return size * size * 1500;
