@@ -96,6 +96,7 @@ public static class LeaderboardEndpoints
             string game,
             string? kind,
             string? period,
+            Guid? circle,
             ClaimsPrincipal principal,
             AppDbContext db,
             TimeProvider clock,
@@ -114,9 +115,18 @@ public static class LeaderboardEndpoints
             var weekStartUtc = new DateTimeOffset(weekStart.ToDateTime(TimeOnly.MinValue), IstClock.Offset).ToUniversalTime();
             var me = principal.Identity?.IsAuthenticated == true ? UserIds.Get(principal) : "";
 
+            if (circle is not null)
+            {
+                // Circle boards are private to members.
+                var member = await db.Database.SqlQueryRaw<int>(
+                    "SELECT 1 AS \"Value\" FROM circle_members WHERE circle_id = @c AND user_id = @u",
+                    new NpgsqlParameter("c", circle.Value), new NpgsqlParameter("u", me)).AnyAsync(ct);
+                if (!member) return Results.NotFound();
+            }
+
             var (sql, parameters) = kind == "practice"
-                ? PracticeSql(game, period, weekStartUtc)
-                : DailySql(game, period, today, weekStart);
+                ? PracticeSql(game, period, weekStartUtc, circle)
+                : DailySql(game, period, today, weekStart, circle);
 
             // The ranked board, trimmed to the top of the table plus this player's own row.
             var full = $"""WITH ranked AS ({sql}) SELECT * FROM ranked WHERE "Rank" <= {PageSize} OR "UserId" = @me ORDER BY "Rank" """;
@@ -131,7 +141,7 @@ public static class LeaderboardEndpoints
         });
     }
 
-    private static (string sql, NpgsqlParameter[] parameters) DailySql(string game, string period, DateOnly today, DateOnly weekStart)
+    private static (string sql, NpgsqlParameter[] parameters) DailySql(string game, string period, DateOnly today, DateOnly weekStart, Guid? circle)
     {
         var start = period == "today" ? today : period == "week" ? weekStart : new DateOnly(2000, 1, 1);
         var end = period == "today" ? today : new DateOnly(2999, 12, 31);
@@ -141,20 +151,22 @@ public static class LeaderboardEndpoints
             new("start", start),
             new("finish", end),
         ];
+        if (circle is not null) parameters = [.. parameters, new NpgsqlParameter("circle", circle.Value)];
+        var scope = circle is null ? "" : " AND a.user_id IN (SELECT user_id FROM circle_members WHERE circle_id = @circle)";
 
         // Every finished daily as (user, day, time in ms, guesses).
         var results = game == "word-guess"
-            ? """
+            ? $"""
               SELECT a.user_id, a.puzzle_date,
                      GREATEST(0, (EXTRACT(EPOCH FROM (a.finished_at - COALESCE(a.first_guess_at, a.started_at))) * 1000)::bigint) AS ms,
                      cardinality(a.guesses)::bigint AS guesses, a.finished_at
               FROM daily_attempts a
-              WHERE a.game = @game AND a.status = 'won' AND a.puzzle_date BETWEEN @start AND @finish
+              WHERE a.game = @game AND a.status = 'won' AND a.puzzle_date BETWEEN @start AND @finish{scope}
               """
-            : """
+            : $"""
               SELECT a.user_id, a.puzzle_date, a.elapsed_ms::bigint AS ms, 0::bigint AS guesses, a.finished_at
               FROM puzzle_attempts a
-              WHERE a.game = @game AND a.status = 'solved' AND a.puzzle_date BETWEEN @start AND @finish
+              WHERE a.game = @game AND a.status = 'solved' AND a.puzzle_date BETWEEN @start AND @finish{scope}
               """;
 
         if (period == "today")
@@ -177,18 +189,20 @@ public static class LeaderboardEndpoints
             """, parameters);
     }
 
-    private static (string sql, NpgsqlParameter[] parameters) PracticeSql(string game, string period, DateTimeOffset weekStartUtc)
+    private static (string sql, NpgsqlParameter[] parameters) PracticeSql(string game, string period, DateTimeOffset weekStartUtc, Guid? circle)
     {
         NpgsqlParameter[] parameters =
         [
             new("game", game),
             new("since", period == "week" ? weekStartUtc : DateTimeOffset.UnixEpoch),
         ];
+        if (circle is not null) parameters = [.. parameters, new NpgsqlParameter("circle", circle.Value)];
+        var scope = circle is null ? "" : " AND p.user_id IN (SELECT user_id FROM circle_members WHERE circle_id = @circle)";
         return ($"""
             SELECT p.user_id AS "UserId", {NameSql} AS "Name", COUNT(*)::bigint AS "Value", 0::bigint AS "Secondary",
                    ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC, MAX(p.solved_at)) AS "Rank"
             FROM practice_solves p JOIN "AspNetUsers" u ON u."Id" = p.user_id
-            WHERE p.game = @game AND p.solved_at >= @since
+            WHERE p.game = @game AND p.solved_at >= @since{scope}
             GROUP BY p.user_id, u."Id", u."DisplayName"
             """, parameters);
     }

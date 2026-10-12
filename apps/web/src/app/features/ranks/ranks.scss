@@ -134,3 +134,17 @@ div.line {
   justify-items: center;
   gap: 0.25rem;
 }
+
+.scope {
+  padding-top: 0;
+}
+.chip.plain {
+  padding: 0.3rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  &.manage {
+    border-style: dashed;
+    color: var(--muted);
+  }
+}

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
+import { Circle, CirclesService } from '../../core/circles.service';
 import { formatDuration, Leaderboard, LeaderboardService } from '../../core/leaderboard.service';
 import { SyncService } from '../../core/sync.service';
 import { DAILY_GAMES } from '../../games/catalog';
@@ -24,6 +26,18 @@ type Period = 'today' | 'week' | 'all';
         </button>
       }
     </div>
+
+    @if (circles().length > 0) {
+      <div class="chips scope" role="tablist" aria-label="Who">
+        <button type="button" role="tab" class="chip plain" [class.on]="!circle()" [attr.aria-selected]="!circle()" (click)="pickCircle(null)">Everyone</button>
+        @for (c of circles(); track c.id) {
+          <button type="button" role="tab" class="chip plain" [class.on]="circle() === c.id" [attr.aria-selected]="circle() === c.id" (click)="pickCircle(c.id)">{{ c.name }}</button>
+        }
+        <a class="chip plain manage" routerLink="/ranks/circles">Manage</a>
+      </div>
+    } @else if (auth.signedIn()) {
+      <p class="muted caption"><a routerLink="/ranks/circles">Compete with friends in a private circle →</a></p>
+    }
 
     <app-segmented class="seg" label="Board" [options]="kindOptions" [value]="kind()" (valueChange)="pickKind($event)" />
     @if (kind() === 'daily') {
@@ -80,6 +94,9 @@ export class Ranks {
   private readonly router = inject(Router);
   private readonly api = inject(LeaderboardService);
   protected readonly sync = inject(SyncService);
+  protected readonly auth = inject(AuthService);
+  private readonly circlesApi = inject(CirclesService);
+  protected readonly circles = signal<Circle[]>([]);
   private readonly query = toSignal(this.route.queryParamMap);
 
   protected readonly games = DAILY_GAMES;
@@ -102,6 +119,10 @@ export class Ranks {
     return DAILY_GAMES.some((g) => g.id === id) ? id : 'word-guess';
   });
   protected readonly kind = computed<Kind>(() => (this.query()?.get('kind') === 'practice' ? 'practice' : 'daily'));
+  protected readonly circle = computed(() => {
+    const id = this.query()?.get('circle');
+    return id && this.circles().some((c) => c.id === id) ? id : null;
+  });
   protected readonly period = signal<Period>('today');
   protected readonly board = signal<Leaderboard | null>(null);
   protected readonly loading = signal(true);
@@ -118,6 +139,7 @@ export class Ranks {
   });
 
   constructor() {
+    if (this.auth.signedIn()) void this.circlesApi.list().then((c) => this.circles.set(c)).catch(() => undefined);
     effect(() => {
       // Practice has no "today" board.
       if (this.kind() === 'practice' && this.period() === 'today') untracked(() => this.period.set('week'));
@@ -126,12 +148,17 @@ export class Ranks {
       this.game();
       this.kind();
       this.period();
+      this.circle();
       untracked(() => void this.load());
     });
   }
 
   protected pickGame(game: string): void {
     void this.router.navigate([], { queryParams: { game }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  protected pickCircle(circle: string | null): void {
+    void this.router.navigate([], { queryParams: { circle }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   protected pickKind(kind: Kind): void {
@@ -155,7 +182,7 @@ export class Ranks {
     this.loading.set(true);
     this.failed.set(false);
     try {
-      const board = await this.api.board(this.game(), this.kind(), this.period());
+      const board = await this.api.board(this.game(), this.kind(), this.period(), this.circle());
       if (id === this.requestId) this.board.set(board);
     } catch {
       if (id === this.requestId) this.failed.set(true);

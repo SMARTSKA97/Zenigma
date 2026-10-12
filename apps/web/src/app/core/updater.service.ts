@@ -61,8 +61,8 @@ export function isNewer(a: string, b: string): boolean {
 }
 
 /**
- * In-app updates from GitHub Releases. Runs only when the user taps "Check for updates" - no background
- * checks, so the app stays silent and makes no requests of its own.
+ * In-app updates from GitHub Releases. The app looks for an update when it opens and when it comes back to the
+ * foreground (at most every six hours); nothing is polled in the background. Installing is always the person's tap.
  */
 @Injectable({ providedIn: 'root' })
 export class UpdaterService {
@@ -87,6 +87,31 @@ export class UpdaterService {
     } catch {
       /* version stays unknown */
     }
+  }
+
+  /** Checks on open and on return to the app. Quiet: no spinner state, and failures say nothing. */
+  startAutoCheck(): void {
+    if (!this.supported || this.autoStarted) return;
+    this.autoStarted = true;
+    // A moment after launch, so it never competes with the first screen (or the "What's new" sheet).
+    setTimeout(() => void this.autoCheck(), 2500);
+    void App.addListener('appStateChange', (s) => {
+      if (s.isActive) void this.autoCheck();
+    });
+  }
+
+  private autoStarted = false;
+  private lastAuto = 0;
+
+  private async autoCheck(): Promise<void> {
+    const busy: UpdateState[] = ['checking', 'downloading', 'installing', 'needsPermission'];
+    if (busy.includes(this.state()) || this.sheetOpen()) return;
+    const sixHours = 6 * 60 * 60 * 1000;
+    if (Date.now() - this.lastAuto < sixHours) return;
+    this.lastAuto = Date.now();
+    await this.check();
+    // A failed or "up to date" automatic check should not show anything on the Settings screen.
+    if (this.state() === 'error') this.state.set('idle');
   }
 
   async check(): Promise<void> {

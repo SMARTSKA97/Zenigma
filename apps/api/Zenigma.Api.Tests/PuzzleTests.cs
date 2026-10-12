@@ -270,4 +270,56 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/leaderboards/tango?kind=daily&period=all")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/daily")).StatusCode);
     }
+
+    [DbFact]
+    public async Task Circles_are_private_boards_joined_with_a_code()
+    {
+        var (puzzle, solution) = ValidVector("queens");
+        await SeedTodayAsync("queens", puzzle);
+        var (ada, deviceA) = await SignUpAsync("CircleAda");
+        var (bob, deviceB) = await SignUpAsync("CircleBob");
+        var (eve, deviceE) = await SignUpAsync("CircleEve");
+        foreach (var (c, d) in new[] { (ada, deviceA), (bob, deviceB), (eve, deviceE) })
+        {
+            await c.PostAsJsonAsync("/daily/queens/start", new { deviceId = d });
+            await c.PostAsJsonAsync("/daily/queens/submit", new { deviceId = d, solution });
+        }
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await ada.PostAsJsonAsync("/circles", new { name = " " })).StatusCode);
+        var made = await (await ada.PostAsJsonAsync("/circles", new { name = "  Office   crew " })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal("Office crew", made.GetProperty("name").GetString());
+        var code = made.GetProperty("code").GetString()!;
+        var id = made.GetProperty("id").GetGuid();
+        Assert.Equal(6, code.Length);
+
+        Assert.Equal(HttpStatusCode.NotFound, (await bob.PostAsJsonAsync("/circles/join", new { code = "ZZZZZZ" })).StatusCode);
+        var joined = await bob.PostAsJsonAsync("/circles/join", new { code = code.ToLowerInvariant() });
+        Assert.Equal(HttpStatusCode.OK, joined.StatusCode);
+        // Joining twice changes nothing.
+        var again = await (await bob.PostAsJsonAsync("/circles/join", new { code })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(2, again.GetProperty("members").GetInt32());
+
+        var board = await ada.GetFromJsonAsync<JsonElement>($"/leaderboards/queens?kind=daily&period=today&circle={id}", Json);
+        var names = board.GetProperty("entries").EnumerateArray().Select(e => e.GetProperty("name").GetString()).ToList();
+        Assert.Contains("CircleAda", names);
+        Assert.Contains("CircleBob", names);
+        Assert.DoesNotContain("CircleEve", names);
+
+        // Non-members cannot look inside.
+        Assert.Equal(HttpStatusCode.NotFound, (await eve.GetAsync($"/leaderboards/queens?kind=daily&period=today&circle={id}")).StatusCode);
+
+        Assert.Single((await bob.GetFromJsonAsync<JsonElement[]>("/circles", Json))!);
+        Assert.Equal(HttpStatusCode.NoContent, (await bob.DeleteAsync($"/circles/{id}")).StatusCode);
+        Assert.Empty((await bob.GetFromJsonAsync<JsonElement[]>("/circles", Json))!);
+        Assert.Equal(HttpStatusCode.NotFound, (await bob.GetAsync($"/leaderboards/queens?kind=daily&period=today&circle={id}")).StatusCode);
+    }
+
+    [Fact]
+    public void Circle_names_and_codes_are_tidy()
+    {
+        Assert.Null(Zenigma.Api.Leaderboards.CircleEndpoints.CleanName("a"));
+        Assert.Null(Zenigma.Api.Leaderboards.CircleEndpoints.CleanName(new string('x', 41)));
+        Assert.Equal("a b", Zenigma.Api.Leaderboards.CircleEndpoints.CleanName("  a   b "));
+        for (var i = 0; i < 200; i++) Assert.Matches("^[2-9A-HJKMNP-Z]{6}$", Zenigma.Api.Leaderboards.CircleEndpoints.NewCode());
+    }
 }

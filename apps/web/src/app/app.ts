@@ -13,6 +13,7 @@ import {
 import { filter, map } from 'rxjs';
 import { AuthService } from './core/auth.service';
 import { SyncService } from './core/sync.service';
+import { UpdaterService } from './core/updater.service';
 import { Loader } from './shared/loader';
 import { UpdateSheet } from './shared/update-sheet';
 import { WhatsNew } from './shared/whats-new';
@@ -298,6 +299,12 @@ export class App {
   protected readonly sync = inject(SyncService);
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly updater = inject(UpdaterService);
+
+  constructor() {
+    // Android: look for a new version when the app opens (the update sheet appears only if there is one).
+    this.updater.startAutoCheck();
+  }
   private readonly url = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),

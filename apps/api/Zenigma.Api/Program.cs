@@ -117,6 +117,7 @@ app.MapDaily();
 app.MapPuzzleDaily();
 app.MapLeaderboards();
 app.MapStats();
+app.MapCircles();
 
 app.Run();
 

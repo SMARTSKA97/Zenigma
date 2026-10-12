@@ -41,8 +41,10 @@ export interface DailyHub {
 export class LeaderboardService {
   private readonly http = inject(HttpClient);
 
-  board(game: string, kind: 'daily' | 'practice', period: 'today' | 'week' | 'all'): Promise<Leaderboard> {
-    return firstValueFrom(this.http.get<Leaderboard>(`${environment.apiBaseUrl}/leaderboards/${game}`, { params: { kind, period } }));
+  board(game: string, kind: 'daily' | 'practice', period: 'today' | 'week' | 'all', circle?: string | null): Promise<Leaderboard> {
+    const params: Record<string, string> = { kind, period };
+    if (circle) params['circle'] = circle;
+    return firstValueFrom(this.http.get<Leaderboard>(`${environment.apiBaseUrl}/leaderboards/${game}`, { params }));
   }
 
   dailyHub(): Promise<DailyHub> {

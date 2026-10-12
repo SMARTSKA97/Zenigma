@@ -9,6 +9,7 @@ export const routes: Routes = [
   { path: 'daily/word-guess', loadComponent: wordGuess, data: { mode: 'daily' } },
   { path: 'daily/:game', loadComponent: puzzle, data: { mode: 'daily' } },
   { path: 'daily', loadComponent: () => import('./features/daily/daily-hub').then((m) => m.DailyHub) },
+  { path: 'ranks/circles', loadComponent: () => import('./features/circles/circles').then((m) => m.Circles) },
   { path: 'ranks', loadComponent: () => import('./features/ranks/ranks').then((m) => m.Ranks) },
   { path: 'stats', loadComponent: () => import('./features/stats/stats').then((m) => m.StatsPage) },
   { path: 'changelog', loadComponent: () => import('./features/changelog/changelog').then((m) => m.Changelog) },
