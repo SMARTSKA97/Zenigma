@@ -5,27 +5,43 @@ import { generateTango, solveTango } from './tango.mjs';
 import { rngFrom } from './rng.mjs';
 
 export const GAMES = ['queens', 'tango', 'sudoku', 'zip'];
-export const LEVELS_PER_GAME = 200;
+export const LEVELS_PER_GAME = 1000;
+
+export const LEVELS_PER_ZONE = 10;
+
+/**
+ * How hard a practice level is, from 0 (gentlest) to 1 (hardest). Levels come in zones of ten: every zone climbs from
+ * easy (its first level) to hard (its tenth), and each zone starts a little above the one before and tops out a little higher,
+ * so level 11 is easier than level 10 but harder than level 1, and level 20 is harder than level 10.
+ */
+export function hardness(level) {
+  const zone = Math.floor((level - 1) / LEVELS_PER_ZONE);
+  const position = ((level - 1) % LEVELS_PER_ZONE) / (LEVELS_PER_ZONE - 1);
+  const climb = Math.min(1, zone / 50);
+  const floor = 0.5 * climb;
+  const ceiling = 0.35 + 0.65 * climb;
+  return floor + (ceiling - floor) * position;
+}
 
 /** Difficulty ramps with the level number; level 1 is the gentlest. */
 export function practiceLevel(game, level) {
   const rng = rngFrom(`zenigma-practice:${game}:${level}`);
+  const h = hardness(level);
   switch (game) {
     case 'queens': {
-      const size = level <= 25 ? 5 : level <= 60 ? 6 : level <= 100 ? 7 : level <= 150 ? 8 : 9;
-      return generateQueens(size, rng, Math.max(1, 3 - Math.floor((level - 1) / 50)));
+      const size = h < 0.2 ? 5 : h < 0.4 ? 6 : h < 0.6 ? 7 : h < 0.8 ? 8 : 9;
+      return generateQueens(size, rng, Math.max(0, Math.round(3 - 3.4 * h))); // queens already placed
     }
     case 'tango':
-      return generateTango(rng, Math.max(0, 6 - Math.floor((level - 1) / 30)));
+      return generateTango(rng, Math.round(6 * (1 - h))); // extra clues left in
     case 'sudoku': {
       // Practice mixes both sizes: roughly two levels in five are the mini 6x6 grid.
       const mini = rngFrom(`zenigma-practice-kind:sudoku:${level}`).int(5) < 2;
-      return mini ? generateSudoku(rng, Math.max(12, 20 - Math.floor((level - 1) / 28)), 6) : generateSudoku(rng, Math.max(27, 46 - Math.floor((level - 1) / 10)));
+      return mini ? generateSudoku(rng, Math.round(20 - 8 * h), 6) : generateSudoku(rng, Math.round(46 - 20 * h));
     }
     case 'zip': {
-      const size = level <= 40 ? 5 : level <= 100 ? 6 : 7;
-      const target = Math.max(5, (size === 7 ? 10 : 8) - Math.floor((level - 1) / 25) % 4);
-      return generateZip(size, rng, target);
+      const size = h < 0.35 ? 5 : h < 0.7 ? 6 : 7;
+      return generateZip(size, rng, Math.max(5, Math.round(9 - 4 * h))); // numbers shown
     }
     default:
       throw new Error(`Unknown game ${game}`);

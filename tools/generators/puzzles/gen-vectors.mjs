@@ -88,7 +88,7 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
   const { practiceLevel, solve } = await import('./games.mjs');
   const cases = [];
   for (const game of ['queens', 'tango', 'sudoku', 'zip']) {
-    for (const level of [1, 2, 3, 150, 200]) {
+    for (const level of [1, 2, 3, 10, 11, 150, 500, 1000]) {
       cases.push({ game, level, solution: solve(game, practiceLevel(game, level)).solution });
     }
   }

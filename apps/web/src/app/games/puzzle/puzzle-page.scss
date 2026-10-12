@@ -199,29 +199,28 @@
   font-size: 2rem;
   animation: pop 0.5s var(--spring);
 }
-.levels {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
-  gap: 0.4rem;
-  margin: 1rem 0;
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.5rem;
+  svg {
+    width: 2.4rem;
+    height: 2.4rem;
+    fill: var(--surface-2);
+    stroke: color-mix(in srgb, var(--ink) 25%, transparent);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+    &.on {
+      fill: #f5b82e;
+      stroke: #a86f00;
+      animation: pop 0.5s var(--spring) backwards;
+      animation-delay: calc(var(--i) * 0.18s + 0.3s);
+    }
+  }
 }
-:host .lv {
-  min-height: 44px;
-  min-width: 0;
-  padding: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 12px;
-  background: var(--surface-2);
-  border-color: transparent;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  &.done {
-    background: color-mix(in srgb, var(--good) 20%, var(--surface-2));
-  }
-  &.now {
-    border-color: var(--accent);
-  }
+a.tool {
+  text-decoration: none;
 }
 
 @media (min-width: 900px) {

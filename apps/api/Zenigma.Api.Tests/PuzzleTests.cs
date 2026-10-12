@@ -50,7 +50,7 @@ public class PuzzleRulesTests
     public void Every_shipped_level_set_is_complete()
     {
         var levels = new PracticeLevels();
-        foreach (var game in PuzzleRules.Games) Assert.Equal(200, levels.Count(game));
+        foreach (var game in PuzzleRules.Games) Assert.Equal(1000, levels.Count(game));
     }
 
     [Fact]

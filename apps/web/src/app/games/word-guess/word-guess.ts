@@ -116,15 +116,15 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
             @for (keys of keyRows; track keys; let i = $index) {
               <div class="keys">
                 @if (i === 2) {
-                  <button type="button" class="key wide" (click)="board().enter()">Enter</button>
+                  <button type="button" class="key wide" (pointerdown)="press($event)" (click)="board().enter()">Enter</button>
                 }
                 @for (k of keys; track k) {
-                  <button type="button" class="key" [attr.data-mark]="board().keyMarks().get(k) ?? null" (click)="board().type(k)">
+                  <button type="button" class="key" [attr.data-k]="k" [attr.data-mark]="board().keyMarks().get(k) ?? null" (pointerdown)="press($event)" (click)="board().type(k)">
                     {{ k }}
                   </button>
                 }
                 @if (i === 2) {
-                  <button type="button" class="key wide" aria-label="Backspace" (click)="board().erase()">&#9003;</button>
+                  <button type="button" class="key wide" aria-label="Backspace" (pointerdown)="press($event)" (click)="board().erase()">&#9003;</button>
                 }
               </div>
             }
@@ -241,5 +241,12 @@ export class WordGuess implements OnInit, OnDestroy {
     } catch {
       /* the person cancelled the share sheet */
     }
+  }
+
+  /** A clear "pressed" look the moment a key is touched (the plain :active state is too brief to notice on a quick tap). */
+  protected press(event: PointerEvent): void {
+    const key = event.currentTarget as HTMLElement;
+    key.classList.add('pressed');
+    setTimeout(() => key.classList.remove('pressed'), 170);
   }
 }

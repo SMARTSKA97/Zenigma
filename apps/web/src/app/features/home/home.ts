@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { GAMES, isPuzzleGame, PUZZLE_GAMES } from '../../games/catalog';
-import { LEVEL_COUNT, PracticeStore } from '../../games/puzzle/practice.store';
+import { PracticeStore } from '../../games/puzzle/practice.store';
 import { Glyph } from '../../shared/glyph';
 
 @Component({
@@ -27,7 +27,7 @@ import { Glyph } from '../../shared/glyph';
     <div class="grid">
       @for (game of games; track game.id) {
         @if (game.live) {
-          <a class="game live" [routerLink]="['/games', game.id]" [style.--h]="game.hue">
+          <a class="game live" [routerLink]="isPuzzle(game.id) ? ['/games', game.id, 'levels'] : ['/games', game.id]" [style.--h]="game.hue">
             <span class="art"><app-glyph [game]="game.id" /></span>
             <span class="name">{{ game.name }}</span>
             <span class="blurb">{{ game.blurb }}</span>
@@ -239,10 +239,14 @@ export class Home implements OnInit {
     for (const game of PUZZLE_GAMES) void this.practice.load(game);
   }
 
+  protected isPuzzle(id: string): boolean {
+    return isPuzzleGame(id);
+  }
+
   protected progress(id: string): string {
     if (!isPuzzleGame(id)) return 'Play';
     const done = this.practice.solvedLevels(id)().size;
-    return done ? `${done} of ${LEVEL_COUNT} solved` : 'Play';
+    return done ? `Level ${this.practice.frontier(id)}` : 'Play';
   }
 
   protected readonly greeting = computed(() => {

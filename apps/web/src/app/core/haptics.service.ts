@@ -19,7 +19,8 @@ export class HapticsService {
 
   /** A very light tick: selecting a cell, stepping a path, a key press. */
   tick(): void {
-    this.run(() => Haptics.selectionChanged(), 8);
+    // (Android only vibrates for selectionChanged after a selection has started, so a short plain vibration is used.)
+    this.run(() => Haptics.vibrate({ duration: 14 }), 14);
   }
 
   /** A light tap: a mark or a number placed. */

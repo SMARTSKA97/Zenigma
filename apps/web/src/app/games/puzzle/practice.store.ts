@@ -2,7 +2,9 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { LocalStore } from '../../core/local-store';
 import { PuzzleGameId } from '../catalog';
 
-export const LEVEL_COUNT = 200;
+export const LEVEL_COUNT = 1000;
+/** Levels come in zones of ten: each climbs from easy (the first) to hard (the tenth). */
+export const ZONE_SIZE = 10;
 
 interface Progress {
   /** Level numbers solved on this device. */
@@ -41,6 +43,16 @@ export class PracticeStore {
 
   bestMs(game: string, level: number): number | null {
     return this.all()[game]?.best[level] ?? null;
+  }
+
+  /** The level to play next: one past the furthest level solved (levels further on stay locked until it is solved). */
+  frontier(game: string): number {
+    const solved = this.all()[game]?.solved ?? [];
+    return Math.min(LEVEL_COUNT, (solved.length ? Math.max(...solved) : 0) + 1);
+  }
+
+  isUnlocked(game: string, level: number): boolean {
+    return level >= 1 && level <= this.frontier(game);
   }
 
   /** The first level not solved yet (or the last level once everything is solved). */

@@ -1,0 +1,377 @@
+:host {
+  display: block;
+  max-width: 30rem;
+  margin: 0 auto;
+  padding-bottom: 6rem;
+}
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: calc(0.5rem + env(safe-area-inset-top)) 0 0.6rem;
+  background: linear-gradient(var(--bg) 70%, transparent);
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  h1 {
+    margin: 0;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+  }
+  p {
+    margin: 0;
+    font-size: 0.8rem;
+  }
+}
+.round {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.map {
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+/* Each zone is one drawing, 360 by 840, scaled to the screen; the things in it are placed in percentages. */
+.zone {
+  --h: var(--zh);
+  position: relative;
+  aspect-ratio: 360 / 920;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 255cqw;
+  background:
+    radial-gradient(120% 40% at 20% 0%, color-mix(in oklch, oklch(0.9 0.09 calc(var(--h) * 1deg)) 55%, transparent), transparent 70%),
+    linear-gradient(color-mix(in oklch, oklch(0.88 0.08 calc((var(--h) + 25) * 1deg)) 40%, var(--bg)), color-mix(in oklch, oklch(0.85 0.1 calc(var(--h) * 1deg)) 40%, var(--bg)));
+}
+.banner {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  padding: 0.7rem 0 0;
+  text-align: center;
+  span {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  b {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 650;
+  }
+  i {
+    display: block;
+    width: 5.5rem;
+    height: 5px;
+    margin-top: 0.2rem;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
+    overflow: hidden;
+    &::after {
+      content: '';
+      display: block;
+      width: calc(var(--p) * 100%);
+      height: 100%;
+      background: var(--accent);
+    }
+  }
+}
+.ground {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.road-edge {
+  stroke: color-mix(in oklch, oklch(0.55 0.12 calc(var(--h) * 1deg)) 55%, var(--bg));
+  stroke-width: 40;
+}
+.road {
+  stroke: color-mix(in oklch, oklch(0.95 0.05 calc((var(--h) + 40) * 1deg)) 70%, var(--surface));
+  stroke-width: 32;
+}
+.dash {
+  stroke: color-mix(in srgb, var(--surface) 90%, transparent);
+  stroke-width: 3.5;
+  stroke-dasharray: 2 12;
+}
+
+.decor,
+.spot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.decor {
+  --s: 1;
+  width: calc(11cqw * var(--s));
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: 0.95;
+  .trunk,
+  .stem {
+    fill: color-mix(in oklch, oklch(0.5 0.08 60) 80%, var(--bg));
+    stroke: color-mix(in oklch, oklch(0.5 0.08 60) 80%, var(--bg));
+    stroke-width: 2;
+  }
+  .leaf {
+    fill: color-mix(in oklch, oklch(0.72 0.14 calc((var(--h) + 60) * 1deg)) 85%, var(--bg));
+  }
+  .shine {
+    fill: rgb(255 255 255 / 0.35);
+    stroke: rgb(255 255 255 / 0.35);
+  }
+  .cloud {
+    fill: color-mix(in srgb, var(--surface) 90%, transparent);
+  }
+  .rock {
+    fill: color-mix(in oklch, oklch(0.7 0.02 calc(var(--h) * 1deg)) 85%, var(--bg));
+  }
+  .petal {
+    fill: color-mix(in oklch, oklch(0.78 0.14 calc((var(--h) + 180) * 1deg)) 90%, var(--bg));
+  }
+  .core {
+    fill: #f3c846;
+  }
+}
+
+.spot {
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+}
+.node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 15.5cqw;
+  height: 15.5cqw;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 0.9cqw solid color-mix(in srgb, var(--ink) 80%, transparent);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 5.6cqw;
+  font-weight: 700;
+  box-shadow: 0 1.2cqw 0 color-mix(in srgb, var(--ink) 22%, transparent);
+  transition: transform 0.2s var(--spring);
+  &:active {
+    transform: translateY(0.6cqw) scale(0.96);
+  }
+  &.done {
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--ink));
+  }
+  &.now {
+    background: #ffcf4a;
+    color: #3b2a00;
+    border-color: #a86f00;
+    animation: beat 1.6s var(--ease) infinite;
+  }
+  &.locked {
+    background: color-mix(in srgb, var(--ink) 12%, var(--surface));
+    color: var(--muted);
+    border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+    box-shadow: none;
+  }
+  &.hard {
+    width: 18.5cqw;
+    height: 18.5cqw;
+    font-size: 6.6cqw;
+    border-color: #a8321f;
+    &:not(.done):not(.now):not(.locked) {
+      background: #ffe3dc;
+    }
+  }
+  &.hard.locked {
+    border-color: color-mix(in srgb, #a8321f 50%, var(--muted));
+  }
+}
+.lock {
+  width: 46%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.flame {
+  position: absolute;
+  top: -3.5cqw;
+  right: -2.2cqw;
+  width: 7cqw;
+  fill: #e4472d;
+  stroke: #7a1b0c;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0.4cqw 0 rgb(0 0 0 / 0.2));
+}
+.you {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 0.5cqw;
+  display: grid;
+  place-items: center;
+  width: 10.5cqw;
+  height: 10.5cqw;
+  padding: 2cqw;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--ink-contrast);
+  box-shadow: 0 1cqw 0 color-mix(in srgb, var(--ink) 25%, transparent);
+  animation: hop 1.6s var(--ease) infinite;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 96%;
+    border: 1.8cqw solid transparent;
+    border-top-color: var(--ink);
+  }
+}
+.stars {
+  display: flex;
+  gap: 0.3cqw;
+  margin-top: 1.6cqw;
+  svg {
+    width: 4.4cqw;
+    fill: color-mix(in srgb, var(--ink) 16%, transparent);
+    &.on {
+      fill: #f5b82e;
+      stroke: #a86f00;
+      stroke-width: 1.4;
+      stroke-linejoin: round;
+    }
+  }
+}
+.more {
+  margin: 0;
+  padding: 1.2rem 1rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  background: var(--surface);
+  order: -1;
+}
+
+.play {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 30;
+  transform: translateX(-50%);
+  padding: 0.85rem 2rem;
+  border-radius: 99px;
+  background: var(--ink);
+  color: var(--ink-contrast);
+  font-weight: 650;
+  text-decoration: none;
+  box-shadow: var(--shadow-lift);
+}
+
+.info {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  h2 {
+    margin: 0;
+  }
+  p {
+    margin: 0;
+  }
+}
+.badge {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: #ffcf4a;
+  border: 4px solid #a86f00;
+  color: #3b2a00;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  &.hard {
+    border-color: #a8321f;
+  }
+}
+.chip {
+  padding: 0.15rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  &[data-d='Hard'],
+  &[data-d='Very hard'] {
+    background: #ffe3dc;
+    color: #8a2410;
+  }
+}
+.big-stars {
+  display: flex;
+  gap: 0.35rem;
+  svg {
+    width: 2.6rem;
+    fill: var(--surface-2);
+    stroke: color-mix(in srgb, var(--ink) 25%, transparent);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+    &.on {
+      fill: #f5b82e;
+      stroke: #a86f00;
+    }
+  }
+}
+
+@keyframes beat {
+  50% {
+    transform: scale(1.08);
+  }
+}
+@keyframes hop {
+  50% {
+    transform: translateY(-1.4cqw);
+  }
+}
+:host-context([data-motion='reduced']) {
+  .node.now,
+  .you {
+    animation: none;
+  }
+}

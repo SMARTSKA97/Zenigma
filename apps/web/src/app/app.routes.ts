@@ -5,6 +5,7 @@ const puzzle = () => import('./games/puzzle/puzzle-page').then((m) => m.PuzzlePa
 
 export const routes: Routes = [
   { path: 'games/word-guess', loadComponent: wordGuess, data: { mode: 'practice' } },
+  { path: 'games/:game/levels', loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
   { path: 'games/:game', loadComponent: puzzle, data: { mode: 'practice' } },
   { path: 'daily/word-guess', loadComponent: wordGuess, data: { mode: 'daily' } },
   { path: 'daily/:game', loadComponent: puzzle, data: { mode: 'daily' } },

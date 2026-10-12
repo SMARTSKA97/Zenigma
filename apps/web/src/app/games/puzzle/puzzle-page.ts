@@ -17,6 +17,7 @@ import { ZipBoard } from '../zip/zip-board';
 import { TangoBoard } from '../tango/tango-board';
 import { ADAPTERS } from './adapters';
 import { LEVEL_COUNT, PracticeStore } from './practice.store';
+import { parMs, starsFor } from './par';
 import { shareCard } from './share';
 import { PuzzleAttempt, PuzzleDailyService, PuzzleDailyState } from './puzzle-daily.service';
 
@@ -136,10 +137,10 @@ const WARN_DELAY_MS = 1600;
               <span>Reset</span>
             </button>
             @if (!daily()) {
-              <button type="button" class="tool" (click)="pickerOpen.set(true)">
+              <a class="tool" [routerLink]="['/games', game(), 'levels']">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
-                <span>Levels</span>
-              </button>
+                <span>Map</span>
+              </a>
             }
             <button type="button" class="tool" (click)="helpOpen.set(true)">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M9.7 9.5a2.4 2.4 0 1 1 3.4 2.2c-.7.4-1.1.8-1.1 1.6M12 16.8v.1" /></svg>
@@ -162,18 +163,6 @@ const WARN_DELAY_MS = 1600;
       </app-sheet>
     }
 
-    @if (pickerOpen()) {
-      <app-sheet label="Levels" (closed)="pickerOpen.set(false)">
-        <h2>Levels</h2>
-        <p class="muted">{{ solvedCount() }} of {{ levelCount }} solved</p>
-        <div class="levels">
-          @for (n of levelNumbers; track n) {
-            <button type="button" class="lv" [class.done]="isDone(n)" [class.now]="n === level()" (click)="openLevel(n)">{{ n }}</button>
-          }
-        </div>
-      </app-sheet>
-    }
-
     @if (resultOpen()) {
       <app-sheet label="Solved" (closed)="resultOpen.set(false)">
         <div class="result">
@@ -188,11 +177,17 @@ const WARN_DELAY_MS = 1600;
               <button type="button" class="secondary" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
             </div>
           } @else {
+            <div class="stars" role="img" [attr.aria-label]="stars() + ' of 3 stars'">
+              @for (n of [1, 2, 3]; track n) {
+                <svg viewBox="0 0 24 24" [class.on]="n <= stars()" [style.--i]="n"><path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z" /></svg>
+              }
+            </div>
             @if (bestMs() !== null && bestMs()! < finalMs()) {
               <p class="muted">Your best on this level is {{ fmt(bestMs()!) }}.</p>
             }
             <div class="actions">
               <button type="button" (click)="nextLevel()">Next level</button>
+              <a class="button secondary" [routerLink]="['/games', game(), 'levels']" (click)="resultOpen.set(false)">Map</a>
               <button type="button" class="secondary" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
               <button type="button" class="secondary" (click)="openLevel(level())">Replay</button>
             </div>
@@ -213,8 +208,6 @@ export class PuzzlePage {
   private readonly practiceStore = inject(PracticeStore);
   private readonly dailyApi = inject(PuzzleDailyService);
 
-  protected readonly levelCount = LEVEL_COUNT;
-  protected readonly levelNumbers = Array.from({ length: LEVEL_COUNT }, (_, i) => i + 1);
   private readonly params = toSignal(this.route.paramMap);
   private readonly data = toSignal(this.route.data);
 
@@ -236,7 +229,6 @@ export class PuzzlePage {
   protected readonly busy = signal(false);
   protected readonly message = signal('');
   protected readonly helpOpen = signal(false);
-  protected readonly pickerOpen = signal(false);
   protected readonly resultOpen = signal(false);
   protected readonly copied = signal(false);
   protected readonly solved = signal(false);
@@ -269,7 +261,10 @@ export class PuzzlePage {
     return this.daily() ? Math.max(0, now - this.serverStart) : this.baseMs + (now - this.stretchStart);
   });
   protected readonly time = computed(() => (this.solved() ? this.fmt(this.finalMs()) : this.fmt(this.elapsed())));
-  protected readonly solvedCount = computed(() => this.practiceStore.solvedLevels(this.game())().size);
+  protected readonly stars = computed(() => {
+    const p = this.puzzle();
+    return p ? starsFor(this.finalMs(), parMs(this.game(), p)) : 0;
+  });
   protected readonly bestMs = computed(() => this.practiceStore.bestMs(this.game(), this.level()));
 
   protected readonly difficulty = computed(() => dailyDifficulty(this.dateLabel()));
@@ -343,10 +338,6 @@ export class PuzzlePage {
     return formatDuration(ms);
   }
 
-  protected isDone(n: number): boolean {
-    return this.practiceStore.isSolved(this.game(), n);
-  }
-
   // ---------------------------------------------------------------------------------------------- practice
 
   private async loadPractice(game: PuzzleGameId): Promise<void> {
@@ -356,16 +347,19 @@ export class PuzzlePage {
     this.resultOpen.set(false);
     await this.practiceStore.load(game);
     const saved = await this.practiceStore.loadBoard(game);
-    const level = saved?.level ?? this.practiceStore.nextUnsolved(game);
+    const asked = Number(this.route.snapshot.queryParamMap.get('level'));
+    const frontier = this.practiceStore.frontier(game);
+    // A level asked for on the map, else the one in progress, else the next one to play. Levels not unlocked yet stay closed.
+    const level = asked >= 1 && asked <= frontier ? asked : saved && saved.level <= frontier ? saved.level : frontier;
     await this.openLevel(level, saved?.level === level ? saved : undefined);
   }
 
   protected async openLevel(level: number, saved?: { state: unknown; elapsedMs: number }): Promise<void> {
     const game = this.game();
+    if (!this.practiceStore.isUnlocked(game, level)) return;
     const levels = await ADAPTERS[game].levels();
     const puzzle = levels[level - 1];
     if (!puzzle) return;
-    this.pickerOpen.set(false);
     this.resultOpen.set(false);
     this.solved.set(false);
     this.level.set(level);
@@ -382,8 +376,7 @@ export class PuzzlePage {
   }
 
   protected nextLevel(): void {
-    const next = this.level() >= LEVEL_COUNT ? 1 : this.practiceStore.nextUnsolved(this.game());
-    void this.openLevel(next === this.level() ? Math.min(LEVEL_COUNT, next + 1) : next);
+    void this.openLevel(Math.min(LEVEL_COUNT, this.level() + 1));
   }
 
   // ---------------------------------------------------------------------------------------------- daily

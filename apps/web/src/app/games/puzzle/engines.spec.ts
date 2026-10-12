@@ -81,3 +81,21 @@ describe('zip moves', () => {
     expect(zipFits(puzzle, [path[1]])).toBe(false);
   });
 });
+
+import { difficultyOf, starsFor, parMs } from './par';
+
+describe('level difficulty labels and stars', () => {
+  it('climbs from easy to very hard within every ten levels', () => {
+    expect([1, 3, 4, 6, 7, 9, 10].map(difficultyOf)).toEqual(['Easy', 'Easy', 'Medium', 'Medium', 'Hard', 'Hard', 'Very hard']);
+    expect(difficultyOf(11)).toBe('Easy');
+    expect(difficultyOf(20)).toBe('Very hard');
+  });
+
+  it('gives stars from the time against par', () => {
+    expect(starsFor(null, 30_000)).toBe(0);
+    expect(starsFor(29_000, 30_000)).toBe(3);
+    expect(starsFor(50_000, 30_000)).toBe(2);
+    expect(starsFor(90_000, 30_000)).toBe(1);
+    expect(parMs('queens', { size: 5, regions: [] })).toBe(30_000);
+  });
+});
