@@ -9,7 +9,7 @@ import { SyncService } from '../../core/sync.service';
 import { Confetti } from '../../shared/confetti';
 import { Loader } from '../../shared/loader';
 import { Sheet } from '../../shared/sheet';
-import { gameInfo, isPuzzleGame, PuzzleGameId } from '../catalog';
+import { dailyDifficulty, gameInfo, isPuzzleGame, PuzzleGameId } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
 import { TangoBoard } from '../tango/tango-board';
@@ -98,7 +98,7 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5" /><path d="M12 9v4l2.5 1.5M9.5 3h5" /></svg>
               <span class="time" aria-label="Time">{{ time() }}</span>
             </div>
-            <span class="pill">{{ daily() ? 'Daily' : 'Level ' + level() }}</span>
+            <span class="pill">{{ daily() ? 'Daily' + (difficulty() ? ' · ' + difficulty()!.label : '') : 'Level ' + level() }}</span>
             @if (message()) {
               <span class="toast">{{ message() }}</span>
             }
@@ -263,6 +263,7 @@ export class PuzzlePage {
   protected readonly solvedCount = computed(() => this.practiceStore.solvedLevels(this.game())().size);
   protected readonly bestMs = computed(() => this.practiceStore.bestMs(this.game(), this.level()));
 
+  protected readonly difficulty = computed(() => dailyDifficulty(this.dateLabel()));
   protected readonly subtitle = computed(() => (this.daily() ? `Daily · ${this.dateLabel() || 'today'}` : `Practice · Level ${this.level()}`));
   protected readonly untilNext = computed(() => {
     const target = this.nextRollover();

@@ -43,3 +43,15 @@ export const DAILY_GAMES = GAMES.filter((g) => g.daily);
 export const PUZZLE_GAMES = ['queens', 'tango', 'sudoku'] as const;
 export type PuzzleGameId = (typeof PUZZLE_GAMES)[number];
 export const isPuzzleGame = (id: string): id is PuzzleGameId => (PUZZLE_GAMES as readonly string[]).includes(id);
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const LEVELS = ['Easy', 'Easy', 'Medium', 'Medium', 'Hard', 'Hard', 'Expert'];
+
+/** Queens, Tango and Sudoku dailies get harder through the week, Monday (easiest) to Sunday (hardest). */
+export function dailyDifficulty(date: string | null | undefined): { day: string; label: string; step: number } | null {
+  if (!date) return null;
+  const d = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return null;
+  const weekday = (d.getUTCDay() + 6) % 7;
+  return { day: DAYS[weekday], label: LEVELS[weekday], step: weekday + 1 };
+}

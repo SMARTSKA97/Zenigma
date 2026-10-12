@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { borders, nextCell, QUEEN, MARK, QueensCell, QueensPuzzle } from './engine';
 
 /** Region colours: hues spread around the wheel; thick outlines mean colour is never the only clue. */
@@ -16,7 +16,16 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
         </linearGradient>
       </defs>
     </svg>
-    <div class="grid" role="grid" aria-label="Queens board" [style.--n]="puzzle().size">
+    <div
+      class="grid"
+      role="grid"
+      aria-label="Queens board"
+      [style.--n]="puzzle().size"
+      (pointerdown)="down($event)"
+      (pointermove)="move($event)"
+      (pointerup)="up($event)"
+      (pointercancel)="cancel()"
+    >
       @for (cell of cells(); track cell.i) {
         <button
           type="button"
@@ -30,7 +39,8 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
           [style.--d]="cell.delay"
           [style.box-shadow]="cell.outline"
           [attr.aria-label]="cell.label"
-          (click)="tap(cell.i)"
+          [attr.data-i]="cell.i"
+          (click)="keyTap($event, cell.i)"
         >
           <b class="rl" aria-hidden="true">{{ cell.letter }}</b>
           @if (cell.value === QUEEN) {
@@ -70,6 +80,9 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
       background: var(--line);
       gap: 1px;
       box-shadow: var(--shadow);
+      touch-action: none; /* dragging across cells must not scroll the page */
+      user-select: none;
+      -webkit-user-select: none;
     }
     :host .cell {
       position: relative;
@@ -221,7 +234,7 @@ export class QueensBoard {
 
   protected readonly cells = computed(() => {
     const puzzle = this.puzzle();
-    const board = this.board();
+    const board = this.draft() ?? this.board();
     const bad = this.bad();
     return board.map((value, i) => {
       const b = borders(puzzle, i);
@@ -246,7 +259,83 @@ export class QueensBoard {
     });
   });
 
+  /** The board while a finger or mouse is dragging, before the whole drag is handed over as one move. */
+  private readonly draft = signal<QueensCell[] | null>(null);
+  private start = -1;
+  private last = -1;
+  private dragged = false;
+  /** What the drag does: put crosses on empty cells, or (when it began on a cross) take crosses away. */
+  private erasing = false;
+
+  private cellAt(event: PointerEvent): number {
+    const el = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-i]');
+    const value = el?.getAttribute('data-i');
+    return value === null || value === undefined ? -1 : Number(value);
+  }
+
+  protected down(event: PointerEvent): void {
+    if (this.locked() || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    const index = this.cellAt(event);
+    if (index < 0) return;
+    this.start = index;
+    this.last = index;
+    this.dragged = false;
+    this.erasing = this.board()[index] === MARK;
+  }
+
+  protected move(event: PointerEvent): void {
+    if (this.start < 0) return;
+    const index = this.cellAt(event);
+    if (index < 0 || index === this.last) return;
+    this.last = index;
+    if (!this.dragged) {
+      // The drag has really begun: it covers the cell it started on as well.
+      this.dragged = true;
+      this.draft.set([...this.board()]);
+      this.paint(this.start);
+    }
+    this.paint(index);
+  }
+
+  protected up(event: PointerEvent): void {
+    if (this.start < 0) return;
+    const start = this.start;
+    this.start = -1;
+    if (!this.dragged) {
+      this.tap(start);
+      return;
+    }
+    const finished = this.draft();
+    this.draft.set(null);
+    if (finished && finished.some((c, i) => c !== this.board()[i])) this.boardChange.emit(finished);
+    event.preventDefault();
+  }
+
+  protected cancel(): void {
+    this.start = -1;
+    this.dragged = false;
+    this.draft.set(null);
+  }
+
+  /** Crosses only go on empty cells and only come off crosses; queens are never touched by a drag. */
+  private paint(index: number): void {
+    this.draft.update((board) => {
+      if (!board) return board;
+      const next = [...board];
+      if (this.erasing) {
+        if (next[index] === MARK) next[index] = 0;
+      } else if (next[index] === 0) next[index] = MARK;
+      return next;
+    });
+  }
+
+  /** Keyboard (Enter or Space) clicks have no pointer; pointer taps are handled above. */
+  protected keyTap(event: MouseEvent, index: number): void {
+    if (event.detail === 0) this.tap(index);
+  }
+
   protected tap(index: number): void {
+    if (this.locked()) return;
     const next = [...this.board()];
     next[index] = nextCell(next[index]);
     this.boardChange.emit(next);

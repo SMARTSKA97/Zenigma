@@ -23,18 +23,29 @@ export function practiceLevel(game, level) {
   }
 }
 
-/** Daily puzzles are the same difficulty every day, a notch above the middle of practice. */
-export function dailyPuzzle(game, seed) {
+/**
+ * Daily puzzles get harder through the week: Monday is the gentlest, Sunday the hardest.
+ * `weekday` is 0 for Monday to 6 for Sunday (the day the puzzle is for, in India Standard Time).
+ */
+export const DAILY_RAMP = {
+  queens: [6, 6, 7, 7, 8, 8, 9], // board size
+  tango: [6, 5, 4, 3, 2, 1, 0], // extra clues left in (fewer is harder)
+  sudoku: [42, 38, 34, 31, 29, 27, 26], // numbers left in the grid (fewer is harder)
+};
+
+export const weekdayOf = (date) => (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
+
+export function dailyPuzzle(game, seed, weekday = 3) {
   const rng = rngFrom(`daily:${seed}`);
+  const level = DAILY_RAMP[game]?.[weekday];
+  if (level === undefined) throw new Error(`Unknown game ${game}`);
   switch (game) {
     case 'queens':
-      return generateQueens(8, rng);
+      return generateQueens(level, rng);
     case 'tango':
-      return generateTango(rng, 4);
+      return generateTango(rng, level);
     case 'sudoku':
-      return generateSudoku(rng, 30);
-    default:
-      throw new Error(`Unknown game ${game}`);
+      return generateSudoku(rng, level);
   }
 }
 

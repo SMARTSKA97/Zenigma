@@ -4,7 +4,7 @@ import { AuthService } from '../../core/auth.service';
 import { DailyGameStatus, DailyHub as Hub, formatDuration, LeaderboardService } from '../../core/leaderboard.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
-import { DAILY_GAMES } from '../../games/catalog';
+import { DAILY_GAMES, dailyDifficulty } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
 
 @Component({
@@ -13,7 +13,7 @@ import { Glyph } from '../../shared/glyph';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="hero">
-      <p class="eyebrow">Daily challenge</p>
+      <p class="eyebrow">Daily challenge{{ difficulty() ? ' · ' + difficulty()!.day : '' }}</p>
       <h1>{{ doneCount() }} of {{ games.length }} done today</h1>
       <p class="lede">One puzzle per game, the same for everyone. Next set in <strong>{{ untilNext() }}</strong>.</p>
       @if (stats(); as s) {
@@ -22,6 +22,16 @@ import { Glyph } from '../../shared/glyph';
           <span>{{ s.rewards.weekSolved }}/{{ s.rewards.weekGoal }} this week</span>
           <span class="go">Stats ›</span>
         </a>
+      }
+      @if (difficulty(); as d) {
+        <div class="level" [attr.aria-label]="'Difficulty ' + d.label + ', day ' + d.step + ' of 7'">
+          <span class="pips" aria-hidden="true">
+            @for (n of [1, 2, 3, 4, 5, 6, 7]; track n) {
+              <i [class.on]="n <= d.step"></i>
+            }
+          </span>
+          <span>{{ d.label }} · gets harder each day until Sunday</span>
+        </div>
       }
       <div class="dots" aria-hidden="true">
         @for (g of games; track g.id) {
@@ -103,6 +113,7 @@ export class DailyHub implements OnInit, OnDestroy {
   private readonly now = signal(Date.now());
   private tick?: ReturnType<typeof setInterval>;
 
+  protected readonly difficulty = computed(() => dailyDifficulty(this.hub()?.date));
   protected readonly doneCount = computed(() => (this.hub()?.games ?? []).filter((g) => ['solved', 'won', 'lost'].includes(g.status)).length);
   protected readonly untilNext = computed(() => {
     const target = this.hub()?.nextRolloverUtc;
