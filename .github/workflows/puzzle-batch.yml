@@ -32,4 +32,5 @@ jobs:
           DAYS: ${{ inputs.days || '21' }}
         run: |
           node schedule.mjs --days "$DAYS" > puzzles.sql
+          node ../puzzles/schedule-puzzles.mjs --days "$DAYS" >> puzzles.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f puzzles.sql

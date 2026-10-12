@@ -63,3 +63,17 @@ public class DailyAttempt
     public DateTimeOffset LastActiveAt { get; set; }
     public DateTimeOffset? FinishedAt { get; set; }
 }
+
+public class PuzzleAttempt
+{
+    public Guid Id { get; set; }
+    public string UserId { get; set; } = "";
+    public string Game { get; set; } = "";
+    public DateOnly PuzzleDate { get; set; }
+    public Guid DeviceId { get; set; }
+    public string Status { get; set; } = "playing";
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset LastActiveAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
+    public int? ElapsedMs { get; set; }
+}

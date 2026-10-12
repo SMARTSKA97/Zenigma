@@ -1,16 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-
-export type GameId =
-  | 'word-guess'
-  | 'queens'
-  | 'tango'
-  | 'mini-sudoku'
-  | 'zip'
-  | 'patches'
-  | 'pinpoint'
-  | 'crossclimb'
-  | 'wend'
-  | 'comet-slice';
+import { GameId } from '../games/catalog';
 
 /** One small line drawing per game, so each tile is recognisable at a glance. */
 @Component({

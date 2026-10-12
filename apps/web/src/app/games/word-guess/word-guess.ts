@@ -1,12 +1,10 @@
 import { Component, computed, HostListener, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { AuthService } from '../../core/auth.service';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PrefsService } from '../../core/prefs.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController } from './board';
 import { DailyStore } from './daily.store';
 import { Loader } from '../../shared/loader';
-import { Segmented, SegmentOption } from '../../shared/segmented';
 import { Switch } from '../../shared/switch';
 import { Mark } from './engine';
 import { WordGuessStore } from './word-guess.store';
@@ -15,18 +13,19 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 @Component({
   selector: 'app-word-guess',
-  imports: [RouterLink, Loader, Segmented, Switch],
+  imports: [RouterLink, Loader, Switch],
   template: `
     <div class="game">
       <header class="bar">
         <a routerLink="/" class="back" aria-label="Back to games">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </a>
-        <h1>Word Guess</h1>
+        <div class="title">
+          <h1>Word Guess</h1>
+          <p class="muted sub">{{ mode() === 'daily' ? 'Daily' + (daily.date() ? ' · ' + daily.date() : '') : 'Practice' }}</p>
+        </div>
         <app-switch [checked]="hardChecked()" [disabled]="hardDisabled()" (checkedChange)="prefs.setHardMode($event)">Hard</app-switch>
       </header>
-
-      <app-segmented class="modes" label="Mode" [options]="modeOptions" [value]="mode()" (valueChange)="setMode($event)" />
 
       <div class="toast" role="status" aria-live="polite">
         @if (board().message(); as text) {
@@ -63,15 +62,11 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
                   Start today's puzzle
                 </button>
               }
-              <button type="button" class="secondary" (click)="setMode('practice')">Play practice</button>
+              <a class="button secondary" routerLink="/games/word-guess">Play practice</a>
             </div>
           </section>
         }
       } @else {
-        @if (mode() === 'daily' && daily.date()) {
-          <p class="muted date">Daily &middot; {{ daily.date() }}{{ daily.hard() ? ' &middot; Hard' : '' }}</p>
-        }
-
         <div class="board" role="grid" aria-label="Guesses">
           @for (row of board().rows(); track $index; let r = $index) {
             <div class="row-tiles" role="row" [class.shake]="board().shakeRow() === r">
@@ -109,7 +104,9 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
               <button type="button" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
               @if (mode() === 'practice') {
                 <button type="button" class="secondary" (click)="practice.newWord()">New word</button>
+                <a class="button secondary" routerLink="/ranks" [queryParams]="{ game: 'word-guess', kind: 'practice' }">Leaderboard</a>
               } @else {
+                <a class="button secondary" routerLink="/ranks" [queryParams]="{ game: 'word-guess', kind: 'daily' }">Leaderboard</a>
                 <span class="muted">Next puzzle in {{ untilNext() }}</span>
               }
             </div>
@@ -142,14 +139,10 @@ export class WordGuess implements OnInit, OnDestroy {
   protected readonly practice = inject(WordGuessStore);
   protected readonly daily = inject(DailyStore);
   protected readonly prefs = inject(PrefsService);
-  private readonly auth = inject(AuthService);
-  private readonly sync = inject(SyncService);
+    private readonly sync = inject(SyncService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly cols = [0, 1, 2, 3, 4];
-  protected readonly modeOptions: SegmentOption<'daily' | 'practice'>[] = [
-    { value: 'daily', label: 'Daily' },
-    { value: 'practice', label: 'Practice' },
-  ];
   protected readonly keyRows = KEY_ROWS.map((r) => [...r]);
   protected readonly copied = signal(false);
   protected readonly mode = signal<'daily' | 'practice'>('practice');
@@ -195,15 +188,7 @@ export class WordGuess implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem('zenigma.wordguess.mode');
-    } catch {
-      /* default */
-    }
-    // Daily is the headline mode when it can actually be played; otherwise open practice.
-    const preferred = saved ?? (this.auth.signedIn() && this.sync.online() ? 'daily' : 'practice');
-    this.setMode(preferred === 'daily' ? 'daily' : 'practice');
+    this.setMode(this.route.snapshot.data['mode'] === 'daily' ? 'daily' : 'practice');
     this.tick = setInterval(() => this.now.set(Date.now()), 30_000); // local clock only, never a request
   }
 
@@ -211,13 +196,8 @@ export class WordGuess implements OnInit, OnDestroy {
     clearInterval(this.tick);
   }
 
-  protected setMode(mode: 'daily' | 'practice'): void {
+  private setMode(mode: 'daily' | 'practice'): void {
     this.mode.set(mode);
-    try {
-      localStorage.setItem('zenigma.wordguess.mode', mode);
-    } catch {
-      /* not remembered */
-    }
     if (mode === 'daily') void this.daily.load();
     else void this.practice.start();
   }

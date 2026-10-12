@@ -6,6 +6,7 @@ using Npgsql;
 using NpgsqlTypes;
 using Zenigma.Api.Auth;
 using Zenigma.Api.Data;
+using Zenigma.Api.Games.Puzzles;
 
 namespace Zenigma.Api.Sync;
 
@@ -40,7 +41,7 @@ public static partial class SyncEndpoints
     {
         var group = app.MapGroup("/sync").RequireAuthorization();
 
-        group.MapPost("/push", async (PushRequest request, ClaimsPrincipal principal, AppDbContext db, TimeProvider clock, CancellationToken ct) =>
+        group.MapPost("/push", async (PushRequest request, ClaimsPrincipal principal, AppDbContext db, PracticeRecorder practice, TimeProvider clock, CancellationToken ct) =>
         {
             var userId = UserIds.Get(principal);
             if (request.DeviceId is null || request.DeviceId == Guid.Empty || request.Events is null)
@@ -83,6 +84,13 @@ public static partial class SyncEndpoints
                         new NpgsqlParameter("created", e.ClientCreatedAt!.Value.ToUniversalTime()),
                     ],
                     ct);
+
+                if (inserted == 1 && PracticeRecorder.IsPracticeKind(e.Kind!))
+                {
+                    // A solve counts for the leaderboards only once the server has checked it; a bad one is just kept in the log.
+                    var at = e.ClientCreatedAt!.Value > clock.GetUtcNow() ? clock.GetUtcNow() : e.ClientCreatedAt.Value;
+                    await practice.RecordAsync(db, userId, e.Kind!, e.Payload, at, ct);
+                }
 
                 (inserted == 1 ? accepted : duplicates).Add(e.Id.Value);
             }
