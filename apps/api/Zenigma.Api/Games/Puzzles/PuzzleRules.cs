@@ -12,8 +12,9 @@ public static class PuzzleRules
     public const string Queens = "queens";
     public const string Tango = "tango";
     public const string Sudoku = "sudoku";
+    public const string Zip = "zip";
 
-    public static readonly string[] Games = [Queens, Tango, Sudoku];
+    public static readonly string[] Games = [Queens, Tango, Sudoku, Zip];
 
     public static bool IsPuzzleGame(string game) => Array.IndexOf(Games, game) >= 0;
 
@@ -23,6 +24,7 @@ public static class PuzzleRules
         Queens => 5_000,
         Tango => 6_000,
         Sudoku => 40_000,
+        Zip => 4_000,
         _ => 5_000,
     };
 
@@ -35,6 +37,7 @@ public static class PuzzleRules
                 Queens => VerifyQueens(puzzle, solution),
                 Tango => VerifyTango(puzzle, solution),
                 Sudoku => VerifySudoku(puzzle, solution),
+                Zip => VerifyZip(puzzle, solution),
                 _ => false,
             };
         }
@@ -64,6 +67,41 @@ public static class PuzzleRules
         }
 
         return true;
+    }
+
+    // Zip: solution lists every cell (row * size + column) in the order the path visits them. It must step to a neighbouring
+    // cell each time, and pass the numbered cells in order from 1 to the highest, starting on 1 and ending on the highest.
+    private static bool VerifyZip(JsonElement puzzle, JsonElement solution)
+    {
+        var size = puzzle.GetProperty("size").GetInt32();
+        var numbers = puzzle.GetProperty("numbers").EnumerateArray().Select(x => x.GetInt32()).ToArray();
+        var total = size * size;
+        if (numbers.Length != total || solution.ValueKind != JsonValueKind.Array || solution.GetArrayLength() != total) return false;
+
+        var path = solution.EnumerateArray().Select(x => x.ValueKind == JsonValueKind.Number ? x.GetInt32() : -1).ToArray();
+        var seen = new bool[total];
+        var top = numbers.Max();
+        var expected = 1;
+        for (var step = 0; step < total; step++)
+        {
+            var cell = path[step];
+            if (cell < 0 || cell >= total || seen[cell]) return false;
+            seen[cell] = true;
+            if (step > 0)
+            {
+                var before = path[step - 1];
+                var apart = Math.Abs(cell / size - before / size) + Math.Abs(cell % size - before % size);
+                if (apart != 1) return false; // one step up, down, left or right
+            }
+
+            if (numbers[cell] != 0)
+            {
+                if (numbers[cell] != expected) return false; // numbers must be reached in order
+                expected++;
+            }
+        }
+
+        return top >= 2 && expected == top + 1 && numbers[path[total - 1]] == top;
     }
 
     // Tango: 36 characters of 's' and 'm'.

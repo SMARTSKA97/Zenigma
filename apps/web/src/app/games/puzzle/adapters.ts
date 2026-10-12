@@ -1,6 +1,7 @@
 import * as queens from '../queens/engine';
 import * as tango from '../tango/engine';
 import * as sudoku from '../sudoku/engine';
+import * as zip from '../zip/engine';
 import { PuzzleGameId } from '../catalog';
 
 /** What the generic puzzle page needs from each game; boards and rules stay in the game's own engine. */
@@ -13,6 +14,8 @@ export interface PuzzleAdapter {
   solution(puzzle: unknown, state: unknown): unknown;
   /** True when the player has put anything on the board (for the clear button). */
   touched(puzzle: unknown, state: unknown): boolean;
+  /** Own rule for whether a saved board still fits (otherwise: same shape as a fresh board with fixed cells kept). */
+  fits?(puzzle: unknown, state: unknown): boolean;
   help: string;
 }
 
@@ -43,5 +46,15 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
     solution: (_, s) => sudoku.solutionOf(s as number[]),
     touched: (p, s) => (s as number[]).join('') !== (p as sudoku.SudokuPuzzle).givens,
     help: 'Fill the grid so every row, column and 3 by 3 box holds the numbers 1 to 9 once. Use Notes to jot down candidates.',
+  },
+  zip: {
+    levels: () => import('../zip/levels.data').then((m) => m.LEVELS),
+    blank: (p) => zip.blankPath(p as zip.ZipPuzzle),
+    conflicts: () => zip.conflicts(),
+    isSolved: (p, s) => zip.isSolved(p as zip.ZipPuzzle, s as zip.ZipPath),
+    solution: (p, s) => zip.solutionOf(p as zip.ZipPuzzle, s as zip.ZipPath),
+    touched: (_, s) => (s as zip.ZipPath).length > 1,
+    fits: (p, s) => zip.fits(p as zip.ZipPuzzle, s),
+    help: 'Draw one path through every cell. Start on 1 and reach the numbers in order; the path ends on the highest number. Drag to draw, drag back to undo a step, or press a cell on the path to cut it back there.',
   },
 };

@@ -1,6 +1,8 @@
 import sudoku from '../../../../../../tests/vectors/puzzles/sudoku.json';
 import queens from '../../../../../../tests/vectors/puzzles/queens.json';
 import tango from '../../../../../../tests/vectors/puzzles/tango.json';
+import zip from '../../../../../../tests/vectors/puzzles/zip.json';
+import { verify as verifyZip, step as zipStep, blankPath, fits as zipFits } from '../zip/engine';
 import { verify as verifyQueens } from '../queens/engine';
 import { verify as verifySudoku } from '../sudoku/engine';
 import { verify as verifyTango } from '../tango/engine';
@@ -17,6 +19,7 @@ describe('puzzle rules (shared vectors, also run by the API)', () => {
     ['queens', queens as Case[], verifyQueens],
     ['tango', tango as Case[], verifyTango],
     ['sudoku', sudoku as Case[], verifySudoku],
+    ['zip', zip as Case[], verifyZip],
   ];
   for (const [game, cases, verify] of suites) {
     for (const c of cases) {
@@ -49,5 +52,32 @@ describe('queens givens and saved boards', () => {
     expect(fitsPuzzle(fresh, undefined)).toBe(false);
     expect(fitsPuzzle(['.', '.'], ['s', 'm'])).toBe(true);
     expect(fitsPuzzle(['.', '.'], [0, 0])).toBe(false);
+  });
+});
+
+describe('zip moves', () => {
+  const valid = (zip as Case[])[0];
+  const puzzle = valid.puzzle;
+  const path = valid.solution as number[];
+
+  it('replays the whole solution one legal step at a time', () => {
+    let built = blankPath(puzzle);
+    expect(built).toEqual([path[0]]);
+    for (const cell of path.slice(1)) {
+      const next = zipStep(puzzle, built, cell);
+      expect(next).not.toBeNull();
+      built = next!;
+    }
+    expect(verifyZip(puzzle, built)).toBe(true);
+    expect(zipFits(puzzle, built)).toBe(true);
+  });
+
+  it('refuses a step onto a visited cell, a far cell or a number out of order, and steps back', () => {
+    const start = blankPath(puzzle);
+    expect(zipStep(puzzle, start, start[0])).toBeNull();
+    expect(zipStep(puzzle, start, path[5])).toBeNull();
+    const two = zipStep(puzzle, start, path[1])!;
+    expect(zipStep(puzzle, two, path[0])).toEqual(start);
+    expect(zipFits(puzzle, [path[1]])).toBe(false);
   });
 });

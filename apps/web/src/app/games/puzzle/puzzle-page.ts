@@ -12,6 +12,7 @@ import { Sheet } from '../../shared/sheet';
 import { dailyDifficulty, gameInfo, isPuzzleGame, PuzzleGameId } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
+import { ZipBoard } from '../zip/zip-board';
 import { TangoBoard } from '../tango/tango-board';
 import { ADAPTERS } from './adapters';
 import { LEVEL_COUNT, PracticeStore } from './practice.store';
@@ -23,7 +24,7 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
 /** One screen for every grid puzzle, in practice (endless levels, offline) or daily (one attempt, timed by the server) mode. */
 @Component({
   selector: 'app-puzzle-page',
-  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard],
+  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page" [attr.data-game]="game()">
@@ -111,6 +112,9 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
               }
               @case ('tango') {
                 <app-tango-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
+              }
+              @case ('zip') {
+                <app-zip-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
               }
               @case ('sudoku') {
                 <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
@@ -356,7 +360,8 @@ export class PuzzlePage {
     this.level.set(level);
     this.puzzle.set(puzzle);
     const fresh = ADAPTERS[game].blank(puzzle);
-    const keep = saved && fitsPuzzle(fresh, saved.state);
+    const adapter = ADAPTERS[game];
+    const keep = saved && (adapter.fits ? adapter.fits(puzzle, saved.state) : fitsPuzzle(fresh, saved.state));
     this.state.set(keep ? saved.state : fresh);
     this.history.set([]);
     this.baseMs = keep ? saved.elapsedMs : 0;

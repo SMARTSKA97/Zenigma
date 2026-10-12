@@ -2,7 +2,7 @@
   "name": "zenigma-puzzle-generators",
   "private": true,
   "type": "module",
-  "description": "Generates Queens, Tango and Mini Sudoku puzzles with exactly one solution. No dependencies.",
+  "description": "Generates Queens, Tango, Sudoku and Zip puzzles with exactly one solution. No dependencies.",
   "scripts": {
     "levels": "node build-levels.mjs",
     "vectors": "node gen-vectors.mjs",

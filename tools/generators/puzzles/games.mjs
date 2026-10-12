@@ -1,9 +1,10 @@
 import { generateQueens, solveQueens } from './queens.mjs';
 import { generateSudoku, solveSudoku } from './sudoku.mjs';
+import { generateZip, solveZip } from './zip.mjs';
 import { generateTango, solveTango } from './tango.mjs';
 import { rngFrom } from './rng.mjs';
 
-export const GAMES = ['queens', 'tango', 'sudoku'];
+export const GAMES = ['queens', 'tango', 'sudoku', 'zip'];
 export const LEVELS_PER_GAME = 200;
 
 /** Difficulty ramps with the level number; level 1 is the gentlest. */
@@ -18,6 +19,11 @@ export function practiceLevel(game, level) {
       return generateTango(rng, Math.max(0, 6 - Math.floor((level - 1) / 30)));
     case 'sudoku':
       return generateSudoku(rng, Math.max(27, 46 - Math.floor((level - 1) / 10)));
+    case 'zip': {
+      const size = level <= 40 ? 5 : level <= 100 ? 6 : 7;
+      const target = Math.max(5, (size === 7 ? 10 : 8) - Math.floor((level - 1) / 25) % 4);
+      return generateZip(size, rng, target);
+    }
     default:
       throw new Error(`Unknown game ${game}`);
   }
@@ -30,6 +36,7 @@ export function practiceLevel(game, level) {
 export const DAILY_RAMP = {
   queens: [6, 6, 7, 7, 8, 8, 9], // board size
   queensGivens: [2, 2, 1, 1, 1, 0, 0], // queens already placed (fewer is harder)
+  zip: [[5, 8], [5, 6], [6, 8], [6, 6], [6, 5], [7, 8], [7, 6]], // [board size, numbers shown] (fewer numbers is harder)
   tango: [6, 5, 4, 3, 2, 1, 0], // extra clues left in (fewer is harder)
   sudoku: [42, 38, 34, 31, 29, 27, 26], // numbers left in the grid (fewer is harder)
 };
@@ -47,6 +54,8 @@ export function dailyPuzzle(game, seed, weekday = 3) {
       return generateTango(rng, level);
     case 'sudoku':
       return generateSudoku(rng, level);
+    case 'zip':
+      return generateZip(level[0], rng, level[1]);
   }
 }
 
@@ -59,6 +68,8 @@ export function solve(game, puzzle) {
       return solveTango(puzzle, 2);
     case 'sudoku':
       return solveSudoku(puzzle, 2);
+    case 'zip':
+      return solveZip(puzzle, 2);
     default:
       throw new Error(`Unknown game ${game}`);
   }

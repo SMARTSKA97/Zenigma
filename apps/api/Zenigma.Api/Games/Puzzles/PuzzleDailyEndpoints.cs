@@ -25,7 +25,7 @@ public record PuzzleAttemptDto(
 public record PuzzleDailyStateDto(string Date, DateTimeOffset NextRolloverUtc, PuzzleAttemptDto? Attempt);
 
 /// <summary>
-/// The daily Queens, Tango and Sudoku. The puzzle is revealed only when the player starts, which also starts the
+/// The daily Queens, Tango, Sudoku and Zip. The puzzle is revealed only when the player starts, which also starts the
 /// server's clock. A solution is checked by the rules and timed by the server, so a modified app cannot report a fake time.
 /// One attempt per player per day, on one device at a time (an idle device's lease can be taken over, resuming the same puzzle).
 /// </summary>

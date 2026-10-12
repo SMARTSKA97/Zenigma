@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { rngFrom } from './rng.mjs';
 import { generateQueens, solveQueens } from './queens.mjs';
 import { generateTango, solveTango } from './tango.mjs';
+import { generateZip, solveZip } from './zip.mjs';
 import { generateSudoku, solveSudoku } from './sudoku.mjs';
 
 const out = new URL('../../../tests/vectors/puzzles/', import.meta.url);
@@ -63,11 +64,27 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
   }
   write('sudoku', cases);
 }
+// Zip: solution is the list of cells (row * size + column) in the order the path visits them.
+{
+  const cases = [];
+  for (const [size, target] of [[5, 7], [6, 6]]) {
+    const puzzle = generateZip(size, rngFrom(`vector-zip-${size}`), target);
+    const solution = solveZip(puzzle).solution;
+    const swap = (list, a, b) => list.map((v, i) => (i === a ? list[b] : i === b ? list[a] : v));
+    cases.push({ name: `${size}x${size} valid`, puzzle, solution, valid: true });
+    cases.push({ name: `${size}x${size} reversed`, puzzle, solution: [...solution].reverse(), valid: false });
+    cases.push({ name: `${size}x${size} jumps between cells`, puzzle, solution: swap(solution, 3, 9), valid: false });
+    cases.push({ name: `${size}x${size} repeats a cell`, puzzle, solution: solution.map((v, i) => (i === 4 ? solution[2] : v)), valid: false });
+    cases.push({ name: `${size}x${size} misses a cell`, puzzle, solution: solution.slice(0, -1), valid: false });
+    cases.push({ name: `${size}x${size} cell out of range`, puzzle, solution: solution.map((v, i) => (i === 0 ? size * size : v)), valid: false });
+  }
+  write('zip', cases);
+}
 // The first levels of every game with their solutions: proves the API accepts the exact levels shipped in the app.
 {
   const { practiceLevel, solve } = await import('./games.mjs');
   const cases = [];
-  for (const game of ['queens', 'tango', 'sudoku']) {
+  for (const game of ['queens', 'tango', 'sudoku', 'zip']) {
     for (const level of [1, 2, 3, 150, 200]) {
       cases.push({ game, level, solution: solve(game, practiceLevel(game, level)).solution });
     }

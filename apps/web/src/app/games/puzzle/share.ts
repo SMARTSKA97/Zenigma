@@ -34,6 +34,16 @@ export function shareCard(input: ShareInput): string {
     for (let r = 0; r < 6; r++) lines.push(board.slice(r * 6, r * 6 + 6).map((v) => (v === 's' ? '🌞' : '🌙')).join(''));
   }
 
+  else if (input.game === 'zip') {
+    // The path as colours from start (blue) to finish (red): the shape of the route without its turns.
+    const puzzle = input.puzzle as { size: number };
+    const path = input.state as number[];
+    const heat = ['🟦', '🟩', '🟨', '🟧', '🟥'];
+    const colour = new Array<string>(path.length);
+    path.forEach((cell, step) => (colour[cell] = heat[Math.min(4, Math.floor((step / path.length) * 5))]));
+    for (let r = 0; r < puzzle.size; r++) lines.push(colour.slice(r * puzzle.size, r * puzzle.size + puzzle.size).join(''));
+  }
+
   lines.push('zenigma.ska97homelab.uk');
   return lines.join('\n');
 }
