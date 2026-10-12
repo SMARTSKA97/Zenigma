@@ -48,7 +48,7 @@ import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
       </button>
     </div>
 
-    <div class="pad" role="group" aria-label="Numbers">
+    <div class="pad" role="group" aria-label="Numbers" [style.--keys]="size() + 1">
       @for (n of numbers(); track n) {
         <button type="button" class="key" [class.spent]="counts()[n] >= size()" [disabled]="locked() || selected() === null" (click)="enter(n)">
           {{ n }}
@@ -240,19 +240,20 @@ import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
       stroke-linejoin: round;
       stroke-linecap: round;
     }
+    /* One row of numbers (plus erase) under the board, so the board keeps as much of the screen as possible. */
     .pad {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 0.45rem;
+      grid-template-columns: repeat(var(--keys, 10), minmax(0, 1fr));
+      gap: 0.3rem;
       width: var(--board, min(100%, 26rem));
       margin: 0.7rem auto 0;
     }
     :host .key {
       position: relative;
       min-width: 0;
-      min-height: 50px;
+      min-height: 52px;
       padding: 0;
-      border-radius: 14px;
+      border-radius: 12px;
       border: 0;
       background: var(--key-bg);
       color: var(--text);

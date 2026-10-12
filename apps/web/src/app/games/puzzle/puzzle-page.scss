@@ -11,7 +11,7 @@
   margin: 0 auto;
 }
 .page[data-game='sudoku'] {
-  --board: min(100%, 32rem, calc(100dvh - 25rem));
+  --board: min(100%, 32rem, calc(100dvh - 21.75rem));
 }
 .bar {
   display: flex;
@@ -226,11 +226,11 @@
 
 @media (min-width: 900px) {
   .page {
-    --board: min(100%, 40rem, calc(100dvh - 9rem));
+    --board: min(100%, 40rem, calc(100dvh - 13.25rem));
     max-width: 62rem;
   }
   .page[data-game='sudoku'] {
-    --board: min(100%, 40rem, calc(100dvh - 9rem));
+    --board: min(100%, 40rem, calc(100dvh - 13.25rem));
     max-width: 70rem;
   }
   .page[data-game='sudoku'] .layout {

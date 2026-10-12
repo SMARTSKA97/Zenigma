@@ -10,6 +10,12 @@
   max-width: 30rem;
   margin: 0 auto;
 }
+/* Phones: the board may use a little of the page margin. */
+@media (max-width: 720px) {
+  .game {
+    margin-inline: -0.75rem;
+  }
+}
 
 .bar {
   display: flex;
@@ -93,9 +99,14 @@
 
 /* Board: tiles are sized from the available width AND height so it never overflows on short phones. */
 .board {
-  --tile: min(4.6rem, calc((100vw - 1.25rem - 4 * 0.4rem) / 5), calc((100dvh - 21rem) / 6));
+  --tile: min(4.6rem, calc((100vw - 1rem - 4 * 0.4rem) / 5), calc((100dvh - 23rem) / 6));
   display: grid;
   gap: 0.4rem;
+}
+@media (min-width: 721px) {
+  .board {
+    --tile: min(4.4rem, calc((100dvh - 31rem) / 6));
+  }
 }
 
 .row-tiles {
