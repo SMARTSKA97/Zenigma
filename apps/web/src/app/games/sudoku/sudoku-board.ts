@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, HostListener, input, output, signal } from '@angular/core';
-import { boxOf, SIZE, SudokuPuzzle } from './engine';
+import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
 
 @Component({
   selector: 'app-sudoku-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="grid" role="grid" aria-label="Sudoku board">
+    <div class="grid" role="grid" aria-label="Sudoku board" [class.mini]="size() === 6" [style.--n]="size()">
       @for (cell of cells(); track cell.i) {
         <button
           type="button"
@@ -47,10 +47,10 @@ import { boxOf, SIZE, SudokuPuzzle } from './engine';
     </div>
 
     <div class="pad" role="group" aria-label="Numbers">
-      @for (n of numbers; track n) {
-        <button type="button" class="key" [class.spent]="counts()[n] >= 9" [disabled]="locked() || selected() === null" (click)="enter(n)">
+      @for (n of numbers(); track n) {
+        <button type="button" class="key" [class.spent]="counts()[n] >= size()" [disabled]="locked() || selected() === null" (click)="enter(n)">
           {{ n }}
-          <i class="left" aria-hidden="true">{{ 9 - counts()[n] }}</i>
+          <i class="left" aria-hidden="true">{{ size() - counts()[n] }}</i>
         </button>
       }
       <button type="button" class="key erase" aria-label="Erase" [disabled]="locked() || selected() === null" (click)="enter(0)">
@@ -90,8 +90,8 @@ import { boxOf, SIZE, SudokuPuzzle } from './engine';
       --line: color-mix(in srgb, var(--ink) 22%, var(--bg));
       container-type: inline-size;
       display: grid;
-      grid-template-columns: repeat(9, minmax(0, 1fr));
-      grid-template-rows: repeat(9, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--n, 9), minmax(0, 1fr));
+      grid-template-rows: repeat(var(--n, 9), minmax(0, 1fr));
       gap: 1px;
       width: var(--board, min(100%, 26rem));
       aspect-ratio: 1;
@@ -120,6 +120,13 @@ import { boxOf, SIZE, SudokuPuzzle } from './engine';
       letter-spacing: 0;
       transition: background-color 0.15s var(--ease);
       touch-action: manipulation;
+    }
+    /* The mini grid has bigger cells, so bigger digits. */
+    :host .mini .cell {
+      font-size: clamp(1.3rem, 9.6cqw, 3.4rem);
+    }
+    :host .mini .notes {
+      font-size: clamp(0.6rem, 3.6cqw, 1.2rem);
     }
     /* Box borders: a thicker line where a 3 by 3 box starts. */
     :host .cell.box-left {
@@ -325,7 +332,8 @@ export class SudokuBoard {
   readonly solved = input(false);
   readonly boardChange = output<number[]>();
 
-  protected readonly numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  protected readonly size = computed(() => sizeOf(this.puzzle().givens.length));
+  protected readonly numbers = computed(() => Array.from({ length: this.size() }, (_, i) => i + 1));
   protected readonly selected = signal<number | null>(null);
   protected readonly noteMode = signal(false);
   /** Pencil marks: a bitmask of candidate digits for each cell. They stay on this screen and are not part of the answer. */
@@ -341,13 +349,14 @@ export class SudokuBoard {
   /** Cells in a row, column or box that is full with no repeats; they flash once as it completes. */
   private readonly completed = computed(() => {
     const board = this.board();
+    const SIZE = this.size();
     const done = new Set<number>();
     const units: number[][] = [];
     for (let k = 0; k < SIZE; k++) {
       units.push(Array.from({ length: SIZE }, (_, j) => k * SIZE + j));
       units.push(Array.from({ length: SIZE }, (_, j) => j * SIZE + k));
     }
-    for (let b = 0; b < SIZE; b++) units.push(Array.from({ length: SIZE * SIZE }, (_, i) => i).filter((i) => boxOf(i) === b));
+    for (let b = 0; b < SIZE; b++) units.push(Array.from({ length: SIZE * SIZE }, (_, i) => i).filter((i) => boxOf(i, SIZE) === b));
     for (const unit of units) {
       const values = unit.map((i) => board[i]);
       if (!values.includes(0) && new Set(values).size === SIZE) unit.forEach((i) => done.add(i));
@@ -357,6 +366,8 @@ export class SudokuBoard {
 
   protected readonly cells = computed(() => {
     const puzzle = this.puzzle();
+    const SIZE = this.size();
+    const [bh, bw] = boxShape(SIZE);
     const bad = this.bad();
     const board = this.board();
     const sel = this.selected();
@@ -367,15 +378,15 @@ export class SudokuBoard {
       i,
       delay: ((i % SIZE) + Math.floor(i / SIZE)) * 0.03 + 's',
       value,
-      notes: value || !notes[i] ? [] : this.numbers.map((n) => (notes[i] & (1 << n) ? String(n) : '')),
+      notes: value || !notes[i] ? [] : this.numbers().map((n) => (notes[i] & (1 << n) ? String(n) : '')),
       given: puzzle.givens[i] !== '0',
       selected: sel === i,
-      peer: sel !== null && sel !== i && (Math.floor(sel / SIZE) === Math.floor(i / SIZE) || sel % SIZE === i % SIZE || boxOf(sel) === boxOf(i)),
+      peer: sel !== null && sel !== i && (Math.floor(sel / SIZE) === Math.floor(i / SIZE) || sel % SIZE === i % SIZE || boxOf(sel, SIZE) === boxOf(i, SIZE)),
       same: sel !== null && sel !== i && selValue !== 0 && value === selValue,
       bad: bad.has(i),
       flash: done.has(i) && !this.solved(),
-      boxLeft: i % SIZE !== 0 && i % 3 === 0,
-      boxTop: Math.floor(i / SIZE) % 3 === 0 && i >= SIZE,
+      boxLeft: i % SIZE !== 0 && (i % SIZE) % bw === 0,
+      boxTop: Math.floor(i / SIZE) % bh === 0 && i >= SIZE,
       label: `Row ${Math.floor(i / SIZE) + 1}, column ${(i % SIZE) + 1}, ${value ? value : 'empty'}${puzzle.givens[i] !== '0' ? ', fixed' : ''}`,
     }));
   });
@@ -403,9 +414,10 @@ export class SudokuBoard {
       delete out[sel];
       if (next[sel] !== 0) {
         // A placed number can no longer be a candidate anywhere it can see.
+        const SIZE = this.size();
         for (let i = 0; i < SIZE * SIZE; i++) {
           if (out[i] === undefined) continue;
-          const sees = Math.floor(i / SIZE) === Math.floor(sel / SIZE) || i % SIZE === sel % SIZE || boxOf(i) === boxOf(sel);
+          const sees = Math.floor(i / SIZE) === Math.floor(sel / SIZE) || i % SIZE === sel % SIZE || boxOf(i, SIZE) === boxOf(sel, SIZE);
           if (sees) out[i] &= ~(1 << next[sel]);
         }
       }
@@ -416,10 +428,11 @@ export class SudokuBoard {
   @HostListener('window:keydown', ['$event'])
   onKey(event: KeyboardEvent): void {
     if (event.ctrlKey || event.metaKey || event.altKey || this.locked()) return;
-    if (event.key >= '1' && event.key <= '9') this.enter(Number(event.key));
+    if (event.key >= '1' && event.key <= String(this.size())) this.enter(Number(event.key));
     else if (event.key === 'Backspace' || event.key === 'Delete' || event.key === '0') this.enter(0);
     else if (event.key === 'n' || event.key === 'N') this.noteMode.set(!this.noteMode());
     else if (event.key.startsWith('Arrow')) {
+      const SIZE = this.size();
       const sel = this.selected() ?? 0;
       const delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -SIZE, ArrowDown: SIZE }[event.key] ?? 0;
       const target = sel + delta;

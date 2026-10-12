@@ -19,11 +19,11 @@ public static class PuzzleRules
     public static bool IsPuzzleGame(string game) => Array.IndexOf(Games, game) >= 0;
 
     /// <summary>The fastest a person could plausibly solve a puzzle after it was revealed. Faster submissions are refused.</summary>
-    public static int MinSolveMs(string game) => game switch
+    public static int MinSolveMs(string game, JsonElement puzzle) => game switch
     {
         Queens => 5_000,
         Tango => 6_000,
-        Sudoku => 40_000,
+        Sudoku => puzzle.TryGetProperty("givens", out var g) && g.GetString()?.Length == 36 ? 12_000 : 40_000, // mini 6x6 or classic 9x9
         Zip => 4_000,
         _ => 5_000,
     };
@@ -147,14 +147,16 @@ public static class PuzzleRules
         return true;
     }
 
-    // Sudoku: 81 digits, boxes are 3 by 3.
+    // Sudoku: 36 digits (mini 6x6, boxes 2 rows by 3 columns) or 81 digits (classic 9x9, boxes 3 by 3).
     private static bool VerifySudoku(JsonElement puzzle, JsonElement solution)
     {
-        const int n = 9;
         var cells = solution.ValueKind == JsonValueKind.String ? solution.GetString()! : "";
         var givens = puzzle.GetProperty("givens").GetString()!;
-        if (cells.Length != n * n || givens.Length != n * n) return false;
-        if (cells.Any(c => c is < '1' or > '9')) return false;
+        if (givens.Length is not (36 or 81) || cells.Length != givens.Length) return false;
+        var n = givens.Length == 36 ? 6 : 9;
+        var boxRows = n == 6 ? 2 : 3;
+        var boxCols = 3;
+        if (cells.Any(c => c < '1' || c > '0' + n)) return false;
 
         for (var i = 0; i < n * n; i++)
         {
@@ -175,7 +177,7 @@ public static class PuzzleRules
         {
             var r = i / n;
             var c = i % n;
-            var box = r / 3 * 3 + c / 3;
+            var box = r / boxRows * (n / boxCols) + c / boxCols;
             if (!rows[r].Add(cells[i]) || !cols[c].Add(cells[i]) || !boxes[box].Add(cells[i])) return false;
         }
 

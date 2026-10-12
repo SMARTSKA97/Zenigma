@@ -16,7 +16,6 @@ import { cutTo, step, ZipPath, ZipPuzzle } from './engine';
       (pointermove)="move($event)"
       (pointerup)="up($event)"
       (pointercancel)="up($event)"
-      (lostpointercapture)="up($event)"
       (contextmenu)="$event.preventDefault()"
       (keydown)="key($event)"
     >
@@ -139,6 +138,7 @@ export class ZipBoard {
   /** The path while a finger or mouse is drawing, handed over as one move when it lifts. */
   private readonly draft = signal<ZipPath | null>(null);
   private drawing = false;
+  private pointer = -1;
 
   private readonly path = computed(() => this.draft() ?? this.board());
 
@@ -178,6 +178,7 @@ export class ZipBoard {
     // Pressing the path cuts it back to that cell; pressing next to its end steps forward.
     const next = cutTo(path, cell) ?? step(this.puzzle(), path, cell);
     this.drawing = true;
+    this.pointer = event.pointerId;
     this.draft.set(next ?? path);
     try {
       (event.currentTarget as HTMLElement | null)?.setPointerCapture(event.pointerId);
@@ -187,7 +188,7 @@ export class ZipBoard {
   }
 
   protected move(event: PointerEvent): void {
-    if (!this.drawing) return;
+    if (!this.drawing || event.pointerId !== this.pointer) return;
     if (event.pointerType === 'mouse' && event.buttons === 0) return this.up(event);
     const cell = this.cellAt(event);
     const path = this.draft();
@@ -197,8 +198,7 @@ export class ZipBoard {
   }
 
   protected up(event: PointerEvent): void {
-    if (!this.drawing) return;
-    void event;
+    if (!this.drawing || event.pointerId !== this.pointer) return;
     this.finish();
   }
 

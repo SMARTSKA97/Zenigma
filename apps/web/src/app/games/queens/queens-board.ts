@@ -25,7 +25,6 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
       (pointermove)="move($event)"
       (pointerup)="up($event)"
       (pointercancel)="up($event)"
-      (lostpointercapture)="up($event)"
       (contextmenu)="$event.preventDefault()"
     >
       @for (cell of cells(); track cell.i) {
@@ -276,6 +275,8 @@ export class QueensBoard {
   /** The board while a finger or mouse is dragging, before the whole drag is handed over as one move. */
   private readonly draft = signal<QueensCell[] | null>(null);
   private start = -1;
+  /** The pointer that began the drag; other fingers are ignored. */
+  private pointer = -1;
   private last = -1;
   private dragged = false;
   /** What the drag does: put crosses on empty cells, or (when it began on a cross) take crosses away. */
@@ -294,13 +295,14 @@ export class QueensBoard {
     this.finish(); // never carry a half-finished drag over (a lost pointerup would otherwise leave the board stuck)
     if (isGiven(this.puzzle(), index)) return;
     this.start = index;
+    this.pointer = event.pointerId;
     this.last = index;
     this.dragged = false;
     this.erasing = this.board()[index] === MARK;
   }
 
   protected move(event: PointerEvent): void {
-    if (this.start < 0) return;
+    if (this.start < 0 || event.pointerId !== this.pointer) return;
     // A mouse button released outside the board never reports pointerup here: stop the drag instead of painting on hover.
     if (event.pointerType === 'mouse' && event.buttons === 0) return this.up(event);
     const index = this.cellAt(event);
@@ -321,7 +323,7 @@ export class QueensBoard {
   }
 
   protected up(event: PointerEvent): void {
-    if (this.start < 0) return;
+    if (this.start < 0 || event.pointerId !== this.pointer) return;
     const start = this.start;
     const wasDrag = this.dragged;
     this.finish();

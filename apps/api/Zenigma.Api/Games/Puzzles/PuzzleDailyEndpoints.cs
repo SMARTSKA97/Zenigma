@@ -164,7 +164,7 @@ public static class PuzzleDailyEndpoints
                 return Results.Json(new { error = "incorrect" }, statusCode: StatusCodes.Status422UnprocessableEntity);
 
             var elapsed = (int)Math.Min((now - attempt.StartedAt).TotalMilliseconds, int.MaxValue);
-            if (elapsed < config.GetValue("Puzzle:MinSolveMs", PuzzleRules.MinSolveMs(game)))
+            if (elapsed < config.GetValue("Puzzle:MinSolveMs", PuzzleRules.MinSolveMs(game, puzzle.RootElement)))
                 return Results.Json(new { error = "too-fast" }, statusCode: StatusCodes.Status422UnprocessableEntity);
 
             attempt.Status = "solved";

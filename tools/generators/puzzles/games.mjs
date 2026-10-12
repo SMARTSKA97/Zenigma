@@ -17,8 +17,11 @@ export function practiceLevel(game, level) {
     }
     case 'tango':
       return generateTango(rng, Math.max(0, 6 - Math.floor((level - 1) / 30)));
-    case 'sudoku':
-      return generateSudoku(rng, Math.max(27, 46 - Math.floor((level - 1) / 10)));
+    case 'sudoku': {
+      // Practice mixes both sizes: roughly two levels in five are the mini 6x6 grid.
+      const mini = rngFrom(`zenigma-practice-kind:sudoku:${level}`).int(5) < 2;
+      return mini ? generateSudoku(rng, Math.max(12, 20 - Math.floor((level - 1) / 28)), 6) : generateSudoku(rng, Math.max(27, 46 - Math.floor((level - 1) / 10)));
+    }
     case 'zip': {
       const size = level <= 40 ? 5 : level <= 100 ? 6 : 7;
       const target = Math.max(5, (size === 7 ? 10 : 8) - Math.floor((level - 1) / 25) % 4);
@@ -38,7 +41,7 @@ export const DAILY_RAMP = {
   queensGivens: [2, 2, 1, 1, 1, 0, 0], // queens already placed (fewer is harder)
   zip: [[5, 8], [5, 6], [6, 8], [6, 6], [6, 5], [7, 8], [7, 6]], // [board size, numbers shown] (fewer numbers is harder)
   tango: [6, 5, 4, 3, 2, 1, 0], // extra clues left in (fewer is harder)
-  sudoku: [42, 38, 34, 31, 29, 27, 26], // numbers left in the grid (fewer is harder)
+  sudoku: [20, 18, 16, 15, 14, 13, 12], // numbers left in the mini 6x6 grid (fewer is harder)
 };
 
 export const weekdayOf = (date) => (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
@@ -53,7 +56,7 @@ export function dailyPuzzle(game, seed, weekday = 3) {
     case 'tango':
       return generateTango(rng, level);
     case 'sudoku':
-      return generateSudoku(rng, level);
+      return generateSudoku(rng, level, 6); // the daily is the mini 6x6 grid
     case 'zip':
       return generateZip(level[0], rng, level[1]);
   }

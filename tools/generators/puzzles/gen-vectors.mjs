@@ -43,27 +43,30 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
   write('tango', cases);
 }
 
-// Sudoku: solution is 81 digits.
+// Sudoku: solution is 36 digits (mini 6x6) or 81 digits (classic 9x9).
 {
   const cases = [];
-  for (const clues of [40, 28]) {
-    const puzzle = generateSudoku(rngFrom(`vector-sudoku-${clues}`), clues);
+  for (const [n, clues] of [[9, 40], [9, 28], [6, 18], [6, 13]]) {
+    const total = n * n;
+    const tag = `${n}x${n} ${clues} clues`;
+    const puzzle = generateSudoku(rngFrom(`vector-sudoku-${n}-${clues}`), clues, n);
     const solution = solveSudoku(puzzle).solution;
-    cases.push({ name: `${clues} clues valid`, puzzle, solution, valid: true });
+    cases.push({ name: `${tag} valid`, puzzle, solution, valid: true });
     const changed = [...solution];
-    changed[0] = String((Number(changed[0]) % 9) + 1);
-    cases.push({ name: `${clues} clues changed digit`, puzzle, solution: changed.join(''), valid: false });
+    changed[0] = String((Number(changed[0]) % n) + 1);
+    cases.push({ name: `${tag} changed digit`, puzzle, solution: changed.join(''), valid: false });
     const given = puzzle.givens.split('').findIndex((c) => c !== '0');
     const swapped = [...solution];
-    const other = (given + 1) % 81;
+    const other = (given + 1) % total;
     [swapped[given], swapped[other]] = [swapped[other], swapped[given]];
-    cases.push({ name: `${clues} clues swapped cells`, puzzle, solution: swapped.join(''), valid: false });
-    cases.push({ name: `${clues} clues zero`, puzzle, solution: solution.slice(1) + '0', valid: false });
-    cases.push({ name: `${clues} clues wrong length`, puzzle, solution: solution.slice(1), valid: false });
-    cases.push({ name: `${clues} clues digit ten`, puzzle, solution: ':' + solution.slice(1), valid: false });
+    cases.push({ name: `${tag} swapped cells`, puzzle, solution: swapped.join(''), valid: false });
+    cases.push({ name: `${tag} zero`, puzzle, solution: solution.slice(1) + '0', valid: false });
+    cases.push({ name: `${tag} wrong length`, puzzle, solution: solution.slice(1), valid: false });
+    cases.push({ name: `${tag} digit out of range`, puzzle, solution: String(n + 1) + solution.slice(1), valid: false });
   }
   write('sudoku', cases);
 }
+
 // Zip: solution is the list of cells (row * size + column) in the order the path visits them.
 {
   const cases = [];

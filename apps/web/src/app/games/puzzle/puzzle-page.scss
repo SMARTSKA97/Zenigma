@@ -116,6 +116,12 @@
 .stage {
   grid-area: stage;
 }
+/* Phones: the board goes nearly edge to edge. */
+@media (max-width: 720px) {
+  .stage {
+    margin-inline: -1rem;
+  }
+}
 .tools {
   grid-area: tools;
   display: grid;

@@ -45,7 +45,7 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
     isSolved: (p, s) => sudoku.isSolved(p as sudoku.SudokuPuzzle, s as number[]),
     solution: (_, s) => sudoku.solutionOf(s as number[]),
     touched: (p, s) => (s as number[]).join('') !== (p as sudoku.SudokuPuzzle).givens,
-    help: 'Fill the grid so every row, column and 3 by 3 box holds the numbers 1 to 9 once. Use Notes to jot down candidates.',
+    help: 'Fill the grid so every row, column and box holds each number once: 1 to 9 in the classic grid (3 by 3 boxes), 1 to 6 in the mini grid (boxes 2 by 3). Use Notes to jot down candidates.',
   },
   zip: {
     levels: () => import('../zip/levels.data').then((m) => m.LEVELS),

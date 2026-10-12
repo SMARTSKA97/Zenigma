@@ -1,10 +1,9 @@
-// Sudoku: the classic 9x9 grid with 3x3 boxes. Every row, column and box holds 1 to 9 once.
+// Sudoku in two sizes: the classic 9x9 grid (3x3 boxes) and a mini 6x6 grid (boxes 2 rows by 3 columns).
+// Every row, column and box holds 1 to n once. A puzzle is its `givens` string; 36 characters means mini, 81 classic.
 
-export const SUDOKU_SIZE = 9;
-const N = 9;
-const ALL = 0x3fe; // bits 1..9
-
-const boxOf = (r, c) => Math.floor(r / 3) * 3 + Math.floor(c / 3);
+export const sizeOf = (givens) => Math.round(Math.sqrt(givens.length));
+/** Box height and width for a grid of side n. */
+const boxShape = (n) => (n === 6 ? [2, 3] : [3, 3]);
 const bitCount = (x) => {
   let n = 0;
   for (; x; x &= x - 1) n++;
@@ -13,6 +12,10 @@ const bitCount = (x) => {
 
 /** Counts solutions (up to `limit`) with bitmasks and "fewest options first" search. `order` randomises digit order. */
 function search(cells, limit, order) {
+  const N = Math.round(Math.sqrt(cells.length));
+  const ALL = ((1 << (N + 1)) - 1) & ~1; // bits 1..N
+  const [bh, bw] = boxShape(N);
+  const boxOf = (r, c) => Math.floor(r / bh) * (N / bw) + Math.floor(c / bw);
   const rows = new Array(N).fill(0);
   const cols = new Array(N).fill(0);
   const boxes = new Array(N).fill(0);
@@ -75,21 +78,23 @@ function search(cells, limit, order) {
   return { count, solution: first };
 }
 
+const digits = (n) => Array.from({ length: n }, (_, i) => i + 1);
+
 export function solveSudoku(puzzle, limit = 2) {
-  return search([...puzzle.givens].map(Number), limit, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  return search([...puzzle.givens].map(Number), limit, digits(sizeOf(puzzle.givens)));
 }
 
-function randomFullGrid(rng) {
-  const order = rng.shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+function randomFullGrid(rng, N) {
+  const order = rng.shuffle(digits(N));
   const cells = new Array(N * N).fill(0);
   // Seeding the first row randomly gives every seed a different grid; the search then completes it.
-  rng.shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).forEach((v, i) => (cells[i] = v));
+  rng.shuffle(digits(N)).forEach((v, i) => (cells[i] = v));
   return search(cells, 1, order).solution;
 }
 
 /** `clues` is how many numbers to leave in the grid: fewer is harder (about 24 is the practical floor for random removal). */
-export function generateSudoku(rng, clues) {
-  const cells = randomFullGrid(rng).split('');
+export function generateSudoku(rng, clues, N = 9) {
+  const cells = randomFullGrid(rng, N).split('');
   let remaining = N * N;
   for (const i of rng.shuffle([...Array(N * N).keys()])) {
     if (remaining <= clues) break;
