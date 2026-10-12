@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { HapticsService } from '../../core/haptics.service';
 import { AuthService } from '../../core/auth.service';
 import { formatDuration } from '../../core/leaderboard.service';
 import { LocalStore } from '../../core/local-store';
@@ -22,6 +23,9 @@ import { PuzzleAttempt, PuzzleDailyService, PuzzleDailyState } from './puzzle-da
 type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playing' | 'blocked' | 'finished' | 'practice';
 
 /** One screen for every grid puzzle, in practice (endless levels, offline) or daily (one attempt, timed by the server) mode. */
+/** How long the board sits still before a mistake is pointed out. */
+const WARN_DELAY_MS = 1600;
+
 @Component({
   selector: 'app-puzzle-page',
   imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard],
@@ -201,6 +205,7 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
 })
 export class PuzzlePage {
   private readonly route = inject(ActivatedRoute);
+  private readonly haptics = inject(HapticsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);
@@ -294,6 +299,7 @@ export class PuzzlePage {
   private heartbeat?: ReturnType<typeof setInterval>;
   private saveTimer?: ReturnType<typeof setTimeout>;
   private showTimer?: ReturnType<typeof setTimeout>;
+  private wrongTimer?: ReturnType<typeof setTimeout>;
 
   constructor() {
     const tick = setInterval(() => this.now.set(Date.now()), 500);
@@ -313,7 +319,12 @@ export class PuzzlePage {
       untracked(() => {
         clearTimeout(this.showTimer);
         this.conflicts.set(new Set());
-        if (found.size) this.showTimer = setTimeout(() => this.conflicts.set(found), 1600);
+        if (found.size) {
+          this.showTimer = setTimeout(() => {
+            this.conflicts.set(found);
+            this.haptics.warning();
+          }, WARN_DELAY_MS);
+        }
       });
     });
     // Pause the practice clock while the page is hidden.
@@ -429,6 +440,7 @@ export class PuzzlePage {
 
   protected change(next: unknown): void {
     if (this.locked()) return;
+    clearTimeout(this.wrongTimer);
     this.history.update((h) => [...h.slice(-99), this.state()]);
     this.state.set(next);
     this.scheduleSave();
@@ -436,6 +448,7 @@ export class PuzzlePage {
   }
 
   protected undo(): void {
+    clearTimeout(this.wrongTimer);
     const h = this.history();
     if (!h.length) return;
     this.state.set(h[h.length - 1]);
@@ -444,6 +457,7 @@ export class PuzzlePage {
   }
 
   protected clear(): void {
+    clearTimeout(this.wrongTimer);
     const p = this.puzzle();
     if (!p) return;
     this.history.update((h) => [...h.slice(-99), this.state()]);
@@ -475,10 +489,14 @@ export class PuzzlePage {
     if (!p || !s) return;
     const solution = ADAPTERS[game].solution(p, s);
     if (!ADAPTERS[game].isSolved(p, s)) {
-      // A full board that is wrong: say so right away and point at the mistakes.
+      // A full board that is wrong: say so, but only once the player pauses (any further move cancels the warning).
       if (solution !== null) {
-        this.flash('Not quite. Check the highlighted cells.');
-        this.conflicts.set(this.found());
+        const found = this.found();
+        clearTimeout(this.wrongTimer);
+        this.wrongTimer = setTimeout(() => {
+          this.flash('Not quite. Check the highlighted cells.');
+          if (!found.size) this.haptics.warning(); // otherwise the highlight (which has its own delay) vibrates
+        }, WARN_DELAY_MS);
       }
       return;
     }
@@ -492,6 +510,7 @@ export class PuzzlePage {
         this.attempt.set(result.state.attempt);
         this.finalMs.set(result.state.attempt?.elapsedMs ?? this.elapsed());
         this.solved.set(true);
+        this.haptics.success();
         void this.store.deleteMeta(this.dailyKey());
         setTimeout(() => this.resultOpen.set(true), 900);
       } else {
@@ -512,6 +531,7 @@ export class PuzzlePage {
     const elapsedMs = this.baseMs + (Date.now() - this.stretchStart);
     this.finalMs.set(elapsedMs);
     this.solved.set(true);
+    this.haptics.success();
     const level = this.level();
     await this.practiceStore.markSolved(game as PuzzleGameId, level, elapsedMs);
     await this.practiceStore.clearBoard(game);

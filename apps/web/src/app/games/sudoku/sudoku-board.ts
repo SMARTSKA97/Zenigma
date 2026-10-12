@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, HostListener, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, HostListener, inject, input, output, signal } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
+
 import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
 
 @Component({
@@ -325,6 +327,7 @@ import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
   `,
 })
 export class SudokuBoard {
+  private readonly haptics = inject(HapticsService);
   readonly puzzle = input.required<SudokuPuzzle>();
   readonly board = input.required<number[]>();
   readonly bad = input<Set<number>>(new Set());
@@ -392,6 +395,7 @@ export class SudokuBoard {
   });
 
   protected select(index: number): void {
+    this.haptics.tick();
     this.selected.set(index);
   }
 
@@ -399,6 +403,7 @@ export class SudokuBoard {
     const sel = this.selected();
     if (sel === null || this.locked() || this.puzzle().givens[sel] !== '0') return;
 
+    this.haptics.tap();
     if (this.noteMode() && value !== 0) {
       if (this.board()[sel] !== 0) return; // notes only go in empty cells
       this.notes.update((n) => ({ ...n, [sel]: (n[sel] ?? 0) ^ (1 << value) }));

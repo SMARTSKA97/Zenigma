@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
+
 import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
 
 @Component({
@@ -204,6 +206,7 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
   `,
 })
 export class TangoBoard {
+  private readonly haptics = inject(HapticsService);
   readonly puzzle = input.required<TangoPuzzle>();
   readonly board = input.required<TangoCell[]>();
   readonly bad = input<Set<number>>(new Set());
@@ -239,6 +242,8 @@ export class TangoBoard {
   protected tap(index: number): void {
     const next = [...this.board()];
     next[index] = nextCell(next[index]);
+    if (next[index] !== '.') this.haptics.tap();
+    else this.haptics.tick();
     this.boardChange.emit(next);
   }
 }

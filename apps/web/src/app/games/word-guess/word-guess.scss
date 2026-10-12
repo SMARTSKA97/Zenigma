@@ -7,7 +7,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  max-width: 28rem;
+  max-width: 30rem;
   margin: 0 auto;
 }
 
@@ -93,7 +93,7 @@
 
 /* Board: tiles are sized from the available width AND height so it never overflows on short phones. */
 .board {
-  --tile: min(3.75rem, calc((100vw - 2.5rem - 4 * 0.4rem) / 5), calc((100dvh - 23rem) / 6));
+  --tile: min(4.6rem, calc((100vw - 1.25rem - 4 * 0.4rem) / 5), calc((100dvh - 21rem) / 6));
   display: grid;
   gap: 0.4rem;
 }
@@ -223,8 +223,8 @@
 .key {
   flex: 1 1 0;
   min-width: 0;
-  max-width: 2.8rem;
-  height: clamp(2.6rem, 7.5dvh, 3.4rem);
+  max-width: 3.2rem;
+  height: clamp(2.8rem, 7.5dvh, 3.7rem);
   padding: 0;
   display: grid;
   place-items: center;

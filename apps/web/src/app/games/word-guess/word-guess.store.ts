@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { LocalStore } from '../../core/local-store';
+import { HapticsService } from '../../core/haptics.service';
 import { PrefsService } from '../../core/prefs.service';
 import { BoardController, BoardRow } from './board';
 import { WordListService } from './word-list.service';
@@ -40,6 +41,7 @@ export class WordGuessStore implements BoardController {
   private readonly local = inject(LocalStore);
   private readonly sync = inject(SyncService);
   private readonly prefs = inject(PrefsService);
+  private readonly haptics = inject(HapticsService);
 
   private readonly wordList = inject(WordListService);
 
@@ -114,11 +116,13 @@ export class WordGuessStore implements BoardController {
 
   type(letter: string): void {
     if (!this.canInput() || this.current().length >= WORD_LENGTH) return;
+    this.haptics.tick();
     this.current.update((c) => c + letter.toLowerCase());
   }
 
   erase(): void {
     if (!this.canInput()) return;
+    this.haptics.tick();
     this.current.update((c) => c.slice(0, -1));
   }
 
@@ -136,6 +140,7 @@ export class WordGuessStore implements BoardController {
             : `Guess must contain ${result.detail.letter.toUpperCase()}`
           : MESSAGES[result.error];
       this.flash(text);
+      this.haptics.error();
       this.shakeRow.set(state.guesses.length);
       setTimeout(() => this.shakeRow.set(null), 500);
       return;
@@ -144,10 +149,13 @@ export class WordGuessStore implements BoardController {
     this.state.set(result.state);
     this.current.set('');
     this.revealing.set(true);
+    this.haptics.place();
     const delay = this.reducedMotion() ? 0 : REVEAL_MS;
     setTimeout(() => {
       this.revealed.set(result.state.guesses.length);
       this.revealing.set(false);
+      if (result.state.status === 'won') this.haptics.success();
+      if (result.state.status === 'lost') this.haptics.error();
       if (result.state.status === 'won') this.flash(['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'][result.state.guesses.length - 1], 4000);
       if (result.state.status === 'lost') this.flash(result.state.answer.toUpperCase(), 6000);
     }, delay);

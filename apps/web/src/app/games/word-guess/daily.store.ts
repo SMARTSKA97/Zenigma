@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth.service';
 import { DeviceService } from '../../core/device.service';
+import { HapticsService } from '../../core/haptics.service';
 import { PrefsService } from '../../core/prefs.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController, BoardRow, BoardStats } from './board';
@@ -56,6 +57,7 @@ export class DailyStore implements BoardController {
   private readonly device = inject(DeviceService);
   private readonly sync = inject(SyncService);
   private readonly prefs = inject(PrefsService);
+  private readonly haptics = inject(HapticsService);
   private readonly wordList = inject(WordListService);
 
   private readonly url = `${environment.apiBaseUrl}/daily/word-guess`;
@@ -137,11 +139,13 @@ export class DailyStore implements BoardController {
 
   type(letter: string): void {
     if (!this.canInput() || this.current().length >= WORD_LENGTH) return;
+    this.haptics.tick();
     this.current.update((c) => c + letter.toLowerCase());
   }
 
   erase(): void {
     if (!this.canInput()) return;
+    this.haptics.tick();
     this.current.update((c) => c.slice(0, -1));
   }
 
@@ -165,11 +169,14 @@ export class DailyStore implements BoardController {
       this.status.set(response.status);
       this.answer.set(response.answer);
       this.revealing.set(true);
+      this.haptics.place();
 
       const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
       setTimeout(() => {
         this.revealed.set(this.guesses().length);
         this.revealing.set(false);
+        if (response.status === 'won') this.haptics.success();
+        if (response.status === 'lost') this.haptics.error();
         if (response.status === 'won') {
           this.flash(['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'][this.guesses().length - 1], 4000);
         }
@@ -244,6 +251,7 @@ export class DailyStore implements BoardController {
 
   private reject(text: string, row: number): void {
     this.flash(text);
+    this.haptics.error();
     this.shakeRow.set(row);
     setTimeout(() => this.shakeRow.set(null), 500);
   }

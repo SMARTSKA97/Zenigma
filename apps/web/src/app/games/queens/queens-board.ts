@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
+
 import { borders, isGiven, nextCell, QUEEN, MARK, QueensCell, QueensPuzzle } from './engine';
 
 /** Region colours: hues spread around the wheel; thick outlines mean colour is never the only clue. */
@@ -234,6 +236,7 @@ const HUES = [25, 85, 145, 195, 255, 305, 345, 55, 115, 225, 280, 170];
   `,
 })
 export class QueensBoard {
+  private readonly haptics = inject(HapticsService);
   readonly puzzle = input.required<QueensPuzzle>();
   readonly board = input.required<QueensCell[]>();
   readonly bad = input<Set<number>>(new Set());
@@ -347,8 +350,14 @@ export class QueensBoard {
       const next = [...board];
       if (isGiven(this.puzzle(), index)) return next;
       if (this.erasing) {
-        if (next[index] === MARK) next[index] = 0;
-      } else if (next[index] === 0) next[index] = MARK;
+        if (next[index] === MARK) {
+          next[index] = 0;
+          this.haptics.tick();
+        }
+      } else if (next[index] === 0) {
+        next[index] = MARK;
+        this.haptics.tick();
+      }
       return next;
     });
   }
@@ -362,6 +371,9 @@ export class QueensBoard {
     if (this.locked() || isGiven(this.puzzle(), index)) return;
     const next = [...this.board()];
     next[index] = nextCell(next[index]);
+    if (next[index] === QUEEN) this.haptics.place();
+    else if (next[index] === MARK) this.haptics.tap();
+    else this.haptics.tick();
     this.boardChange.emit(next);
   }
 }

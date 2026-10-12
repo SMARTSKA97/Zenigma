@@ -26,6 +26,11 @@ import { UpdaterService } from '../../core/updater.service';
         Reduce motion
         <small>Turns off board animations and confetti.</small>
       </app-switch>
+      <div class="gap"></div>
+      <app-switch [checked]="prefs.haptics()" (checkedChange)="prefs.setHaptics($event)">
+        Vibration
+        <small>Small taps as you play, and a pattern for mistakes and wins.</small>
+      </app-switch>
     </section>
 
     @if (updater.supported) {

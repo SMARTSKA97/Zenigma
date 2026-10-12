@@ -6,6 +6,7 @@ interface Prefs {
   hardMode: boolean;
   highContrast: boolean;
   reduceMotion: boolean;
+  haptics: boolean;
 }
 
 /** Small per-device settings (not synced). Kept in localStorage so they apply before anything else loads. */
@@ -14,6 +15,7 @@ export class PrefsService {
   readonly hardMode = signal(false);
   readonly highContrast = signal(false);
   readonly reduceMotion = signal(false);
+  readonly haptics = signal(true);
 
   constructor() {
     try {
@@ -21,6 +23,7 @@ export class PrefsService {
       this.hardMode.set(saved.hardMode === true);
       this.highContrast.set(saved.highContrast === true);
       this.reduceMotion.set(saved.reduceMotion === true);
+      this.haptics.set(saved.haptics !== false);
     } catch {
       /* storage unavailable: defaults */
     }
@@ -51,9 +54,14 @@ export class PrefsService {
     this.apply();
   }
 
+  setHaptics(value: boolean): void {
+    this.haptics.set(value);
+    this.save();
+  }
+
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics() }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

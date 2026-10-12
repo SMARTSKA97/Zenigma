@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
+
 import { cutTo, step, ZipPath, ZipPuzzle } from './engine';
 
 @Component({
@@ -128,6 +130,7 @@ import { cutTo, step, ZipPath, ZipPuzzle } from './engine';
   `,
 })
 export class ZipBoard {
+  private readonly haptics = inject(HapticsService);
   readonly puzzle = input.required<ZipPuzzle>();
   readonly board = input.required<ZipPath>();
   readonly bad = input<Set<number>>(new Set());
@@ -180,6 +183,7 @@ export class ZipBoard {
     this.drawing = true;
     this.pointer = event.pointerId;
     this.draft.set(next ?? path);
+    if (next) this.haptics.tap();
     try {
       (event.currentTarget as HTMLElement | null)?.setPointerCapture(event.pointerId);
     } catch {
@@ -194,7 +198,10 @@ export class ZipBoard {
     const path = this.draft();
     if (cell < 0 || !path || cell === path[path.length - 1]) return;
     const next = step(this.puzzle(), path, cell);
-    if (next) this.draft.set(next);
+    if (next) {
+      this.draft.set(next);
+      this.haptics.tick();
+    }
   }
 
   protected up(event: PointerEvent): void {
