@@ -6,7 +6,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
-import { TRACKS, LEVELS_PER_GAME, practiceLevel, solve } from './games.mjs';
+import { TRACKS, levelsOf, practiceLevel, solve } from './games.mjs';
 
 if (!isMainThread) {
   const { game, levels } = workerData; // game here is a track
@@ -26,7 +26,7 @@ if (!isMainThread) {
     // Interleaved chunks, so every worker gets a similar mix of easy and hard levels.
     for (let w = 0; w < workers; w++) {
       const levels = [];
-      for (let level = 1 + w; level <= LEVELS_PER_GAME; level += workers) levels.push(level);
+      for (let level = 1 + w; level <= levelsOf(game); level += workers) levels.push(level);
       jobs.push(
         new Promise((resolve, reject) => {
           const worker = new Worker(new URL(import.meta.url), { workerData: { game, levels } });
@@ -38,7 +38,7 @@ if (!isMainThread) {
   }
   const results = await Promise.all(jobs);
   for (const game of tracks) {
-    const levels = new Array(LEVELS_PER_GAME);
+    const levels = new Array(levelsOf(game));
     for (const r of results.filter((x) => x.game === game)) r.levels.forEach((level, i) => (levels[level - 1] = r.puzzles[i]));
     const json = JSON.stringify(levels);
 

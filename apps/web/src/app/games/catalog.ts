@@ -50,13 +50,37 @@ export interface Variant {
   blurb: string;
   /** Not playable yet: shown as "coming soon" on the chooser, and has no levels. */
   soon?: boolean;
+  /** Split into difficulty tiers (Easy to Insane): each tier is its own set of levels and map. */
+  tiered?: boolean;
 }
+
+export interface Tier {
+  id: string;
+  name: string;
+  blurb: string;
+}
+
+/** The difficulty tiers of a tiered kind, gentlest first. */
+export const TIERS: Tier[] = [
+  { id: 'easy', name: 'Easy', blurb: 'Lots of numbers given. Learn the ropes.' },
+  { id: 'medium', name: 'Medium', blurb: 'A steady challenge.' },
+  { id: 'hard', name: 'Hard', blurb: 'Fewer clues, sharper thinking.' },
+  { id: 'challenging', name: 'Challenging', blurb: 'Only for confident solvers.' },
+  { id: 'insane', name: 'Insane', blurb: 'As few clues as a puzzle can have.' },
+];
+
+/** Levels in each tier of a tiered kind. */
+export const LEVELS_PER_TIER = 200;
+/** Levels in an ordinary track. */
+export const LEVELS_PER_TRACK = 1000;
+/** How many levels a practice track has: 200 for a tier of a tiered kind, 1000 otherwise. */
+export const levelCountOf = (track: string): number => (track.startsWith('sudoku-') ? LEVELS_PER_TIER : LEVELS_PER_TRACK);
 
 /** Games that offer more than one kind of practice. Each variant has its own levels, map and progress. Add a variant here to add one. */
 export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
   sudoku: [
-    { id: 'classic', name: 'Classic', blurb: 'The 9 by 9 grid, numbers 1 to 9.' },
-    { id: 'mini', name: 'Mini', blurb: 'A quick 6 by 6 grid, numbers 1 to 6.' },
+    { id: 'classic', name: 'Classic', blurb: 'The 9 by 9 grid, numbers 1 to 9.', tiered: true },
+    { id: 'mini', name: 'Mini', blurb: 'A quick 6 by 6 grid, numbers 1 to 6.', tiered: true },
     // The kinds seen at Sudoku championships (World Sudoku and Puzzle Championships), on the way.
     { id: 'killer', name: 'Killer', blurb: 'Cages with a sum: the digits in each cage add up to its number, with no repeats.', soon: true },
     { id: 'thermo', name: 'Thermo', blurb: 'Digits climb along every thermometer, from the bulb to the tip.', soon: true },
@@ -70,7 +94,17 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
   ],
 };
 
+/** The kinds of a game as the player chooses them (Sudoku: Classic, Mini ...). */
 export const variantsOf = (game: string): Variant[] => (isPuzzleGame(game) ? VARIANTS[game] ?? [] : []);
+
+/** The ids that levels are stored under: a tiered kind becomes one id per tier ('classic-easy' ...), other kinds keep their id. */
+export const leafIds = (game: string): string[] =>
+  variantsOf(game)
+    .filter((v) => !v.soon)
+    .flatMap((v) => (v.tiered ? TIERS.map((t) => `${v.id}-${t.id}`) : [v.id]));
+
+/** Router link to the difficulty chooser of a tiered kind. */
+export const kindLink = (game: string, kind: string): string[] => ['/games', game, kind];
 
 /** The key practice progress and levels are stored under: the game, plus its variant when it has one. */
 export const trackOf = (game: string, variant?: string | null): string => (variant ? `${game}-${variant}` : game);
@@ -92,7 +126,7 @@ export interface PracticeTrack {
 }
 export const PRACTICE_TRACKS: PracticeTrack[] = PUZZLE_GAMES.flatMap((game): PracticeTrack[] => {
   const variants = VARIANTS[game];
-  return variants ? variants.filter((v) => !v.soon).map((v) => ({ track: trackOf(game, v.id), game, variant: v.id })) : [{ track: game, game, variant: null }];
+  return variants ? leafIds(game).map((id) => ({ track: trackOf(game, id), game, variant: id })) : [{ track: game, game, variant: null }];
 });
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -106,3 +140,28 @@ export function dailyDifficulty(date: string | null | undefined): { day: string;
   const weekday = (d.getUTCDay() + 6) % 7;
   return { day: DAYS[weekday], label: LEVELS[weekday], step: weekday + 1 };
 }
+
+/** A kind of a game that is on the way: shown under "Coming soon" in Practice. */
+export interface SoonKind {
+  name: string;
+  blurb: string;
+}
+
+/** What is coming next for the games that are live (Sudoku's championship kinds are on its own page, in VARIANTS). */
+export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
+  'word-guess': [
+    { name: 'Four Letters', blurb: 'A quick word, four letters and five tries.' },
+    { name: 'Six Letters', blurb: 'A longer word, six letters and seven tries.' },
+    { name: 'Seven Letters', blurb: 'A big word for big brains.' },
+    { name: 'Speed Guess', blurb: 'Solve as many words as you can in three minutes.' },
+    { name: 'Duel', blurb: 'The same word, you against a friend.' },
+    { name: 'Themed Words', blurb: 'Animals, food, places: every word in a theme.' },
+  ],
+  queens: [
+    { name: 'Mini Queens', blurb: 'Small boards for a quick break.' },
+    { name: 'Giant Queens', blurb: 'Bigger boards with more colours.' },
+  ],
+  tango: [{ name: 'Big Tango', blurb: 'An 8 by 8 board with more clues to chain.' }],
+  zip: [{ name: 'Zip Walls', blurb: 'Walls block the path between some cells.' }],
+  patches: [{ name: 'Patches Big', blurb: 'Bigger grids with more shapes.' }],
+};

@@ -47,6 +47,7 @@ export class BackService {
       if (b === 'word-guess') return '/';
       if (d === 'levels' || c === 'levels') return '/'; // a level map
       // A level on a variant (/games/sudoku/mini) or a plain game (/games/queens): up to its map.
+      if (parts.length === 3 && variantsOf(b).some((v) => v.id === c && v.tiered)) return '/'; // a difficulty chooser
       return parts.length === 3 ? `/games/${b}/${c}/levels` : parts.length === 2 ? this.mapOrPicker(b) : '/';
     }
     if (a === 'daily') return parts.length === 1 ? '/' : '/daily';

@@ -17,14 +17,14 @@ import { CardInput, gridFromText } from '../../shared/share-card';
 import { HintsService } from '../../core/hints.service';
 import { ScreenGuardService } from '../../core/screen-guard.service';
 import { Hint, hasMistake, hintFor } from '../hints/hint';
-import { dailyDifficulty, gameInfo, isPuzzleGame, mapLink, PuzzleGameId, trackOf } from '../catalog';
+import { dailyDifficulty, gameInfo, levelCountOf, isPuzzleGame, mapLink, PuzzleGameId, trackOf } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
 import { ZipBoard } from '../zip/zip-board';
 import { PatchesBoard } from '../patches/patches-board';
 import { TangoBoard } from '../tango/tango-board';
 import { ADAPTERS } from './adapters';
-import { LEVEL_COUNT, PracticeStore } from './practice.store';
+import { PracticeStore } from './practice.store';
 import { parMs, starsFor } from './par';
 import { shareCard } from './share';
 import { PuzzleAttempt, PuzzleDailyService, PuzzleDailyState } from './puzzle-daily.service';
@@ -462,7 +462,7 @@ export class PuzzlePage {
   }
 
   protected nextLevel(): void {
-    void this.openLevel(Math.min(LEVEL_COUNT, this.level() + 1));
+    void this.openLevel(Math.min(levelCountOf(this.track()), this.level() + 1));
   }
 
   // ---------------------------------------------------------------------------------------------- daily

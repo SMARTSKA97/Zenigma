@@ -181,3 +181,26 @@
     }
   }
 }
+
+.soon-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.soon-card h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+}
+.soon-card p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.soon-card .pill {
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+}

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { LEVELS as QUEENS } from '../queens/levels.data';
 import { LEVELS as TANGO } from '../tango/levels.data';
-import { LEVELS as SUDOKU } from '../sudoku/levels-classic.data';
-import { LEVELS as MINI } from '../sudoku/levels-mini.data';
+import { LEVELS as SUDOKU } from '../sudoku/levels-classic-insane.data';
+import { LEVELS as MINI } from '../sudoku/levels-mini-insane.data';
 import { LEVELS as ZIP } from '../zip/levels.data';
 import { LEVELS as PATCHES } from '../patches/levels.data';
 import * as queens from '../queens/engine';

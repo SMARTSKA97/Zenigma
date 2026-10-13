@@ -13,7 +13,8 @@ describe('BackService', () => {
     const b = service();
     expect(b.parentOf('/')).toBeNull();
     expect(b.parentOf('/games/queens?level=12')).toBe('/games/queens/levels');
-    expect(b.parentOf('/games/sudoku/mini')).toBe('/games/sudoku/mini/levels');
+    expect(b.parentOf('/games/sudoku/mini-easy')).toBe('/games/sudoku/mini-easy/levels');
+    expect(b.parentOf('/games/sudoku/mini')).toBe('/'); // the difficulty chooser
     expect(b.parentOf('/games/queens/levels')).toBe('/');
     expect(b.parentOf('/games/sudoku/mini/levels')).toBe('/');
     expect(b.parentOf('/games/sudoku')).toBe('/');

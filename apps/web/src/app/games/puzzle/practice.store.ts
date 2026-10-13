@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { LocalStore } from '../../core/local-store';
+import { levelCountOf } from '../catalog';
 
-export const LEVEL_COUNT = 1000;
 /** Levels come in zones of ten: each climbs from easy (the first) to hard (the tenth). */
 export const ZONE_SIZE = 10;
 
@@ -55,7 +55,7 @@ export class PracticeStore {
   /** The level to play next: one past the furthest level solved (levels further on stay locked until it is solved). */
   frontier(game: string): number {
     const solved = this.all()[game]?.solved ?? [];
-    return Math.min(LEVEL_COUNT, (solved.length ? Math.max(...solved) : 0) + 1);
+    return Math.min(levelCountOf(game), (solved.length ? Math.max(...solved) : 0) + 1);
   }
 
   isUnlocked(game: string, level: number): boolean {
@@ -65,8 +65,8 @@ export class PracticeStore {
   /** The first level not solved yet (or the last level once everything is solved). */
   nextUnsolved(game: string): number {
     const solved = new Set(this.all()[game]?.solved ?? []);
-    for (let level = 1; level <= LEVEL_COUNT; level++) if (!solved.has(level)) return level;
-    return LEVEL_COUNT;
+    for (let level = 1; level <= levelCountOf(game); level++) if (!solved.has(level)) return level;
+    return levelCountOf(game);
   }
 
   async markSolved(game: string, level: number, elapsedMs: number, hinted = false): Promise<void> {

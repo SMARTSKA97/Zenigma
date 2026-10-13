@@ -16,121 +16,122 @@ import { UpdaterService } from '../../core/updater.service';
   template: `
     <h1>Settings</h1>
 
-    <section class="card account">
+    <a class="profile" routerLink="/account">
       @if (auth.user(); as user) {
-        <div class="who">
-          <span class="avatar" aria-hidden="true">{{ (user.displayName || user.email).charAt(0).toUpperCase() }}</span>
-          <div>
-            <h2>{{ user.displayName || user.email }}</h2>
-            <p class="muted">
-              {{ user.email }} ·
-              @if (sync.syncing()) { Syncing } @else if (sync.pendingCount() > 0) { {{ sync.pendingCount() }} to sync } @else if (!sync.online()) { Offline } @else { Synced }
-            </p>
-          </div>
-        </div>
-        <div class="row">
-          <a class="button secondary" routerLink="/account">Manage account</a>
-          <a class="button secondary" routerLink="/stats">Streaks and stats</a>
-        </div>
+        <span class="avatar" aria-hidden="true">{{ (user.displayName || user.email).charAt(0).toUpperCase() }}</span>
+        <span class="pt">
+          <strong>{{ user.displayName || user.email }}</strong>
+          <small>
+            {{ user.email }} ·
+            @if (sync.syncing()) { Syncing } @else if (sync.pendingCount() > 0) { {{ sync.pendingCount() }} to sync } @else if (!sync.online()) { Offline } @else { Synced }
+          </small>
+        </span>
       } @else {
-        <h2>Account</h2>
-        <p class="muted">Guest mode works offline. An account keeps your streaks and history across devices and puts you on leaderboards.</p>
-        <a class="button" routerLink="/account">Sign in or create account</a>
+        <span class="avatar" aria-hidden="true">?</span>
+        <span class="pt">
+          <strong>Sign in or create account</strong>
+          <small>Guest mode works offline. An account keeps streaks across devices.</small>
+        </span>
       }
-    </section>
+      <span class="chev" aria-hidden="true">›</span>
+    </a>
 
-    <section class="card">
-      <h2>Appearance</h2>
-      <app-segmented label="Theme" [options]="themes" [value]="theme.mode()" (valueChange)="theme.set($event)" />
-      <div class="gap"></div>
-      <app-switch [checked]="prefs.highContrast()" (checkedChange)="prefs.setHighContrast($event)">
-        Colour-blind friendly colours
-        <small>Orange and blue, plus letters on Queens regions.</small>
-      </app-switch>
-      <div class="gap"></div>
-      <app-switch [checked]="prefs.reduceMotion()" (checkedChange)="prefs.setReduceMotion($event)">
-        Reduce motion
-        <small>Turns off board animations and confetti.</small>
-      </app-switch>
-      <div class="gap"></div>
-      <app-switch [checked]="prefs.haptics()" (checkedChange)="prefs.setHaptics($event)">
-        Vibration
-        <small>Small taps as you play, and a pattern for mistakes and wins.</small>
-      </app-switch>
+    <h2 class="group">Appearance</h2>
+    <section class="list">
+      <div class="item stack">
+        <span class="lead">Theme</span>
+        <app-segmented label="Theme" [options]="themes" [value]="theme.mode()" (valueChange)="theme.set($event)" />
+      </div>
+      <div class="item">
+        <app-switch [checked]="prefs.highContrast()" (checkedChange)="prefs.setHighContrast($event)">
+          Colour-blind friendly
+          <small>Orange and blue, plus letters on Queens regions.</small>
+        </app-switch>
+      </div>
+      <div class="item">
+        <app-switch [checked]="prefs.largeNumbers()" (checkedChange)="prefs.setLargeNumbers($event)">
+          Larger numbers
+          <small>Bigger digits and letters on the boards, easier to read.</small>
+        </app-switch>
+      </div>
+      <div class="item">
+        <app-switch [checked]="prefs.reduceMotion()" (checkedChange)="prefs.setReduceMotion($event)">
+          Reduce motion
+          <small>Turns off board animations and confetti.</small>
+        </app-switch>
+      </div>
+      <div class="item">
+        <app-switch [checked]="prefs.haptics()" (checkedChange)="prefs.setHaptics($event)">
+          Vibration
+          <small>Small taps as you play, and a pattern for mistakes and wins.</small>
+        </app-switch>
+      </div>
     </section>
 
     @if (reminder.supported) {
-      <section class="card">
-        <h2>Daily reminder</h2>
-        <app-switch [checked]="reminder.enabled()" (checkedChange)="reminder.setEnabled($event)">
-          Remind me to play
-          <small>One notification a day, from this phone. Nothing is sent to a server.</small>
-        </app-switch>
+      <h2 class="group">Reminders</h2>
+      <section class="list">
+        <div class="item">
+          <app-switch [checked]="reminder.enabled()" (checkedChange)="reminder.setEnabled($event)">
+            Daily reminder
+            <small>One notification a day, from this phone. Nothing is sent to a server.</small>
+          </app-switch>
+        </div>
         @if (reminder.enabled()) {
-          <label class="time">
-            Time
+          <label class="item time">
+            <span class="lead">Time</span>
             <input type="time" [value]="reminder.timeValue()" (change)="reminder.setTime($any($event.target).value)" />
           </label>
         }
         @if (reminder.denied()) {
-          <p class="error">Notifications are blocked for Zenigma. Allow them in Android settings, under Apps, Zenigma, Notifications.</p>
+          <p class="item error">Notifications are blocked for Zenigma. Allow them in Android settings, under Apps, Zenigma, Notifications.</p>
         }
       </section>
     }
 
     @if (updater.supported) {
-      <section class="card">
-        <h2>App updates</h2>
-        <p class="muted">Version {{ updater.currentVersion() ?? '-' }}</p>
-
-        @switch (updater.state()) {
-          @case ('checking') {
-            <p class="status"><app-loader [size]="18" /> Checking for updates</p>
-          }
-          @case ('upToDate') {
-            <p class="status ok">You are on the latest version.</p>
-          }
-          @case ('available') {
-            <p>
-              <strong>Version {{ updater.update()?.version }}</strong> is ready to install.
-            </p>
-          }
-          @case ('error') {
-            @if (!updater.sheetOpen()) {
-              <p class="error">{{ updater.message() }}</p>
+      <h2 class="group">App updates</h2>
+      <section class="list">
+        <div class="item stack">
+          <span class="lead">Version {{ updater.currentVersion() ?? '-' }}</span>
+          @switch (updater.state()) {
+            @case ('checking') {
+              <p class="status"><app-loader [size]="18" /> Checking for updates</p>
+            }
+            @case ('upToDate') {
+              <p class="status ok">You are on the latest version.</p>
+            }
+            @case ('available') {
+              <p><strong>Version {{ updater.update()?.version }}</strong> is ready to install.</p>
+            }
+            @case ('error') {
+              @if (!updater.sheetOpen()) {
+                <p class="error">{{ updater.message() }}</p>
+              }
             }
           }
-        }
-
-        @if (updater.state() === 'available' && !updater.sheetOpen()) {
-          <button type="button" (click)="updater.sheetOpen.set(true)">See what's new</button>
-        } @else if (updater.state() !== 'checking' && updater.state() !== 'downloading' && updater.state() !== 'installing') {
-          <button type="button" class="secondary" (click)="updater.check()">Check for updates</button>
-        }
+          @if (updater.state() === 'available' && !updater.sheetOpen()) {
+            <button type="button" (click)="updater.sheetOpen.set(true)">See what's new</button>
+          } @else if (updater.state() !== 'checking' && updater.state() !== 'downloading' && updater.state() !== 'installing') {
+            <button type="button" class="secondary" (click)="updater.check()">Check for updates</button>
+          }
+        </div>
       </section>
     }
 
-    <section class="card">
-      <h2>Version history</h2>
-      <p class="muted">See what changed in every release.</p>
-      <a class="button secondary" routerLink="/changelog">Open version history</a>
+    <h2 class="group">Explore</h2>
+    <section class="list">
+      <a class="item link" routerLink="/stats"><span class="ico">📊</span><span class="lead">Streaks and stats</span><span class="chev">›</span></a>
+      <a class="item link" routerLink="/badges"><span class="ico">🏅</span><span class="lead">Badges</span><span class="chev">›</span></a>
+      <a class="item link" routerLink="/rules"><span class="ico">📖</span><span class="lead">How to play</span><span class="chev">›</span></a>
+      <a class="item link" routerLink="/changelog"><span class="ico">🆕</span><span class="lead">Version history</span><span class="chev">›</span></a>
     </section>
 
-    <section class="card">
-      <h2>About</h2>
-      <p class="muted">What Zenigma is, who makes it, and how your data is handled.</p>
-      <div class="row">
-        <a class="button secondary" routerLink="/rules">How to play</a>
-        <a class="button secondary" routerLink="/badges">Badges</a>
-        <a class="button secondary" routerLink="/about">About Zenigma</a>
-        <a class="button secondary" routerLink="/privacy">Privacy policy</a>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Diagnostics</h2>
-      <p class="muted">See the local event log and test sync with the server.</p>
-      <a class="button secondary" routerLink="/sync-test">Open sync test</a>
+    <h2 class="group">About</h2>
+    <section class="list">
+      <a class="item link" routerLink="/about"><span class="ico">✨</span><span class="lead">About Zenigma</span><span class="chev">›</span></a>
+      <a class="item link" routerLink="/privacy"><span class="ico">🔒</span><span class="lead">Privacy policy</span><span class="chev">›</span></a>
+      <a class="item link" routerLink="/sync-test"><span class="ico">🛠</span><span class="lead">Diagnostics</span><span class="chev">›</span></a>
     </section>
   `,
   styles: `
@@ -138,99 +139,110 @@ import { UpdaterService } from '../../core/updater.service';
       display: block;
       max-width: 36rem;
       margin: 0 auto;
+      padding-bottom: 2rem;
     }
-    .who {
+    .profile {
       display: flex;
       align-items: center;
       gap: 0.9rem;
-      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: var(--radius, 16px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
     }
-    .who h2 {
-      margin: 0;
+    .pt {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
     }
-    .who p {
-      margin: 0;
-      font-size: 0.85rem;
+    .pt small {
       overflow-wrap: anywhere;
     }
     .avatar {
       flex: none;
       display: grid;
       place-items: center;
-      width: 3rem;
-      height: 3rem;
+      width: 3.2rem;
+      height: 3.2rem;
       border-radius: 50%;
       font-family: var(--font-display);
       font-weight: 700;
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       color: var(--accent);
       background: var(--accent-soft);
     }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
+    .group {
+      margin: 1.5rem 0.5rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
-    .time {
+    .list {
+      border-radius: var(--radius, 16px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .item {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-top: 1rem;
-      font-weight: 600;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      margin: 0;
+    }
+    .item + .item {
+      border-top: 1px solid var(--border);
+    }
+    .item.stack {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.6rem;
+    }
+    .item app-switch {
+      flex: 1;
+    }
+    .lead {
+      flex: 1;
+      font-weight: 500;
+    }
+    .link {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .ico {
+      width: 1.6rem;
+      text-align: center;
+    }
+    .chev {
+      color: var(--muted);
+      font-size: 1.4rem;
+      line-height: 1;
     }
     .time input {
       width: auto;
-    }
-    section + section {
-      margin-top: 1rem;
-    }
-    h2 {
-      margin-bottom: 1rem;
-    }
-    .gap {
-      height: 1.25rem;
     }
     small {
       display: block;
       color: var(--muted);
       font-size: 0.8rem;
+      font-weight: 400;
     }
     .status {
       display: flex;
       align-items: center;
       gap: 0.6rem;
+      margin: 0;
     }
     .status.ok {
       color: var(--good);
     }
-    .notes {
-      white-space: pre-wrap;
-      font: inherit;
-      color: var(--muted);
-      margin: 0 0 1rem;
-    }
-    .bar {
-      height: 8px;
-      border-radius: 99px;
-      background: var(--surface-2);
-      overflow: hidden;
-      margin-bottom: 0.75rem;
-    }
-    .bar span {
-      display: block;
-      height: 100%;
-      background: var(--accent);
-      border-radius: 99px;
-      transform-origin: left;
-      transition: transform 0.25s ease-out;
-    }
-    p + button,
-    p + a,
-    pre + button {
-      margin-top: 0.25rem;
-    }
-    button + button {
-      margin-left: 0.5rem;
+    .stack p {
+      margin: 0;
     }
   `,
 })

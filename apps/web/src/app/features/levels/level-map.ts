@@ -2,10 +2,10 @@ import { BackService } from '../../core/back.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, afterNextRender, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { gameInfo, isPuzzleGame, playLink, PuzzleGameId, trackOf, variantsOf } from '../../games/catalog';
+import { gameInfo, levelCountOf, TIERS, isPuzzleGame, playLink, PuzzleGameId, trackOf, variantsOf } from '../../games/catalog';
 import { ADAPTERS } from '../../games/puzzle/adapters';
 import { difficultyOf, parMs, starsFor } from '../../games/puzzle/par';
-import { LEVEL_COUNT, PracticeStore, ZONE_SIZE } from '../../games/puzzle/practice.store';
+import { PracticeStore, ZONE_SIZE } from '../../games/puzzle/practice.store';
 import { formatDuration } from '../../core/leaderboard.service';
 import { Glyph } from '../../shared/glyph';
 import { Sheet } from '../../shared/sheet';
@@ -227,7 +227,19 @@ export class LevelMap {
   /** What practice progress and levels are stored under. */
   private readonly track = computed(() => trackOf(this.game(), this.variant()));
   protected readonly info = computed(() => gameInfo(this.game()));
-  protected readonly variantName = computed(() => variantsOf(this.game()).find((v) => v.id === this.variant())?.name ?? null);
+  /** How many levels this track has (a Sudoku tier has fewer than the other games). */
+  private readonly count = computed(() => levelCountOf(this.track()));
+  /** "Classic · Easy" for a tier, "Mini" for a plain kind. */
+  protected readonly variantName = computed(() => {
+    const id = this.variant();
+    if (!id) return null;
+    const kinds = variantsOf(this.game());
+    const direct = kinds.find((v) => v.id === id);
+    if (direct) return direct.name;
+    const kind = kinds.find((v) => v.tiered && id.startsWith(`${v.id}-`));
+    const tier = TIERS.find((t) => kind && id === `${kind.id}-${t.id}`);
+    return kind && tier ? `${kind.name} · ${tier.name}` : id;
+  });
   protected readonly backLink = computed(() => (this.variant() ? ['/games', this.game()] : ['/practice']));
   protected readonly playLink = computed(() => playLink(this.game(), this.variant()));
   private readonly levels = signal<unknown[]>([]);
@@ -245,7 +257,7 @@ export class LevelMap {
     const frontier = this.frontier();
     const solved = this.practice.solvedLevels(track)();
     const levels = this.levels();
-    const lastZone = Math.min(LEVEL_COUNT / ZONE_SIZE - 1, Math.floor((frontier - 1) / ZONE_SIZE) + 2);
+    const lastZone = Math.min(this.count() / ZONE_SIZE - 1, Math.floor((frontier - 1) / ZONE_SIZE) + 2);
     const zones: ZoneView[] = [];
     for (let z = lastZone; z >= 0; z--) {
       const first = z * ZONE_SIZE + 1;
@@ -270,13 +282,13 @@ export class LevelMap {
         });
       }
       const lastLevel = first + ZONE_SIZE - 1;
-      if (lastLevel < LEVEL_COUNT) pts.push([crossingX(lastLevel), 0]);
+      if (lastLevel < this.count()) pts.push([crossingX(lastLevel), 0]);
       zones.push({
         index: z,
         name: ZONE_NAMES[z % ZONE_NAMES.length] + (z >= ZONE_NAMES.length ? ' ' + (Math.floor(z / ZONE_NAMES.length) + 1) : ''),
         hue: (140 + z * 47) % 360,
         nodes,
-        path: smooth(pts, { start: first > 1, end: lastLevel < LEVEL_COUNT }),
+        path: smooth(pts, { start: first > 1, end: lastLevel < this.count() }),
         decor: this.decorFor(z, nodes),
         done: nodes.filter((n) => n.state === 'done').length / ZONE_SIZE,
       });
@@ -286,7 +298,7 @@ export class LevelMap {
 
   protected readonly moreText = computed(() => {
     const frontier = this.frontier();
-    return frontier >= LEVEL_COUNT ? 'You reached the last level. More are on the way.' : `${LEVEL_COUNT - this.solvedCount()} levels still to go. Solve a level to open the next.`;
+    return frontier >= this.count() ? 'You reached the last level. More are on the way.' : `${this.count() - this.solvedCount()} levels still to go. Solve a level to open the next.`;
   });
 
   constructor() {

@@ -7,6 +7,7 @@ interface Prefs {
   highContrast: boolean;
   reduceMotion: boolean;
   haptics: boolean;
+  largeNumbers: boolean;
 }
 
 /** Small per-device settings (not synced). Kept in localStorage so they apply before anything else loads. */
@@ -16,6 +17,7 @@ export class PrefsService {
   readonly highContrast = signal(false);
   readonly reduceMotion = signal(false);
   readonly haptics = signal(true);
+  readonly largeNumbers = signal(false);
 
   constructor() {
     try {
@@ -24,6 +26,7 @@ export class PrefsService {
       this.highContrast.set(saved.highContrast === true);
       this.reduceMotion.set(saved.reduceMotion === true);
       this.haptics.set(saved.haptics !== false);
+      this.largeNumbers.set(saved.largeNumbers === true);
     } catch {
       /* storage unavailable: defaults */
     }
@@ -35,6 +38,8 @@ export class PrefsService {
     else document.documentElement.removeAttribute('data-contrast');
     if (this.reduceMotion()) document.documentElement.setAttribute('data-motion', 'reduced');
     else document.documentElement.removeAttribute('data-motion');
+    if (this.largeNumbers()) document.documentElement.setAttribute('data-large', 'true');
+    else document.documentElement.removeAttribute('data-large');
   }
 
   setHardMode(value: boolean): void {
@@ -54,6 +59,12 @@ export class PrefsService {
     this.apply();
   }
 
+  setLargeNumbers(value: boolean): void {
+    this.largeNumbers.set(value);
+    this.save();
+    this.apply();
+  }
+
   setHaptics(value: boolean): void {
     this.haptics.set(value);
     this.save();
@@ -61,7 +72,7 @@ export class PrefsService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers() }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

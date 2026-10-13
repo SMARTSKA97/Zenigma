@@ -50,7 +50,7 @@ public class PuzzleRulesTests
     public void Every_shipped_level_set_is_complete()
     {
         var levels = new PracticeLevels();
-        foreach (var track in PuzzleRules.Tracks) Assert.Equal(1000, levels.Count(track));
+        foreach (var track in PuzzleRules.Tracks) Assert.Equal(track.StartsWith("sudoku-") ? 200 : 1000, levels.Count(track));
     }
 
     [Fact]

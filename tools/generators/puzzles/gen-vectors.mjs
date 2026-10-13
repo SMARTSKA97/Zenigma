@@ -102,9 +102,10 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
 {
   const { practiceLevel, solve } = await import('./games.mjs');
   const cases = [];
-  for (const track of ['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip', 'patches']) {
+  const { TRACKS, levelsOf } = await import('./games.mjs');
+  for (const track of TRACKS) {
     const game = track.split('-')[0];
-    for (const level of [1, 2, 3, 10, 11, 150, 500, 1000]) {
+    for (const level of [1, 2, 3, 10, 11, 150, 500, 1000].filter((l) => l <= levelsOf(track)).concat(levelsOf(track) < 1000 ? [levelsOf(track)] : [])) {
       cases.push({ game, track, level, solution: solve(track, practiceLevel(track, level)).solution });
     }
   }

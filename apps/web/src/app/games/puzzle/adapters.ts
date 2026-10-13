@@ -20,6 +20,20 @@ export interface PuzzleAdapter {
   help: string;
 }
 
+/** Sudoku levels, one file per kind and difficulty tier, loaded only when played. */
+const SUDOKU_LEVELS: Record<string, () => Promise<unknown[]>> = {
+  'classic-easy': () => import('../sudoku/levels-classic-easy.data').then((m) => m.LEVELS),
+  'classic-medium': () => import('../sudoku/levels-classic-medium.data').then((m) => m.LEVELS),
+  'classic-hard': () => import('../sudoku/levels-classic-hard.data').then((m) => m.LEVELS),
+  'classic-challenging': () => import('../sudoku/levels-classic-challenging.data').then((m) => m.LEVELS),
+  'classic-insane': () => import('../sudoku/levels-classic-insane.data').then((m) => m.LEVELS),
+  'mini-easy': () => import('../sudoku/levels-mini-easy.data').then((m) => m.LEVELS),
+  'mini-medium': () => import('../sudoku/levels-mini-medium.data').then((m) => m.LEVELS),
+  'mini-hard': () => import('../sudoku/levels-mini-hard.data').then((m) => m.LEVELS),
+  'mini-challenging': () => import('../sudoku/levels-mini-challenging.data').then((m) => m.LEVELS),
+  'mini-insane': () => import('../sudoku/levels-mini-insane.data').then((m) => m.LEVELS),
+};
+
 export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
   queens: {
     levels: () => import('../queens/levels.data').then((m) => m.LEVELS),
@@ -40,8 +54,10 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
     help: 'Fill the grid with suns and moons. No more than two of a kind in a row, three of each in every row and column. = means the same, × means different.',
   },
   'sudoku': {
-    levels: (variant) =>
-      variant === 'mini' ? import('../sudoku/levels-mini.data').then((m) => m.LEVELS) : import('../sudoku/levels-classic.data').then((m) => m.LEVELS),
+    levels: (variant) => {
+      const load = SUDOKU_LEVELS[variant ?? ''] ?? SUDOKU_LEVELS['classic-easy'];
+      return load();
+    },
     blank: (p) => sudoku.boardFrom(p as sudoku.SudokuPuzzle),
     conflicts: (_, s) => sudoku.conflicts(s as number[]),
     isSolved: (p, s) => sudoku.isSolved(p as sudoku.SudokuPuzzle, s as number[]),

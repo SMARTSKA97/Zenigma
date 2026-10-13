@@ -98,6 +98,11 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
       </div>
     }
 
+    <section class="soon-card">
+      <h2>Sudoku challenges <span class="pill">Soon</span></h2>
+      <p class="muted">Special Sudoku puzzles (Killer, Thermo, Jigsaw and more) will appear here as extra daily challenges, with their own ranks.</p>
+    </section>
+
     <p class="foot muted">Want to play for fun? Practice is endless and works offline. <a routerLink="/">Open practice</a></p>
   `,
   styleUrl: './daily-hub.scss',

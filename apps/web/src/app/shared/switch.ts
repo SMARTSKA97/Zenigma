@@ -1,41 +1,54 @@
-import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
-/** An accessible on/off switch built on a real checkbox. */
+/**
+ * An on/off switch. It is a plain button with role="switch" and shows exactly what its parent says (`checked`):
+ * a tap asks for the opposite through `checkedChange`, and nothing changes until the parent agrees (so a refused
+ * permission, for example, leaves the switch off).
+ */
 @Component({
   selector: 'app-switch',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <label>
-      <input type="checkbox" role="switch" [checked]="checked()" [disabled]="disabled()" (change)="checked.set($any($event.target).checked)" />
+    <button type="button" class="sw" role="switch" [attr.aria-checked]="checked()" [disabled]="disabled()" (click)="checkedChange.emit(!checked())">
       <span class="text"><ng-content /></span>
       <span class="track" aria-hidden="true"><span class="knob"></span></span>
-    </label>
+    </button>
   `,
   styles: `
-    label {
+    :host {
+      display: block;
+    }
+    /* Reset everything the global (and Android Material) button styles add, so only this layout applies. */
+    :host .sw {
       display: flex;
-      flex-direction: row;
       align-items: center;
+      justify-content: space-between;
       gap: 0.75rem;
-      cursor: pointer;
-      color: var(--text);
-      font-size: 0.95rem;
-    }
-    label {
-      position: relative;
-    }
-    /* Raised above Android's global 56dp text-field style, which would otherwise stretch this hidden input over the rows around it and swallow taps. */
-    :host input {
-      position: absolute;
-      inset: 0 auto auto 0;
-      opacity: 0;
-      width: 1px;
-      height: 1px;
+      width: 100%;
       min-height: 0;
+      height: auto;
       margin: 0;
       padding: 0;
       border: 0;
-      pointer-events: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-align: left;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :host .sw:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+    .text {
+      flex: 1;
+      min-width: 0;
     }
     .track {
       position: relative;
@@ -58,23 +71,17 @@ import { ChangeDetectionStrategy, Component, input, model } from '@angular/core'
       box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
       transition: transform 0.3s var(--spring);
     }
-    input:checked + .track {
+    .sw[aria-checked='true'] .track {
       background: var(--ink);
       border-color: var(--ink);
     }
-    input:checked + .track .knob {
+    .sw[aria-checked='true'] .knob {
       transform: translateX(18px);
       background: var(--ink-contrast);
     }
-    input:focus-visible + .track {
+    .sw:focus-visible .track {
       outline: 2px solid var(--accent);
       outline-offset: 3px;
-    }
-    input:disabled + .track {
-      opacity: 0.5;
-    }
-    .text {
-      flex: 1;
     }
 
     /* Android: Material 3 switch. A small outlined thumb that grows and fills when on. */
@@ -99,11 +106,11 @@ import { ChangeDetectionStrategy, Component, input, model } from '@angular/core'
         left 0.2s var(--ease),
         background-color 0.2s var(--ease);
     }
-    :host-context([data-platform='android']) input:checked + .track {
+    :host-context([data-platform='android']) .sw[aria-checked='true'] .track {
       background: var(--accent);
       border-color: var(--accent);
     }
-    :host-context([data-platform='android']) input:checked + .track .knob {
+    :host-context([data-platform='android']) .sw[aria-checked='true'] .knob {
       top: 2px;
       left: 2px;
       width: 24px;
@@ -111,12 +118,10 @@ import { ChangeDetectionStrategy, Component, input, model } from '@angular/core'
       transform: translateX(20px);
       background: var(--accent-contrast);
     }
-    label {
-      justify-content: space-between;
-    }
   `,
 })
 export class Switch {
-  readonly checked = model(false);
+  readonly checked = input(false);
   readonly disabled = input(false);
+  readonly checkedChange = output<boolean>();
 }

@@ -141,3 +141,46 @@
   color: #3b2a00;
   font-weight: 800;
 }
+
+.sec {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sub2 {
+  margin: -0.4rem 0 0.9rem;
+  font-size: 0.9rem;
+}
+.kinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.kind-card {
+  padding: 0.9rem 1rem;
+  border: 1px dashed color-mix(in srgb, oklch(0.7 0.12 calc(var(--h) * 1deg)) 55%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, oklch(0.9 0.05 calc(var(--h) * 1deg)) 12%, var(--surface));
+}
+.kind-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+.kind-card ul {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+}
+.kind-card li b {
+  font-weight: 650;
+}
+.kind-card li b {
+  display: block;
+}

@@ -7,9 +7,31 @@ import { rngFrom } from './rng.mjs';
 
 export const GAMES = ['queens', 'tango', 'sudoku', 'zip', 'patches'];
 /** Practice tracks: each has its own 1000 levels. A game can have several (Sudoku: classic 9x9 and mini 6x6), and more can be added. */
-export const TRACKS = ['queens', 'tango', 'sudoku-classic', 'sudoku-mini', 'zip', 'patches'];
+export const SUDOKU_TIERS = ['easy', 'medium', 'hard', 'challenging', 'insane'];
+export const TRACKS = [
+  'queens',
+  'tango',
+  ...['classic', 'mini'].flatMap((kind) => SUDOKU_TIERS.map((tier) => `sudoku-${kind}-${tier}`)),
+  'zip',
+  'patches',
+];
 export const gameOfTrack = (track) => track.split('-')[0];
 export const LEVELS_PER_GAME = 1000;
+/** Sudoku kinds are split into difficulty tiers, each its own track of this many levels. */
+export const LEVELS_PER_TIER = 200;
+export const levelsOf = (track) => (track.startsWith('sudoku-') ? LEVELS_PER_TIER : LEVELS_PER_GAME);
+
+/** Numbers left in the grid at the start and end of each tier (the end of a tier is a touch harder than its start). */
+const SUDOKU_CLUES = {
+  classic: { easy: [42, 36], medium: [35, 31], hard: [30, 27], challenging: [26, 24], insane: [23, 22] },
+  mini: { easy: [20, 17], medium: [16, 15], hard: [14, 13], challenging: [12, 12], insane: [11, 10] },
+};
+function sudokuTierLevel(track, level, rng) {
+  const [, kind, tier] = track.split('-');
+  const [from, to] = SUDOKU_CLUES[kind][tier];
+  const along = 0.5 * ((level - 1) / (LEVELS_PER_TIER - 1)) + 0.5 * (((level - 1) % LEVELS_PER_ZONE) / (LEVELS_PER_ZONE - 1));
+  return generateSudoku(rng, Math.round(from - (from - to) * along), kind === 'mini' ? 6 : 9);
+}
 
 export const LEVELS_PER_ZONE = 10;
 
@@ -32,6 +54,7 @@ export function practiceLevel(track, level) {
   const game = track;
   const rng = rngFrom(`zenigma-practice:${track}:${level}`);
   const h = hardness(level);
+  if (game.startsWith('sudoku-')) return sudokuTierLevel(track, level, rng);
   switch (game) {
     case 'queens': {
       const size = h < 0.2 ? 5 : h < 0.4 ? 6 : h < 0.6 ? 7 : h < 0.8 ? 8 : 9;
@@ -39,10 +62,6 @@ export function practiceLevel(track, level) {
     }
     case 'tango':
       return generateTango(rng, Math.round(6 * (1 - h))); // extra clues left in
-    case 'sudoku-classic':
-      return generateSudoku(rng, Math.round(46 - 20 * h)); // numbers left in the 9x9 grid
-    case 'sudoku-mini':
-      return generateSudoku(rng, Math.round(20 - 8 * h), 6); // numbers left in the 6x6 grid
     case 'zip': {
       const size = h < 0.35 ? 5 : h < 0.7 ? 6 : 7;
       return generateZip(size, rng, Math.max(5, Math.round(9 - 4 * h))); // numbers shown

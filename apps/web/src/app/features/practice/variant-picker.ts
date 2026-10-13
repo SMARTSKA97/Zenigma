@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { gameInfo, mapLink, trackOf, variantsOf } from '../../games/catalog';
+import { gameInfo, kindLink, leafIds, mapLink, TIERS, trackOf, variantsOf } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 import { Glyph } from '../../shared/glyph';
 
@@ -16,12 +16,12 @@ import { Glyph } from '../../shared/glyph';
     <p class="muted">Choose a kind. Each has its own levels and progress.</p>
     <div class="list">
       @for (v of playable(); track v.id) {
-        <a class="card" [routerLink]="link(v.id)" [style.--h]="info()?.hue">
+        <a class="card" [routerLink]="link(v.id, v.tiered)" [style.--h]="info()?.hue">
           <span class="art"><app-glyph [game]="game()" /></span>
           <span class="text">
             <strong>{{ v.name }}</strong>
             <span class="muted">{{ v.blurb }}</span>
-            <span class="tag">{{ progress(v.id) }}</span>
+            <span class="tag">{{ progress(v.id, v.tiered) }}</span>
           </span>
           <span class="go" aria-hidden="true">›</span>
         </a>
@@ -133,14 +133,18 @@ export class VariantPicker implements OnInit {
   protected readonly soon = computed(() => this.variants().filter((v) => v.soon));
 
   ngOnInit(): void {
-    for (const v of this.playable()) void this.practice.load(trackOf(this.game(), v.id));
+    for (const id of leafIds(this.game())) void this.practice.load(trackOf(this.game(), id));
   }
 
-  protected link(variant: string): string[] {
-    return mapLink(this.game(), variant);
+  protected link(variant: string, tiered?: boolean): string[] {
+    return tiered ? kindLink(this.game(), variant) : mapLink(this.game(), variant);
   }
 
-  protected progress(variant: string): string {
+  protected progress(variant: string, tiered?: boolean): string {
+    if (tiered) {
+      const solved = TIERS.reduce((n, t) => n + this.practice.solvedLevels(trackOf(this.game(), `${variant}-${t.id}`))().size, 0);
+      return solved ? `${solved} levels solved · 5 difficulties` : '5 difficulties, Easy to Insane';
+    }
     const track = trackOf(this.game(), variant);
     const solved = this.practice.solvedLevels(track)().size;
     return solved ? `Level ${this.practice.frontier(track)} · ${solved} solved` : 'Start at level 1';

@@ -1,10 +1,11 @@
 import { CanMatchFn, Routes } from '@angular/router';
-import { variantsOf } from './games/catalog';
+import { leafIds, variantsOf } from './games/catalog';
 
 const wordGuess = () => import('./games/word-guess/word-guess').then((m) => m.WordGuess);
 const puzzle = () => import('./games/puzzle/puzzle-page').then((m) => m.PuzzlePage);
 
-const variantPlayable: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.path ?? '').some((v) => v.id === segments[2]?.path && !v.soon);
+const variantPlayable: CanMatchFn = (_route, segments) => leafIds(segments[1]?.path ?? '').includes(segments[2]?.path ?? '');
+const tieredKind: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.path ?? '').some((v) => v.id === segments[2]?.path && v.tiered);
 const hasVariants: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.path ?? '').length > 0;
 
 export const routes: Routes = [
@@ -12,6 +13,7 @@ export const routes: Routes = [
   { path: 'games/:game/levels', loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
   { path: 'games/:game/:variant/levels', canMatch: [variantPlayable], loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
   { path: 'games/:game/:variant', canMatch: [variantPlayable], loadComponent: puzzle, data: { mode: 'practice' } },
+  { path: 'games/:game/:kind', canMatch: [tieredKind], loadComponent: () => import('./features/practice/tier-picker').then((m) => m.TierPicker) },
   { path: 'games/:game', canMatch: [hasVariants], loadComponent: () => import('./features/practice/variant-picker').then((m) => m.VariantPicker) },
   { path: 'games/:game', loadComponent: puzzle, data: { mode: 'practice' } },
   { path: 'practice', loadComponent: () => import('./features/practice/practice').then((m) => m.Practice) },
