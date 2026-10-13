@@ -12,7 +12,8 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 | 0.16.0 | ✅ Sudoku difficulty tiers, Practice Play / Coming soon, redesigned Settings, larger numbers |
 | 0.17.0 | ✅ Weekly level packs, Diagonal / Windoku / Disjoint / Anti-Knight, speed round, challenge links, circle seasons, themes, haptics, Home extras, redo and keyboard play |
 | 0.18.0 | ✅ Weekly/weekend/monthly challenges, more badges, 15 mind games, featured level of the week, seven more Sudoku kinds |
-| 0.19.0 | ✅ Zip Walls and Blocked cells, Patches Shapes only (see `docs/CHALLENGES.md` for all challenge ideas), five new mind games, LinkedIn-style Patches, leave-game guard, dark-theme audit, more haptics, Challenges hub, daily mind set, Mind dashboard, profile and Google sign-in, offline mode, warm-up loader, server hint balance, tiers for every logic game, seven Sudoku kinds, featured level, new badges |
+| 0.19.0 | ✅ Challenges hub, daily mind set, Mind dashboard, profile and Google sign-in, offline mode, warm-up loader, server hint balance, tiers for every logic game |
+| 0.20.0 | ✅ Zip Walls and Blocked cells, Patches Shapes only (see `docs/CHALLENGES.md` for all challenge ideas), five new mind games, LinkedIn-style Patches, leave-game guard, dark-theme audit, more haptics, daily mind set, Mind dashboard, profile and Google sign-in, offline mode, warm-up loader, server hint balance, tiers for every logic game, seven Sudoku kinds, featured level, new badges |
 
 ## Hints economy
 
@@ -43,7 +44,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ⬜ 🆕 **Skill trend**: a small line of each mark over the last 30 days.
 - ⬜ 🆕 **Weakest-skill nudge**: "Your attention is lowest, try Odd One Out".
 - ⬜ 🆕 **Mind age**: a playful single number from the marks, clearly labelled as entertainment.
-- ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.19.0).
+- ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.20.0).
 - ⬜ More mind games: Comet Slice and others (see Coming soon in Practice).
 - ⬜ Ranked puzzle of the week for the featured level, by fewest mistakes.
 
