@@ -8,7 +8,7 @@ describe('practice tracks', () => {
   });
 
   it('gives Sudoku its kinds, the logic games one tiered Classic kind, and Word Guess none', () => {
-    expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini', 'diagonal', 'windoku', 'disjoint', 'knight', 'killer', 'thermo', 'jigsaw', 'arrow', 'sandwich', 'consecutive', 'even-odd']);
+    expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini', 'diagonal', 'windoku', 'disjoint', 'knight', 'king', 'nonconsec', 'killer', 'thermo', 'jigsaw', 'arrow', 'sandwich', 'consecutive', 'even-odd']);
     for (const g of ['queens', 'tango']) expect(variantsOf(g).map((v) => v.id)).toEqual(['classic']);
     expect(variantsOf('patches').map((v) => v.id)).toEqual(['classic', 'shapes']);
     expect(variantsOf('zip').map((v) => v.id)).toEqual(['classic', 'walls', 'holes']);
@@ -24,6 +24,8 @@ describe('practice tracks', () => {
       'sudoku-windoku',
       'sudoku-disjoint',
       'sudoku-knight',
+      'sudoku-king',
+      'sudoku-nonconsec',
       ...['killer', 'thermo', 'jigsaw', 'arrow', 'sandwich', 'consecutive', 'even-odd'].map((k) => `sudoku-${k}`),
       ...tiers.map((t) => `zip-classic-${t}`),
       'zip-walls',

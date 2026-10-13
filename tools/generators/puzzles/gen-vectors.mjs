@@ -81,12 +81,26 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
       }
       return false;
     },
+    king: (sol) => {
+      for (let i = 0; i < 81; i++) for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        const r = Math.floor(i / 9) + dr; const c = (i % 9) + dc;
+        if ((dr || dc) && r >= 0 && r < 9 && c >= 0 && c < 9 && sol[r * 9 + c] === sol[i]) return true;
+      }
+      return false;
+    },
+    nonconsec: (sol) => {
+      for (let i = 0; i < 81; i++) for (const [dr, dc] of [[0, 1], [1, 0]]) {
+        const r = Math.floor(i / 9) + dr; const c = (i % 9) + dc;
+        if (r < 9 && c < 9 && Math.abs(sol[r * 9 + c] - sol[i]) === 1) return true;
+      }
+      return false;
+    },
     windoku: (sol) => [[1, 1], [1, 5], [5, 1], [5, 5]].some(([r0, c0]) => new Set([0, 1, 2].flatMap((a) => [0, 1, 2].map((b) => sol[(r0 + a) * 9 + c0 + b]))).size < 9),
     disjoint: (sol) => [...Array(9).keys()].some((g) => new Set([...Array(9).keys()].map((b) => sol[(Math.floor(b / 3) * 3 + Math.floor(g / 3)) * 9 + (b % 3) * 3 + (g % 3)])).size < 9),
   };
   const plain = generateSudoku(rngFrom('vector-sudoku-plain-for-rules'), 40, 9);
   const plainSolution = solveSudoku(plain).solution;
-  for (const rule of ['diagonal', 'knight', 'windoku', 'disjoint']) {
+  for (const rule of ['diagonal', 'knight', 'king', 'nonconsec', 'windoku', 'disjoint']) {
     const puzzle = generateSudoku(rngFrom(`vector-sudoku-${rule}`), 30, 9, rule);
     const solution = solveSudoku(puzzle).solution;
     cases.push({ name: `9x9 ${rule} valid`, puzzle, solution, valid: true });

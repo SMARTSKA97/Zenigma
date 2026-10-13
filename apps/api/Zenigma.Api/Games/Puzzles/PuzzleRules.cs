@@ -22,7 +22,7 @@ public static class PuzzleRules
     [
         .. new[] { Queens, Tango }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
         .. new[] { "classic", "mini" }.SelectMany(kind => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"sudoku-{kind}-{tier}")),
-        "sudoku-diagonal", "sudoku-knight", "sudoku-windoku", "sudoku-disjoint",
+        "sudoku-diagonal", "sudoku-knight", "sudoku-king", "sudoku-nonconsec", "sudoku-windoku", "sudoku-disjoint",
         .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich" }.Select(kind => $"sudoku-{kind}"),
         .. new[] { Zip, Patches }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
         "zip-walls", "zip-holes", "patches-shapes",
@@ -277,6 +277,24 @@ public static class PuzzleRules
                         int rr = i / n + m[0], cc = i % n + m[1];
                         if (rr >= 0 && rr < n && cc >= 0 && cc < n && cells[rr * n + cc] == cells[i]) return false;
                     }
+                }
+            }
+            else if (rule == "king")
+            {
+                for (var i = 0; i < n * n; i++)
+                    for (var dr = -1; dr <= 1; dr++)
+                        for (var dc = -1; dc <= 1; dc++)
+                        {
+                            int rr = i / n + dr, cc = i % n + dc;
+                            if ((dr != 0 || dc != 0) && rr >= 0 && rr < n && cc >= 0 && cc < n && cells[rr * n + cc] == cells[i]) return false;
+                        }
+            }
+            else if (rule == "nonconsec")
+            {
+                for (var i = 0; i < n * n; i++)
+                {
+                    if (i % n < n - 1 && Math.Abs(cells[i] - cells[i + 1]) == 1) return false;
+                    if (i + n < n * n && Math.Abs(cells[i] - cells[i + n]) == 1) return false;
                 }
             }
             else if (rule == "windoku")

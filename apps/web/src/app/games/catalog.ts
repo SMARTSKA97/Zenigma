@@ -156,6 +156,8 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
     { id: 'windoku', name: 'Windoku', blurb: 'Classic rules, and four extra shaded 3×3 windows hold 1 to 9 too.' },
     { id: 'disjoint', name: 'Disjoint Groups', blurb: 'Classic rules, and the cells in the same spot of every box (all top-lefts, all centres…) hold 1 to 9.' },
     { id: 'knight', name: 'Anti-Knight', blurb: 'Classic rules, and no digit repeats a chess knight\'s move away.' },
+    { id: 'king', name: 'Anti-King', blurb: 'Classic rules, and no digit repeats a king\'s step away, diagonals included.' },
+    { id: 'nonconsec', name: 'Non-consecutive', blurb: 'Classic rules, and cells that share an edge never hold digits one apart.' },
     // The kinds seen at Sudoku championships (World Sudoku and Puzzle Championships), on the way.
     { id: 'killer', name: 'Killer', blurb: 'Cages with a sum: the digits in each cage add up to its number, with no repeats.' },
     { id: 'thermo', name: 'Thermo', blurb: 'Digits climb along every thermometer, from the bulb to the tip.' },
@@ -249,7 +251,6 @@ export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
     { name: 'Themed Words', blurb: 'Animals, food, places: every word in a theme.' },
   ],
   sudoku: [
-    { name: 'Anti-King', blurb: 'Classic rules, and no digit repeats a king’s step away, diagonals included.' },
     { name: 'Renban', blurb: 'Purple lines hold a run of consecutive digits, in any order.' },
     { name: 'Little Killer', blurb: 'Arrows outside the grid give the sum along a diagonal.' },
   ],

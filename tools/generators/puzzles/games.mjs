@@ -17,6 +17,8 @@ export const TRACKS = [
   ...['classic', 'mini'].flatMap((kind) => SUDOKU_TIERS.map((tier) => `sudoku-${kind}-${tier}`)),
   'sudoku-diagonal',
   'sudoku-knight',
+  'sudoku-king',
+  'sudoku-nonconsec',
   ...KIND_RULES.map((k) => `sudoku-${k}`),
   'sudoku-windoku',
   'sudoku-disjoint',
@@ -82,6 +84,8 @@ export function practiceLevel(track, level) {
   if (isKindRule(game.slice(7))) return generateKind(rng, game.slice(7), h);
   if (game === 'sudoku-windoku') return generateSudoku(rng, Math.round(38 - 14 * h), 9, 'windoku');
   if (game === 'sudoku-disjoint') return generateSudoku(rng, Math.round(38 - 14 * h), 9, 'disjoint');
+  if (game === 'sudoku-king') return generateSudoku(rng, Math.round(38 - 12 * h), 9, 'king');
+  if (game === 'sudoku-nonconsec') return generateSudoku(rng, Math.round(38 - 12 * h), 9, 'nonconsec');
   if (game === 'sudoku-knight') return generateSudoku(rng, Math.round(36 - 12 * h), 9, 'knight');
   if (game.startsWith('sudoku-')) return sudokuTierLevel(track, level, rng);
   // Zip with walls the path may not cross, or blocked cells it must go around: one track each, climbing from a few to many.

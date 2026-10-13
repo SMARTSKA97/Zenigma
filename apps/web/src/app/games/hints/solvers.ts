@@ -93,6 +93,19 @@ export function sudokuCandidates(board: number[], i: number, rules?: Rules): num
   if (rules && typeof rules === 'object' && isKindRule(rules.rule)) return kindCandidates(rules as KindData, board, i);
   const taken = new Set(peersOf(i, n, rules).map((j) => board[j]));
   const out: number[] = [];
+  if (rules === 'nonconsec' || (rules && typeof rules === 'object' && rules.rule === 'nonconsec')) {
+    const r = Math.floor(i / n);
+    const c = i % n;
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const rr = r + dr;
+      const cc = c + dc;
+      const v = rr >= 0 && rr < n && cc >= 0 && cc < n ? board[rr * n + cc] : 0;
+      if (v) {
+        taken.add(v - 1);
+        taken.add(v + 1);
+      }
+    }
+  }
   for (let d = 1; d <= n; d++) if (!taken.has(d)) out.push(d);
   return out;
 }

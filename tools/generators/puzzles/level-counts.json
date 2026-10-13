@@ -11,6 +11,8 @@
  "sudoku-mini-insane": 1200,
  "sudoku-diagonal": 2000,
  "sudoku-knight": 2000,
+ "sudoku-king": 1000,
+ "sudoku-nonconsec": 1000,
  "sudoku-windoku": 2000,
  "sudoku-disjoint": 2000,
  "sudoku-even-odd": 1000,

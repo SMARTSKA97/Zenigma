@@ -52,7 +52,8 @@ This is the menu of difficulty ideas for every game. ✅ means it is in the app,
 
 - ✅ Five tiers by number of clues; Mini 6×6 and Classic 9×9.
 - ✅ Extra-rule kinds: Diagonal, Windoku, Disjoint, Anti-Knight, Killer, Thermo, Jigsaw, Arrow, Sandwich, Consecutive, Even-Odd.
-- ⬜ **Anti-King**, **Renban**, **Little Killer**, **Kropki dots**, **Non-consecutive**, **Anti-Knight + Windoku** combos.
+- ✅ **Anti-King**, **Non-consecutive**.
+- ⬜ **Renban**, **Little Killer**, **Kropki dots**, **Anti-Knight + Windoku** combos.
 - ⬜ **Notes off**: a run where pencil marks are disabled.
 - ⬜ **Mistake limit** rule (see strikes above).
 

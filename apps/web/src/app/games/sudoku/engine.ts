@@ -6,7 +6,7 @@ import { isKindRule, KindData, KindRule, modelOf } from './kinds';
  */
 
 /** One more rule on the classic grid: both long diagonals hold 1 to 9 once ('diagonal'), or no digit repeats a chess knight's move away ('knight'). */
-export type SudokuRule = 'diagonal' | 'knight' | 'windoku' | 'disjoint' | KindRule;
+export type SudokuRule = 'diagonal' | 'knight' | 'king' | 'nonconsec' | 'windoku' | 'disjoint' | KindRule;
 
 /** What the rule functions take: a plain rule name, or the puzzle itself (the kinds that carry data need it). */
 export type Rules = SudokuRule | (KindData & { rule?: SudokuRule }) | undefined;
@@ -33,6 +33,7 @@ export interface SudokuPuzzle extends KindData {
   rule?: SudokuRule;
 }
 
+const KING: [number, number][] = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 const KNIGHT: [number, number][] = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
 const peerCache = new Map<string, number[]>();
 
@@ -55,8 +56,8 @@ export function peersOf(i: number, n: number, rules?: Rules): number[] {
     if ((rule === 'windoku' || rule === 'disjoint') && extraGroup(rule, i, n) >= 0 && extraGroup(rule, i, n) === extraGroup(rule, j, n)) out.add(j);
     if (rule === 'diagonal' && ((r === c && rj === cj) || (r + c === n - 1 && rj + cj === n - 1))) out.add(j);
   }
-  if (rule === 'knight') {
-    for (const [dr, dc] of KNIGHT) {
+  if (rule === 'knight' || rule === 'king') {
+    for (const [dr, dc] of rule === 'king' ? KING : KNIGHT) {
       const rr = r + dr;
       const cc = c + dc;
       if (rr >= 0 && rr < n && cc >= 0 && cc < n) out.add(rr * n + cc);
@@ -99,6 +100,17 @@ export function conflicts(board: number[], rules?: Rules): Set<number> {
       if (j > i && board[j] === board[i]) {
         bad.add(i);
         bad.add(j);
+      }
+    }
+  }
+  if (ruleName(rules) === 'nonconsec') {
+    for (let i = 0; i < board.length; i++) {
+      for (const j of [i + 1, i + n]) {
+        if (j >= board.length || (j === i + 1 && (i + 1) % n === 0)) continue;
+        if (board[i] && board[j] && Math.abs(board[i] - board[j]) === 1) {
+          bad.add(i);
+          bad.add(j);
+        }
       }
     }
   }
