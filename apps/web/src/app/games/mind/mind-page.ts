@@ -13,6 +13,7 @@ import { EchoSequence } from './echo-sequence';
 import { GridRecall } from './grid-recall';
 import { MIND_META } from './mind-meta';
 import { MindStore } from './mind-store';
+import { MindDailyService } from './mind-daily';
 import { MindResult } from './mind-util';
 import { MissingLetters } from './missing-letters';
 import { NumberRecall } from './number-recall';
@@ -37,6 +38,7 @@ import { MindGameId } from '../catalog';
 export class MindPage {
   protected readonly nav = inject(BackService);
   protected readonly store = inject(MindStore);
+  protected readonly daily = inject(MindDailyService);
   private readonly haptics = inject(HapticsService);
   private readonly route = inject(ActivatedRoute);
 
@@ -65,6 +67,8 @@ export class MindPage {
   protected finish(r: MindResult): void {
     this.result.set(r);
     this.record.set(this.store.add(this.id(), r.score) && r.score > 0);
+    // A game that is in today's mind set counts for it, wherever it was started from.
+    this.daily.record(this.id(), r.score);
     if (this.record()) this.haptics.success();
     this.stage.set('result');
   }

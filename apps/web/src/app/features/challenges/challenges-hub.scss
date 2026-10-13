@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+h1 {
+  margin: 0 0 0.8rem;
+}
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 1.1rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.tabs button {
+  min-height: 0;
+  padding: 0.55rem 0.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  box-shadow: none;
+}
+.tabs button[aria-selected='true'] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
+}

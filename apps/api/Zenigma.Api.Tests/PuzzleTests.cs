@@ -232,7 +232,7 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
     {
         var (client, device) = await SignUpAsync("Grinder");
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(VectorsDir, "practice-levels.json")));
-        var known = doc.RootElement.EnumerateArray().First(c => c.GetProperty("game").GetString() == "queens" && c.GetProperty("level").GetInt32() == 1);
+        var known = doc.RootElement.EnumerateArray().First(c => c.GetProperty("track").GetString() == "queens-classic-easy" && c.GetProperty("level").GetInt32() == 1);
 
         var mini = doc.RootElement.EnumerateArray().First(c => c.GetProperty("track").GetString() == "sudoku-mini-easy" && c.GetProperty("level").GetInt32() == 1);
 
@@ -240,7 +240,7 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         {
             id = Guid.NewGuid(),
             kind = "puzzle.practice.solved",
-            payload = new { game = "queens", level, solution, elapsedMs = 40_000 },
+            payload = new { game = "queens", variant = "classic-easy", level, solution, elapsedMs = 40_000 },
             clientCreatedAt = DateTimeOffset.UtcNow,
         };
 

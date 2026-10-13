@@ -1,7 +1,12 @@
 @for (line of lines(); track $index) {
   @switch (line.kind) {
     @case ('heading') {
-      <h4>{{ line.text }}</h4>
+      <h4 [attr.data-tone]="line.tone">
+        @if (line.tone) {
+          <span class="ic" aria-hidden="true">{{ icons[line.tone] }}</span>
+        }
+        {{ line.text }}
+      </h4>
     }
     @case ('item') {
       <p class="item"><i aria-hidden="true"></i><span>{{ line.text }}</span></p>

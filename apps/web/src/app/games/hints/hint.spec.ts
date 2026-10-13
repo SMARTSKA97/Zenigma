@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import QUEENS from '../../../../public/levels/queens-0.json';
-import TANGO from '../../../../public/levels/tango-0.json';
+import QUEENS from '../../../../public/levels/queens-classic-hard-0.json';
+import TANGO from '../../../../public/levels/tango-classic-hard-0.json';
 import SUDOKU from '../../../../public/levels/sudoku-classic-insane-0.json';
 import MINI from '../../../../public/levels/sudoku-mini-insane-0.json';
-import ZIP from '../../../../public/levels/zip-0.json';
-import PATCHES from '../../../../public/levels/patches-0.json';
+import ZIP from '../../../../public/levels/zip-classic-hard-0.json';
+import PATCHES from '../../../../public/levels/patches-classic-hard-0.json';
 import * as queens from '../queens/engine';
 import * as tango from '../tango/engine';
 import * as sudoku from '../sudoku/engine';

@@ -17,14 +17,14 @@ public static class PuzzleRules
 
     public static readonly string[] Games = [Queens, Tango, Sudoku, Zip, Patches];
 
-    /// <summary>Practice tracks, each with its own levels: 1000 each, or 200 for every Sudoku kind and difficulty tier (classic or mini, easy to insane).</summary>
+    /// <summary>Practice tracks, each with its own levels (counts in levels/ and level-counts.json): the five difficulty tiers of Queens, Tango, Zip, Patches and Sudoku (classic and mini), and the Sudoku kinds.</summary>
     public static readonly string[] Tracks =
     [
-        Queens, Tango,
+        .. new[] { Queens, Tango }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
         .. new[] { "classic", "mini" }.SelectMany(kind => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"sudoku-{kind}-{tier}")),
         "sudoku-diagonal", "sudoku-knight", "sudoku-windoku", "sudoku-disjoint",
         .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich" }.Select(kind => $"sudoku-{kind}"),
-        Zip, Patches,
+        .. new[] { Zip, Patches }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
     ];
 
     public static string TrackOf(string game, string? variant) => string.IsNullOrEmpty(variant) ? game : $"{game}-{variant}";

@@ -13,16 +13,20 @@
 @if (wheel()) {
   <app-hint-wheel (closed)="wheel.set(false)" />
 }
-<app-challenge-strip />
+<a class="mind-link" routerLink="/mind">
+  <span aria-hidden="true">🧠</span>
+  <span class="txt"><b>Mind training</b><span>15 short games for memory, focus, speed, maths, language and logic. See your brain map.</span></span>
+  <span class="go">Open ›</span>
+</a>
 
-<app-segmented class="tabs" label="Practice" [options]="tabs" [(value)]="tab" />
+<div class="cats" role="tablist" aria-label="Kind of game">
+  @for (c of cats; track c.id) {
+    <button type="button" role="tab" class="cat" [attr.aria-selected]="cat() === c.id" (click)="cat.set(c.id)">{{ c.name }}</button>
+  }
+</div>
 
-@if (tab() === 'play') {
-  @for (cat of playable; track cat.id) {
+  @for (cat of playable(); track cat.id) {
     <h2 class="sec">{{ cat.name }}</h2>
-    @if (cat.id === 'mind') {
-      <app-skill-bars />
-    }
     <div class="grid">
       @for (game of cat.games; track game.id) {
         <a class="game live" [routerLink]="link(game.id)" [style.--h]="game.hue">
@@ -42,47 +46,21 @@
       <a class="speed-chip" [routerLink]="['/speed', g.id]" [style.--h]="g.hue">⚡ {{ g.name }}</a>
     }
   </div>
-  <p class="muted more">More on the way: <button type="button" class="link" (click)="tab.set('soon')">see what is coming soon</button></p>
-} @else {
-  <h2 class="sec">Mind training, still to come</h2>
-  <p class="muted sub2">More short exercises for memory, focus, speed and maths are on the way.</p>
-  @for (s of mind; track s.skill.id) {
-    <section class="skill">
-      <h3>{{ s.skill.emoji }} {{ s.skill.name }}</h3>
-      <div class="mlist">
-        @for (g of s.games; track g.id) {
-          <div class="mrow" [style.--h]="g.hue">
-            <span class="art"><app-glyph [game]="g.id" /></span>
-            <span class="mtext"><b>{{ g.name }}</b><span class="muted">{{ g.blurb }}</span></span>
-          </div>
+
+  <details class="soon">
+    <summary>Coming soon</summary>
+    @if (soonWords.length) {
+      <h3>New word games</h3>
+      <ul>
+        @for (g of soonWords; track g.id) {
+          <li><b>{{ g.name }}</b> <span class="muted">{{ g.blurb }}</span></li>
         }
-      </div>
-    </section>
-  }
-
-  @if (soonWords.length) {
-    <h2 class="sec">New word games</h2>
-    <div class="mlist">
-      @for (g of soonWords; track g.id) {
-        <div class="mrow" [style.--h]="g.hue">
-          <span class="art"><app-glyph [game]="g.id" /></span>
-          <span class="mtext"><b>{{ g.name }}</b><span class="muted">{{ g.blurb }}</span></span>
-        </div>
-      }
-    </div>
-  }
-
-  <h2 class="sec">More kinds of the games you know</h2>
-  <div class="kinds">
-    @for (g of soonKinds; track g.game.id) {
-      <section class="kind-card" [style.--h]="g.game.hue">
-        <h3>More {{ g.game.name }}</h3>
-        <ul>
-          @for (k of g.kinds; track k.name) {
-            <li><b>{{ k.name }}</b> <span class="muted">{{ k.blurb }}</span></li>
-          }
-        </ul>
-      </section>
+      </ul>
     }
-  </div>
-}
+    <h3>More kinds of the games you know</h3>
+    <ul>
+      @for (g of soonKinds; track g.game.id) {
+        <li><b>{{ g.game.name }}</b> <span class="muted">{{ kindNames(g.kinds) }}</span></li>
+      }
+    </ul>
+  </details>

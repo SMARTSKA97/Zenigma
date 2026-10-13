@@ -1,0 +1,110 @@
+<h1>Mind</h1>
+<p class="muted sub">Short games for memory, focus, speed, maths, language and reasoning. See how your skills add up.</p>
+
+<app-mind-daily-panel />
+
+<h2 class="sec">Your skills</h2>
+@if (played() === 0) {
+  <section class="card empty">
+    <p>Play any game below to start filling in your brain map. Each skill is the average of its games, scored against an excellent result.</p>
+  </section>
+}
+<section class="card brain">
+  <div class="score">
+    <span class="num">{{ overall() }}</span>
+    <span class="muted">Overall mark<br />({{ played() }} of {{ list().length === 0 ? 0 : 15 }} games played)</span>
+  </div>
+  <app-brain [marks]="marks()" [(selected)]="selected" />
+  @if (detail(); as d) {
+    <div class="detail" role="status">
+      <h3>{{ d.skill.emoji }} {{ d.skill.name }}: {{ d.mark }} / 100</h3>
+      <p class="muted">{{ d.played }} of {{ d.total }} games played.
+        @if (d.cmp?.average != null) { Average player: {{ d.cmp!.average }}. {{ beat(d.cmp!.percentile) }}. }
+      </p>
+      <div class="chips">
+        @for (g of d.games; track g) {
+          <a class="chip" [routerLink]="['/mind', g]">{{ g.replace('-', ' ') }}</a>
+        }
+      </div>
+    </div>
+  }
+</section>
+
+<h2 class="sec">How you compare</h2>
+<section class="card compare">
+  @if (!auth.signedIn()) {
+    <p>Sign in to see how your marks compare with other players, by age group and gender.</p>
+    <a class="button" routerLink="/account">Sign in</a>
+    <app-radar [axes]="axes()" />
+  } @else if (conn.offlineMode()) {
+    <p class="muted">Offline mode is on, so the comparison is paused. Turn it off in Settings to load it.</p>
+    <app-radar [axes]="axes()" />
+  } @else if (!compare()) {
+    <p class="muted">{{ mindApi.loading() ? 'Loading the comparison…' : 'The comparison is not available right now. It loads once the server is awake.' }}</p>
+    <app-radar [axes]="axes()" />
+  } @else {
+    <div class="pills" role="tablist" aria-label="Compare with">
+      @for (g of compare()!.groups; track g.name; let i = $index) {
+        <button type="button" class="pill" role="tab" [attr.aria-selected]="group() === i" (click)="group.set(i)">{{ g.name }}</button>
+      }
+    </div>
+    @if (active(); as g) {
+      <app-radar [axes]="axes()" [otherLabel]="g.name + ' (average)'" />
+      @if (g.ready) {
+        <ul class="rows">
+          @for (s of skills; track s.id) {
+            @let c = g.skills.find((x) => x.skill === s.id);
+            <li>
+              <span class="nm">{{ s.emoji }} {{ s.name }}</span>
+              <span class="bar" aria-hidden="true"><i class="me" [style.width.%]="marks()[s.id]"></i><i class="avg" [style.left.%]="c?.average ?? 0"></i></span>
+              <span class="val">{{ marks()[s.id] }}<small> vs {{ c?.average ?? '–' }}</small></span>
+            </li>
+          }
+        </ul>
+        <p class="muted note">Based on {{ g.players }} players who chose to share. Marks are out of 100; the line is the group average.</p>
+      } @else {
+        <p class="muted note">Only {{ g.players }} {{ g.players === 1 ? 'player has' : 'players have' }} shared so far. A group needs 5 before its averages are shown, so nobody can be picked out.</p>
+      }
+    }
+    @if (!compare()!.sharing) {
+      <div class="join">
+        <p><b>Count yourself in.</b> Your best marks, with no name, join the age and gender averages. You can switch it off any time in your profile.</p>
+        <button type="button" [disabled]="saving()" (click)="join()">Share my marks</button>
+      </div>
+    }
+    @if (!compare()!.ageGroup || !compare()!.gender) {
+      <p class="muted note">Add your {{ !compare()!.ageGroup && !compare()!.gender ? 'age group and gender' : !compare()!.ageGroup ? 'age group' : 'gender' }} in your <a routerLink="/account">profile</a> to see those groups too.</p>
+    }
+  }
+</section>
+
+<h2 class="sec">Train</h2>
+<div class="pills" role="tablist" aria-label="Skill">
+  <button type="button" class="pill" role="tab" [attr.aria-selected]="filter() === 'all'" (click)="filter.set('all')">All</button>
+  @for (s of skills; track s.id) {
+    <button type="button" class="pill" role="tab" [attr.aria-selected]="filter() === s.id" (click)="filter.set(s.id)">{{ s.emoji }} {{ s.name }}</button>
+  }
+</div>
+<div class="games">
+  @for (row of list(); track row.game.id) {
+    <a class="row" [routerLink]="['/mind', row.game.id]" [style.--h]="row.game.hue">
+      <span class="art"><app-glyph [game]="row.game.id" /></span>
+      <span class="text">
+        <b>{{ row.game.name }}@if (row.today) { <span class="today">Today</span> }</b>
+        <span class="muted">{{ row.game.blurb }}</span>
+      </span>
+      <span class="best">{{ best(row) }}</span>
+    </a>
+  }
+</div>
+
+@if (soon.length) {
+  <details class="soon">
+    <summary>On the way ({{ soon.length }})</summary>
+    <ul>
+      @for (g of soon; track g.id) {
+        <li><b>{{ g.name }}</b> <span class="muted">{{ g.blurb }}</span></li>
+      }
+    </ul>
+  </details>
+}

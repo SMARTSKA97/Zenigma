@@ -1,6 +1,6 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { GAMES, MindGameId, Skill } from '../catalog';
-import { MIND_META } from './mind-meta';
+import { markOf, MIND_META } from './mind-meta';
 
 export interface MindRecord {
   best: number;
@@ -41,6 +41,13 @@ export class MindStore {
   /** How many different mind games have been played, and plays in all. */
   readonly gamesPlayed = computed(() => Object.values(this.all()).filter((r) => r.plays > 0).length);
   readonly totalPlays = computed(() => Object.values(this.all()).reduce((n, r) => n + r.plays, 0));
+
+  /** Each game played: its skill, best mark (0 to 100) and plays. This is what an account uploads for the comparisons. */
+  readonly marks = computed(() =>
+    Object.entries(this.all())
+      .filter(([id, r]) => r.plays > 0 && MIND_META[id as MindGameId])
+      .map(([id, r]) => ({ game: id, skill: MIND_META[id as MindGameId]!.skill, pct: markOf(id, r.best), plays: r.plays })),
+  );
 
   /** A 0 to 100 mark per skill: the average of its games' bests against their "excellent" score. Games not played yet count as 0. */
   readonly skills = computed(() => {

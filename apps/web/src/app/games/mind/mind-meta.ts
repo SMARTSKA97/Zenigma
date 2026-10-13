@@ -32,3 +32,9 @@ export const MIND_META: Partial<Record<MindGameId, MindMeta>> = {
 };
 
 export const isMindPlayable = (id: string): id is MindGameId => id in MIND_META;
+
+/** A score as a 0 to 100 mark against the game's "excellent" score. */
+export const markOf = (id: string, score: number): number => {
+  const meta = MIND_META[id as MindGameId];
+  return meta ? Math.max(0, Math.min(100, Math.round((score / meta.scale) * 100))) : 0;
+};

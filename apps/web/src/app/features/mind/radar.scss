@@ -1,0 +1,62 @@
+:host {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+}
+svg {
+  width: 100%;
+  max-width: 22rem;
+  overflow: visible;
+}
+.ring {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.spoke {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.you {
+  fill: color-mix(in srgb, var(--accent) 28%, transparent);
+  stroke: var(--accent);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+.other {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  stroke-linejoin: round;
+}
+.dot {
+  fill: var(--accent);
+}
+.label {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+}
+.key {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.k {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.5rem;
+  margin-right: 0.3rem;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.k.you {
+  background: var(--accent);
+}
+.k.other {
+  border-top: 2px dashed var(--muted);
+  height: 0;
+}

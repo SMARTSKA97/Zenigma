@@ -51,10 +51,11 @@ export class BackService {
       return parts.length === 3 ? `/games/${b}/${c}/levels` : parts.length === 2 ? this.mapOrPicker(b) : '/';
     }
     if (a === 'speed') return '/practice';
-    if (a === 'daily') return parts.length === 1 ? '/' : '/daily';
+    if (a === 'mind') return parts.length === 1 ? '/' : '/mind';
+    if (a === 'daily') return parts.length === 1 ? '/' : '/challenges';
     if (a === 'rules') return parts.length === 1 ? '/settings' : '/rules';
     if (a === 'ranks' && parts.length > 1) return '/ranks';
-    if (['practice', 'daily', 'ranks', 'settings', 'stats', 'sync-test'].includes(a)) return '/';
+    if (['practice', 'daily', 'challenges', 'ranks', 'settings', 'stats', 'sync-test'].includes(a)) return '/';
     // About, privacy, version history, account…
     return '/settings';
   }

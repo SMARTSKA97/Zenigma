@@ -121,7 +121,13 @@ export class LevelMap {
     const tier = TIERS.find((t) => kind && id === `${kind.id}-${t.id}`);
     return kind && tier ? `${kind.name} · ${tier.name}` : id;
   });
-  protected readonly backLink = computed(() => (this.variant() ? ['/games', this.game()] : ['/practice']));
+  protected readonly backLink = computed(() => {
+    const id = this.variant();
+    if (!id) return ['/practice'];
+    // A difficulty map goes back to its difficulty chooser; a plain kind goes back to the kind chooser.
+    const kind = variantsOf(this.game()).find((v) => v.tiered && id.startsWith(`${v.id}-`));
+    return kind ? ['/games', this.game(), kind.id] : ['/games', this.game()];
+  });
   protected readonly playLink = computed(() => playLink(this.game(), this.variant()));
   private readonly levels = signal<unknown[]>([]);
   protected readonly picked = signal<{ level: number; hard: boolean; difficulty: string; locked: boolean; stars: number; best: number | null; par: number } | null>(null);

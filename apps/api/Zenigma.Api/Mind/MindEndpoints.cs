@@ -20,7 +20,7 @@ public record MindCompareDto(string? AgeGroup, string? Gender, bool Sharing, Lis
 public static partial class MindEndpoints
 {
     public const int MinGroup = 5;
-    public static readonly string[] Skills = ["memory", "focus", "speed", "maths", "language", "reasoning"];
+    public static readonly string[] Skills = ["memory", "attention", "speed", "math", "language", "logic"];
 
     [GeneratedRegex("^[a-z0-9-]{1,32}$")]
     private static partial Regex GamePattern();

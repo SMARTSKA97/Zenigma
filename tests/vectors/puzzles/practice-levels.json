@@ -1,23 +1,11 @@
 [
  {
   "game": "queens",
-  "track": "queens",
+  "track": "queens-classic-easy",
   "level": 1,
   "solution": [
-   1,
-   3,
-   0,
-   4,
-   2
-  ]
- },
- {
-  "game": "queens",
-  "track": "queens",
-  "level": 2,
-  "solution": [
-   4,
    2,
+   4,
    0,
    3,
    1
@@ -25,176 +13,799 @@
  },
  {
   "game": "queens",
-  "track": "queens",
+  "track": "queens-classic-easy",
+  "level": 2,
+  "solution": [
+   0,
+   3,
+   1,
+   4,
+   2
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-easy",
   "level": 3,
   "solution": [
-   1,
-   4,
    2,
    0,
+   4,
+   1,
    3
   ]
  },
  {
   "game": "queens",
-  "track": "queens",
+  "track": "queens-classic-easy",
   "level": 10,
   "solution": [
-   1,
    4,
-   0,
+   1,
    3,
-   5,
+   0,
    2
   ]
  },
  {
   "game": "queens",
-  "track": "queens",
+  "track": "queens-classic-easy",
   "level": 11,
   "solution": [
-   1,
-   3,
+   2,
    0,
+   3,
+   1,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-easy",
+  "level": 150,
+  "solution": [
+   3,
+   1,
    4,
+   0,
    2
   ]
  },
  {
   "game": "queens",
-  "track": "queens",
-  "level": 150,
-  "solution": [
-   6,
-   2,
-   4,
-   1,
-   5,
-   0,
-   3
-  ]
- },
- {
-  "game": "queens",
-  "track": "queens",
+  "track": "queens-classic-easy",
   "level": 500,
   "solution": [
    1,
+   5,
    3,
    0,
-   8,
-   4,
-   6,
    2,
-   5,
-   7
+   4
   ]
  },
  {
   "game": "queens",
-  "track": "queens",
+  "track": "queens-classic-easy",
   "level": 1000,
   "solution": [
+   1,
+   4,
+   2,
+   5,
+   0,
+   3
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 1,
+  "solution": [
+   5,
+   1,
+   4,
+   2,
+   0,
+   3
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 2,
+  "solution": [
+   1,
+   5,
+   3,
+   0,
+   2,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 3,
+  "solution": [
+   4,
+   1,
    3,
    0,
    5,
-   7,
+   2
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 10,
+  "solution": [
+   3,
+   1,
    4,
-   8,
    2,
+   0,
+   5
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 11,
+  "solution": [
+   3,
+   1,
+   4,
+   0,
+   2,
+   5
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 150,
+  "solution": [
+   4,
+   1,
+   3,
+   0,
+   5,
+   2
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 500,
+  "solution": [
+   2,
+   4,
+   1,
+   5,
+   0,
    6,
+   3
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-medium",
+  "level": 1000,
+  "solution": [
+   2,
+   0,
+   3,
+   5,
+   1,
+   6,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-hard",
+  "level": 1,
+  "solution": [
+   1,
+   6,
+   4,
+   0,
+   2,
+   5,
+   3
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-hard",
+  "level": 2,
+  "solution": [
+   5,
+   2,
+   0,
+   4,
+   6,
+   3,
    1
   ]
  },
  {
   "game": "queens",
-  "track": "queens",
-  "level": 1001,
+  "track": "queens-classic-hard",
+  "level": 3,
   "solution": [
-   4,
+   3,
    1,
    5,
    2,
+   0,
+   4,
+   6
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-hard",
+  "level": 10,
+  "solution": [
+   6,
+   0,
+   5,
+   3,
+   1,
+   4,
+   2
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-hard",
+  "level": 11,
+  "solution": [
+   5,
+   2,
+   6,
+   0,
+   3,
+   1,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-hard",
+  "level": 150,
+  "solution": [
+   5,
+   2,
+   6,
+   1,
+   3,
+   0,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-hard",
+  "level": 500,
+  "solution": [
+   4,
+   2,
+   6,
+   0,
+   5,
+   3,
+   7,
+   1
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-hard",
+  "level": 1000,
+  "solution": [
+   1,
+   5,
+   2,
+   7,
+   3,
+   0,
+   6,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-challenging",
+  "level": 1,
+  "solution": [
+   1,
+   4,
+   0,
+   7,
+   5,
+   3,
+   6,
+   2
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-challenging",
+  "level": 2,
+  "solution": [
+   1,
+   5,
+   0,
+   6,
+   4,
+   2,
+   7,
+   3
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-challenging",
+  "level": 3,
+  "solution": [
    6,
    3,
+   0,
+   4,
+   1,
+   7,
+   2,
+   5
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-challenging",
+  "level": 10,
+  "solution": [
+   5,
+   2,
+   6,
+   1,
+   3,
+   7,
+   4,
    0
   ]
  },
  {
   "game": "queens",
-  "track": "queens",
-  "level": 1500,
+  "track": "queens-classic-challenging",
+  "level": 11,
   "solution": [
-   4,
    6,
-   1,
-   8,
-   0,
+   4,
    2,
    7,
+   1,
    5,
+   0,
    3
   ]
  },
  {
-  "game": "tango",
-  "track": "tango",
-  "level": 1,
-  "solution": "mmssmsssmsmmsmsmsmmsmsmsssmmsmmmsmss"
- },
- {
-  "game": "tango",
-  "track": "tango",
-  "level": 2,
-  "solution": "ssmsmmsmmsmsmmsmssmsmssmsmsmmsmssmsm"
- },
- {
-  "game": "tango",
-  "track": "tango",
-  "level": 3,
-  "solution": "mmssmssmmsmsssmmsmmssmsmmmssmsssmmsm"
- },
- {
-  "game": "tango",
-  "track": "tango",
-  "level": 10,
-  "solution": "ssmsmmmmsmssmmsmssssmsmmmmssmsssmmsm"
- },
- {
-  "game": "tango",
-  "track": "tango",
-  "level": 11,
-  "solution": "mssmmsmmsmsssmmssmmssmmsssmsmmsmmssm"
- },
- {
-  "game": "tango",
-  "track": "tango",
+  "game": "queens",
+  "track": "queens-classic-challenging",
   "level": 150,
-  "solution": "smsmsmssmsmmmsmsmsmmsmssssmmsmmmssms"
+  "solution": [
+   7,
+   1,
+   6,
+   3,
+   0,
+   5,
+   2,
+   4
+  ]
  },
  {
-  "game": "tango",
-  "track": "tango",
+  "game": "queens",
+  "track": "queens-classic-challenging",
   "level": 500,
-  "solution": "mmssmsssmmsmmssmmsmmssmssmmssmssmmsm"
+  "solution": [
+   0,
+   8,
+   6,
+   3,
+   7,
+   5,
+   1,
+   4,
+   2
+  ]
  },
  {
-  "game": "tango",
-  "track": "tango",
+  "game": "queens",
+  "track": "queens-classic-challenging",
   "level": 1000,
-  "solution": "mmssmsmssmmsssmmsmsmssmmmsmmsssmmssm"
+  "solution": [
+   3,
+   8,
+   1,
+   7,
+   0,
+   4,
+   6,
+   2,
+   5
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 1,
+  "solution": [
+   1,
+   4,
+   0,
+   5,
+   7,
+   3,
+   8,
+   2,
+   6
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 2,
+  "solution": [
+   6,
+   8,
+   3,
+   0,
+   5,
+   1,
+   4,
+   2,
+   7
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 3,
+  "solution": [
+   7,
+   5,
+   1,
+   4,
+   6,
+   8,
+   2,
+   0,
+   3
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 10,
+  "solution": [
+   6,
+   8,
+   2,
+   5,
+   3,
+   1,
+   7,
+   0,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 11,
+  "solution": [
+   3,
+   0,
+   8,
+   2,
+   4,
+   6,
+   1,
+   7,
+   5
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 150,
+  "solution": [
+   7,
+   5,
+   2,
+   8,
+   3,
+   0,
+   4,
+   1,
+   6
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 500,
+  "solution": [
+   1,
+   8,
+   6,
+   3,
+   5,
+   7,
+   0,
+   2,
+   4
+  ]
+ },
+ {
+  "game": "queens",
+  "track": "queens-classic-insane",
+  "level": 1000,
+  "solution": [
+   2,
+   5,
+   7,
+   3,
+   1,
+   4,
+   8,
+   6,
+   0
+  ]
  },
  {
   "game": "tango",
-  "track": "tango",
-  "level": 1001,
-  "solution": "ssmmsmssmmsmmmssmsmsmssmsmsmmsmmssms"
+  "track": "tango-classic-easy",
+  "level": 1,
+  "solution": "smsmsmmmssmsssmmsmsmmsmsmssmmsmsmssm"
  },
  {
   "game": "tango",
-  "track": "tango",
-  "level": 1500,
-  "solution": "ssmmsmsmmssmmssmmsmssmsmsmmsmsmmssms"
+  "track": "tango-classic-easy",
+  "level": 2,
+  "solution": "mmssmsmmsmssssmsmmsmsmmsmsmssmssmmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-easy",
+  "level": 3,
+  "solution": "mssmsmsmsmmsmsmsmsmssmsmsmmssmsmmsms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-easy",
+  "level": 10,
+  "solution": "mmsmssssmmsmmsmsmsmmssmsssmmsmsmssmm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-easy",
+  "level": 11,
+  "solution": "ssmmsmssmmsmmmssmsssmsmmmmsmssmmssms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-easy",
+  "level": 150,
+  "solution": "smmssmsmssmmmssmmsmsmssmsmsmmsmsmmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-easy",
+  "level": 500,
+  "solution": "mssmsmmssmmssmmssmmsmssmsmsmmssmmsms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-easy",
+  "level": 1000,
+  "solution": "smmssmssmsmmmssmmssmmssmmmsmssmssmms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 1,
+  "solution": "smmsmsmsmmsssmssmmsmmssmmssmmsmssmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 2,
+  "solution": "ssmmsmmmssmsmssmsmssmsmmsmmsmsmmsmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 3,
+  "solution": "mmsmssssmsmmmmssmssmsmsmmsmmssssmsmm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 10,
+  "solution": "mssmmsssmsmmsmsmsmmmsmssmsmsmssmmssm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 11,
+  "solution": "mmssmsmsmssmsmsmsmmssmmssmmsmsssmmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 150,
+  "solution": "ssmsmmmmssmsssmmsmmssmmssmmssmmmsmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 500,
+  "solution": "mmssmsmsmsmsssmmsmmmsmsssmssmmssmmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-medium",
+  "level": 1000,
+  "solution": "mssmmsmssmsmsmmssmsmmsmsmssmmssmmssm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 1,
+  "solution": "msmmssmsmsmssmsmsmmmssmsssmmsmsmssmm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 2,
+  "solution": "smsmsmmsmmssmmssmsssmmsmmsmsmssmssmm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 3,
+  "solution": "msmmssmmsmsssmssmmmsmmssssmsmmsmssmm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 10,
+  "solution": "mssmmssmmsmssmmssmmssmsmsmsmmsmsmssm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 11,
+  "solution": "msmmsssmssmmsmmsmsmssmsmsmmsmsmssmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 150,
+  "solution": "mmssmssmmsmsmssmsmsmmsmsmssmsmssmmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 500,
+  "solution": "msmsmsmsmssmsmsmsmmmssmsssmmsmsmsmms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-hard",
+  "level": 1000,
+  "solution": "msmmssmmsmsssmssmmssmmsmmsmsmssmssmm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 1,
+  "solution": "smssmmsmssmmmsmmssssmsmmmmsmssmsmmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 2,
+  "solution": "mssmsmsmmsmsmsmsmsmssmsmsmmsmssmsmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 3,
+  "solution": "smssmmmsmmssssmmsmsmssmmmsmsmsmmsmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 10,
+  "solution": "smssmmsmmsmsmssmsmssmsmmmmsmssmsmmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 11,
+  "solution": "ssmmsmsmmsmsmmsmssssmsmmmmssmsmssmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 150,
+  "solution": "ssmsmmmssmmsmmsmssssmsmmmmsmsssmmssm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 500,
+  "solution": "mssmsmmsmmsssmmsmssmssmmmssmsmsmmsms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-challenging",
+  "level": 1000,
+  "solution": "smssmmmmssmsmsmmssssmsmmmmsmssssmmsm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 1,
+  "solution": "ssmsmmmsmmssmmssmsssmsmmsmsmsmmmsmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 2,
+  "solution": "mssmsmsmssmmsmmsmsmssmsmmsmmsssmmsms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 3,
+  "solution": "smmssmsmmssmmssmmsmssmmssmmssmmssmms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 10,
+  "solution": "smssmmmssmsmsmmsmsmmsmssssmsmmmsmmss"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 11,
+  "solution": "ssmmsmmmsmsssmssmmmsmmssmsmsmssmssmm"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 150,
+  "solution": "mmsmssmssmsmsmmsmsssmsmmmssmsmsmmsms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 500,
+  "solution": "msmssmsmsmsmmmssmsssmsmmmsmmsssmsmms"
+ },
+ {
+  "game": "tango",
+  "track": "tango-classic-insane",
+  "level": 1000,
+  "solution": "ssmsmmmmsmsssmsmmsssmsmmmmsmssmsmssm"
  },
  {
   "game": "sudoku",
@@ -1314,16 +1925,22 @@
  },
  {
   "game": "zip",
-  "track": "zip",
+  "track": "zip-classic-easy",
   "level": 1,
   "solution": [
+   16,
+   17,
+   18,
+   13,
+   8,
+   7,
+   12,
+   11,
    6,
    1,
    0,
    5,
    10,
-   11,
-   16,
    15,
    20,
    21,
@@ -1335,132 +1952,341 @@
    9,
    4,
    3,
-   2,
-   7,
-   12,
-   17,
-   18,
-   13,
-   8
+   2
   ]
  },
  {
   "game": "zip",
-  "track": "zip",
+  "track": "zip-classic-easy",
   "level": 2,
   "solution": [
-   18,
-   17,
-   22,
-   23,
-   24,
-   19,
+   4,
+   9,
    14,
-   13,
-   12,
-   11,
-   16,
+   19,
+   24,
+   23,
+   22,
    21,
    20,
    15,
-   10,
-   5,
-   0,
-   1,
-   6,
-   7,
-   2,
+   16,
+   17,
+   18,
+   13,
+   8,
    3,
-   4,
-   9,
-   8
+   2,
+   7,
+   6,
+   1,
+   0,
+   5,
+   10,
+   11,
+   12
   ]
  },
  {
   "game": "zip",
-  "track": "zip",
+  "track": "zip-classic-easy",
   "level": 3,
   "solution": [
-   6,
-   1,
-   0,
-   5,
-   10,
-   11,
-   16,
-   15,
-   20,
-   21,
-   22,
-   17,
-   12,
-   13,
-   8,
-   7,
    2,
    3,
    4,
    9,
+   8,
+   13,
    14,
    19,
    24,
    23,
-   18
+   18,
+   17,
+   22,
+   21,
+   20,
+   15,
+   10,
+   5,
+   0,
+   1,
+   6,
+   7,
+   12,
+   11,
+   16
   ]
  },
  {
   "game": "zip",
-  "track": "zip",
+  "track": "zip-classic-easy",
   "level": 10,
   "solution": [
-   0,
-   1,
-   2,
    8,
-   7,
-   6,
-   12,
    13,
-   19,
    18,
-   24,
-   30,
-   31,
-   25,
-   26,
-   32,
-   33,
-   34,
-   35,
-   29,
-   23,
    17,
-   16,
-   22,
-   28,
-   27,
-   21,
-   20,
-   14,
-   15,
-   9,
+   12,
+   7,
+   2,
    3,
    4,
-   5,
+   9,
+   14,
+   19,
+   24,
+   23,
+   22,
+   21,
+   20,
+   15,
+   16,
    11,
+   6,
+   1,
+   0,
+   5,
    10
   ]
  },
  {
   "game": "zip",
-  "track": "zip",
+  "track": "zip-classic-easy",
   "level": 11,
   "solution": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   9,
+   14,
+   19,
+   24,
+   23,
+   22,
+   17,
+   12,
+   11,
+   16,
+   21,
+   20,
+   15,
+   10,
+   5,
+   6,
+   7,
+   8,
+   13,
+   18
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-easy",
+  "level": 150,
+  "solution": [
+   6,
+   5,
+   0,
+   1,
+   2,
+   7,
+   8,
+   3,
+   4,
+   9,
+   14,
+   13,
+   12,
+   17,
+   16,
+   11,
+   10,
+   15,
+   20,
+   21,
+   22,
+   23,
+   18,
+   19,
+   24
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-easy",
+  "level": 500,
+  "solution": [
+   18,
+   13,
    8,
    7,
-   6,
-   11,
    12,
+   17,
+   16,
+   11,
+   6,
+   1,
+   0,
+   5,
+   10,
+   15,
+   20,
+   21,
+   22,
+   23,
+   24,
+   19,
+   14,
+   9,
+   4,
+   3,
+   2
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-easy",
+  "level": 1000,
+  "solution": [
+   18,
+   19,
+   24,
+   23,
+   22,
+   17,
+   16,
+   21,
+   20,
+   15,
+   10,
+   11,
+   6,
+   5,
+   0,
+   1,
+   2,
+   3,
+   8,
+   7,
+   12,
+   13,
+   14,
+   9,
+   4
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 1,
+  "solution": [
+   12,
+   17,
+   16,
+   11,
+   10,
+   15,
+   20,
+   21,
+   22,
+   23,
+   24,
+   19,
+   18,
+   13,
+   14,
+   9,
+   4,
+   3,
+   8,
+   7,
+   2,
+   1,
+   0,
+   5,
+   6
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 2,
+  "solution": [
+   6,
+   5,
+   0,
+   1,
+   2,
+   7,
+   8,
+   3,
+   4,
+   9,
+   14,
+   19,
+   24,
+   23,
+   18,
+   13,
+   12,
+   11,
+   10,
+   15,
+   20,
+   21,
+   22,
+   17,
+   16
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 3,
+  "solution": [
+   18,
+   17,
+   16,
+   15,
+   20,
+   21,
+   22,
+   23,
+   24,
+   19,
+   14,
+   13,
+   12,
+   11,
+   10,
+   5,
+   0,
+   1,
+   6,
+   7,
+   8,
+   9,
+   4,
+   3,
+   2
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 10,
+  "solution": [
+   14,
+   13,
+   18,
+   19,
+   24,
+   23,
+   22,
    17,
    16,
    21,
@@ -1474,32 +2300,487 @@
    3,
    4,
    9,
+   8,
+   7,
+   6,
+   11,
+   12
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 11,
+  "solution": [
+   4,
+   3,
+   8,
+   9,
    14,
    13,
    18,
    19,
    24,
    23,
+   22,
+   21,
+   20,
+   15,
+   10,
+   11,
+   6,
+   5,
+   0,
+   1,
+   2,
+   7,
+   12,
+   17,
+   16
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 150,
+  "solution": [
+   22,
+   23,
+   24,
+   19,
+   14,
+   9,
+   4,
+   3,
+   8,
+   7,
+   2,
+   1,
+   0,
+   5,
+   10,
+   15,
+   20,
+   21,
+   16,
+   17,
+   18,
+   13,
+   12,
+   11,
+   6
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 500,
+  "solution": [
+   9,
+   10,
+   16,
+   22,
+   28,
+   27,
+   26,
+   25,
+   19,
+   13,
+   12,
+   18,
+   24,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   29,
+   23,
+   17,
+   11,
+   5,
+   4,
+   3,
+   2,
+   1,
+   0,
+   6,
+   7,
+   8,
+   14,
+   15,
+   21,
+   20
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-medium",
+  "level": 1000,
+  "solution": [
+   14,
+   20,
+   26,
+   25,
+   19,
+   13,
+   7,
+   1,
+   0,
+   6,
+   12,
+   18,
+   24,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   29,
+   28,
+   27,
+   21,
+   22,
+   23,
+   17,
+   11,
+   5,
+   4,
+   10,
+   16,
+   15,
+   9,
+   3,
+   2,
+   8
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-hard",
+  "level": 1,
+  "solution": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   11,
+   10,
+   9,
+   15,
+   16,
+   17,
+   23,
+   22,
+   21,
+   20,
+   19,
+   13,
+   14,
+   8,
+   7,
+   6,
+   12,
+   18,
+   24,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   29,
+   28,
+   27,
+   26,
+   25
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-hard",
+  "level": 2,
+  "solution": [
+   2,
+   1,
+   0,
+   6,
+   7,
+   8,
+   14,
+   20,
+   26,
+   25,
+   19,
+   13,
+   12,
+   18,
+   24,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   29,
+   23,
+   17,
+   16,
+   10,
+   11,
+   5,
+   4,
+   3,
+   9,
+   15,
+   21,
+   27,
+   28,
    22
   ]
  },
  {
   "game": "zip",
-  "track": "zip",
+  "track": "zip-classic-hard",
+  "level": 3,
+  "solution": [
+   21,
+   20,
+   19,
+   18,
+   24,
+   30,
+   31,
+   25,
+   26,
+   32,
+   33,
+   27,
+   28,
+   34,
+   35,
+   29,
+   23,
+   22,
+   16,
+   17,
+   11,
+   5,
+   4,
+   3,
+   2,
+   8,
+   7,
+   1,
+   0,
+   6,
+   12,
+   13,
+   14,
+   15,
+   9,
+   10
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-hard",
+  "level": 10,
+  "solution": [
+   14,
+   8,
+   7,
+   6,
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   11,
+   17,
+   23,
+   29,
+   35,
+   34,
+   33,
+   32,
+   31,
+   30,
+   24,
+   18,
+   12,
+   13,
+   19,
+   25,
+   26,
+   27,
+   28,
+   22,
+   16,
+   10,
+   9,
+   15,
+   21,
+   20
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-hard",
+  "level": 11,
+  "solution": [
+   14,
+   8,
+   7,
+   13,
+   12,
+   6,
+   0,
+   1,
+   2,
+   3,
+   9,
+   15,
+   16,
+   10,
+   4,
+   5,
+   11,
+   17,
+   23,
+   22,
+   28,
+   29,
+   35,
+   34,
+   33,
+   27,
+   21,
+   20,
+   19,
+   18,
+   24,
+   30,
+   31,
+   32,
+   26,
+   25
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-hard",
   "level": 150,
   "solution": [
+   12,
+   6,
+   0,
+   1,
+   7,
+   8,
+   2,
+   3,
+   4,
+   5,
+   11,
+   17,
+   16,
+   10,
+   9,
+   15,
+   21,
+   22,
+   23,
+   29,
+   35,
+   34,
+   28,
+   27,
+   33,
+   32,
+   26,
+   25,
+   31,
+   30,
+   24,
+   18,
    19,
+   20,
+   14,
+   13
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-hard",
+  "level": 500,
+  "solution": [
+   11,
+   5,
+   4,
+   3,
+   2,
+   8,
+   14,
+   15,
+   9,
+   10,
+   16,
+   17,
+   23,
+   29,
+   35,
+   34,
+   28,
+   22,
+   21,
+   27,
+   33,
+   32,
+   26,
+   20,
+   19,
+   25,
+   31,
+   30,
+   24,
    18,
    12,
    6,
    0,
    1,
    7,
-   13,
+   13
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-hard",
+  "level": 1000,
+  "solution": [
    14,
+   8,
+   7,
+   6,
+   0,
+   1,
+   2,
+   3,
+   9,
+   15,
+   21,
    20,
    26,
    25,
+   19,
+   13,
+   12,
+   18,
    24,
    30,
    31,
@@ -1515,41 +2796,456 @@
    11,
    5,
    4,
-   3,
-   2,
-   8,
-   9,
    10,
    16,
-   15,
-   21,
    22
   ]
  },
  {
   "game": "zip",
-  "track": "zip",
-  "level": 500,
+  "track": "zip-classic-challenging",
+  "level": 1,
   "solution": [
+   14,
+   8,
+   7,
+   6,
+   0,
+   1,
+   2,
+   3,
+   9,
+   15,
+   16,
+   10,
+   4,
+   5,
+   11,
+   17,
+   23,
+   22,
+   21,
+   20,
+   19,
+   13,
+   12,
+   18,
+   24,
+   30,
+   31,
+   25,
+   26,
+   32,
+   33,
+   34,
+   35,
+   29,
+   28,
+   27
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-challenging",
+  "level": 2,
+  "solution": [
+   21,
+   22,
+   23,
+   17,
+   16,
+   15,
+   14,
+   13,
+   7,
+   8,
+   9,
+   10,
+   11,
+   5,
+   4,
+   3,
+   2,
+   1,
+   0,
+   6,
+   12,
+   18,
+   19,
+   20,
+   26,
+   25,
+   24,
+   30,
+   31,
+   32,
+   33,
+   27,
+   28,
+   34,
+   35,
+   29
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-challenging",
+  "level": 3,
+  "solution": [
+   14,
+   13,
+   7,
+   8,
+   2,
+   1,
+   0,
+   6,
+   12,
+   18,
+   24,
+   30,
+   31,
+   32,
+   33,
+   27,
+   26,
+   25,
+   19,
+   20,
+   21,
+   15,
+   9,
+   3,
+   4,
+   5,
+   11,
+   10,
+   16,
+   17,
+   23,
+   29,
+   35,
+   34,
+   28,
+   22
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-challenging",
+  "level": 10,
+  "solution": [
+   26,
+   20,
+   19,
+   25,
+   31,
+   32,
+   33,
+   34,
+   35,
+   29,
+   28,
+   27,
+   21,
+   22,
+   23,
+   17,
+   11,
+   5,
+   4,
+   10,
+   16,
+   15,
+   14,
+   13,
+   7,
+   8,
+   9,
+   3,
+   2,
+   1,
+   0,
+   6,
+   12,
+   18,
+   24,
+   30
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-challenging",
+  "level": 11,
+  "solution": [
+   7,
+   6,
+   0,
+   1,
+   2,
+   8,
+   9,
+   3,
+   4,
+   5,
+   11,
+   10,
+   16,
+   17,
+   23,
+   29,
+   35,
+   34,
+   28,
+   22,
+   21,
+   20,
+   19,
+   25,
+   26,
+   27,
+   33,
+   32,
+   31,
+   30,
+   24,
+   18,
+   12,
+   13,
+   14,
+   15
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-challenging",
+  "level": 150,
+  "solution": [
+   36,
+   43,
+   42,
+   35,
+   28,
+   21,
+   14,
+   7,
+   0,
+   1,
+   8,
+   15,
+   22,
+   29,
+   30,
+   37,
+   44,
+   45,
+   38,
+   31,
+   32,
+   39,
+   46,
+   47,
+   48,
+   41,
    34,
    27,
    20,
+   13,
+   6,
+   5,
+   4,
+   3,
+   2,
+   9,
+   16,
+   23,
+   24,
+   25,
+   18,
+   17,
+   10,
+   11,
+   12,
    19,
+   26,
+   33,
+   40
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-challenging",
+  "level": 500,
+  "solution": [
+   26,
+   19,
+   12,
+   11,
+   10,
+   17,
+   18,
+   25,
+   24,
+   31,
+   32,
+   39,
+   46,
+   47,
+   48,
+   41,
+   40,
+   33,
+   34,
+   27,
+   20,
+   13,
+   6,
+   5,
+   4,
+   3,
+   2,
+   9,
+   16,
+   15,
+   8,
+   1,
+   0,
+   7,
+   14,
+   21,
+   22,
+   23,
+   30,
+   29,
+   28,
+   35,
+   36,
+   37,
+   38,
+   45,
+   44,
+   43,
+   42
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-challenging",
+  "level": 1000,
+  "solution": [
+   32,
+   33,
+   26,
+   27,
+   34,
+   41,
+   48,
+   47,
+   40,
+   39,
+   46,
+   45,
+   44,
+   43,
+   42,
+   35,
+   36,
+   37,
+   38,
+   31,
+   30,
+   23,
+   22,
+   29,
+   28,
+   21,
+   14,
+   15,
+   16,
+   9,
+   8,
+   7,
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   13,
+   20,
+   19,
+   18,
+   25,
+   24,
+   17,
+   10,
+   11,
+   12
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-insane",
+  "level": 1,
+  "solution": [
+   18,
+   17,
+   10,
+   11,
    12,
    13,
    6,
    5,
    4,
-   11,
-   18,
-   17,
-   16,
+   3,
+   2,
+   1,
+   0,
+   7,
+   14,
    15,
    8,
    9,
-   10,
-   3,
-   2,
+   16,
+   23,
+   24,
+   25,
+   26,
+   19,
+   20,
+   27,
+   34,
+   33,
+   40,
+   41,
+   48,
+   47,
+   46,
+   39,
+   32,
+   31,
+   38,
+   45,
+   44,
+   37,
+   30,
+   29,
+   22,
+   21,
+   28,
+   35,
+   42,
+   43,
+   36
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-insane",
+  "level": 2,
+  "solution": [
+   8,
    1,
    0,
    7,
@@ -1561,54 +3257,130 @@
    43,
    36,
    29,
-   22,
-   23,
-   24,
+   30,
+   31,
+   32,
+   33,
+   40,
+   39,
+   38,
+   37,
+   44,
+   45,
+   46,
+   47,
+   48,
+   41,
+   34,
+   27,
+   20,
+   13,
+   6,
+   5,
+   12,
+   11,
+   4,
+   3,
+   2,
+   9,
+   10,
+   17,
+   18,
+   19,
+   26,
    25,
+   24,
+   23,
+   22,
+   15,
+   16
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-insane",
+  "level": 3,
+  "solution": [
+   18,
+   19,
+   12,
+   5,
+   6,
+   13,
+   20,
+   27,
    26,
    33,
-   32,
-   39,
-   40,
+   34,
    41,
    48,
    47,
+   40,
+   39,
    46,
    45,
    38,
    31,
+   32,
+   25,
+   24,
+   23,
    30,
    37,
-   44
-  ]
- },
- {
-  "game": "zip",
-  "track": "zip",
-  "level": 1000,
-  "solution": [
+   44,
+   43,
+   42,
+   35,
    36,
    29,
    28,
-   35,
-   42,
-   43,
-   44,
-   37,
-   30,
-   23,
-   22,
    21,
-   14,
+   22,
    15,
    16,
    17,
    10,
+   11,
+   4,
+   3,
+   2,
    9,
    8,
+   1,
+   0,
+   7,
+   14
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-insane",
+  "level": 10,
+  "solution": [
+   40,
+   41,
+   48,
+   47,
+   46,
+   39,
+   38,
+   45,
+   44,
+   37,
+   36,
+   43,
+   42,
+   35,
+   28,
+   21,
+   14,
    7,
    0,
    1,
+   8,
+   15,
+   16,
+   9,
    2,
    3,
    4,
@@ -1616,23 +3388,77 @@
    6,
    13,
    20,
+   19,
+   26,
    27,
+   34,
+   33,
+   32,
+   31,
+   30,
+   29,
+   22,
+   23,
+   24,
+   25,
+   18,
+   17,
+   10,
+   11,
+   12
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-insane",
+  "level": 11,
+  "solution": [
+   40,
+   33,
    26,
    19,
    12,
    11,
-   18,
-   25,
-   32,
-   33,
+   4,
+   5,
+   6,
+   13,
+   20,
+   27,
    34,
    41,
    48,
    47,
-   40,
-   39,
    46,
    45,
+   44,
+   43,
+   42,
+   35,
+   36,
+   37,
+   30,
+   29,
+   28,
+   21,
+   22,
+   23,
+   16,
+   15,
+   14,
+   7,
+   0,
+   1,
+   8,
+   9,
+   2,
+   3,
+   10,
+   17,
+   18,
+   25,
+   32,
+   39,
    38,
    31,
    24
@@ -1640,161 +3466,230 @@
  },
  {
   "game": "zip",
-  "track": "zip",
-  "level": 1001,
+  "track": "zip-classic-insane",
+  "level": 150,
   "solution": [
-   2,
-   3,
+   6,
+   5,
    4,
+   3,
    10,
-   9,
-   8,
-   14,
+   11,
+   12,
    13,
-   7,
+   20,
+   27,
+   26,
+   19,
+   18,
+   17,
+   24,
+   25,
+   32,
+   31,
+   30,
+   37,
+   36,
+   29,
+   22,
+   23,
+   16,
+   15,
+   8,
+   9,
+   2,
    1,
    0,
-   6,
-   12,
-   18,
-   24,
-   30,
-   31,
-   32,
-   26,
-   25,
-   19,
-   20,
+   7,
+   14,
    21,
-   15,
-   16,
-   22,
    28,
-   27,
-   33,
-   34,
    35,
-   29,
-   23,
-   17,
-   11,
-   5
-  ]
- },
- {
-  "game": "zip",
-  "track": "zip",
-  "level": 1500,
-  "solution": [
-   40,
-   39,
-   38,
-   37,
+   42,
+   43,
    44,
    45,
+   38,
+   39,
    46,
    47,
    48,
    41,
-   34,
+   40,
    33,
-   26,
-   27,
-   20,
-   19,
-   12,
-   13,
-   6,
-   5,
-   4,
-   11,
+   34
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-insane",
+  "level": 500,
+  "solution": [
+   16,
+   15,
+   8,
+   9,
    10,
+   11,
+   4,
    3,
    2,
    1,
    0,
    7,
-   8,
-   9,
-   16,
-   23,
-   24,
-   17,
-   18,
-   25,
-   32,
-   31,
-   30,
-   29,
-   22,
-   15,
    14,
    21,
    28,
    35,
-   36,
+   42,
    43,
-   42
+   36,
+   37,
+   44,
+   45,
+   38,
+   39,
+   46,
+   47,
+   48,
+   41,
+   40,
+   33,
+   34,
+   27,
+   20,
+   13,
+   6,
+   5,
+   12,
+   19,
+   18,
+   17,
+   24,
+   23,
+   22,
+   29,
+   30,
+   31,
+   32,
+   25,
+   26
+  ]
+ },
+ {
+  "game": "zip",
+  "track": "zip-classic-insane",
+  "level": 1000,
+  "solution": [
+   10,
+   3,
+   4,
+   11,
+   12,
+   5,
+   6,
+   13,
+   20,
+   19,
+   26,
+   27,
+   34,
+   33,
+   40,
+   41,
+   48,
+   47,
+   46,
+   45,
+   44,
+   43,
+   42,
+   35,
+   28,
+   29,
+   36,
+   37,
+   30,
+   31,
+   38,
+   39,
+   32,
+   25,
+   18,
+   17,
+   24,
+   23,
+   22,
+   21,
+   14,
+   15,
+   8,
+   7,
+   0,
+   1,
+   2,
+   9,
+   16
   ]
  },
  {
   "game": "patches",
-  "track": "patches",
+  "track": "patches-classic-easy",
   "level": 1,
   "solution": [
    [
     0,
     0,
-    0,
+    1,
     0
    ],
    [
     0,
     1,
+    3,
+    1
+   ],
+   [
+    0,
     2,
+    3,
     2
    ],
    [
     0,
     3,
+    1,
+    3
+   ],
+   [
+    0,
+    4,
     0,
     4
    ],
    [
     1,
-    0,
+    4,
+    3,
+    4
+   ],
+   [
     2,
+    0,
+    3,
     0
    ],
    [
-    1,
-    3,
-    3,
-    4
-   ],
-   [
-    3,
-    0,
-    3,
-    1
-   ],
-   [
-    3,
     2,
+    3,
+    3,
+    3
+   ],
+   [
+    4,
+    0,
     4,
     2
-   ],
-   [
-    4,
-    0,
-    4,
-    0
-   ],
-   [
-    4,
-    1,
-    4,
-    1
    ],
    [
     4,
@@ -1806,7 +3701,7 @@
  },
  {
   "game": "patches",
-  "track": "patches",
+  "track": "patches-classic-easy",
   "level": 2,
   "solution": [
    [
@@ -1818,7 +3713,68 @@
    [
     0,
     2,
+    0,
+    4
+   ],
+   [
     1,
+    2,
+    1,
+    3
+   ],
+   [
+    1,
+    4,
+    1,
+    4
+   ],
+   [
+    2,
+    2,
+    3,
+    2
+   ],
+   [
+    2,
+    3,
+    2,
+    4
+   ],
+   [
+    3,
+    0,
+    4,
+    1
+   ],
+   [
+    3,
+    3,
+    4,
+    4
+   ],
+   [
+    4,
+    2,
+    4,
+    2
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-easy",
+  "level": 3,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    2,
     3
    ],
    [
@@ -1828,10 +3784,425 @@
     4
    ],
    [
+    3,
+    0,
+    4,
+    0
+   ],
+   [
+    3,
+    1,
+    3,
+    2
+   ],
+   [
+    3,
+    3,
+    4,
+    3
+   ],
+   [
+    4,
+    1,
+    4,
+    2
+   ],
+   [
+    4,
+    4,
+    4,
+    4
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-easy",
+  "level": 10,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    1
+   ],
+   [
+    0,
+    2,
+    0,
+    3
+   ],
+   [
+    0,
+    4,
+    0,
+    4
+   ],
+   [
+    1,
+    0,
+    3,
+    1
+   ],
+   [
+    1,
+    2,
+    1,
+    3
+   ],
+   [
+    1,
+    4,
+    2,
+    4
+   ],
+   [
+    2,
+    2,
+    3,
+    3
+   ],
+   [
+    3,
+    4,
+    4,
+    4
+   ],
+   [
+    4,
+    0,
+    4,
+    2
+   ],
+   [
+    4,
+    3,
+    4,
+    3
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-easy",
+  "level": 11,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    1,
+    2
+   ],
+   [
+    0,
+    3,
+    0,
+    4
+   ],
+   [
+    1,
+    3,
+    4,
+    3
+   ],
+   [
+    1,
+    4,
+    2,
+    4
+   ],
+   [
+    2,
+    2,
+    4,
+    2
+   ],
+   [
+    3,
+    0,
+    3,
+    1
+   ],
+   [
+    3,
+    4,
+    4,
+    4
+   ],
+   [
+    4,
+    0,
+    4,
+    1
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-easy",
+  "level": 150,
+  "solution": [
+   [
+    0,
+    0,
+    1,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    4
+   ],
+   [
+    2,
+    0,
+    4,
+    1
+   ],
+   [
+    2,
+    2,
+    4,
+    2
+   ],
+   [
+    3,
+    3,
+    4,
+    3
+   ],
+   [
+    3,
+    4,
+    3,
+    4
+   ],
+   [
+    4,
+    4,
+    4,
+    4
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-easy",
+  "level": 500,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    3
+   ],
+   [
+    0,
+    4,
+    1,
+    4
+   ],
+   [
+    1,
+    0,
+    2,
+    1
+   ],
+   [
+    1,
+    2,
+    4,
+    2
+   ],
+   [
+    1,
+    3,
+    4,
+    3
+   ],
+   [
+    2,
+    4,
+    4,
+    4
+   ],
+   [
+    3,
+    0,
+    3,
+    0
+   ],
+   [
+    3,
+    1,
+    4,
+    1
+   ],
+   [
+    4,
+    0,
+    4,
+    0
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-easy",
+  "level": 1000,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    3
+   ],
+   [
+    0,
+    4,
+    1,
+    5
+   ],
+   [
+    1,
+    0,
+    1,
+    3
+   ],
+   [
+    2,
+    0,
+    4,
+    1
+   ],
+   [
     2,
     2,
     4,
     3
+   ],
+   [
+    2,
+    4,
+    4,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    1
+   ],
+   [
+    5,
+    2,
+    5,
+    3
+   ],
+   [
+    5,
+    4,
+    5,
+    5
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-medium",
+  "level": 1,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    1
+   ],
+   [
+    0,
+    2,
+    1,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    3
+   ],
+   [
+    0,
+    4,
+    0,
+    4
+   ],
+   [
+    1,
+    0,
+    3,
+    1
+   ],
+   [
+    1,
+    4,
+    3,
+    4
+   ],
+   [
+    2,
+    2,
+    4,
+    2
+   ],
+   [
+    3,
+    3,
+    4,
+    3
+   ],
+   [
+    4,
+    0,
+    4,
+    1
+   ],
+   [
+    4,
+    4,
+    4,
+    4
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-medium",
+  "level": 2,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    2,
+    3
+   ],
+   [
+    0,
+    4,
+    3,
+    4
    ],
    [
     3,
@@ -1846,8 +4217,14 @@
     1
    ],
    [
+    3,
+    2,
+    3,
+    3
+   ],
+   [
     4,
-    4,
+    2,
     4,
     4
    ]
@@ -1855,7 +4232,7 @@
  },
  {
   "game": "patches",
-  "track": "patches",
+  "track": "patches-classic-medium",
   "level": 3,
   "solution": [
    [
@@ -1868,61 +4245,37 @@
     0,
     3,
     1,
-    3
-   ],
-   [
-    0,
-    4,
-    1,
     4
    ],
    [
     2,
     0,
-    2,
-    0
-   ],
-   [
-    2,
-    1,
     3,
-    3
-   ],
-   [
-    2,
-    4,
-    3,
-    4
-   ],
-   [
-    3,
-    0,
-    4,
-    0
-   ],
-   [
-    4,
-    1,
-    4,
     2
    ],
    [
-    4,
+    2,
+    3,
+    2,
+    4
+   ],
+   [
+    3,
     3,
     4,
-    3
+    4
    ],
    [
     4,
+    0,
     4,
-    4,
-    4
+    2
    ]
   ]
  },
  {
   "game": "patches",
-  "track": "patches",
+  "track": "patches-classic-medium",
   "level": 10,
   "solution": [
    [
@@ -1934,43 +4287,37 @@
    [
     0,
     3,
-    1,
-    3
+    0,
+    4
    ],
    [
     0,
-    4,
+    5,
     2,
     5
    ],
    [
     1,
     0,
-    3,
-    1
-   ],
-   [
-    1,
-    2,
     2,
     2
    ],
    [
-    2,
+    1,
     3,
     2,
-    3
+    4
    ],
    [
     3,
-    2,
+    0,
     5,
-    3
+    1
    ],
    [
     3,
-    4,
-    4,
+    2,
+    3,
     4
    ],
    [
@@ -1981,28 +4328,308 @@
    ],
    [
     4,
+    2,
+    4,
+    3
+   ],
+   [
+    4,
+    4,
+    5,
+    4
+   ],
+   [
+    5,
+    2,
+    5,
+    3
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-medium",
+  "level": 11,
+  "solution": [
+   [
+    0,
+    0,
+    1,
+    2
+   ],
+   [
+    0,
+    3,
+    1,
+    3
+   ],
+   [
+    0,
+    4,
+    1,
+    4
+   ],
+   [
+    2,
+    0,
+    2,
+    3
+   ],
+   [
+    2,
+    4,
+    3,
+    4
+   ],
+   [
+    3,
+    0,
+    3,
+    1
+   ],
+   [
+    3,
+    2,
+    4,
+    3
+   ],
+   [
+    4,
     0,
     4,
     1
    ],
    [
-    5,
-    0,
-    5,
-    1
-   ],
-   [
-    5,
     4,
-    5,
+    4,
+    4,
     4
    ]
   ]
  },
  {
   "game": "patches",
-  "track": "patches",
-  "level": 11,
+  "track": "patches-classic-medium",
+  "level": 150,
+  "solution": [
+   [
+    0,
+    0,
+    1,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    4
+   ],
+   [
+    0,
+    5,
+    2,
+    5
+   ],
+   [
+    2,
+    0,
+    2,
+    1
+   ],
+   [
+    2,
+    2,
+    2,
+    2
+   ],
+   [
+    3,
+    0,
+    4,
+    2
+   ],
+   [
+    3,
+    3,
+    5,
+    4
+   ],
+   [
+    3,
+    5,
+    3,
+    5
+   ],
+   [
+    4,
+    5,
+    4,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    1
+   ],
+   [
+    5,
+    2,
+    5,
+    2
+   ],
+   [
+    5,
+    5,
+    5,
+    5
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-medium",
+  "level": 500,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    0,
+    5
+   ],
+   [
+    1,
+    2,
+    3,
+    3
+   ],
+   [
+    1,
+    4,
+    1,
+    5
+   ],
+   [
+    2,
+    4,
+    5,
+    4
+   ],
+   [
+    2,
+    5,
+    4,
+    5
+   ],
+   [
+    3,
+    0,
+    5,
+    0
+   ],
+   [
+    3,
+    1,
+    4,
+    1
+   ],
+   [
+    4,
+    2,
+    5,
+    3
+   ],
+   [
+    5,
+    1,
+    5,
+    1
+   ],
+   [
+    5,
+    5,
+    5,
+    5
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-medium",
+  "level": 1000,
+  "solution": [
+   [
+    0,
+    0,
+    1,
+    0
+   ],
+   [
+    0,
+    1,
+    2,
+    2
+   ],
+   [
+    0,
+    3,
+    0,
+    4
+   ],
+   [
+    0,
+    5,
+    3,
+    5
+   ],
+   [
+    1,
+    3,
+    3,
+    4
+   ],
+   [
+    2,
+    0,
+    4,
+    0
+   ],
+   [
+    3,
+    1,
+    4,
+    1
+   ],
+   [
+    3,
+    2,
+    4,
+    2
+   ],
+   [
+    4,
+    3,
+    5,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    2
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 1,
   "solution": [
    [
     0,
@@ -2013,6 +4640,353 @@
    [
     0,
     2,
+    2,
+    3
+   ],
+   [
+    0,
+    4,
+    2,
+    4
+   ],
+   [
+    0,
+    5,
+    3,
+    5
+   ],
+   [
+    2,
+    0,
+    2,
+    1
+   ],
+   [
+    3,
+    0,
+    4,
+    1
+   ],
+   [
+    3,
+    2,
+    5,
+    3
+   ],
+   [
+    3,
+    4,
+    5,
+    4
+   ],
+   [
+    4,
+    5,
+    5,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    1
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 2,
+  "solution": [
+   [
+    0,
+    0,
+    1,
+    0
+   ],
+   [
+    0,
+    1,
+    2,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    4
+   ],
+   [
+    0,
+    5,
+    2,
+    5
+   ],
+   [
+    2,
+    0,
+    4,
+    0
+   ],
+   [
+    3,
+    1,
+    5,
+    1
+   ],
+   [
+    3,
+    2,
+    4,
+    4
+   ],
+   [
+    3,
+    5,
+    5,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    0
+   ],
+   [
+    5,
+    2,
+    5,
+    4
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 3,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    0
+   ],
+   [
+    0,
+    1,
+    2,
+    2
+   ],
+   [
+    0,
+    3,
+    0,
+    4
+   ],
+   [
+    0,
+    5,
+    3,
+    5
+   ],
+   [
+    1,
+    3,
+    3,
+    4
+   ],
+   [
+    3,
+    0,
+    3,
+    2
+   ],
+   [
+    4,
+    0,
+    4,
+    3
+   ],
+   [
+    4,
+    4,
+    4,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    2
+   ],
+   [
+    5,
+    3,
+    5,
+    4
+   ],
+   [
+    5,
+    5,
+    5,
+    5
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 10,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    1
+   ],
+   [
+    0,
+    2,
+    3,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    4
+   ],
+   [
+    0,
+    5,
+    2,
+    5
+   ],
+   [
+    1,
+    0,
+    1,
+    0
+   ],
+   [
+    1,
+    1,
+    4,
+    1
+   ],
+   [
+    2,
+    0,
+    4,
+    0
+   ],
+   [
+    3,
+    3,
+    5,
+    4
+   ],
+   [
+    3,
+    5,
+    3,
+    5
+   ],
+   [
+    4,
+    2,
+    5,
+    2
+   ],
+   [
+    4,
+    5,
+    5,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    1
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 11,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    2,
+    3
+   ],
+   [
+    0,
+    4,
+    1,
+    5
+   ],
+   [
+    2,
+    4,
+    2,
+    5
+   ],
+   [
+    3,
+    0,
+    4,
+    2
+   ],
+   [
+    3,
+    3,
+    4,
+    3
+   ],
+   [
+    3,
+    4,
+    3,
+    5
+   ],
+   [
+    4,
+    4,
+    5,
+    5
+   ],
+   [
+    5,
+    0,
+    5,
+    1
+   ],
+   [
+    5,
+    2,
+    5,
+    3
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 150,
+  "solution": [
+   [
+    0,
+    0,
     1,
     3
    ],
@@ -2020,49 +4994,650 @@
     0,
     4,
     0,
-    4
+    6
    ],
    [
     1,
     4,
-    2,
+    5,
     4
+   ],
+   [
+    1,
+    5,
+    2,
+    5
+   ],
+   [
+    1,
+    6,
+    2,
+    6
    ],
    [
     2,
     0,
+    3,
+    3
+   ],
+   [
+    3,
+    5,
+    3,
+    6
+   ],
+   [
+    4,
+    0,
+    5,
+    3
+   ],
+   [
+    4,
+    5,
+    6,
+    6
+   ],
+   [
+    6,
+    0,
+    6,
+    4
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 500,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    1,
+    4
+   ],
+   [
+    0,
+    5,
+    3,
+    6
+   ],
+   [
+    2,
+    2,
+    3,
+    3
+   ],
+   [
+    2,
+    4,
+    3,
+    4
+   ],
+   [
+    3,
+    0,
+    5,
+    1
+   ],
+   [
+    4,
+    2,
+    6,
+    3
+   ],
+   [
+    4,
+    4,
+    4,
+    5
+   ],
+   [
+    4,
+    6,
+    5,
+    6
+   ],
+   [
+    5,
+    4,
+    5,
+    4
+   ],
+   [
+    5,
+    5,
+    6,
+    5
+   ],
+   [
+    6,
+    0,
+    6,
+    1
+   ],
+   [
+    6,
+    4,
+    6,
+    4
+   ],
+   [
+    6,
+    6,
+    6,
+    6
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-hard",
+  "level": 1000,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    2
+   ],
+   [
+    0,
+    3,
+    1,
+    6
+   ],
+   [
+    1,
+    0,
+    4,
+    0
+   ],
+   [
+    1,
+    1,
+    1,
+    2
+   ],
+   [
+    2,
+    1,
     3,
     2
    ],
    [
     2,
     3,
+    3,
+    6
+   ],
+   [
     4,
+    1,
+    5,
+    4
+   ],
+   [
+    4,
+    5,
+    4,
+    6
+   ],
+   [
+    5,
+    0,
+    5,
+    0
+   ],
+   [
+    5,
+    5,
+    6,
+    5
+   ],
+   [
+    5,
+    6,
+    5,
+    6
+   ],
+   [
+    6,
+    0,
+    6,
+    4
+   ],
+   [
+    6,
+    6,
+    6,
+    6
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-challenging",
+  "level": 1,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    4
+   ],
+   [
+    0,
+    5,
+    0,
+    6
+   ],
+   [
+    1,
+    0,
+    3,
+    1
+   ],
+   [
+    1,
+    2,
+    3,
+    3
+   ],
+   [
+    1,
+    4,
+    1,
+    6
+   ],
+   [
+    2,
+    4,
+    4,
+    5
+   ],
+   [
+    2,
+    6,
+    5,
+    6
+   ],
+   [
+    4,
+    0,
+    5,
+    2
+   ],
+   [
+    4,
+    3,
+    5,
+    3
+   ],
+   [
+    5,
+    4,
+    5,
+    5
+   ],
+   [
+    6,
+    0,
+    6,
+    3
+   ],
+   [
+    6,
+    4,
+    6,
+    4
+   ],
+   [
+    6,
+    5,
+    6,
+    6
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-challenging",
+  "level": 2,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    2,
+    3
+   ],
+   [
+    0,
+    4,
+    0,
+    5
+   ],
+   [
+    0,
+    6,
+    3,
+    6
+   ],
+   [
+    1,
+    4,
+    2,
+    5
+   ],
+   [
+    3,
+    0,
+    5,
+    1
+   ],
+   [
+    3,
+    2,
+    3,
     3
    ],
    [
     3,
     4,
+    5,
+    5
+   ],
+   [
     4,
+    2,
+    5,
+    3
+   ],
+   [
+    4,
+    6,
+    5,
+    6
+   ],
+   [
+    6,
+    0,
+    6,
+    3
+   ],
+   [
+    6,
+    4,
+    6,
     4
    ],
    [
-    4,
+    6,
+    5,
+    6,
+    6
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-challenging",
+  "level": 3,
+  "solution": [
+   [
+    0,
+    0,
+    1,
+    3
+   ],
+   [
     0,
     4,
-    0
+    3,
+    4
+   ],
+   [
+    0,
+    5,
+    3,
+    5
+   ],
+   [
+    0,
+    6,
+    3,
+    6
+   ],
+   [
+    2,
+    0,
+    4,
+    1
+   ],
+   [
+    2,
+    2,
+    5,
+    3
    ],
    [
     4,
-    1,
     4,
+    4,
+    6
+   ],
+   [
+    5,
+    0,
+    6,
+    1
+   ],
+   [
+    5,
+    4,
+    6,
+    5
+   ],
+   [
+    5,
+    6,
+    6,
+    6
+   ],
+   [
+    6,
+    2,
+    6,
+    3
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-challenging",
+  "level": 10,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    4,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    4
+   ],
+   [
+    0,
+    5,
+    4,
+    5
+   ],
+   [
+    0,
+    6,
+    0,
+    6
+   ],
+   [
+    1,
+    6,
+    2,
+    6
+   ],
+   [
+    3,
+    0,
+    4,
+    1
+   ],
+   [
+    3,
+    3,
+    6,
+    4
+   ],
+   [
+    3,
+    6,
+    6,
+    6
+   ],
+   [
+    5,
+    0,
+    5,
+    1
+   ],
+   [
+    5,
+    2,
+    5,
+    2
+   ],
+   [
+    5,
+    5,
+    6,
+    5
+   ],
+   [
+    6,
+    0,
+    6,
+    1
+   ],
+   [
+    6,
+    2,
+    6,
     2
    ]
   ]
  },
  {
   "game": "patches",
-  "track": "patches",
+  "track": "patches-classic-challenging",
+  "level": 11,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    1,
+    5
+   ],
+   [
+    0,
+    6,
+    2,
+    6
+   ],
+   [
+    2,
+    2,
+    2,
+    4
+   ],
+   [
+    2,
+    5,
+    6,
+    5
+   ],
+   [
+    3,
+    0,
+    3,
+    4
+   ],
+   [
+    3,
+    6,
+    5,
+    6
+   ],
+   [
+    4,
+    0,
+    4,
+    3
+   ],
+   [
+    4,
+    4,
+    4,
+    4
+   ],
+   [
+    5,
+    0,
+    6,
+    3
+   ],
+   [
+    5,
+    4,
+    6,
+    4
+   ],
+   [
+    6,
+    6,
+    6,
+    6
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-challenging",
   "level": 150,
   "solution": [
    [
@@ -2074,68 +5649,44 @@
    [
     0,
     2,
-    3,
+    2,
     3
    ],
    [
     0,
     4,
-    2,
-    5
+    4,
+    4
    ],
    [
     0,
-    6,
-    4,
+    5,
+    3,
     6
    ],
    [
     3,
     0,
     5,
-    0
-   ],
-   [
-    3,
-    1,
-    3,
     1
    ],
    [
     3,
-    4,
-    5,
-    4
-   ],
-   [
-    3,
-    5,
-    4,
-    5
-   ],
-   [
-    4,
-    1,
+    2,
     6,
-    2
-   ],
-   [
-    4,
-    3,
-    4,
     3
    ],
    [
-    5,
-    3,
-    5,
-    3
-   ],
-   [
-    5,
+    4,
     5,
     6,
     6
+   ],
+   [
+    5,
+    4,
+    6,
+    4
    ],
    [
     6,
@@ -2145,106 +5696,622 @@
    ],
    [
     6,
-    3,
+    1,
     6,
-    4
+    1
    ]
   ]
  },
  {
   "game": "patches",
-  "track": "patches",
+  "track": "patches-classic-challenging",
   "level": 500,
   "solution": [
    [
     0,
     0,
-    1,
-    2
+    0,
+    1
    ],
    [
     0,
-    3,
-    4,
-    3
-   ],
-   [
-    0,
-    4,
+    2,
     2,
     4
    ],
    [
     0,
     5,
-    0,
+    2,
     7
    ],
    [
     1,
+    0,
+    2,
+    0
+   ],
+   [
+    1,
+    1,
     5,
+    1
+   ],
+   [
     3,
+    0,
+    7,
+    0
+   ],
+   [
+    3,
+    2,
+    5,
+    4
+   ],
+   [
+    3,
+    5,
+    5,
     7
    ],
    [
-    2,
-    0,
-    4,
-    2
-   ],
-   [
-    3,
-    4,
+    6,
+    1,
     7,
     4
    ],
    [
-    4,
+    6,
     5,
-    4,
+    7,
     6
    ],
    [
-    4,
+    6,
     7,
-    5,
+    7,
     7
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-challenging",
+  "level": 1000,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
    ],
    [
-    5,
     0,
-    7,
+    2,
+    2,
     2
    ],
    [
-    5,
+    0,
     3,
-    6,
-    3
+    1,
+    5
    ],
    [
-    5,
-    5,
-    5,
-    6
-   ],
-   [
+    0,
     6,
-    5,
-    6,
+    2,
     7
    ],
    [
-    7,
+    2,
     3,
-    7,
-    3
+    2,
+    4
    ],
    [
+    2,
+    5,
+    5,
+    5
+   ],
+   [
+    3,
+    0,
+    3,
+    4
+   ],
+   [
+    3,
+    6,
     7,
+    6
+   ],
+   [
+    3,
+    7,
+    7,
+    7
+   ],
+   [
+    4,
+    0,
+    6,
+    2
+   ],
+   [
+    4,
+    3,
+    5,
+    4
+   ],
+   [
+    6,
+    3,
+    7,
+    4
+   ],
+   [
+    6,
     5,
     7,
     5
+   ],
+   [
+    7,
+    0,
+    7,
+    2
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-insane",
+  "level": 1,
+  "solution": [
+   [
+    0,
+    0,
+    1,
+    3
+   ],
+   [
+    0,
+    4,
+    3,
+    4
+   ],
+   [
+    0,
+    5,
+    3,
+    6
+   ],
+   [
+    0,
+    7,
+    3,
+    7
+   ],
+   [
+    2,
+    0,
+    5,
+    1
+   ],
+   [
+    2,
+    2,
+    5,
+    3
+   ],
+   [
+    4,
+    4,
+    5,
+    5
+   ],
+   [
+    4,
+    6,
+    4,
+    7
+   ],
+   [
+    5,
+    6,
+    5,
+    7
+   ],
+   [
+    6,
+    0,
+    7,
+    1
+   ],
+   [
+    6,
+    2,
+    7,
+    2
+   ],
+   [
+    6,
+    3,
+    7,
+    6
+   ],
+   [
+    6,
+    7,
+    7,
+    7
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-insane",
+  "level": 2,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    1
+   ],
+   [
+    0,
+    2,
+    1,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    5
+   ],
+   [
+    0,
+    6,
+    2,
+    7
+   ],
+   [
+    1,
+    0,
+    4,
+    0
+   ],
+   [
+    1,
+    1,
+    3,
+    1
+   ],
+   [
+    2,
+    2,
+    3,
+    2
+   ],
+   [
+    3,
+    3,
+    4,
+    6
+   ],
+   [
+    3,
+    7,
+    6,
+    7
+   ],
+   [
+    4,
+    1,
+    7,
+    2
+   ],
+   [
+    5,
+    0,
+    7,
+    0
+   ],
+   [
+    5,
+    3,
+    5,
+    5
+   ],
+   [
+    5,
+    6,
+    5,
+    6
+   ],
+   [
+    6,
+    3,
+    7,
+    5
+   ],
+   [
+    6,
+    6,
+    7,
+    6
+   ],
+   [
+    7,
+    7,
+    7,
+    7
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-insane",
+  "level": 3,
+  "solution": [
+   [
+    0,
+    0,
+    0,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    5
+   ],
+   [
+    0,
+    6,
+    3,
+    7
+   ],
+   [
+    1,
+    0,
+    1,
+    2
+   ],
+   [
+    2,
+    0,
+    3,
+    1
+   ],
+   [
+    2,
+    2,
+    4,
+    2
+   ],
+   [
+    3,
+    3,
+    4,
+    3
+   ],
+   [
+    3,
+    4,
+    4,
+    5
+   ],
+   [
+    4,
+    0,
+    4,
+    1
+   ],
+   [
+    4,
+    6,
+    4,
+    7
+   ],
+   [
+    5,
+    0,
+    7,
+    2
+   ],
+   [
+    5,
+    3,
+    6,
+    6
+   ],
+   [
+    5,
+    7,
+    6,
+    7
+   ],
+   [
+    7,
+    3,
+    7,
+    4
+   ],
+   [
+    7,
+    5,
+    7,
+    6
+   ],
+   [
+    7,
+    7,
+    7,
+    7
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-insane",
+  "level": 10,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    1
+   ],
+   [
+    0,
+    2,
+    2,
+    4
+   ],
+   [
+    0,
+    5,
+    1,
+    7
+   ],
+   [
+    2,
+    5,
+    5,
+    5
+   ],
+   [
+    2,
+    6,
+    5,
+    6
+   ],
+   [
+    2,
+    7,
+    5,
+    7
+   ],
+   [
+    3,
+    0,
+    4,
+    3
+   ],
+   [
+    3,
+    4,
+    6,
+    4
+   ],
+   [
+    5,
+    0,
+    7,
+    2
+   ],
+   [
+    5,
+    3,
+    6,
+    3
+   ],
+   [
+    6,
+    5,
+    7,
+    7
+   ],
+   [
+    7,
+    3,
+    7,
+    4
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-insane",
+  "level": 11,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    5
+   ],
+   [
+    0,
+    6,
+    0,
+    6
+   ],
+   [
+    0,
+    7,
+    0,
+    7
+   ],
+   [
+    1,
+    6,
+    4,
+    7
+   ],
+   [
+    3,
+    0,
+    5,
+    2
+   ],
+   [
+    3,
+    3,
+    5,
+    5
+   ],
+   [
+    5,
+    6,
+    6,
+    7
+   ],
+   [
+    6,
+    0,
+    7,
+    3
+   ],
+   [
+    6,
+    4,
+    6,
+    4
+   ],
+   [
+    6,
+    5,
+    7,
+    5
+   ],
+   [
+    7,
+    4,
+    7,
+    4
    ],
    [
     7,
@@ -2256,286 +6323,292 @@
  },
  {
   "game": "patches",
-  "track": "patches",
+  "track": "patches-classic-insane",
+  "level": 150,
+  "solution": [
+   [
+    0,
+    0,
+    3,
+    1
+   ],
+   [
+    0,
+    2,
+    2,
+    4
+   ],
+   [
+    0,
+    5,
+    0,
+    7
+   ],
+   [
+    1,
+    5,
+    3,
+    7
+   ],
+   [
+    3,
+    2,
+    6,
+    2
+   ],
+   [
+    3,
+    3,
+    5,
+    4
+   ],
+   [
+    4,
+    0,
+    5,
+    1
+   ],
+   [
+    4,
+    5,
+    4,
+    7
+   ],
+   [
+    5,
+    5,
+    6,
+    6
+   ],
+   [
+    5,
+    7,
+    7,
+    7
+   ],
+   [
+    6,
+    0,
+    7,
+    1
+   ],
+   [
+    6,
+    3,
+    6,
+    3
+   ],
+   [
+    6,
+    4,
+    7,
+    4
+   ],
+   [
+    7,
+    2,
+    7,
+    3
+   ],
+   [
+    7,
+    5,
+    7,
+    6
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-insane",
+  "level": 500,
+  "solution": [
+   [
+    0,
+    0,
+    2,
+    2
+   ],
+   [
+    0,
+    3,
+    2,
+    5
+   ],
+   [
+    0,
+    6,
+    3,
+    7
+   ],
+   [
+    3,
+    0,
+    5,
+    2
+   ],
+   [
+    3,
+    3,
+    5,
+    3
+   ],
+   [
+    3,
+    4,
+    6,
+    5
+   ],
+   [
+    4,
+    6,
+    7,
+    6
+   ],
+   [
+    4,
+    7,
+    4,
+    7
+   ],
+   [
+    5,
+    7,
+    6,
+    7
+   ],
+   [
+    6,
+    0,
+    7,
+    2
+   ],
+   [
+    6,
+    3,
+    6,
+    3
+   ],
+   [
+    7,
+    3,
+    7,
+    4
+   ],
+   [
+    7,
+    5,
+    7,
+    5
+   ],
+   [
+    7,
+    7,
+    7,
+    7
+   ]
+  ]
+ },
+ {
+  "game": "patches",
+  "track": "patches-classic-insane",
   "level": 1000,
   "solution": [
    [
     0,
     0,
     1,
-    2
-   ],
-   [
-    0,
-    3,
-    2,
-    5
-   ],
-   [
-    0,
-    6,
-    3,
-    7
-   ],
-   [
-    2,
-    0,
-    3,
-    2
-   ],
-   [
-    3,
-    3,
-    3,
-    4
-   ],
-   [
-    3,
-    5,
-    6,
-    5
-   ],
-   [
-    4,
-    0,
-    6,
-    2
-   ],
-   [
-    4,
-    3,
-    5,
-    4
-   ],
-   [
-    4,
-    6,
-    4,
-    7
-   ],
-   [
-    5,
-    6,
-    6,
-    7
-   ],
-   [
-    6,
-    3,
-    6,
     3
    ],
    [
-    6,
+    0,
     4,
-    6,
-    4
-   ],
-   [
-    7,
-    0,
-    7,
-    3
-   ],
-   [
-    7,
-    4,
-    7,
-    5
-   ],
-   [
-    7,
-    6,
-    7,
-    7
-   ]
-  ]
- },
- {
-  "game": "patches",
-  "track": "patches",
-  "level": 1001,
-  "solution": [
-   [
-    0,
-    0,
-    2,
-    1
-   ],
-   [
-    0,
-    2,
-    1,
+    3,
     5
    ],
    [
     0,
     6,
-    1,
+    3,
     6
    ],
    [
-    2,
-    2,
+    0,
+    7,
+    0,
+    7
+   ],
+   [
+    1,
+    7,
     4,
-    3
+    7
    ],
    [
     2,
-    4,
-    3,
-    5
-   ],
-   [
-    2,
-    6,
-    4,
-    6
-   ],
-   [
-    3,
     0,
     5,
     0
    ],
    [
+    2,
+    1,
     3,
-    1,
-    4,
-    1
-   ],
-   [
-    4,
-    4,
-    6,
-    5
-   ],
-   [
-    5,
-    1,
-    6,
     2
    ],
    [
-    5,
+    2,
     3,
     6,
     3
    ],
    [
-    5,
-    6,
-    6,
-    6
-   ],
-   [
-    6,
-    0,
-    6,
-    0
-   ]
-  ]
- },
- {
-  "game": "patches",
-  "track": "patches",
-  "level": 1500,
-  "solution": [
-   [
-    0,
-    0,
-    3,
-    1
-   ],
-   [
-    0,
-    2,
-    2,
-    4
-   ],
-   [
-    0,
-    5,
-    2,
-    6
-   ],
-   [
-    0,
-    7,
-    0,
-    7
-   ],
-   [
+    4,
     1,
-    7,
-    3,
-    7
-   ],
-   [
-    3,
-    2,
-    6,
-    3
-   ],
-   [
-    3,
-    4,
     5,
-    6
+    2
    ],
    [
     4,
-    0,
-    5,
-    1
-   ],
-   [
     4,
-    7,
     4,
-    7
-   ],
-   [
-    5,
-    7,
-    7,
-    7
-   ],
-   [
-    6,
-    0,
-    7,
-    1
-   ],
-   [
-    6,
-    4,
-    7,
-    4
-   ],
-   [
-    6,
-    5,
-    6,
     5
    ],
    [
+    4,
     6,
-    6,
-    6,
+    4,
     6
    ],
    [
+    5,
+    4,
+    5,
+    7
+   ],
+   [
+    6,
+    0,
     7,
-    2,
+    0
+   ],
+   [
+    6,
+    1,
+    7,
+    2
+   ],
+   [
+    6,
+    4,
+    7,
+    7
+   ],
+   [
+    7,
+    3,
     7,
     3
-   ],
-   [
-    7,
-    5,
-    7,
-    6
    ]
   ]
  }

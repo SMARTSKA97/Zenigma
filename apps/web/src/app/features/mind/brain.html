@@ -1,0 +1,51 @@
+<svg viewBox="0 0 320 240" role="group" aria-label="Your brain, coloured by skill">
+  <defs>
+    <clipPath id="cortex">
+      <path d="M34 138 C24 96 52 46 104 34 C138 16 196 12 236 34 C282 50 306 98 292 138 C284 160 262 168 244 164 C226 160 214 176 196 182 C176 190 140 192 112 184 C80 176 44 168 34 138 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- brainstem and cerebellum sit behind the cortex -->
+  <path class="stem" d="M178 184 L188 226 L210 226 L206 184 Z" />
+  <g class="cerebellum" role="button" tabindex="0" [attr.aria-label]="'Speed: ' + (marks()['speed'] ?? 0) + ' out of 100'" [class.on]="selected() === 'speed'" (click)="pick('speed')" (keydown.enter)="pick('speed')" (keydown.space)="pick('speed'); $event.preventDefault()">
+    <path [style.fill]="tint()['speed']" d="M214 182 C230 170 270 168 292 178 C304 196 284 220 252 222 C230 222 212 204 214 182 Z" />
+    <path class="fold" d="M226 186 C246 180 272 180 290 186 M224 196 C246 190 274 190 294 196 M228 207 C248 201 270 201 286 207" />
+  </g>
+
+  <g clip-path="url(#cortex)">
+    <path class="lobe" role="button" tabindex="0" [attr.aria-label]="'Reasoning: ' + (marks()['logic'] ?? 0) + ' out of 100'" [class.on]="selected() === 'logic'" [style.fill]="tint()['logic']" (click)="pick('logic')" (keydown.enter)="pick('logic')" (keydown.space)="pick('logic'); $event.preventDefault()"
+      d="M0 0 L162 0 L162 14 C150 50 144 90 140 118 C110 140 80 152 46 158 L0 160 Z" />
+    <path class="lobe" role="button" tabindex="0" [attr.aria-label]="'Maths: ' + (marks()['math'] ?? 0) + ' out of 100'" [class.on]="selected() === 'math'" [style.fill]="tint()['math']" (click)="pick('math')" (keydown.enter)="pick('math')" (keydown.space)="pick('math'); $event.preventDefault()"
+      d="M162 0 L232 0 L236 40 C238 80 236 120 234 150 C216 144 160 120 140 118 C144 90 150 50 162 14 Z" />
+    <path class="lobe" role="button" tabindex="0" [attr.aria-label]="'Speed: ' + (marks()['speed'] ?? 0) + ' out of 100'" [class.on]="selected() === 'speed'" [style.fill]="tint()['speed']" (click)="pick('speed')" (keydown.enter)="pick('speed')" (keydown.space)="pick('speed'); $event.preventDefault()"
+      d="M232 0 L330 0 L330 200 L232 200 L234 150 C236 120 238 80 236 40 Z" />
+    <path class="lobe" role="button" tabindex="0" [attr.aria-label]="'Language: ' + (marks()['language'] ?? 0) + ' out of 100'" [class.on]="selected() === 'language'" [style.fill]="tint()['language']" (click)="pick('language')" (keydown.enter)="pick('language')" (keydown.space)="pick('language'); $event.preventDefault()"
+      d="M0 160 L46 158 C80 152 110 140 140 118 C160 120 216 144 234 150 L234 200 L0 200 Z" />
+  </g>
+
+  <!-- the folds of the cortex -->
+  <path class="fold" d="M60 120 C72 96 92 92 106 98 M92 66 C110 52 134 54 146 64 M178 36 C190 60 216 62 224 48 M170 96 C184 84 206 88 214 102 M250 76 C262 92 278 94 286 88 M70 150 C96 140 120 142 140 150 M156 158 C176 148 200 152 212 164 M250 118 C262 128 276 128 284 120" />
+
+  <!-- hippocampus (memory) and cingulate (focus) sit inside -->
+  <path class="inner" role="button" tabindex="0" [attr.aria-label]="'Memory: ' + (marks()['memory'] ?? 0) + ' out of 100'" [class.on]="selected() === 'memory'" [style.fill]="tint()['memory']" (click)="pick('memory')" (keydown.enter)="pick('memory')" (keydown.space)="pick('memory'); $event.preventDefault()"
+    d="M112 160 C132 148 168 152 176 168 C168 178 134 178 112 168 Z" />
+  <ellipse class="inner" role="button" tabindex="0" [attr.aria-label]="'Focus: ' + (marks()['attention'] ?? 0) + ' out of 100'" [class.on]="selected() === 'attention'" [style.fill]="tint()['attention']" (click)="pick('attention')" (keydown.enter)="pick('attention')" (keydown.space)="pick('attention'); $event.preventDefault()"
+    cx="104" cy="92" rx="22" ry="13" />
+
+  <path class="outline" d="M34 138 C24 96 52 46 104 34 C138 16 196 12 236 34 C282 50 306 98 292 138 C284 160 262 168 244 164 C226 160 214 176 196 182 C176 190 140 192 112 184 C80 176 44 168 34 138 Z" />
+</svg>
+
+<ul class="legend" aria-label="Skills">
+  @for (s of skills; track s.id) {
+    <li>
+      <button type="button" [class.on]="selected() === s.id" (click)="pick(s.id)">
+        <i [style.background]="tint()[s.id]"></i>
+        <span>{{ s.emoji }} {{ s.name }}</span>
+        <b>{{ marks()[s.id] ?? 0 }}</b>
+      </button>
+    </li>
+  }
+</ul>
+@if (selected(); as s) {
+  <p class="where" role="status"><b>{{ regions[s] }}</b>: a simplified map of where this kind of thinking happens, for fun.</p>
+}

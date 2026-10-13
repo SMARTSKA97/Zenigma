@@ -1,18 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ConnectionService } from '../../core/connection.service';
 import { AuthService } from '../../core/auth.service';
 import { DailyGameStatus, DailyHub as Hub, formatDuration, LeaderboardService } from '../../core/leaderboard.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { CATEGORIES, DAILY_GAMES, dailyDifficulty } from '../../games/catalog';
-import { ChallengeStrip, FeaturedLevel } from '../challenges/challenges';
 import { Insights } from '../stats/insights';
 import { Glyph } from '../../shared/glyph';
 import { FreezeSheet } from '../../shared/freeze-sheet';
 
 @Component({
   selector: 'app-daily-hub',
-  imports: [RouterLink, Glyph, FreezeSheet, ChallengeStrip, FeaturedLevel, Insights],
+  imports: [RouterLink, Glyph, FreezeSheet, Insights],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './daily-hub.html',
   styleUrl: './daily-hub.scss',
@@ -20,6 +20,7 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
 export class DailyHub implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);
+  protected readonly conn = inject(ConnectionService);
   private readonly api = inject(LeaderboardService);
   private readonly statsApi = inject(StatsService);
   protected readonly stats = signal<Stats | null>(null);
@@ -103,7 +104,7 @@ export class DailyHub implements OnInit, OnDestroy {
   protected async load(): Promise<void> {
     this.loading.set(true);
     this.failed.set(false);
-    if (!this.sync.online()) {
+    if (!this.sync.online() || this.conn.offlineMode()) {
       this.loading.set(false);
       this.failed.set(true);
       return;

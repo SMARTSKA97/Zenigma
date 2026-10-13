@@ -15,6 +15,7 @@ import { AuthService } from './core/auth.service';
 import { BackService } from './core/back.service';
 import { HintsService } from './core/hints.service';
 import { HintsSyncService } from './core/hints-sync.service';
+import { MindSyncService } from './core/mind-sync.service';
 import { SyncService } from './core/sync.service';
 import { ConnectionService } from './core/connection.service';
 import { ServerNotice } from './shared/server-notice';
@@ -43,6 +44,7 @@ export class App {
     this.back.listen();
     inject(HintsService).visit();
     inject(HintsSyncService);
+    inject(MindSyncService);
     void this.reminder.restore();
     // Android: look for a new version when the app opens (the update sheet appears only if there is one).
     this.updater.startAutoCheck();

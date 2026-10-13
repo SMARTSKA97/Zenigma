@@ -1,0 +1,34 @@
+<section class="panel">
+  <header>
+    <div>
+      <p class="eyebrow">Mind set · {{ daily.date() }}</p>
+      <h2>{{ daily.complete() ? 'Set complete' : daily.doneCount() + ' of ' + daily.games().length + ' done' }}</h2>
+    </div>
+    <div class="meta">
+      <span class="pts"><b>{{ daily.points() }}</b><small>/ {{ daily.maxPoints }}</small></span>
+      @if (daily.streak(); as n) {
+        <span class="streak" [attr.aria-label]="n + ' day streak'">🔥 {{ n }}</span>
+      }
+    </div>
+  </header>
+  <p class="muted lede">Three quick games, one for each of three skills. The same set for everyone today. Finish all three to keep your streak.</p>
+
+  <ul>
+    @for (g of daily.games(); track g) {
+      @let r = daily.results()[g];
+      <li [style.--h]="info(g)?.hue" [class.done]="!!r">
+        <span class="art"><app-glyph [game]="g" /></span>
+        <span class="text">
+          <b>{{ info(g)?.name }}</b>
+          <span class="muted">{{ skill(g)?.emoji }} {{ skill(g)?.name }}{{ r ? ' · ' + r.mark + ' / 100' : '' }}</span>
+        </span>
+        <a class="button" [class.secondary]="!!r" [routerLink]="['/mind', g]">{{ r ? 'Replay' : 'Play' }}</a>
+      </li>
+    }
+  </ul>
+  @if (firstOpen(); as next) {
+    <a class="button wide" [routerLink]="['/mind', next]">{{ daily.doneCount() ? 'Next game' : 'Start today’s set' }}</a>
+  } @else {
+    <p class="done-note">All done for today. Come back tomorrow for a new set. 🎉</p>
+  }
+</section>

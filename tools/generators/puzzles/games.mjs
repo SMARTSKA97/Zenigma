@@ -10,17 +10,17 @@ import { rngFrom } from './rng.mjs';
 export const GAMES = ['queens', 'tango', 'sudoku', 'zip', 'patches'];
 /** Practice tracks: each has its own 1000 levels. A game can have several (Sudoku: classic 9x9 and mini 6x6), and more can be added. */
 export const SUDOKU_TIERS = ['easy', 'medium', 'hard', 'challenging', 'insane'];
+/** Queens, Tango, Zip and Patches have the same five difficulty tiers as Sudoku. */
+export const TIERED_GAMES = ['queens', 'tango', 'zip', 'patches'];
 export const TRACKS = [
-  'queens',
-  'tango',
+  ...['queens', 'tango'].flatMap((game) => SUDOKU_TIERS.map((tier) => `${game}-classic-${tier}`)),
   ...['classic', 'mini'].flatMap((kind) => SUDOKU_TIERS.map((tier) => `sudoku-${kind}-${tier}`)),
   'sudoku-diagonal',
   'sudoku-knight',
   ...KIND_RULES.map((k) => `sudoku-${k}`),
   'sudoku-windoku',
   'sudoku-disjoint',
-  'zip',
-  'patches',
+  ...['zip', 'patches'].flatMap((game) => SUDOKU_TIERS.map((tier) => `${game}-classic-${tier}`)),
 ];
 export const gameOfTrack = (track) => track.split('-')[0];
 /** The first 200 levels of a Sudoku tier climb through its clue range; later levels stay near the hard end. */
@@ -45,6 +45,9 @@ function sudokuTierLevel(track, level, rng) {
 
 export const LEVELS_PER_ZONE = 10;
 
+/** The slice of the 0 to 1 hardness scale each tier covers (the slices overlap a little, so neighbouring tiers feel connected). */
+const TIER_RANGE = { easy: [0, 0.25], medium: [0.2, 0.45], hard: [0.4, 0.65], challenging: [0.6, 0.85], insane: [0.8, 1] };
+
 /**
  * How hard a practice level is, from 0 (gentlest) to 1 (hardest). Levels come in zones of ten: every zone climbs from
  * easy (its first level) to hard (its tenth), and each zone starts a little above the one before and tops out a little higher,
@@ -61,9 +64,16 @@ export function hardness(level) {
 
 /** Difficulty ramps with the level number; level 1 is the gentlest. */
 export function practiceLevel(track, level) {
-  const game = track;
+  let game = track;
   const rng = rngFrom(`zenigma-practice:${track}:${level}`);
-  const h = hardness(level);
+  let h = hardness(level);
+  // Tiered games (queens-classic-hard...): the tier picks a slice of the hardness scale, the level climbs within it.
+  const tiered = /^(queens|tango|zip|patches)-classic-(easy|medium|hard|challenging|insane)$/.exec(track);
+  if (tiered) {
+    const [lo, hi] = TIER_RANGE[tiered[2]];
+    h = lo + (hi - lo) * h;
+    game = tiered[1];
+  }
   // Sudoku with one more rule: a single track each that climbs from many clues to few.
   if (game === 'sudoku-diagonal') return generateSudoku(rng, Math.round(38 - 16 * h), 9, 'diagonal');
   if (isKindRule(game.slice(7))) return generateKind(rng, game.slice(7), h);

@@ -1,0 +1,24 @@
+<svg viewBox="0 0 260 260" role="img" [attr.aria-label]="'Radar chart of your six skills against ' + otherLabel()">
+  @for (g of grid(); track $index) {
+    <polygon class="ring" [attr.points]="g" />
+  }
+  @for (s of spokes(); track $index) {
+    <line class="spoke" x1="130" y1="130" [attr.x2]="s[0]" [attr.y2]="s[1]" />
+  }
+  @if (other(); as o) {
+    <polygon class="other" [attr.points]="o" />
+  }
+  <polygon class="you" [attr.points]="you()" />
+  @for (d of dots(); track $index) {
+    <circle class="dot" [attr.cx]="d[0]" [attr.cy]="d[1]" r="3.2" />
+  }
+  @for (l of labels(); track $index) {
+    <text class="label" [attr.x]="l.x" [attr.y]="l.y" [attr.text-anchor]="l.anchor" dominant-baseline="middle">{{ l.text }}</text>
+  }
+</svg>
+<p class="key">
+  <span><i class="k you"></i> You</span>
+  @if (other()) {
+    <span><i class="k other"></i> {{ otherLabel() }}</span>
+  }
+</p>

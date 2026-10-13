@@ -124,7 +124,7 @@ public class ProfileTests : IClassFixture<ApiFactory>
     {
         var me = await SignUpAsync();
         Assert.Equal(HttpStatusCode.OK, (await me.PutAsJsonAsync("/profile", new { shareCohort = true, ageGroup = "25-34" })).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await me.PutAsJsonAsync("/mind/scores", new { scores = new[] { new { game = "quick-sums", skill = "maths", pct = 80, plays = 3 } } })).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await me.PutAsJsonAsync("/mind/scores", new { scores = new[] { new { game = "quick-sums", skill = "math", pct = 80, plays = 3 } } })).StatusCode);
 
         var early = await me.GetFromJsonAsync<JsonElement>("/mind/compare", Json);
         var everyone = early.GetProperty("groups")[0];
@@ -134,13 +134,13 @@ public class ProfileTests : IClassFixture<ApiFactory>
         {
             var other = await SignUpAsync();
             await other.PutAsJsonAsync("/profile", new { shareCohort = true });
-            await other.PutAsJsonAsync("/mind/scores", new { scores = new[] { new { game = "quick-sums", skill = "maths", pct = 40 + i * 5, plays = 1 } } });
+            await other.PutAsJsonAsync("/mind/scores", new { scores = new[] { new { game = "quick-sums", skill = "math", pct = 40 + i * 5, plays = 1 } } });
         }
 
         var now = await me.GetFromJsonAsync<JsonElement>("/mind/compare", Json);
         var group = now.GetProperty("groups")[0];
         Assert.True(group.GetProperty("ready").GetBoolean());
-        var maths = group.GetProperty("skills").EnumerateArray().First(s => s.GetProperty("skill").GetString() == "maths");
+        var maths = group.GetProperty("skills").EnumerateArray().First(s => s.GetProperty("skill").GetString() == "math");
         Assert.Equal(80, maths.GetProperty("mine").GetInt32());
         Assert.True(maths.GetProperty("percentile").GetInt32() >= 80);
     }

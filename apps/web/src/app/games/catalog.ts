@@ -129,11 +129,11 @@ export interface Tier {
 
 /** The difficulty tiers of a tiered kind, gentlest first. */
 export const TIERS: Tier[] = [
-  { id: 'easy', name: 'Easy', blurb: 'Lots of numbers given. Learn the ropes.' },
+  { id: 'easy', name: 'Easy', blurb: 'Small boards and plenty of help. Learn the ropes.' },
   { id: 'medium', name: 'Medium', blurb: 'A steady challenge.' },
-  { id: 'hard', name: 'Hard', blurb: 'Fewer clues, sharper thinking.' },
+  { id: 'hard', name: 'Hard', blurb: 'Less help, sharper thinking.' },
   { id: 'challenging', name: 'Challenging', blurb: 'Only for confident solvers.' },
-  { id: 'insane', name: 'Insane', blurb: 'As few clues as a puzzle can have.' },
+  { id: 'insane', name: 'Insane', blurb: 'The biggest boards with the least help.' },
 ];
 
 /** How many levels a practice track has (it grows every week: see tools/generators/puzzles/grow-levels.mjs). */
@@ -157,6 +157,11 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
     { id: 'consecutive', name: 'Consecutive', blurb: 'A bar between two cells means their digits differ by exactly 1.' },
     { id: 'even-odd', name: 'Even-Odd', blurb: 'Shaded cells hold only even digits (circles) or only odd digits (squares).' },
   ],
+  // The other games have one kind with the same five difficulties as Sudoku, so they go straight to the difficulty chooser.
+  queens: [{ id: 'classic', name: 'Classic', blurb: 'One queen in every row, column and colour.', tiered: true }],
+  tango: [{ id: 'classic', name: 'Classic', blurb: 'Fill the grid with suns and moons.', tiered: true }],
+  zip: [{ id: 'classic', name: 'Classic', blurb: 'One path through every cell, in number order.', tiered: true }],
+  patches: [{ id: 'classic', name: 'Classic', blurb: 'Cut the grid into rectangles that match their numbers.', tiered: true }],
 };
 
 /** The kinds of a game as the player chooses them (Sudoku: Classic, Mini ...). */
@@ -181,7 +186,13 @@ export const mapLink = (game: string, variant?: string | null): string[] => ['/g
 export const playLink = (game: string, variant?: string | null): string[] => ['/games', game, ...(variant ? [variant] : [])];
 
 /** Where a practice tile leads: the level map, the variant chooser (Sudoku), or the game itself. */
-export const practiceEntry = (id: string): string[] => (!isPuzzleGame(id) ? (GAMES.find((g) => g.id === id)?.category === 'mind' ? ['/mind', id] : ['/games', id]) : VARIANTS[id] ? ['/games', id] : mapLink(id));
+export const practiceEntry = (id: string): string[] => {
+  if (!isPuzzleGame(id)) return GAMES.find((g) => g.id === id)?.category === 'mind' ? ['/mind', id] : ['/games', id];
+  const variants = VARIANTS[id];
+  if (!variants) return mapLink(id);
+  // A game with one tiered kind has nothing to choose but the difficulty.
+  return variants.length === 1 && variants[0].tiered ? kindLink(id, variants[0].id) : ['/games', id];
+};
 
 /** Every practice track (a game, or a game's variant) with its game, for loading progress. */
 export interface PracticeTrack {

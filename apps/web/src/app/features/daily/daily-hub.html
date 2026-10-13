@@ -10,8 +10,8 @@
   </div>
 }
 <section class="hero">
-  <p class="eyebrow">Daily challenge{{ difficulty() ? ' · ' + difficulty()!.day : '' }}</p>
-  <h1>{{ doneCount() }} of {{ games.length }} done today</h1>
+  <p class="eyebrow">Daily puzzles{{ difficulty() ? ' · ' + difficulty()!.day : '' }}</p>
+  <h2 class="big">{{ doneCount() }} of {{ games.length }} done today</h2>
   <p class="lede">One puzzle per game, the same for everyone. Next set in <strong>{{ untilNext() }}</strong>.</p>
   @if (stats(); as s) {
     <div class="chips">
@@ -39,7 +39,15 @@
   </div>
 </section>
 
-@if (!auth.signedIn()) {
+@if (conn.offlineMode()) {
+  <section class="card cta">
+    <div>
+      <h2>Offline mode is on</h2>
+      <p class="muted">Daily puzzles are ranked, so they need the server. Practice and Mind games still work. Turn offline mode off in Settings to play today's set.</p>
+    </div>
+    <a class="button" routerLink="/settings">Settings</a>
+  </section>
+} @else if (!auth.signedIn()) {
   <section class="card cta">
     <div>
       <h2>Sign in to play</h2>
@@ -55,6 +63,7 @@
       <div class="skeleton row-skeleton"></div>
     }
   </div>
+} @else if (conn.offlineMode()) {
 } @else if (failed()) {
   <section class="card cta">
     <p class="muted">Could not load today's challenges.</p>
@@ -97,20 +106,6 @@
   }
 }
 
-<app-featured-level class="block" />
-<app-challenge-strip class="block" />
-
 @if (stats(); as s) {
   <app-insights [stats]="s" [limit]="3" class="block" />
 }
-
-<section class="soon-card">
-  <h2>Coming to Daily <span class="pill">Soon</span></h2>
-  <ul>
-    <li><b>Sudoku challenges</b> Killer, Thermo, Jigsaw and more, as extra dailies with their own ranks.</li>
-    <li><b>Ranked puzzle of the week</b> The featured level above will get its own leaderboard, ranked by fewest mistakes.</li>
-    <li><b>Mind training dailies</b> A short memory, focus and maths set every day.</li>
-  </ul>
-</section>
-
-<p class="foot muted">Want to play for fun? Practice is endless and works offline. <a routerLink="/">Open practice</a></p>

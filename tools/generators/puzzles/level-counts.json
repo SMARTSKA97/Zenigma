@@ -1,6 +1,4 @@
 {
- "queens": 2000,
- "tango": 2000,
  "sudoku-classic-easy": 1200,
  "sudoku-classic-medium": 1200,
  "sudoku-classic-hard": 1200,
@@ -22,6 +20,24 @@
  "sudoku-jigsaw": 1000,
  "sudoku-arrow": 1000,
  "sudoku-sandwich": 1000,
- "zip": 2000,
- "patches": 2000
+ "queens-classic-easy": 1000,
+ "queens-classic-medium": 1000,
+ "queens-classic-hard": 1000,
+ "queens-classic-challenging": 1000,
+ "queens-classic-insane": 1000,
+ "tango-classic-easy": 1000,
+ "tango-classic-medium": 1000,
+ "tango-classic-hard": 1000,
+ "tango-classic-challenging": 1000,
+ "tango-classic-insane": 1000,
+ "zip-classic-easy": 1000,
+ "zip-classic-medium": 1000,
+ "zip-classic-hard": 1000,
+ "zip-classic-challenging": 1000,
+ "zip-classic-insane": 1000,
+ "patches-classic-easy": 1000,
+ "patches-classic-medium": 1000,
+ "patches-classic-hard": 1000,
+ "patches-classic-challenging": 1000,
+ "patches-classic-insane": 1000
 }

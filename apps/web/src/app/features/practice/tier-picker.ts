@@ -24,6 +24,9 @@ export class TierPicker implements OnInit {
   protected readonly info = computed(() => gameInfo(this.game()));
   protected readonly kind = computed(() => variantsOf(this.game()).find((v) => v.id === this.kindId()));
 
+  /** The game has just this one kind, so its name adds nothing. */
+  protected readonly single = computed(() => variantsOf(this.game()).length === 1);
+
   ngOnInit(): void {
     for (const t of TIERS) void this.practice.load(this.track(t.id));
   }

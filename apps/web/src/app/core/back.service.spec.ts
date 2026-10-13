@@ -12,15 +12,16 @@ describe('BackService', () => {
   it('goes out of a game, then home, never through history', () => {
     const b = service();
     expect(b.parentOf('/')).toBeNull();
-    expect(b.parentOf('/games/queens?level=12')).toBe('/games/queens/levels');
+    expect(b.parentOf('/games/queens/classic-easy?level=12')).toBe('/games/queens/classic-easy/levels');
+    expect(b.parentOf('/games/queens/classic')).toBe('/'); // the difficulty chooser
     expect(b.parentOf('/games/sudoku/mini-easy')).toBe('/games/sudoku/mini-easy/levels');
     expect(b.parentOf('/games/sudoku/mini')).toBe('/'); // the difficulty chooser
     expect(b.parentOf('/games/queens/levels')).toBe('/');
     expect(b.parentOf('/games/sudoku/mini/levels')).toBe('/');
     expect(b.parentOf('/games/sudoku')).toBe('/');
     expect(b.parentOf('/games/word-guess')).toBe('/');
-    expect(b.parentOf('/daily/tango')).toBe('/daily');
-    expect(b.parentOf('/daily/word-guess')).toBe('/daily');
+    expect(b.parentOf('/daily/tango')).toBe('/challenges');
+    expect(b.parentOf('/daily/word-guess')).toBe('/challenges');
   });
 
   it('goes up from tabs and info pages', () => {
