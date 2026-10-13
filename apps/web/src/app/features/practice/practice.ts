@@ -3,6 +3,10 @@ import { RouterLink } from '@angular/router';
 import { CATEGORIES, GAMES, SKILLS, SPEED_GAMES, isPuzzleGame, PRACTICE_TRACKS, practiceEntry, soonKindsOf } from '../../games/catalog';
 import { ChallengeStrip } from '../challenges/challenges';
 import { Segmented } from '../../shared/segmented';
+import { MindStore } from '../../games/mind/mind-store';
+import { MIND_META } from '../../games/mind/mind-meta';
+import { SkillBars } from './skill-bars';
+import { MindGameId } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 import { Glyph } from '../../shared/glyph';
 import { HintWheel } from '../../shared/hint-wheel';
@@ -11,7 +15,7 @@ import { HintsService } from '../../core/hints.service';
 /** Practice: every game, endless levels, no pressure. Games with variants (Sudoku) open a chooser first. */
 @Component({
   selector: 'app-practice',
-  imports: [RouterLink, Glyph, HintWheel, ChallengeStrip, Segmented],
+  imports: [RouterLink, Glyph, HintWheel, ChallengeStrip, Segmented, SkillBars],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Practice</h1>
@@ -36,6 +40,9 @@ import { HintsService } from '../../core/hints.service';
     @if (tab() === 'play') {
       @for (cat of playable; track cat.id) {
         <h2 class="sec">{{ cat.name }}</h2>
+        @if (cat.id === 'mind') {
+          <app-skill-bars />
+        }
         <div class="grid">
           @for (game of cat.games; track game.id) {
             <a class="game live" [routerLink]="link(game.id)" [style.--h]="game.hue">
@@ -57,8 +64,8 @@ import { HintsService } from '../../core/hints.service';
       </div>
       <p class="muted more">More on the way: <button type="button" class="link" (click)="tab.set('soon')">see what is coming soon</button></p>
     } @else {
-      <h2 class="sec">Mind training</h2>
-      <p class="muted sub2">Short exercises for memory, focus, speed, maths and language. Each one trains a skill, and your progress will show on a skill chart.</p>
+      <h2 class="sec">Mind training, still to come</h2>
+      <p class="muted sub2">More short exercises for memory, focus, speed and maths are on the way.</p>
       @for (s of mind; track s.skill.id) {
         <section class="skill">
           <h3>{{ s.skill.emoji }} {{ s.skill.name }}</h3>
@@ -104,6 +111,7 @@ import { HintsService } from '../../core/hints.service';
 })
 export class Practice implements OnInit {
   private readonly practice = inject(PracticeStore);
+  private readonly mindStore = inject(MindStore);
   protected readonly tabs: { value: 'play' | 'soon'; label: string }[] = [
     { value: 'play', label: 'Play' },
     { value: 'soon', label: 'Coming soon' },
@@ -131,6 +139,11 @@ export class Practice implements OnInit {
   }
 
   protected progress(id: string): string {
+    const meta = MIND_META[id as MindGameId];
+    if (meta) {
+      const rec = this.mindStore.record(id);
+      return rec.plays ? `Best ${meta.format ? meta.format(rec.best) : rec.best}` : 'Play';
+    }
     if (!isPuzzleGame(id)) return 'Play';
     const tracks = PRACTICE_TRACKS.filter((t) => t.game === id);
     const solved = tracks.reduce((n, t) => n + this.practice.solvedLevels(t.track)().size, 0);

@@ -647,7 +647,7 @@ export class Home implements OnInit {
   private readonly statsApi = inject(StatsService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly liveGames = GAMES.filter((g) => g.live);
+  protected readonly liveGames = GAMES.filter((g) => g.live && g.category !== 'mind');
   protected readonly stats = signal<Stats | null>(null);
   protected readonly freezesOpen = signal(false);
 

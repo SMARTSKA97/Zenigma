@@ -1,15 +1,17 @@
 import { CanMatchFn, Routes } from '@angular/router';
-import { leafIds, variantsOf } from './games/catalog';
+import { leafIds, MIND_LIVE, variantsOf } from './games/catalog';
 
 const wordGuess = () => import('./games/word-guess/word-guess').then((m) => m.WordGuess);
 const puzzle = () => import('./games/puzzle/puzzle-page').then((m) => m.PuzzlePage);
 
 const variantPlayable: CanMatchFn = (_route, segments) => leafIds(segments[1]?.path ?? '').includes(segments[2]?.path ?? '');
 const tieredKind: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.path ?? '').some((v) => v.id === segments[2]?.path && v.tiered);
+const mindPlayable: CanMatchFn = (_route, segments) => MIND_LIVE.includes((segments[1]?.path ?? '') as never);
 const hasVariants: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.path ?? '').length > 0;
 
 export const routes: Routes = [
   { path: 'games/word-guess', loadComponent: wordGuess, data: { mode: 'practice' } },
+  { path: 'mind/:game', canMatch: [mindPlayable], loadComponent: () => import('./games/mind/mind-page').then((m) => m.MindPage) },
   { path: 'speed/:game', loadComponent: () => import('./features/speed/speed-round').then((m) => m.SpeedRound) },
   { path: 'games/:game/levels', loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
   { path: 'games/:game/:variant/levels', canMatch: [variantPlayable], loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },

@@ -13,7 +13,7 @@ export interface Activity {
   game: string;
   /** A Sudoku kind or tier id ('classic-hard', 'diagonal'), when there is one. */
   variant?: string;
-  kind: 'practice' | 'daily';
+  kind: 'practice' | 'daily' | 'mind';
   /** True when no hint was used (unknown for results saved before hints were recorded). */
   clean?: boolean;
   /** `track:level` or the daily's date, so a repeat is not counted twice. */
@@ -38,6 +38,8 @@ const METRICS = {
   sudokuKinds: (items) => distinct(items.filter((a) => a.game === 'sudoku'), (a) => (a.variant ?? '').replace(/-(easy|medium|hard|challenging|insane)$/, '')),
   words: (items) => distinct(items.filter((a) => a.game === 'word-guess'), (a) => `${a.kind}:${a.id}`),
   sudoku: (items) => distinct(items.filter((a) => a.game === 'sudoku'), (a) => `${a.kind}:${a.id}`),
+  /** Mind-training games played. */
+  mind: (items) => distinct(items.filter((a) => a.kind === 'mind'), (a) => a.id),
   logic: (items) => distinct(items.filter((a) => ['queens', 'tango', 'zip', 'patches'].includes(a.game)), (a) => `${a.kind}:${a.id}`),
 } satisfies Record<string, Metric>;
 export type MetricName = keyof typeof METRICS;
@@ -70,6 +72,7 @@ export const POOL: Template[] = [
   { id: 'w-hard-3', period: 'weekly', icon: '💎', title: 'Hard mode', text: 'Clear 3 Sudoku levels on Hard or above', metric: 'hard', target: 3, reward: 2 },
   { id: 'w-logic-10', period: 'weekly', icon: '🧩', title: 'Logic lover', text: 'Solve 10 Queens, Tango, Zip or Patches puzzles', metric: 'logic', target: 10, reward: 1 },
   { id: 'w-words-5', period: 'weekly', icon: '🔤', title: 'Word nerd', text: 'Win 5 Word Guess games', metric: 'words', target: 5, reward: 1 },
+  { id: 'w-mind-6', period: 'weekly', icon: '🧠', title: 'Brain gym', text: 'Play 6 mind-training games', metric: 'mind', target: 6, reward: 1 },
   // Weekend (Saturday and Sunday)
   { id: 'e-levels-8', period: 'weekend', icon: '🏖️', title: 'Weekend warm-up', text: 'Clear 8 practice levels this weekend', metric: 'levels', target: 8, reward: 1 },
   { id: 'e-levels-20', period: 'weekend', icon: '🎢', title: 'Weekend marathon', text: 'Clear 20 practice levels this weekend', metric: 'levels', target: 20, reward: 2 },
@@ -78,7 +81,9 @@ export const POOL: Template[] = [
   { id: 'e-dailies-2', period: 'weekend', icon: '🏁', title: 'Weekend dailies', text: 'Solve 2 dailies this weekend', metric: 'dailies', target: 2, reward: 1 },
   { id: 'e-hard-2', period: 'weekend', icon: '🧨', title: 'Weekend brain-burner', text: 'Clear 2 Sudoku levels on Hard or above', metric: 'hard', target: 2, reward: 2 },
   { id: 'e-clean-5', period: 'weekend', icon: '🧘', title: 'Calm and clean', text: 'Clear 5 levels without a hint', metric: 'clean', target: 5, reward: 1 },
+  { id: 'e-mind-3', period: 'weekend', icon: '🎯', title: 'Weekend workout', text: 'Play 3 mind-training games', metric: 'mind', target: 3, reward: 1 },
   // Monthly
+  { id: 'm-mind-25', period: 'monthly', icon: '🧬', title: 'Sharper every day', text: 'Play 25 mind-training games this month', metric: 'mind', target: 25, reward: 3 },
   { id: 'm-levels-100', period: 'monthly', icon: '🏔️', title: 'Hundred club', text: 'Clear 100 practice levels this month', metric: 'levels', target: 100, reward: 3 },
   { id: 'm-levels-200', period: 'monthly', icon: '🚀', title: 'Double century', text: 'Clear 200 practice levels this month', metric: 'levels', target: 200, reward: 3 },
   { id: 'm-dailies-15', period: 'monthly', icon: '📆', title: 'Daily regular', text: 'Solve 15 dailies this month', metric: 'dailies', target: 15, reward: 3 },

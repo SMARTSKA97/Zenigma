@@ -1,4 +1,4 @@
-import { GAMES, mapLink, playLink, PRACTICE_TRACKS, practiceEntry, soonKindsOf, trackOf, variantsOf } from './catalog';
+import { GAMES, MIND_LIVE, mapLink, playLink, PRACTICE_TRACKS, practiceEntry, soonKindsOf, trackOf, variantsOf } from './catalog';
 
 describe('practice tracks', () => {
   it('names a track after its game and variant', () => {
@@ -40,11 +40,13 @@ describe('practice tracks', () => {
     expect(practiceEntry('word-guess')).toEqual(['/games', 'word-guess']);
   });
 
-  it('sorts every game into a category and keeps mind training as coming soon', () => {
+  it('sorts every game into a category and marks only the finished mind games as live', () => {
     expect(GAMES.every((g) => g.category)).toBe(true);
     const mind = GAMES.filter((g) => g.category === 'mind');
     expect(mind.length).toBeGreaterThanOrEqual(12);
-    expect(mind.every((g) => !g.live && !g.daily && g.skill)).toBe(true);
+    expect(mind.every((g) => !g.daily && g.skill)).toBe(true);
+    expect(mind.filter((g) => g.live).map((g) => g.id).sort()).toEqual([...MIND_LIVE].sort());
+    expect(mind.some((g) => !g.live)).toBe(true);
     expect(new Set(GAMES.map((g) => g.id)).size).toBe(GAMES.length);
   });
 

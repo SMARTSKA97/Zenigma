@@ -5,6 +5,9 @@ import { Stats, StatsService } from '../../core/stats.service';
 import { DAILY_GAMES, PRACTICE_TRACKS, SPEED_GAMES } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 import { SyncService } from '../../core/sync.service';
+import { MindStore } from '../../games/mind/mind-store';
+import { MIND_META } from '../../games/mind/mind-meta';
+import { MindGameId } from '../../games/catalog';
 import { ChallengesService, activityFrom } from '../challenges/challenges.service';
 
 interface Badge {
@@ -125,6 +128,7 @@ export class Badges implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly statsApi = inject(StatsService);
   private readonly sync = inject(SyncService);
+  private readonly mind = inject(MindStore);
   private readonly challenges = inject(ChallengesService);
   private readonly stats = signal<Stats | null>(null);
   private readonly loaded = signal(0);
@@ -156,7 +160,8 @@ export class Badges implements OnInit {
       if (solved.length) gamesWithLevels.add(t.game);
     }
     // Things only the event log knows: when and what kind of puzzle was solved.
-    const activity = activityFrom(this.sync.events(), stats);
+    const activity = activityFrom(this.sync.events(), stats, this.mind.plays());
+    const excellent = (Object.keys(MIND_META) as MindGameId[]).filter((id) => this.mind.record(id).best >= MIND_META[id]!.scale).length;
     const practice = activity.filter((a) => a.kind === 'practice');
     const perGame = (g: string) => new Set(practice.filter((a) => a.game === g).map((a) => a.id)).size;
     const kinds = new Set(practice.filter((a) => a.game === 'sudoku').map((a) => (a.variant ?? '').replace(/-(easy|medium|hard|challenging|insane)$/, '')));
@@ -218,6 +223,11 @@ export class Badges implements OnInit {
       { id: 'weekend3', icon: '🏖️', name: 'Weekend warrior', text: 'Play on both days of 3 weekends', have: fullWeekends, need: 3 },
       { id: 'bigday', icon: '🎢', name: 'Big day', text: 'Clear 20 levels in one day', have: bigDay, need: 20 },
       { id: 'days30', icon: '🗓️', name: 'Thirty days', text: 'Play on 30 different days', have: days.size, need: 30 },
+      { id: 'mind3', icon: '🧠', name: 'Warm-up', text: 'Play 3 different mind-training games', have: this.mind.gamesPlayed(), need: 3 },
+      { id: 'mind10', icon: '🏋️', name: 'Brain gym', text: 'Play 10 different mind-training games', have: this.mind.gamesPlayed(), need: 10 },
+      { id: 'mind50', icon: '🧬', name: 'Regular trainee', text: 'Play 50 mind-training games', have: this.mind.totalPlays(), need: 50 },
+      { id: 'sharp', icon: '🎓', name: 'Sharp', text: 'Reach an excellent score in a mind game', have: excellent, need: 1 },
+      { id: 'sharp5', icon: '🧠', name: 'Razor sharp', text: 'Reach an excellent score in 5 mind games', have: excellent, need: 5 },
       { id: 'chal1', icon: '🎯', name: 'Challenge accepted', text: 'Collect your first challenge reward', have: collected, need: 1 },
       { id: 'chal10', icon: '🏁', name: 'Challenge hunter', text: 'Collect 10 challenge rewards', have: collected, need: 10 },
       { id: 'chal50', icon: '🥇', name: 'Challenge legend', text: 'Collect 50 challenge rewards', have: collected, need: 50 },
@@ -229,6 +239,7 @@ export class Badges implements OnInit {
     ['Sudoku', ['sudoku100', 'hard25', 'insane1', 'kinds4', 'kinds6']],
     ['Streaks and dailies', ['streak7', 'streak30', 'streak100', 'allDaily', 'daily50', 'daily200']],
     ['Habits', ['clean', 'clean100', 'early', 'owl', 'weekend3', 'bigday', 'days30']],
+    ['Mind training', ['mind3', 'mind10', 'mind50', 'sharp', 'sharp5']],
     ['Challenges', ['chal1', 'chal10', 'chal50']],
   ];
   /** Badges in sections; inside each, the ones you have come first. */

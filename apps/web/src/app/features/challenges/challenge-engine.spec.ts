@@ -51,7 +51,7 @@ describe('challenge progress', () => {
     const items = [solve(at(2026, 10, 12), 1), solve(at(2026, 10, 13), 1), solve(at(2026, 10, 13), 2), solve(at(2026, 10, 11), 3)];
     // Whatever goals are offered, a level solved twice counts once and one from before Monday does not count.
     const states = progressFor(w, items);
-    for (const s of states) expect(['levels', 'solves', 'games', 'days', 'dailies', 'clean', 'hard', 'sudokuKinds', 'words', 'sudoku', 'logic']).toContain(s.template.metric);
+    for (const s of states) expect(['levels', 'solves', 'games', 'days', 'dailies', 'clean', 'hard', 'sudokuKinds', 'words', 'sudoku', 'logic', 'mind']).toContain(s.template.metric);
     for (const s of states.filter((x) => x.template.metric === 'games')) expect(s.have).toBe(1);
     for (const s of states.filter((x) => x.template.metric === 'days')) expect(s.have).toBe(2);
     for (const s of states.filter((x) => x.template.metric === 'levels')) expect(s.have).toBe(2);

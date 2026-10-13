@@ -3,13 +3,14 @@ import { AuthService } from '../../core/auth.service';
 import { HintsService } from '../../core/hints.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
+import { MindStore } from '../../games/mind/mind-store';
 import { Activity, ChallengeState, Period, progressFor, windowOf } from './challenge-engine';
 
 const CLAIMED_KEY = 'zenigma.challenges.claimed';
 
 /** What the player solved, from the event log (practice, Word Guess) and the daily stats (signed in). */
-export function activityFrom(events: { kind: string; payload: unknown; clientCreatedAt: string }[], stats: Stats | null): Activity[] {
-  const out: Activity[] = [];
+export function activityFrom(events: { kind: string; payload: unknown; clientCreatedAt: string }[], stats: Stats | null, mind: { id: string; at: number }[] = []): Activity[] {
+  const out: Activity[] = mind.map((m) => ({ at: new Date(m.at), game: m.id, kind: 'mind' as const, id: `${m.id}:${m.at}` }));
   for (const e of events) {
     const at = new Date(e.clientCreatedAt);
     if (Number.isNaN(at.getTime())) continue;
@@ -34,12 +35,13 @@ export class ChallengesService {
   private readonly auth = inject(AuthService);
   private readonly statsApi = inject(StatsService);
   private readonly hints = inject(HintsService);
+  private readonly mind = inject(MindStore);
 
   readonly stats = signal<Stats | null>(null);
   readonly now = signal(new Date());
   private readonly claimed = signal<string[]>(this.readClaimed());
 
-  readonly activity = computed(() => activityFrom(this.sync.events(), this.stats()));
+  readonly activity = computed(() => activityFrom(this.sync.events(), this.stats(), this.mind.plays()));
 
   readonly sets = computed<Record<Period, ChallengeState[]>>(() => {
     const now = this.now();

@@ -78,23 +78,26 @@ export const GAMES: GameInfo[] = [
   { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: false, daily: false, category: 'word' },
   { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: false, daily: false, category: 'word' },
   { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice comets, dodge bombs, keep your lives.', hue: 15, live: false, daily: false, category: 'mind', skill: 'speed' },
-  { id: 'echo-sequence', name: 'Echo Sequence', blurb: 'Watch a pattern of lights, then repeat it. It grows by one each round.', hue: 120, live: false, daily: false, category: 'mind', skill: 'memory' },
-  { id: 'grid-recall', name: 'Grid Recall', blurb: 'Memorise which tiles lit up, then tap them from memory.', hue: 140, live: false, daily: false, category: 'mind', skill: 'memory' },
-  { id: 'number-recall', name: 'Number Recall', blurb: 'See a number for a moment, then type it back.', hue: 180, live: false, daily: false, category: 'mind', skill: 'memory' },
-  { id: 'pair-match', name: 'Pair Match', blurb: 'Flip cards and find every matching pair in as few flips as you can.', hue: 210, live: false, daily: false, category: 'mind', skill: 'memory' },
-  { id: 'colour-clash', name: 'Colour Clash', blurb: 'The word says one colour, the ink shows another. Tap the ink.', hue: 20, live: false, daily: false, category: 'mind', skill: 'attention' },
-  { id: 'odd-one-out', name: 'Odd One Out', blurb: 'Spot the one tile that is different, before time runs out.', hue: 70, live: false, daily: false, category: 'mind', skill: 'attention' },
-  { id: 'spot-change', name: 'Spot the Change', blurb: 'Two scenes flash by. Find what changed.', hue: 100, live: false, daily: false, category: 'mind', skill: 'attention' },
-  { id: 'target-tap', name: 'Target Tap', blurb: 'Tap the right shapes, ignore the wrong ones.', hue: 335, live: false, daily: false, category: 'mind', skill: 'attention' },
-  { id: 'quick-reflex', name: 'Quick Reflex', blurb: 'Tap the moment the screen changes. How fast are you?', hue: 10, live: false, daily: false, category: 'mind', skill: 'speed' },
-  { id: 'back-track', name: 'Back Track', blurb: 'Is this the same as two steps ago? A classic working-memory workout.', hue: 230, live: false, daily: false, category: 'mind', skill: 'speed' },
-  { id: 'quick-sums', name: 'Quick Sums', blurb: 'Answer as many sums as you can before the clock runs out.', hue: 40, live: false, daily: false, category: 'mind', skill: 'math' },
-  { id: 'target-number', name: 'Target Number', blurb: 'Combine the numbers you are given to reach the target.', hue: 60, live: false, daily: false, category: 'mind', skill: 'math' },
-  { id: 'anagram-rush', name: 'Anagram Rush', blurb: 'Unscramble the letters into a word, fast.', hue: 165, live: false, daily: false, category: 'mind', skill: 'language' },
-  { id: 'missing-letters', name: 'Missing Letters', blurb: 'Fill in the blanks to complete the word.', hue: 190, live: false, daily: false, category: 'mind', skill: 'language' },
-  { id: 'what-next', name: 'What Comes Next', blurb: 'Find the rule and pick the piece that comes next in the pattern.', hue: 285, live: false, daily: false, category: 'mind', skill: 'logic' },
+  { id: 'echo-sequence', name: 'Echo Sequence', blurb: 'Watch a pattern of lights, then repeat it. It grows by one each round.', hue: 120, live: true, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'grid-recall', name: 'Grid Recall', blurb: 'Memorise which tiles lit up, then tap them from memory.', hue: 140, live: true, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'number-recall', name: 'Number Recall', blurb: 'See a number for a moment, then type it back.', hue: 180, live: true, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'pair-match', name: 'Pair Match', blurb: 'Flip cards and find every matching pair in as few flips as you can.', hue: 210, live: true, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'colour-clash', name: 'Colour Clash', blurb: 'The word says one colour, the ink shows another. Tap the ink.', hue: 20, live: true, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'odd-one-out', name: 'Odd One Out', blurb: 'Spot the one tile that is different, before time runs out.', hue: 70, live: true, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'spot-change', name: 'Spot the Change', blurb: 'Two scenes flash by. Find what changed.', hue: 100, live: true, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'target-tap', name: 'Target Tap', blurb: 'Tap the right shapes, ignore the wrong ones.', hue: 335, live: true, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'quick-reflex', name: 'Quick Reflex', blurb: 'Tap the moment the screen changes. How fast are you?', hue: 10, live: true, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'back-track', name: 'Back Track', blurb: 'Is this the same as two steps ago? A classic working-memory workout.', hue: 230, live: true, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'quick-sums', name: 'Quick Sums', blurb: 'Answer as many sums as you can before the clock runs out.', hue: 40, live: true, daily: false, category: 'mind', skill: 'math' },
+  { id: 'target-number', name: 'Target Number', blurb: 'Combine the numbers you are given to reach the target.', hue: 60, live: true, daily: false, category: 'mind', skill: 'math' },
+  { id: 'anagram-rush', name: 'Anagram Rush', blurb: 'Unscramble the letters into a word, fast.', hue: 165, live: true, daily: false, category: 'mind', skill: 'language' },
+  { id: 'missing-letters', name: 'Missing Letters', blurb: 'Fill in the blanks to complete the word.', hue: 190, live: true, daily: false, category: 'mind', skill: 'language' },
+  { id: 'what-next', name: 'What Comes Next', blurb: 'Find the rule and pick the piece that comes next in the pattern.', hue: 285, live: true, daily: false, category: 'mind', skill: 'logic' },
   { id: 'mental-turn', name: 'Mental Turn', blurb: 'Which shape is the same one, just turned around?', hue: 310, live: false, daily: false, category: 'mind', skill: 'logic' },
 ];
+
+/** Mind-training games that can be played now (the rest of them are still coming soon). */
+export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next'];
 
 export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => g.id === id);
 
@@ -178,7 +181,7 @@ export const mapLink = (game: string, variant?: string | null): string[] => ['/g
 export const playLink = (game: string, variant?: string | null): string[] => ['/games', game, ...(variant ? [variant] : [])];
 
 /** Where a practice tile leads: the level map, the variant chooser (Sudoku), or the game itself. */
-export const practiceEntry = (id: string): string[] => (!isPuzzleGame(id) ? ['/games', id] : VARIANTS[id] ? ['/games', id] : mapLink(id));
+export const practiceEntry = (id: string): string[] => (!isPuzzleGame(id) ? (GAMES.find((g) => g.id === id)?.category === 'mind' ? ['/mind', id] : ['/games', id]) : VARIANTS[id] ? ['/games', id] : mapLink(id));
 
 /** Every practice track (a game, or a game's variant) with its game, for loading progress. */
 export interface PracticeTrack {
