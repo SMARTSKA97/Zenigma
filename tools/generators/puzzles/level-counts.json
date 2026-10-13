@@ -39,5 +39,8 @@
  "patches-classic-medium": 1000,
  "patches-classic-hard": 1000,
  "patches-classic-challenging": 1000,
- "patches-classic-insane": 1000
+ "patches-classic-insane": 1000,
+ "zip-walls": 1000,
+ "zip-holes": 1000,
+ "patches-shapes": 1000
 }

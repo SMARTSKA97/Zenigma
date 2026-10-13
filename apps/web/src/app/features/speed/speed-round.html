@@ -52,3 +52,7 @@
     </div>
   </section>
 }
+
+@if (leaving()) {
+  <app-leave-sheet text="The round is still running and will not count if you leave." (answer)="answerLeave($event)" />
+}

@@ -117,3 +117,26 @@ describe('patches moves', () => {
     expect(patchFits(valid.puzzle, [[0, 0, 1, 1], [1, 1, 2, 2]])).toBe(false);
   });
 });
+
+describe('zip walls and blocked cells', () => {
+  // 3 by 3: the path 1 → 9 snakes through every open cell. A wall between cells 0 and 1 and a hole at 4.
+  const base = { size: 3, numbers: [1, 0, 0, 0, 0, 0, 0, 0, 2] };
+
+  it('refuses a step across a wall or onto a blocked cell', async () => {
+    const zip = await import('../zip/engine');
+    const walled = { ...base, walls: [[0, 1]] as [number, number][] };
+    expect(zip.canStep(walled, [0], 1)).toBe(false);
+    expect(zip.canStep(walled, [0], 3)).toBe(true);
+    const holed = { ...base, holes: [4] };
+    expect(zip.canStep(holed, [3], 4)).toBe(false);
+  });
+
+  it('needs the path to cover every open cell and respect the walls', async () => {
+    const zip = await import('../zip/engine');
+    const holed = { ...base, holes: [4], numbers: [1, 0, 0, 0, 0, 0, 0, 0, 2] };
+    // 8 open cells around the ring: 0,1,2,5,8 ... ends on 8 only if it goes all the way round.
+    expect(zip.verify(holed, [0, 3, 6, 7, 8])).toBe(false);
+    expect(zip.verify(holed, [0, 1, 2, 5, 8, 7, 6, 3])).toBe(false); // ends on cell 3, not on the highest number
+    expect(zip.cellsToCover(holed)).toBe(8);
+  });
+});

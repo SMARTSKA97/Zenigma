@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CanLeave } from '../../core/leave';
+import { LeaveSheet } from '../../shared/leave-sheet';
 import { HapticsService } from '../../core/haptics.service';
 import { BackService } from '../../core/back.service';
 import { formatDuration } from '../../core/leaderboard.service';
@@ -27,12 +29,12 @@ const bestKey = (game: string) => `zenigma.speed.${game}`;
 /** A speed round: five easy levels back to back against a three-minute clock. Your best is kept on this device. */
 @Component({
   selector: 'app-speed-round',
-  imports: [RouterLink, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
+  imports: [RouterLink, LeaveSheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './speed-round.html',
   styleUrl: './speed-round.scss',
 })
-export class SpeedRound {
+export class SpeedRound implements CanLeave {
   protected readonly nav = inject(BackService);
   private readonly haptics = inject(HapticsService);
   private readonly route = inject(ActivatedRoute);
@@ -63,6 +65,21 @@ export class SpeedRound {
       return null;
     }
   });
+
+  protected readonly leaving = signal<((ok: boolean) => void) | null>(null);
+
+  /** Mid-round, a stray Back asks first: the round would be lost. */
+  canLeave(): boolean | Promise<boolean> {
+    if (this.phase() !== 'playing') return true;
+    this.haptics.warning();
+    return new Promise<boolean>((resolve) => this.leaving.set(resolve));
+  }
+
+  protected answerLeave(leave: boolean): void {
+    const done = this.leaving();
+    this.leaving.set(null);
+    done?.(leave);
+  }
 
   private order: number[] = [];
   private timer?: ReturnType<typeof setInterval>;

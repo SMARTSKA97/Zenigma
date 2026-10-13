@@ -10,6 +10,8 @@ import { LocalStore } from '../../core/local-store';
 import { SyncService } from '../../core/sync.service';
 import { Confetti } from '../../shared/confetti';
 import { Loader } from '../../shared/loader';
+import { LeaveSheet } from '../../shared/leave-sheet';
+import { CanLeave } from '../../core/leave';
 import { Sheet } from '../../shared/sheet';
 import { HintWheel } from '../../shared/hint-wheel';
 import { ShareSheet } from '../../shared/share-sheet';
@@ -39,7 +41,7 @@ const WARN_DELAY_MS = 1600;
 
 @Component({
   selector: 'app-puzzle-page',
-  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, HintWheel, ShareSheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
+  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, HintWheel, ShareSheet, LeaveSheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './puzzle-page.html',
   styleUrl: './puzzle-page.scss',
@@ -102,6 +104,8 @@ export class PuzzlePage {
   protected readonly wheelOpen = signal(false);
   /** Practice only: the board is covered and the clock stops. */
   protected readonly paused = signal(false);
+  /** Set while "Leave this game?" is open; calling it with the answer lets the navigation go or stops it. */
+  protected readonly leaving = signal<((ok: boolean) => void) | null>(null);
   protected readonly shareOpen = signal<{ card: CardInput; text: string } | null>(null);
   protected readonly coach = signal<Hint | null>(null);
   /** Hints spent on the level in play (a level solved with help earns at most two stars). */
@@ -369,6 +373,7 @@ export class PuzzlePage {
     clearTimeout(this.wrongTimer);
     const h = this.history();
     if (!h.length) return;
+    this.haptics.tick();
     this.future.update((f) => [this.state(), ...f]);
     this.state.set(h[h.length - 1]);
     this.history.set(h.slice(0, -1));
@@ -379,6 +384,7 @@ export class PuzzlePage {
     clearTimeout(this.wrongTimer);
     const f = this.future();
     if (!f.length || this.locked()) return;
+    this.haptics.tick();
     this.history.update((h) => [...h.slice(-99), this.state()]);
     this.state.set(f[0]);
     this.future.set(f.slice(1));
@@ -403,6 +409,7 @@ export class PuzzlePage {
     clearTimeout(this.wrongTimer);
     const p = this.puzzle();
     if (!p) return;
+    this.haptics.place();
     this.history.update((h) => [...h.slice(-99), this.state()]);
     this.state.set(ADAPTERS[this.game()].blank(p));
     this.scheduleSave();
@@ -493,6 +500,7 @@ export class PuzzlePage {
   /** Stops the clock and covers the board (practice only: a daily is timed by the server). */
   protected togglePause(): void {
     if (this.daily() || this.locked()) return;
+    this.haptics.tick();
     if (this.paused()) {
       this.stretchStart = Date.now();
       this.paused.set(false);
@@ -501,6 +509,21 @@ export class PuzzlePage {
       this.paused.set(true);
       void this.persist();
     }
+  }
+
+  /** A stray Back press, swipe or tap on a board that has been played on asks first. A practice clock stops while the question is open. */
+  canLeave(): boolean | Promise<boolean> {
+    if (this.solved() || this.locked() || this.history().length === 0) return true;
+    if (!this.daily() && !this.paused()) this.togglePause();
+    this.haptics.warning();
+    return new Promise<boolean>((resolve) => this.leaving.set(resolve));
+  }
+
+  protected answerLeave(leave: boolean): void {
+    const done = this.leaving();
+    this.leaving.set(null);
+    if (!leave && !this.daily() && this.paused()) this.togglePause();
+    done?.(leave);
   }
 
   // ---------------------------------------------------------------------------------------------- hints

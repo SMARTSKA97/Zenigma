@@ -9,7 +9,9 @@ describe('practice tracks', () => {
 
   it('gives Sudoku its kinds, the logic games one tiered Classic kind, and Word Guess none', () => {
     expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini', 'diagonal', 'windoku', 'disjoint', 'knight', 'killer', 'thermo', 'jigsaw', 'arrow', 'sandwich', 'consecutive', 'even-odd']);
-    for (const g of ['queens', 'tango', 'zip', 'patches']) expect(variantsOf(g).map((v) => v.id)).toEqual(['classic']);
+    for (const g of ['queens', 'tango']) expect(variantsOf(g).map((v) => v.id)).toEqual(['classic']);
+    expect(variantsOf('patches').map((v) => v.id)).toEqual(['classic', 'shapes']);
+    expect(variantsOf('zip').map((v) => v.id)).toEqual(['classic', 'walls', 'holes']);
     expect(variantsOf('word-guess')).toEqual([]);
   });
 
@@ -23,7 +25,11 @@ describe('practice tracks', () => {
       'sudoku-disjoint',
       'sudoku-knight',
       ...['killer', 'thermo', 'jigsaw', 'arrow', 'sandwich', 'consecutive', 'even-odd'].map((k) => `sudoku-${k}`),
-      ...['zip', 'patches'].flatMap((g) => tiers.map((t) => `${g}-classic-${t}`)),
+      ...tiers.map((t) => `zip-classic-${t}`),
+      'zip-walls',
+      'zip-holes',
+      ...tiers.map((t) => `patches-classic-${t}`),
+      'patches-shapes',
     ]);
   });
 
@@ -36,6 +42,7 @@ describe('practice tracks', () => {
   it('sends Sudoku to the chooser and other games straight to their map', () => {
     expect(practiceEntry('sudoku')).toEqual(['/games', 'sudoku']);
     expect(practiceEntry('queens')).toEqual(['/games', 'queens', 'classic']);
+    expect(practiceEntry('zip')).toEqual(['/games', 'zip']);
     expect(practiceEntry('word-guess')).toEqual(['/games', 'word-guess']);
   });
 

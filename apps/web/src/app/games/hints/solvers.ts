@@ -127,7 +127,7 @@ export function solveSudoku(givens: number[], rules?: Rules): string | null {
 
 export function solveZip(puzzle: ZipPuzzle): number[] | null {
   const n = puzzle.size;
-  const total = n * n;
+  const total = n * n - (puzzle.holes?.length ?? 0);
   const top = Math.max(...puzzle.numbers);
   const start = puzzle.numbers.indexOf(1);
   const nbrs = Array.from({ length: total }, (_, i) => {
@@ -138,9 +138,10 @@ export function solveZip(puzzle: ZipPuzzle): number[] | null {
     if (r < n - 1) out.push(i + n);
     if (c > 0) out.push(i - 1);
     if (c < n - 1) out.push(i + 1);
-    return out;
+    if (puzzle.holes?.includes(i)) return [];
+    return out.filter((v) => !puzzle.holes?.includes(v) && !puzzle.walls?.some(([x, y]) => (x === i && y === v) || (x === v && y === i)));
   });
-  const seen = new Array<boolean>(total).fill(false);
+  const seen = new Array<boolean>(n * n).fill(false);
   const path: number[] = [];
   const stranded = (at: number): boolean => {
     for (const v of nbrs[at]) {
@@ -179,10 +180,12 @@ export function patchOptions(puzzle: PatchesPuzzle, k: number): Rect[] {
   const out: Rect[] = [];
   const r = Math.floor(cell / n);
   const c = cell % n;
+  const sizes: [number, number][] = [];
   for (let h = 1; h <= n; h++) {
-    if (area % h) continue;
-    const w = area / h;
-    if (w > n) continue;
+    // A hidden number (area 0) could be any width.
+    for (let w = 1; w <= n; w++) if (area === 0 || h * w === area) sizes.push([h, w]);
+  }
+  for (const [h, w] of sizes) {
     if (shape === 1 && !(w > h)) continue;
     if (shape === 2 && !(h > w)) continue;
     if (shape === 3 && w !== h) continue;

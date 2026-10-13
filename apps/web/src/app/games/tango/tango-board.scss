@@ -11,7 +11,7 @@
   margin: 0 auto;
 }
 .grid {
-  --line: color-mix(in srgb, var(--ink) 18%, var(--bg));
+  --line: color-mix(in srgb, var(--ink) var(--line-mix), var(--bg));
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-template-rows: repeat(6, minmax(0, 1fr));

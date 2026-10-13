@@ -1,4 +1,5 @@
 import { CanMatchFn, Routes } from '@angular/router';
+import { leaveGuard } from './core/leave';
 import { leafIds, MIND_LIVE, variantsOf } from './games/catalog';
 
 const wordGuess = () => import('./games/word-guess/word-guess').then((m) => m.WordGuess);
@@ -11,18 +12,18 @@ const hasVariants: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.pa
 
 export const routes: Routes = [
   { path: 'games/word-guess', loadComponent: wordGuess, data: { mode: 'practice' } },
-  { path: 'mind/:game', canMatch: [mindPlayable], loadComponent: () => import('./games/mind/mind-page').then((m) => m.MindPage) },
-  { path: 'speed/:game', loadComponent: () => import('./features/speed/speed-round').then((m) => m.SpeedRound) },
+  { path: 'mind/:game', canDeactivate: [leaveGuard], canMatch: [mindPlayable], loadComponent: () => import('./games/mind/mind-page').then((m) => m.MindPage) },
+  { path: 'speed/:game', canDeactivate: [leaveGuard], loadComponent: () => import('./features/speed/speed-round').then((m) => m.SpeedRound) },
   { path: 'games/:game/levels', loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
   { path: 'games/:game/:variant/levels', canMatch: [variantPlayable], loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
-  { path: 'games/:game/:variant', canMatch: [variantPlayable], loadComponent: puzzle, data: { mode: 'practice' } },
+  { path: 'games/:game/:variant', canMatch: [variantPlayable], canDeactivate: [leaveGuard], loadComponent: puzzle, data: { mode: 'practice' } },
   { path: 'games/:game/:kind', canMatch: [tieredKind], loadComponent: () => import('./features/practice/tier-picker').then((m) => m.TierPicker) },
   { path: 'games/:game', canMatch: [hasVariants], loadComponent: () => import('./features/practice/variant-picker').then((m) => m.VariantPicker) },
-  { path: 'games/:game', loadComponent: puzzle, data: { mode: 'practice' } },
+  { path: 'games/:game', loadComponent: puzzle, canDeactivate: [leaveGuard], data: { mode: 'practice' } },
   { path: 'mind', loadComponent: () => import('./features/mind/mind-home').then((m) => m.MindHome) },
   { path: 'practice', loadComponent: () => import('./features/practice/practice').then((m) => m.Practice) },
   { path: 'daily/word-guess', loadComponent: wordGuess, data: { mode: 'daily' } },
-  { path: 'daily/:game', loadComponent: puzzle, data: { mode: 'daily' } },
+  { path: 'daily/:game', loadComponent: puzzle, canDeactivate: [leaveGuard], data: { mode: 'daily' } },
   { path: 'daily', pathMatch: 'full', redirectTo: 'challenges' },
   { path: 'ranks/circles', loadComponent: () => import('./features/circles/circles').then((m) => m.Circles) },
   { path: 'ranks', loadComponent: () => import('./features/ranks/ranks').then((m) => m.Ranks) },

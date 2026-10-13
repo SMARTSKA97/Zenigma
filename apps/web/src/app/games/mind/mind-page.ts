@@ -26,16 +26,18 @@ import { TargetNumber } from './target-number';
 import { TargetTap } from './target-tap';
 import { WhatNext } from './what-next';
 import { MindGameId } from '../catalog';
+import { CanLeave } from '../../core/leave';
+import { LeaveSheet } from '../../shared/leave-sheet';
 
 /** One screen for every mind-training game: how to play, the game, then your score against your best. */
 @Component({
   selector: 'app-mind-page',
-  imports: [RouterLink, Glyph, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber],
+  imports: [RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-page.html',
   styleUrl: './mind-page.scss',
 })
-export class MindPage {
+export class MindPage implements CanLeave {
   protected readonly nav = inject(BackService);
   protected readonly store = inject(MindStore);
   protected readonly daily = inject(MindDailyService);
@@ -56,6 +58,26 @@ export class MindPage {
     if (!m) return String(score);
     if (short && score === 0 && this.store.record(this.id()).plays === 0) return '–';
     return m.format ? m.format(score) : `${score} ${m.unit}`;
+  }
+
+  protected readonly leaving = signal<((ok: boolean) => void) | null>(null);
+
+  /** Mid-round, a stray Back asks first: a round cannot be picked up again. */
+  canLeave(): boolean | Promise<boolean> {
+    if (this.stage() !== 'play') return true;
+    this.haptics.warning();
+    return new Promise<boolean>((resolve) => this.leaving.set(resolve));
+  }
+
+  protected answerLeave(leave: boolean): void {
+    const done = this.leaving();
+    this.leaving.set(null);
+    done?.(leave);
+  }
+
+  /** Every button press in a game gives a small tap, so each answer is felt even in games that do not buzz themselves. */
+  protected feel(event: PointerEvent): void {
+    if ((event.target as HTMLElement | null)?.closest('button')) this.haptics.tick();
   }
 
   protected start(): void {

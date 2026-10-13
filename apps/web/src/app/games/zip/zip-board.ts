@@ -33,7 +33,7 @@ export class ZipBoard {
       .filter((x): x is { number: number; i: number } => x !== null)
       .sort((a, b) => a.number - b.number)
       .map((x) => `${x.number} at row ${Math.floor(x.i / p.size) + 1}, column ${(x.i % p.size) + 1}`);
-    return `Zip board, ${p.size} by ${p.size}. Draw one path through every cell, reaching the numbers in order. Numbers: ${where.join('; ')}. Path covers ${this.path().length} of ${p.size * p.size} cells.`;
+    return `Zip board, ${p.size} by ${p.size}. Draw one path through every open cell, reaching the numbers in order.${(p.holes?.length ?? 0) ? ` ${p.holes!.length} cells are blocked.` : ''}${(p.walls?.length ?? 0) ? ` ${p.walls!.length} walls cannot be crossed.` : ''} Numbers: ${where.join('; ')}. Path covers ${this.path().length} of ${p.size * p.size - (p.holes?.length ?? 0)} cells.`;
   });
 
   protected readonly cells = computed(() => {
@@ -41,7 +41,8 @@ export class ZipBoard {
     const path = this.path();
     const on = new Set(path);
     const end = path[path.length - 1];
-    return puzzle.numbers.map((number, i) => ({ i, number, on: on.has(i), head: i === end }));
+    const holes = new Set(puzzle.holes ?? []);
+    return puzzle.numbers.map((number, i) => ({ i, number, on: on.has(i), head: i === end, hole: holes.has(i) }));
   });
 
   protected readonly points = computed(() => {
@@ -49,6 +50,18 @@ export class ZipBoard {
     return this.path()
       .map((c) => `${(c % n) + 0.5},${Math.floor(c / n) + 0.5}`)
       .join(' ');
+  });
+
+  /** Walls as short thick bars on the line between two cells, in cell units. */
+  protected readonly walls = computed(() => {
+    const n = this.puzzle().size;
+    return (this.puzzle().walls ?? []).map(([a, b]) => {
+      const [lo, hi] = a < b ? [a, b] : [b, a];
+      // Side by side: a vertical bar on the shared edge. One above the other: a horizontal bar.
+      return hi - lo === 1
+        ? { x1: hi % n, y1: Math.floor(hi / n), x2: hi % n, y2: Math.floor(hi / n) + 1 }
+        : { x1: lo % n, y1: Math.floor(hi / n), x2: (lo % n) + 1, y2: Math.floor(hi / n) };
+    });
   });
 
   protected readonly head = computed(() => {

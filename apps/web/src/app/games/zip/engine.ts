@@ -4,7 +4,16 @@ export interface ZipPuzzle {
   size: number;
   /** The number on every cell (0 for none), row by row. */
   numbers: number[];
+  /** Side-by-side cells [a, b] the path may not cross between. */
+  walls?: [number, number][];
+  /** Blocked cells: the path goes around them, so it covers every other cell. */
+  holes?: number[];
 }
+
+/** How many cells the path has to cover. */
+export const cellsToCover = (puzzle: ZipPuzzle): number => puzzle.size * puzzle.size - (puzzle.holes?.length ?? 0);
+
+const wallBetween = (puzzle: ZipPuzzle, a: number, b: number): boolean => !!puzzle.walls?.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
 
 /** The path so far, as the cells it passes, starting on the cell numbered 1. */
 export type ZipPath = number[];
@@ -26,9 +35,10 @@ export function nextNumber(puzzle: ZipPuzzle, path: ZipPath): number {
 export function canStep(puzzle: ZipPuzzle, path: ZipPath, cell: number): boolean {
   const end = path[path.length - 1];
   if (cell < 0 || cell >= puzzle.size * puzzle.size || path.includes(cell) || apart(puzzle.size, end, cell) !== 1) return false;
+  if (puzzle.holes?.includes(cell) || wallBetween(puzzle, end, cell)) return false;
   const number = puzzle.numbers[cell];
   if (number > 0 && number !== nextNumber(puzzle, path)) return false;
-  if (number === topNumber(puzzle) && path.length + 1 !== puzzle.size * puzzle.size) return false;
+  if (number === topNumber(puzzle) && path.length + 1 !== cellsToCover(puzzle)) return false;
   return true;
 }
 
@@ -47,27 +57,28 @@ export function cutTo(path: ZipPath, cell: number): ZipPath | null {
 /** Moves never break a rule, so nothing is ever highlighted as wrong. */
 export const conflicts = (): Set<number> => new Set();
 
-export const solutionOf = (puzzle: ZipPuzzle, path: ZipPath): number[] | null => (path.length === puzzle.size * puzzle.size ? path : null);
+export const solutionOf = (puzzle: ZipPuzzle, path: ZipPath): number[] | null => (path.length === cellsToCover(puzzle) ? path : null);
 
 /** The same rules the server applies to a submitted path. */
 export function verify(puzzle: ZipPuzzle, path: unknown): boolean {
   const total = puzzle.size * puzzle.size;
-  if (!Array.isArray(path) || path.length !== total || puzzle.numbers.length !== total) return false;
+  const covered = cellsToCover(puzzle);
+  if (!Array.isArray(path) || path.length !== covered || puzzle.numbers.length !== total) return false;
   const top = topNumber(puzzle);
   const seen = new Set<number>();
   let expected = 1;
-  for (let i = 0; i < total; i++) {
+  for (let i = 0; i < covered; i++) {
     const cell = path[i];
-    if (!Number.isInteger(cell) || cell < 0 || cell >= total || seen.has(cell)) return false;
+    if (!Number.isInteger(cell) || cell < 0 || cell >= total || seen.has(cell) || puzzle.holes?.includes(cell)) return false;
     seen.add(cell);
-    if (i > 0 && apart(puzzle.size, path[i - 1], cell) !== 1) return false;
+    if (i > 0 && (apart(puzzle.size, path[i - 1], cell) !== 1 || wallBetween(puzzle, path[i - 1], cell))) return false;
     const number = puzzle.numbers[cell];
     if (number !== 0) {
       if (number !== expected) return false;
       expected++;
     }
   }
-  return top >= 2 && expected === top + 1 && puzzle.numbers[path[total - 1]] === top;
+  return top >= 2 && expected === top + 1 && puzzle.numbers[path[covered - 1]] === top;
 }
 
 export const isSolved = (puzzle: ZipPuzzle, path: ZipPath): boolean => verify(puzzle, path);

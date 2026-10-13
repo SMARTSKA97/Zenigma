@@ -1,0 +1,8 @@
+<app-sheet label="Leave this game?" (closed)="answer.emit(false)">
+  <h2>Leave this game?</h2>
+  <p class="muted">{{ text() }}</p>
+  <div class="actions">
+    <button type="button" class="secondary" (click)="answer.emit(true)">Leave</button>
+    <button type="button" (click)="answer.emit(false)">Keep playing</button>
+  </div>
+</app-sheet>

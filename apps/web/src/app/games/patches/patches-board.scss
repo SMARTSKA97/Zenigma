@@ -2,7 +2,7 @@
   display: block;
 }
 .grid {
-  --line: color-mix(in srgb, var(--ink) 16%, var(--bg));
+  --line: color-mix(in srgb, var(--ink) var(--line-mix), var(--bg));
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--n), minmax(0, 1fr));
@@ -10,8 +10,8 @@
   width: var(--board, min(100%, 26rem));
   aspect-ratio: 1;
   margin: 0 auto;
-  border: 2.5px solid var(--ink);
-  border-radius: 16px;
+  border: 2px solid var(--line);
+  border-radius: 18px;
   overflow: hidden;
   background: var(--line);
   gap: 1px;
@@ -29,63 +29,75 @@
   min-height: 0;
   background: var(--surface);
 }
+/* A clue is a soft tile in its own colour: the shape it needs as a faint outline, the area as a number. The patch drawn over it takes the same colour. */
 .clue {
   position: relative;
   z-index: 3;
   display: grid;
   place-items: center;
-  width: 66%;
+  width: 84%;
   aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 70%, transparent), 0 2px 4px rgb(0 0 0 / 0.18);
+  border-radius: 28%;
+  background: color-mix(in srgb, oklch(0.78 0.12 calc(var(--hue) * 1deg)) 36%, var(--surface));
   pointer-events: none;
   line-height: 1;
+  transition: background-color 0.2s var(--ease);
 }
 .clue b {
+  position: relative;
   font-family: var(--font-display);
   font-weight: 750;
-  font-size: clamp(0.95rem, 7cqw, 1.6rem);
-  color: var(--ink);
+  font-size: clamp(1rem, 7.4cqw, 1.7rem);
+  color: oklch(0.38 0.12 calc(var(--hue) * 1deg));
 }
-/* Which shape the patch must be: a small outline of it tucked into the corner of the badge. */
+.clue.shape-only .shape {
+  inset: 12%;
+  width: 76%;
+  height: 76%;
+  stroke-width: 2.2;
+  stroke-dasharray: none;
+  opacity: 0.9;
+}
+.clue.done {
+  background: transparent !important;
+}
 .shape {
   position: absolute;
-  right: -0.28rem;
-  bottom: -0.28rem;
-  width: clamp(0.85rem, 3.4cqw, 1.2rem);
-  padding: 0.12rem;
-  border-radius: 0.3rem;
-  background: var(--ink);
+  inset: 14%;
+  width: 72%;
+  height: 72%;
   fill: none;
-  stroke: var(--ink-contrast);
-  stroke-width: 3;
-  box-sizing: content-box;
+  stroke: oklch(0.45 0.13 calc(var(--hue) * 1deg));
+  stroke-width: 1.6;
+  stroke-dasharray: 2.2 2.2;
+  opacity: 0.75;
 }
 .patch {
   position: absolute;
   z-index: 2;
   box-sizing: border-box;
-  margin: 2px;
-  border: 2.5px solid oklch(0.58 0.15 calc(var(--hue) * 1deg));
-  border-radius: 12px;
-  background: color-mix(in srgb, oklch(0.76 0.14 calc(var(--hue) * 1deg)) 52%, var(--surface));
-  box-shadow: inset 0 -3px 0 color-mix(in srgb, oklch(0.5 0.15 calc(var(--hue) * 1deg)) 25%, transparent);
+  margin: 3px;
+  border: 0;
+  border-radius: 14px;
+  background: oklch(0.84 0.1 calc(var(--hue) * 1deg));
+  box-shadow: inset 0 -3px 0 oklch(0.7 0.12 calc(var(--hue) * 1deg) / 0.55);
   pointer-events: none;
   transition: background-color 0.2s var(--ease);
   animation: settle 0.22s var(--spring) backwards;
 }
 .patch.blocked {
-  border-color: var(--bad);
+  outline-color: var(--bad);
   animation: nudge 0.3s;
 }
 .patch.draft {
-  border-style: dashed;
+  outline: 2.5px dashed oklch(0.55 0.15 calc(var(--hue) * 1deg));
+  outline-offset: -3px;
   opacity: 0.8;
   animation: none;
 }
 .patch.bad {
-  border-color: var(--bad);
+  outline: 2.5px solid var(--bad);
+  outline-offset: -3px;
   background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--bad) 22%, transparent) 0 6px, color-mix(in srgb, var(--bad) 8%, transparent) 6px 12px);
 }
 .win .patch {
@@ -105,4 +117,31 @@
   50% {
     transform: scale(1.03);
   }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host-context(:root:not([data-theme='light'])) .patch {
+    background: oklch(0.5 0.11 calc(var(--hue) * 1deg));
+  }
+  :host-context(:root:not([data-theme='light'])) .clue b {
+    color: oklch(0.94 0.06 calc(var(--hue) * 1deg));
+  }
+  :host-context(:root:not([data-theme='light'])) .shape {
+    stroke: oklch(0.85 0.1 calc(var(--hue) * 1deg));
+  }
+  :host-context(:root:not([data-theme='light'])) .clue {
+    background: color-mix(in srgb, oklch(0.55 0.12 calc(var(--hue) * 1deg)) 40%, var(--surface));
+  }
+}
+:host-context(:root[data-theme='dark']) .patch {
+  background: oklch(0.5 0.11 calc(var(--hue) * 1deg));
+}
+:host-context(:root[data-theme='dark']) .clue b {
+  color: oklch(0.94 0.06 calc(var(--hue) * 1deg));
+}
+:host-context(:root[data-theme='dark']) .shape {
+  stroke: oklch(0.85 0.1 calc(var(--hue) * 1deg));
+}
+:host-context(:root[data-theme='dark']) .clue {
+  background: color-mix(in srgb, oklch(0.55 0.12 calc(var(--hue) * 1deg)) 40%, var(--surface));
 }

@@ -13,7 +13,7 @@
   (keydown)="key($event)"
 >
   @for (cell of cells(); track cell.i) {
-    <div class="cell" [attr.data-i]="cell.i" [class.on]="cell.on" [class.head]="cell.head">
+    <div class="cell" [attr.data-i]="cell.i" [class.on]="cell.on" [class.head]="cell.head" [class.hole]="cell.hole">
       @if (cell.number) {
         <b class="num" [class.reached]="cell.on">{{ cell.number }}</b>
       }
@@ -25,4 +25,11 @@
       <circle [attr.cx]="h.x" [attr.cy]="h.y" r="0.2" />
     }
   </svg>
+  @if (walls().length) {
+    <svg class="walls" [attr.viewBox]="'0 0 ' + puzzle().size + ' ' + puzzle().size" aria-hidden="true">
+      @for (w of walls(); track $index) {
+        <line [attr.x1]="w.x1" [attr.y1]="w.y1" [attr.x2]="w.x2" [attr.y2]="w.y2" />
+      }
+    </svg>
+  }
 </div>

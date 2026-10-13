@@ -2,7 +2,7 @@
   display: block;
 }
 .grid {
-  --line: color-mix(in srgb, var(--ink) 22%, var(--bg));
+  --line: color-mix(in srgb, var(--ink) var(--line-mix), var(--bg));
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--n), minmax(0, 1fr));
@@ -87,4 +87,24 @@
   50% {
     stroke-width: 0.5;
   }
+}
+
+/* A blocked cell is solid: the path goes around it. */
+.cell.hole {
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ink) 45%, var(--bg)) 0 3px, var(--bg) 3px 8px);
+}
+/* A wall is a thick bar on the line between two cells. */
+.walls {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  overflow: visible;
+}
+.walls line {
+  stroke: var(--ink);
+  stroke-width: 0.1;
+  stroke-linecap: round;
 }

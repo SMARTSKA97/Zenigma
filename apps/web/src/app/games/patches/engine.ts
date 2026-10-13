@@ -1,6 +1,6 @@
 /** Patches: cut the grid into rectangles. Each holds exactly one clue and has its area, and matches its shape when shown. */
 
-/** [cell, area, shape]: shape 0 is any, 1 wide, 2 tall, 3 square. */
+/** [cell, area, shape]: shape 0 is any, 1 wide, 2 tall, 3 square. An area of 0 means the number is hidden (the clue shows only its shape). */
 export type PatchesClue = [number, number, number];
 
 export interface PatchesPuzzle {
@@ -47,7 +47,7 @@ export function isRight(puzzle: PatchesPuzzle, r: Rect): boolean {
   const inside = cluesIn(puzzle, r);
   if (inside.length !== 1) return false;
   const [, area, shape] = inside[0];
-  return area === widthOf(r) * heightOf(r) && (shape === 0 || shape === shapeOf(r));
+  return (area === 0 || area === widthOf(r) * heightOf(r)) && (shape === 0 || shape === shapeOf(r));
 }
 
 /** Cells of every rectangle that cannot be part of an answer. */

@@ -111,7 +111,7 @@
   stroke-width: 0.07px;
 }
 .grid {
-  --line: color-mix(in srgb, var(--ink) 22%, var(--bg));
+  --line: color-mix(in srgb, var(--ink) var(--line-mix), var(--bg));
   container-type: inline-size;
   display: grid;
   grid-template-columns: repeat(var(--n, 9), minmax(0, 1fr));
@@ -173,7 +173,7 @@
   cursor: default;
 }
 :host .diag {
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  background: color-mix(in srgb, var(--accent) var(--region-mix), var(--surface));
 }
 :host .peer {
   background: var(--surface-2);

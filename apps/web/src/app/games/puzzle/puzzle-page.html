@@ -237,3 +237,7 @@
     </div>
   </app-sheet>
 }
+
+@if (leaving()) {
+  <app-leave-sheet [text]="daily() ? 'Your daily clock keeps running while you are away. You can come back to this board any time today.' : 'Your board and time are saved. The clock is paused, so you carry on where you stopped.'" (answer)="answerLeave($event)" />
+}

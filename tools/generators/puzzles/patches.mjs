@@ -57,7 +57,7 @@ export function solvePatches(puzzle, limit = 2) {
         }
         if (many || found < 0) continue;
         const [, area, shape] = clues[found];
-        if (area !== w * h) continue;
+        if (area !== 0 && area !== w * h) continue; // area 0: the number is hidden, any size will do
         if (shape !== SHAPE_ANY && shape !== shapeOf(w, h)) continue;
         for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) covered[r * n + c] = true;
         rects.push([r0, c0, r0 + h - 1, c0 + w - 1]);
@@ -122,4 +122,27 @@ export function generatePatches(size, rng, extra = 0) {
     return { size, clues: clues.sort((a, b) => a[0] - b[0]) };
   }
   throw new Error(`Could not generate a ${size}x${size} Patches puzzle`);
+}
+
+/**
+ * A Patches puzzle where some numbers are hidden: those clues show only their shape (wide, tall or square), and the player works
+ * out how big each patch is. `share` (0 to 1) is how many of the numbers to hide, as long as the answer stays unique.
+ */
+export function generatePatchesHidden(size, rng, share = 0.5) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const base = generatePatches(size, rng, size * size); // every shape shown
+    const clues = base.clues.map(([cell, area, shape]) => [cell, area, shape === SHAPE_ANY ? SHAPE_SQUARE : shape]);
+    const puzzle = { size, clues };
+    const want = Math.max(1, Math.round(clues.length * share));
+    let hidden = 0;
+    for (const k of rng.shuffle(clues.map((_, i) => i))) {
+      if (hidden >= want) break;
+      const area = clues[k][1];
+      clues[k][1] = 0;
+      if (solvePatches(puzzle, 2).count === 1) hidden++;
+      else clues[k][1] = area;
+    }
+    if (hidden > 0) return puzzle;
+  }
+  throw new Error(`Could not generate a ${size}x${size} hidden-number Patches puzzle`);
 }

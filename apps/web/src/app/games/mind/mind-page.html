@@ -22,7 +22,7 @@
       </section>
     }
     @case ('play') {
-      <section class="stage">
+      <section class="stage" (pointerdown)="feel($event)">
         @switch (id()) {
           @case ('quick-sums') { <app-quick-sums (done)="finish($event)" /> }
           @case ('colour-clash') { <app-colour-clash (done)="finish($event)" /> }
@@ -66,4 +66,8 @@
       </section>
     }
   }
+}
+
+@if (leaving()) {
+  <app-leave-sheet text="This round will end and will not count. You can start a new one any time." (answer)="answerLeave($event)" />
 }

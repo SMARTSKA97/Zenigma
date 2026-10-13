@@ -2,7 +2,7 @@ import { generateQueens, solveQueens } from './queens.mjs';
 import { generateSudoku, solveSudoku } from './sudoku.mjs';
 import { generateKind, isKindRule, KIND_RULES } from './sudoku-kinds.mjs';
 import { generateZip, solveZip } from './zip.mjs';
-import { generatePatches, solvePatches } from './patches.mjs';
+import { generatePatches, generatePatchesHidden, solvePatches } from './patches.mjs';
 import { generateTango, solveTango } from './tango.mjs';
 import { readFileSync } from 'node:fs';
 import { rngFrom } from './rng.mjs';
@@ -21,6 +21,9 @@ export const TRACKS = [
   'sudoku-windoku',
   'sudoku-disjoint',
   ...['zip', 'patches'].flatMap((game) => SUDOKU_TIERS.map((tier) => `${game}-classic-${tier}`)),
+  'zip-walls',
+  'zip-holes',
+  'patches-shapes',
 ];
 export const gameOfTrack = (track) => track.split('-')[0];
 /** The first 200 levels of a Sudoku tier climb through its clue range; later levels stay near the hard end. */
@@ -81,6 +84,10 @@ export function practiceLevel(track, level) {
   if (game === 'sudoku-disjoint') return generateSudoku(rng, Math.round(38 - 14 * h), 9, 'disjoint');
   if (game === 'sudoku-knight') return generateSudoku(rng, Math.round(36 - 12 * h), 9, 'knight');
   if (game.startsWith('sudoku-')) return sudokuTierLevel(track, level, rng);
+  // Zip with walls the path may not cross, or blocked cells it must go around: one track each, climbing from a few to many.
+  if (game === 'zip-walls') return generateZip(h < 0.5 ? 5 : h < 0.8 ? 6 : 7, rng, Math.max(4, Math.round(7 - 3 * h)), { walls: Math.round(3 + 7 * h) });
+  if (game === 'patches-shapes') return generatePatchesHidden(h < 0.3 ? 5 : h < 0.6 ? 6 : h < 0.85 ? 7 : 8, rng, 0.35 + 0.65 * h);
+  if (game === 'zip-holes') return generateZip(h < 0.35 ? 5 : h < 0.7 ? 6 : 7, rng, Math.max(4, Math.round(7 - 3 * h)), { holes: Math.round(2 + 3 * h) });
   switch (game) {
     case 'queens': {
       const size = h < 0.2 ? 5 : h < 0.4 ? 6 : h < 0.6 ? 7 : h < 0.8 ? 8 : 9;

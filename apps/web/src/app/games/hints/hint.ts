@@ -212,7 +212,7 @@ function zipHint(puzzle: zip.ZipPuzzle, path: zip.ZipPath): Hint {
   }
   const n = puzzle.size;
   if (path.length === 1) {
-    const corners = [0, n - 1, n * (n - 1), n * n - 1].filter((c) => !path.includes(c) && puzzle.numbers[c] === 0);
+    const corners = [0, n - 1, n * (n - 1), n * n - 1].filter((c) => !path.includes(c) && puzzle.numbers[c] === 0 && !puzzle.holes?.includes(c));
     if (corners.length) return { kind: 'nudge', cells: corners, title: 'Corners have two neighbours', text: 'The path must enter and leave every corner, so it must use both of its neighbours. Start your route from there.' };
   }
   const next = zip.nextNumber(puzzle, path);

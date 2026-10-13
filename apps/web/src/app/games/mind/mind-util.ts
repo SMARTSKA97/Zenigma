@@ -1,8 +1,10 @@
 import { DestroyRef, inject, signal } from '@angular/core';
+import { HapticsService } from '../../core/haptics.service';
 
 /** A countdown in milliseconds that ticks ten times a second, can be docked (a wrong answer), and calls `onEnd` once at zero. */
 export function useClock(total: number, onEnd: () => void) {
   const destroy = inject(DestroyRef);
+  const haptics = inject(HapticsService);
   const left = signal(total);
   let id: ReturnType<typeof setInterval> | undefined;
   let ended = false;
@@ -27,6 +29,7 @@ export function useClock(total: number, onEnd: () => void) {
       }, 100);
     },
     dock(ms: number) {
+      haptics.error();
       left.update((v) => Math.max(0, v - ms));
     },
     stop,

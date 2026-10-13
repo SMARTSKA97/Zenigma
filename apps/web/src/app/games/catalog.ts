@@ -160,8 +160,15 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
   // The other games have one kind with the same five difficulties as Sudoku, so they go straight to the difficulty chooser.
   queens: [{ id: 'classic', name: 'Classic', blurb: 'One queen in every row, column and colour.', tiered: true }],
   tango: [{ id: 'classic', name: 'Classic', blurb: 'Fill the grid with suns and moons.', tiered: true }],
-  zip: [{ id: 'classic', name: 'Classic', blurb: 'One path through every cell, in number order.', tiered: true }],
-  patches: [{ id: 'classic', name: 'Classic', blurb: 'Cut the grid into rectangles that match their numbers.', tiered: true }],
+  zip: [
+    { id: 'classic', name: 'Classic', blurb: 'One path through every cell, in number order.', tiered: true },
+    { id: 'walls', name: 'Walls', blurb: 'Walls stand between some cells, and the path may not cross them.' },
+    { id: 'holes', name: 'Blocked cells', blurb: 'Some cells are blocked. The path goes around them and covers all the rest.' },
+  ],
+  patches: [
+    { id: 'classic', name: 'Classic', blurb: 'Cut the grid into rectangles that match their numbers.', tiered: true },
+    { id: 'shapes', name: 'Shapes only', blurb: 'Many numbers are hidden. A clue shows only the shape of its patch, and you work out the size.' },
+  ],
 };
 
 /** The kinds of a game as the player chooses them (Sudoku: Classic, Mini ...). */
@@ -243,8 +250,6 @@ export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
     { name: 'Giant Queens', blurb: 'Bigger boards with more colours.' },
   ],
   tango: [{ name: 'Big Tango', blurb: 'An 8 by 8 board with more clues to chain.' }],
-  zip: [{ name: 'Zip Walls', blurb: 'Walls block the path between some cells.' }],
-  patches: [{ name: 'Patches Big', blurb: 'Bigger grids with more shapes.' }],
 };
 
 /** Everything on the way for a live game: its own coming-soon kinds plus the variants not playable yet. */

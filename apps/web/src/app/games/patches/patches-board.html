@@ -13,8 +13,10 @@
   @for (cell of cells(); track cell.i) {
     <div class="cell" [attr.data-i]="cell.i">
       @if (cell.clue; as clue) {
-        <span class="clue" [class.done]="cell.covered">
-          <b>{{ clue[1] }}</b>
+        <span class="clue" [class.done]="cell.covered" [class.shape-only]="clue[1] === 0" [style.--hue]="cell.hue">
+          @if (clue[1] > 0) {
+            <b>{{ clue[1] }}</b>
+          }
           @if (clue[2] > 0) {
             <svg class="shape" viewBox="0 0 24 24" aria-hidden="true">
               @switch (clue[2]) {

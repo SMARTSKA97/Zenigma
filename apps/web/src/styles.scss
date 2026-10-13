@@ -17,6 +17,9 @@
 :root {
   --bg: #f2f4f3;
   --surface: #ffffff;
+  /* How strongly grid lines and shaded regions (Windoku windows, diagonals, even cells) show against a cell. Stronger in dark, where a faint tint disappears. */
+  --line-mix: 22%;
+  --region-mix: 9%;
   --surface-2: #eaeeed;
   --thumb: #ffffff;
   --text: #0f1618;
@@ -60,6 +63,8 @@
 @mixin dark-tokens {
   --bg: #0b1012;
   --surface: #141b1e;
+  --line-mix: 38%;
+  --region-mix: 28%;
   --surface-2: #1c2528;
   --thumb: #2f3c41;
   --text: #eef2f1;

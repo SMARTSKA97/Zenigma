@@ -25,6 +25,7 @@ public static class PuzzleRules
         "sudoku-diagonal", "sudoku-knight", "sudoku-windoku", "sudoku-disjoint",
         .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich" }.Select(kind => $"sudoku-{kind}"),
         .. new[] { Zip, Patches }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
+        "zip-walls", "zip-holes", "patches-shapes",
     ];
 
     public static string TrackOf(string game, string? variant) => string.IsNullOrEmpty(variant) ? game : $"{game}-{variant}";
@@ -84,29 +85,43 @@ public static class PuzzleRules
         return true;
     }
 
-    // Zip: solution lists every cell (row * size + column) in the order the path visits them. It must step to a neighbouring
-    // cell each time, and pass the numbered cells in order from 1 to the highest, starting on 1 and ending on the highest.
+    // Zip: solution lists every open cell (row * size + column) in the order the path visits them. It must step to a neighbouring
+    // cell each time (never across a wall, never onto a blocked cell), and pass the numbered cells in order from 1 to the highest,
+    // starting on 1 and ending on the highest. Optional "walls" are [a, b] pairs of side-by-side cells and "holes" are blocked cells.
     private static bool VerifyZip(JsonElement puzzle, JsonElement solution)
     {
         var size = puzzle.GetProperty("size").GetInt32();
         var numbers = puzzle.GetProperty("numbers").EnumerateArray().Select(x => x.GetInt32()).ToArray();
+        var holes = puzzle.TryGetProperty("holes", out var h) && h.ValueKind == JsonValueKind.Array ? h.EnumerateArray().Select(x => x.GetInt32()).ToHashSet() : new HashSet<int>();
+        var walls = new HashSet<(int, int)>();
+        if (puzzle.TryGetProperty("walls", out var w) && w.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var pair in w.EnumerateArray())
+            {
+                var ends = pair.EnumerateArray().Select(x => x.GetInt32()).ToArray();
+                if (ends.Length == 2) walls.Add((Math.Min(ends[0], ends[1]), Math.Max(ends[0], ends[1])));
+            }
+        }
+
         var total = size * size;
-        if (numbers.Length != total || solution.ValueKind != JsonValueKind.Array || solution.GetArrayLength() != total) return false;
+        var covered = total - holes.Count;
+        if (numbers.Length != total || solution.ValueKind != JsonValueKind.Array || solution.GetArrayLength() != covered) return false;
 
         var path = solution.EnumerateArray().Select(x => x.ValueKind == JsonValueKind.Number ? x.GetInt32() : -1).ToArray();
         var seen = new bool[total];
         var top = numbers.Max();
         var expected = 1;
-        for (var step = 0; step < total; step++)
+        for (var step = 0; step < covered; step++)
         {
             var cell = path[step];
-            if (cell < 0 || cell >= total || seen[cell]) return false;
+            if (cell < 0 || cell >= total || seen[cell] || holes.Contains(cell)) return false;
             seen[cell] = true;
             if (step > 0)
             {
                 var before = path[step - 1];
                 var apart = Math.Abs(cell / size - before / size) + Math.Abs(cell % size - before % size);
                 if (apart != 1) return false; // one step up, down, left or right
+                if (walls.Contains((Math.Min(cell, before), Math.Max(cell, before)))) return false; // never across a wall
             }
 
             if (numbers[cell] != 0)
@@ -116,7 +131,7 @@ public static class PuzzleRules
             }
         }
 
-        return top >= 2 && expected == top + 1 && numbers[path[total - 1]] == top;
+        return top >= 2 && expected == top + 1 && numbers[path[covered - 1]] == top;
     }
 
     // Patches: the solution is a list of rectangles [row0, col0, row1, col1] (inclusive). Together they must cover every cell exactly
@@ -150,7 +165,7 @@ public static class PuzzleRules
             var inside = clues.Where(k => k[0] / size >= r0 && k[0] / size <= r1 && k[0] % size >= c0 && k[0] % size <= c1).ToArray();
             if (inside.Length != 1) return false;
             var (area, shape) = (inside[0][1], inside[0][2]);
-            if (area != w * h) return false;
+            if (area != 0 && area != w * h) return false; // area 0: the number is hidden, any size will do
             var actual = w == h ? 3 : w > h ? 1 : 2;
             if (shape != 0 && shape != actual) return false;
         }

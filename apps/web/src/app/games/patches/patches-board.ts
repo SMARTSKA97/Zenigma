@@ -30,7 +30,7 @@ export class PatchesBoard {
   protected readonly description = computed(() => {
     const p = this.puzzle();
     const shape = ['', ', wide', ', tall', ', square'];
-    const clues = p.clues.map((c) => `row ${Math.floor(c[0] / p.size) + 1}, column ${(c[0] % p.size) + 1}: area ${c[1]}${shape[c[2]] ?? ''}`);
+    const clues = p.clues.map((c) => `row ${Math.floor(c[0] / p.size) + 1}, column ${(c[0] % p.size) + 1}: ${c[1] > 0 ? `area ${c[1]}` : 'area hidden'}${shape[c[2]] ?? ''}`);
     return `Patches board, ${p.size} by ${p.size}. Drag across cells to draw a rectangle; each holds one clue and has that area. Tap a rectangle to remove it. Clues: ${clues.join('; ')}. ${this.board().length} of ${p.clues.length} rectangles drawn.`;
   });
 
@@ -38,7 +38,8 @@ export class PatchesBoard {
     const p = this.puzzle();
     const rects = this.board();
     const byCell = new Map<number, PatchesClue>(p.clues.map((c) => [c[0], c]));
-    return Array.from({ length: p.size * p.size }, (_, i) => ({ i, clue: byCell.get(i) ?? null, covered: rects.some((r) => covers(r, p.size, i)) }));
+    const hueOf = (cell: number) => (200 + Math.max(0, p.clues.findIndex(([c]) => c === cell)) * 53) % 360;
+    return Array.from({ length: p.size * p.size }, (_, i) => ({ i, clue: byCell.get(i) ?? null, hue: hueOf(i), covered: rects.some((r) => covers(r, p.size, i)) }));
   });
 
   protected readonly shown = computed(() => {
