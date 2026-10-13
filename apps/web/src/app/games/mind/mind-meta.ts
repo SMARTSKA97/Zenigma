@@ -29,6 +29,11 @@ export const MIND_META: Partial<Record<MindGameId, MindMeta>> = {
   'anagram-rush': { skill: 'language', how: 'Tap the letters in the right order to spell the word. 60 seconds. Skip costs 5 seconds.', scale: 10, unit: 'words' },
   'missing-letters': { skill: 'language', how: 'Two letters are missing from the word. Pick the pair that makes a real word. 60 seconds. A wrong answer costs 3 seconds.', scale: 15, unit: 'words' },
   'what-next': { skill: 'logic', how: 'Find the rule in the number pattern and pick the number that comes next. 60 seconds. A wrong answer costs 3 seconds.', scale: 12, unit: 'correct' },
+  'mental-turn': { skill: 'logic', how: 'A shape is shown. Pick the one that is the same shape turned around. Beware: flipped over is not the same. 60 seconds. A wrong answer costs 3 seconds.', scale: 12, unit: 'correct' },
+  'number-sort': { skill: 'speed', how: 'Nine numbers on the board. Tap them from the smallest to the largest. Five boards. A wrong tap adds 2 seconds.', scale: 90, unit: 'points' },
+  'dot-count': { skill: 'attention', how: 'Dots flash for a second, then vanish. Pick how many there were. 45 seconds. A wrong answer costs 3 seconds.', scale: 15, unit: 'counted' },
+  opposites: { skill: 'language', how: 'A word appears. Pick its opposite from four words. 60 seconds. A wrong answer costs 3 seconds.', scale: 20, unit: 'correct' },
+  'word-recall': { skill: 'memory', how: 'A few words appear for a moment. Then pick them out of a longer list. One more word each round. Three lives.', scale: 7, unit: 'rounds' },
 };
 
 export const isMindPlayable = (id: string): id is MindGameId => id in MIND_META;

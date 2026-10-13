@@ -12,7 +12,7 @@
 <section class="card brain">
   <div class="score">
     <span class="num">{{ overall() }}</span>
-    <span class="muted">Overall mark<br />({{ played() }} of {{ list().length === 0 ? 0 : 15 }} games played)</span>
+    <span class="muted">Overall mark<br />({{ played() }} of {{ total }} games played)</span>
   </div>
   <app-brain [marks]="marks()" [(selected)]="selected" />
   @if (detail(); as d) {

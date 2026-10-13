@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CATEGORIES, GAMES, SKILLS, SPEED_GAMES, isPuzzleGame, PRACTICE_TRACKS, practiceEntry, soonKindsOf } from '../../games/catalog';
+import { CATEGORIES, GAMES, MIND_LIVE, SKILLS, SPEED_GAMES, isPuzzleGame, PRACTICE_TRACKS, practiceEntry, soonKindsOf } from '../../games/catalog';
 import { MindStore } from '../../games/mind/mind-store';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
@@ -20,6 +20,7 @@ import { HintsService } from '../../core/hints.service';
 export class Practice implements OnInit {
   private readonly practice = inject(PracticeStore);
   private readonly mindStore = inject(MindStore);
+  protected readonly mindCount = MIND_LIVE.length;
   protected readonly cats = [{ id: 'all', name: 'All' }, ...CATEGORIES.filter((c) => c.id !== 'mind')];
   protected readonly cat = signal<string>('all');
   /** Live games by category (logic puzzles, Sudoku, words). Mind training has its own page. */

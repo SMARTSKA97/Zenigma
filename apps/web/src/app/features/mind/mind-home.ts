@@ -30,6 +30,7 @@ export class MindHome implements OnInit {
   private readonly profileApi = inject(ProfileService);
 
   protected readonly skills = SKILLS;
+  protected readonly total = MIND_LIVE.length;
   protected readonly selected = signal<Skill | null>(null);
   protected readonly filter = signal<Skill | 'all'>('all');
   protected readonly group = signal(0);

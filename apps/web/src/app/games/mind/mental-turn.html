@@ -1,0 +1,17 @@
+<div class="hud"><span>{{ score() }} correct</span><span>{{ seconds() }}s</span></div>
+<div class="time"><i [style.width.%]="(clock.left() / 60000) * 100"></i></div>
+<p class="say">Which one is this shape, turned?</p>
+<div class="shape big" [class.flash-bad]="bad()" aria-label="The shape to match">
+  @for (i of grid; track i) {
+    <i [class.on]="has(round().shown, i)"></i>
+  }
+</div>
+<div class="shapes">
+  @for (o of round().options; track $index) {
+    <button type="button" class="shape pick" (click)="answer(o.right)" [attr.aria-label]="'Option ' + ($index + 1)">
+      @for (i of grid; track i) {
+        <i [class.on]="has(o.cells, i)"></i>
+      }
+    </button>
+  }
+</div>

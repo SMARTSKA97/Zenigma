@@ -6,7 +6,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideRouter, withViewTransitions } from '@angular/router';
+import { PreloadAllModules, provideRouter, withInMemoryScrolling, withPreloading, withViewTransitions } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { Capacitor } from '@capacitor/core';
 import { routes } from './app.routes';
@@ -24,7 +24,8 @@ import { ThemeService } from './core/theme.service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withViewTransitions()),
+    // Screens are fetched in the background once the app is idle, so moving between them never waits on the network.
+    provideRouter(routes, withViewTransitions(), withPreloading(PreloadAllModules), withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
     provideHttpClient(withInterceptors([offlineInterceptor, authInterceptor])),
     {
       provide: LocalStore,

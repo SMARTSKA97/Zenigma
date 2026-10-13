@@ -1,0 +1,16 @@
+<div class="hud"><span>Round {{ level() }}</span><span class="lives" aria-label="Lives left">{{ '♥'.repeat(lives()) }}</span></div>
+@if (phase() === 'show') {
+  <p class="say">Remember these {{ count() }} words…</p>
+  <div class="words big">
+    @for (w of shown(); track w) {
+      <span>{{ w }}</span>
+    }
+  </div>
+} @else {
+  <p class="say">{{ phase() === 'over' ? 'The words were:' : 'Pick the ' + count() + ' words you saw (' + chosen().size + '/' + count() + ')' }}</p>
+  <div class="words">
+    @for (w of choices(); track w) {
+      <button type="button" class="opt word" [class.pick]="chosen().has(w)" [class.good]="phase() === 'over' && right().has(w)" [class.bad]="phase() === 'over' && chosen().has(w) && !right().has(w)" [disabled]="phase() === 'over'" (click)="toggle(w)">{{ w }}</button>
+    }
+  </div>
+}

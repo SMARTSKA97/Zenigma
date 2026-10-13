@@ -1,0 +1,16 @@
+<div class="hud"><span>{{ score() }} counted</span><span>{{ seconds() }}s</span></div>
+<div class="time"><i [style.width.%]="(clock.left() / 45000) * 100"></i></div>
+<div class="field" [class.flash-bad]="bad()" aria-label="Dots">
+  @if (phase() === 'show') {
+    @for (d of dots(); track $index) {
+      <i class="dot" [style.left.%]="d.x" [style.top.%]="d.y"></i>
+    }
+  } @else {
+    <span class="say">How many dots?</span>
+  }
+</div>
+<div class="options">
+  @for (o of options(); track o) {
+    <button type="button" class="opt" [disabled]="phase() !== 'ask'" (click)="pick(o)">{{ o }}</button>
+  }
+</div>

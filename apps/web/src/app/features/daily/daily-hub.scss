@@ -6,10 +6,11 @@
 .hero {
   padding: clamp(1.5rem, 4vw, 2.25rem);
   border-radius: 28px;
-  background: var(--ink);
-  color: var(--ink-contrast);
+  background: var(--hero-bg);
+  color: var(--hero-fg);
   margin-bottom: 1rem;
-  h1 {
+  h1,
+  .big {
     margin-bottom: 0.4rem;
   }
 }
@@ -33,10 +34,10 @@
     max-width: 3rem;
     height: 6px;
     border-radius: 99px;
-    background: color-mix(in srgb, var(--ink-contrast) 22%, transparent);
+    background: color-mix(in srgb, var(--hero-fg) 22%, transparent);
     transition: background-color 0.4s var(--ease);
     &.on {
-      background: var(--ink-contrast);
+      background: var(--hero-fg);
     }
   }
 }
@@ -126,7 +127,7 @@
     padding: 0.25rem 0.75rem;
     border: 0;
     border-radius: 99px;
-    background: color-mix(in srgb, var(--ink-contrast) 14%, transparent);
+    background: color-mix(in srgb, var(--hero-fg) 14%, transparent);
     color: inherit;
     font-size: 0.82rem;
     font-weight: 600;
@@ -135,8 +136,8 @@
   }
   :host a.chip {
     margin-left: auto;
-    background: var(--ink-contrast);
-    color: var(--ink);
+    background: var(--hero-fg);
+    color: var(--hero-bg);
   }
 }
 .flame {
@@ -169,7 +170,7 @@
     width: 5px;
     height: 10px;
     border-radius: 2px;
-    background: color-mix(in srgb, var(--ink-contrast) 25%, transparent);
+    background: color-mix(in srgb, var(--hero-fg) 25%, transparent);
     &:nth-child(2) { height: 12px; }
     &:nth-child(3) { height: 14px; }
     &:nth-child(4) { height: 16px; }
@@ -177,7 +178,7 @@
     &:nth-child(6) { height: 20px; }
     &:nth-child(7) { height: 22px; }
     &.on {
-      background: var(--ink-contrast);
+      background: var(--hero-fg);
     }
   }
 }

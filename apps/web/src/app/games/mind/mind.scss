@@ -125,3 +125,88 @@
 :host .tile.good {
   background: var(--good, #2e9e5b);
 }
+
+/* Shapes (Mental Turn): a 4 by 4 grid with some cells filled. */
+.shape {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  padding: 0.5rem;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 0;
+  box-shadow: none;
+}
+.shape i {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.shape i.on {
+  background: var(--accent);
+}
+.shape.big {
+  width: min(52%, 11rem);
+}
+.shapes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  width: 100%;
+}
+:host .shape.pick {
+  min-height: 0;
+}
+:host .shape.pick:active {
+  background: var(--accent-soft);
+}
+/* Dot Count */
+.field {
+  position: relative;
+  width: min(100%, 20rem);
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+}
+.field .dot {
+  position: absolute;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: -0.55rem 0 0 -0.55rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+/* Word Recall */
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+}
+.words.big span {
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+:host .opt.word {
+  min-height: 0;
+  padding: 0.5rem 1rem;
+  font-size: 1.05rem;
+}
+:host .opt.pick {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+:host .opt.good {
+  border-color: var(--good, #2e9e5b);
+  background: color-mix(in srgb, var(--good, #2e9e5b) 22%, var(--surface));
+}
+:host .opt.bad {
+  border-color: var(--bad, #d94f4f);
+  background: color-mix(in srgb, var(--bad, #d94f4f) 22%, var(--surface));
+}

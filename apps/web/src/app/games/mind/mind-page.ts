@@ -25,6 +25,11 @@ import { SpotChange } from './spot-change';
 import { TargetNumber } from './target-number';
 import { TargetTap } from './target-tap';
 import { WhatNext } from './what-next';
+import { MentalTurn } from './mental-turn';
+import { NumberSort } from './number-sort';
+import { DotCount } from './dot-count';
+import { Opposites } from './opposites';
+import { WordRecall } from './word-recall';
 import { MindGameId } from '../catalog';
 import { CanLeave } from '../../core/leave';
 import { LeaveSheet } from '../../shared/leave-sheet';
@@ -32,7 +37,7 @@ import { LeaveSheet } from '../../shared/leave-sheet';
 /** One screen for every mind-training game: how to play, the game, then your score against your best. */
 @Component({
   selector: 'app-mind-page',
-  imports: [RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber],
+  imports: [RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-page.html',
   styleUrl: './mind-page.scss',

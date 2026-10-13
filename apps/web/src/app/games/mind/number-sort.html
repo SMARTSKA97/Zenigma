@@ -1,0 +1,6 @@
+<div class="hud"><span>Board {{ round() }} of 5</span><span>Next: smallest left</span></div>
+<div class="tiles" style="grid-template-columns: repeat(3, 1fr)">
+  @for (n of numbers(); track n) {
+    <button type="button" class="tile" [class.good]="tapped().includes(n)" [class.bad]="wrong() === n" [disabled]="tapped().includes(n)" (pointerdown)="tap(n)">{{ n }}</button>
+  }
+</div>

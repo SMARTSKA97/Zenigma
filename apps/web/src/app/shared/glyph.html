@@ -1,5 +1,5 @@
 <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-  @switch (game()) {
+  @switch (kind()) {
     @case ('word-guess') {
       <rect x="6" y="14" width="10" height="10" rx="2.5" fill="currentColor" stroke="none" />
       <rect x="19" y="14" width="10" height="10" rx="2.5" />
@@ -47,6 +47,36 @@
     @case ('comet-slice') {
       <circle cx="31" cy="17" r="8" fill="currentColor" stroke="none" />
       <path d="M26 22 L8 40 M23 14 L8 29 M34 25 L19 40" stroke-width="2" />
+    }
+    @case ('skill-memory') {
+      <rect x="7" y="7" width="15" height="15" rx="4" fill="currentColor" stroke="none" />
+      <rect x="26" y="7" width="15" height="15" rx="4" />
+      <rect x="7" y="26" width="15" height="15" rx="4" />
+      <rect x="26" y="26" width="15" height="15" rx="4" fill="currentColor" stroke="none" />
+    }
+    @case ('skill-attention') {
+      <circle cx="24" cy="24" r="16" />
+      <circle cx="24" cy="24" r="6" fill="currentColor" stroke="none" />
+      <path d="M24 4v7M24 37v7M4 24h7M37 24h7" />
+    }
+    @case ('skill-speed') {
+      <path d="M27 5 L11 27 H23 L21 43 L37 21 H25 Z" fill="currentColor" stroke="none" />
+    }
+    @case ('skill-math') {
+      <path d="M8 15h14M15 8v14" />
+      <path d="M28 32l10 10M38 32L28 42" />
+      <path d="M30 14h10M30 20h10" />
+      <path d="M9 37h12" />
+    }
+    @case ('skill-language') {
+      <path d="M9 40 L24 8 L39 40" />
+      <path d="M15 28h18" />
+    }
+    @case ('skill-logic') {
+      <circle cx="12" cy="12" r="5" />
+      <rect x="29" y="7" width="10" height="10" rx="2" fill="currentColor" stroke="none" />
+      <path d="M12 31 L17 41 H7 Z" fill="currentColor" stroke="none" />
+      <path d="M29 36 H39 M34 31 V41" />
     }
     @default {
       <circle cx="16" cy="17" r="5" />

@@ -30,7 +30,11 @@ export type MindGameId =
   | 'anagram-rush'
   | 'missing-letters'
   | 'what-next'
-  | 'mental-turn';
+  | 'mental-turn'
+  | 'number-sort'
+  | 'dot-count'
+  | 'opposites'
+  | 'word-recall';
 
 /** Where a game sits in the apps: logic puzzles, Sudoku, words or mind training. */
 export type Category = 'logic' | 'sudoku' | 'word' | 'mind';
@@ -93,11 +97,15 @@ export const GAMES: GameInfo[] = [
   { id: 'anagram-rush', name: 'Anagram Rush', blurb: 'Unscramble the letters into a word, fast.', hue: 165, live: true, daily: false, category: 'mind', skill: 'language' },
   { id: 'missing-letters', name: 'Missing Letters', blurb: 'Fill in the blanks to complete the word.', hue: 190, live: true, daily: false, category: 'mind', skill: 'language' },
   { id: 'what-next', name: 'What Comes Next', blurb: 'Find the rule and pick the piece that comes next in the pattern.', hue: 285, live: true, daily: false, category: 'mind', skill: 'logic' },
-  { id: 'mental-turn', name: 'Mental Turn', blurb: 'Which shape is the same one, just turned around?', hue: 310, live: false, daily: false, category: 'mind', skill: 'logic' },
+  { id: 'mental-turn', name: 'Mental Turn', blurb: 'Which shape is the same one, just turned around?', hue: 310, live: true, daily: false, category: 'mind', skill: 'logic' },
+  { id: 'number-sort', name: 'Number Sort', blurb: 'Tap nine numbers from smallest to largest, as fast as you can.', hue: 50, live: true, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'dot-count', name: 'Dot Count', blurb: 'Dots flash for a second. How many were there?', hue: 95, live: true, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'opposites', name: 'Opposites', blurb: 'Pick the word that means the opposite.', hue: 200, live: true, daily: false, category: 'mind', skill: 'language' },
+  { id: 'word-recall', name: 'Word Recall', blurb: 'Remember a few words, then pick them out of a list.', hue: 150, live: true, daily: false, category: 'mind', skill: 'memory' },
 ];
 
 /** Mind-training games that can be played now (the rest of them are still coming soon). */
-export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next'];
+export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall'];
 
 export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => g.id === id);
 

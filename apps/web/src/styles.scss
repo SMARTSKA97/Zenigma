@@ -18,6 +18,8 @@
   --bg: #f2f4f3;
   --surface: #ffffff;
   /* How strongly grid lines and shaded regions (Windoku windows, diagonals, even cells) show against a cell. Stronger in dark, where a faint tint disappears. */
+  --hero-bg: var(--ink);
+  --hero-fg: var(--ink-contrast);
   --line-mix: 22%;
   --region-mix: 9%;
   --surface-2: #eaeeed;
@@ -63,6 +65,8 @@
 @mixin dark-tokens {
   --bg: #0b1012;
   --surface: #141b1e;
+  --hero-bg: #1d2850;
+  --hero-fg: #f1f4ff;
   --line-mix: 38%;
   --region-mix: 28%;
   --surface-2: #1c2528;
@@ -275,6 +279,24 @@ label {
 
 .error {
   color: var(--bad);
+}
+
+/* Taps feel instant: no 300ms delay, and every card or row that is a link gives a small press. */
+a,
+button,
+[role='button'] {
+  touch-action: manipulation;
+}
+a.card:active,
+a.row:active,
+a.game:active,
+a.item:active {
+  transform: scale(0.985);
+}
+a.card,
+a.row,
+a.game {
+  transition: transform 0.12s var(--ease);
 }
 
 /* Smooth page changes (View Transitions). */
