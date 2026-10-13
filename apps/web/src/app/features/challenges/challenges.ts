@@ -63,7 +63,7 @@ export class FeaturedLevel implements OnInit {
 /** All weekly, weekend and monthly goals, with progress and the hints they earn. */
 @Component({
   selector: 'app-challenges',
-  imports: [RouterLink, FeaturedLevel],
+  imports: [FeaturedLevel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './challenges-page.html',
   styleUrl: './challenges-page.scss',

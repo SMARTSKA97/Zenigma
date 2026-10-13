@@ -2,7 +2,9 @@
 
 Offline-first puzzle and brain-game app: Android (Capacitor) and web (installable PWA), with an ASP.NET Core API on
 PostgreSQL. Ten games (Word Guess, LinkedIn's Queens, Tango, Sudoku, Zip, Patches, Pinpoint, Crossclimb, Wend,
-and Comet Slice), daily puzzles plus endless levels, streaks and leaderboards.
+and Comet Slice), daily puzzles plus endless levels, streaks and leaderboards. Also 15 mind-training games with a
+daily mind set and a skills dashboard, weekly/weekend/monthly challenges that earn hints, an optional profile with
+Google sign-in on the web, and an offline mode. `docs/IDEAS.md` is the roadmap (done and to do).
 
 | Path | What |
 |---|---|

@@ -130,7 +130,15 @@ mode works fully offline.
 - First request after sleep may time out; the sync layer keeps events in the outbox and retries on the next trigger
   (a local change, regaining connection, or opening the app). Sign-in shows a "server is waking up" state rather
   than failing hard (to do with the first online screens).
+- The app shows a "Waking server" state while `/health` answers slowly and lets the player carry on; users can also turn on **Offline mode** in Settings, which blocks all API calls (daily challenges pause, everything else works) and syncs when it is switched off.
 - If you later want zero cold starts, move the API to a paid instance; nothing else changes.
+
+## Google sign-in (web)
+
+Set `Google__ClientId` on Render to the OAuth web client id (and use the same id in the web app's config). The API verifies the
+ID token with Google's tokeninfo endpoint. Without it, `/auth/config` reports Google as unavailable and the button is hidden.
+The Android WebView cannot run Google Identity Services, so the button is hidden there until a native plugin is added.
+Migration `V8` adds profiles, the server hint balance and mind scores; Flyway applies it on deploy.
 
 ## Observability and safety
 

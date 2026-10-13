@@ -18,6 +18,8 @@ Difficulty: most tracks reach their hardest setting around level 500 and then re
 
 ## Tracks
 
-`queens`, `tango`, `zip`, `patches`, `sudoku-<classic|mini>-<easy|medium|hard|challenging|insane>`, `sudoku-diagonal`, `sudoku-knight`, `sudoku-windoku`, `sudoku-disjoint`.
+`<queens|tango|zip|patches>-classic-<easy|medium|hard|challenging|insane>`, `sudoku-<classic|mini>-<easy|medium|hard|challenging|insane>`, `sudoku-diagonal`, `sudoku-knight`, `sudoku-windoku`, `sudoku-disjoint`, and the rule kinds `sudoku-<killer|thermo|jigsaw|arrow|sandwich|consecutive|even-odd>`.
+
+The tiers of the logic games slice one hardness scale (`TIER_RANGE` in `games.mjs`), so each tier has its own 1000+ levels and its own map. The weekly job therefore grows about 40 tracks by 1000 levels each; watch the repo size and the job's run time (see `docs/IDEAS.md`, Engineering and growth).
 
 To add a kind: add its generator case in `games.mjs` (`practiceLevel`), list it in `TRACKS` and `level-counts.json`, add it to `PuzzleRules.Tracks` (API) and to `VARIANTS` in `catalog.ts`, then run `node build-levels.mjs <track>` and `node gen-vectors.mjs`.
