@@ -18,6 +18,6 @@ Difficulty: most tracks reach their hardest setting around level 500 and then re
 
 ## Tracks
 
-`queens`, `tango`, `zip`, `patches`, `sudoku-<classic|mini>-<easy|medium|hard|challenging|insane>`, `sudoku-diagonal`, `sudoku-knight`.
+`queens`, `tango`, `zip`, `patches`, `sudoku-<classic|mini>-<easy|medium|hard|challenging|insane>`, `sudoku-diagonal`, `sudoku-knight`, `sudoku-windoku`, `sudoku-disjoint`.
 
 To add a kind: add its generator case in `games.mjs` (`practiceLevel`), list it in `TRACKS` and `level-counts.json`, add it to `PuzzleRules.Tracks` (API) and to `VARIANTS` in `catalog.ts`, then run `node build-levels.mjs <track>` and `node gen-vectors.mjs`.

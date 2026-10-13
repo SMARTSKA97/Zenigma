@@ -173,7 +173,7 @@ function sudokuHint(puzzle: { givens: string; rule?: SudokuRule }, board: number
 
   // A cell with only one number left.
   const naked = empties.find((i) => cand.get(i)!.length === 1);
-  if (naked !== undefined) return { kind: 'nudge', cells: [naked], title: 'Only one number fits here', text: `Everything else is already taken by this cell’s row, column or box${rule === 'diagonal' ? ', or its diagonal' : rule === 'knight' ? ', or a knight’s move away' : ''}. Which number is left?` };
+  if (naked !== undefined) return { kind: 'nudge', cells: [naked], title: 'Only one number fits here', text: `Everything else is already taken by this cell’s row, column or box${rule === 'diagonal' ? ', or its diagonal' : rule === 'knight' ? ', or a knight’s move away' : rule === 'windoku' ? ', or its shaded window' : rule === 'disjoint' ? ', or the cells in the same spot of the other boxes' : ''}. Which number is left?` };
 
   // A number that has only one home in a row, column or box.
   const houses: { cells: number[]; label: string }[] = [];

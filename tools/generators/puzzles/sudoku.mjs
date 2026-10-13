@@ -1,7 +1,20 @@
 // Sudoku in two sizes: the classic 9x9 grid (3x3 boxes) and a mini 6x6 grid (boxes 2 rows by 3 columns).
 // Every row, column and box holds 1 to n once. A puzzle is its `givens` string; 36 characters means mini, 81 classic.
 // A classic puzzle can also carry a `rule` with one more constraint: 'diagonal' (both long diagonals hold 1 to 9 once too)
-// or 'knight' (no digit repeats a chess knight's move away).
+// 'knight' (no digit repeats a chess knight's move away), 'windoku' (four extra 3x3 windows) or 'disjoint'
+// (cells in the same spot of their box, such as every top-left cell, hold 1 to 9 once).
+
+/** The extra group a cell belongs to under a 'windoku' or 'disjoint' rule, or -1. */
+export function extraGroup(rule, r, c) {
+  if (rule === 'disjoint') return (r % 3) * 3 + (c % 3);
+  if (rule === 'windoku') {
+    const win = (x) => (x >= 1 && x <= 3 ? 0 : x >= 5 && x <= 7 ? 1 : -1);
+    const a = win(r);
+    const b = win(c);
+    return a < 0 || b < 0 ? -1 : a * 2 + b;
+  }
+  return -1;
+}
 
 export const sizeOf = (givens) => Math.round(Math.sqrt(givens.length));
 /** Box height and width for a grid of side n. */
@@ -23,6 +36,12 @@ function search(cells, limit, order, rule = null) {
   const rows = new Array(N).fill(0);
   const cols = new Array(N).fill(0);
   const boxes = new Array(N).fill(0);
+  const groups = rule === 'windoku' || rule === 'disjoint' ? new Array(9).fill(0) : null;
+  const groupOf = (r, c) => (groups ? extraGroup(rule, r, c) : -1);
+  const groupBits = (r, c) => {
+    const g = groupOf(r, c);
+    return g < 0 ? 0 : groups[g];
+  };
   const diag = rule === 'diagonal' ? [0, 0] : null; // digits on the main and the anti diagonal
   const diagBits = (r, c) => (diag ? (r === c ? diag[0] : 0) | (r + c === N - 1 ? diag[1] : 0) : 0);
   /** Digits already used a knight's move away from a cell (knight rule). */
@@ -40,6 +59,7 @@ function search(cells, limit, order, rule = null) {
     rows[r] |= bit;
     cols[c] |= bit;
     boxes[boxOf(r, c)] |= bit;
+    if (groups && groupOf(r, c) >= 0) groups[groupOf(r, c)] |= bit;
     if (diag) {
       if (r === c) diag[0] |= bit;
       if (r + c === N - 1) diag[1] |= bit;
@@ -49,6 +69,7 @@ function search(cells, limit, order, rule = null) {
     rows[r] &= ~bit;
     cols[c] &= ~bit;
     boxes[boxOf(r, c)] &= ~bit;
+    if (groups && groupOf(r, c) >= 0) groups[groupOf(r, c)] &= ~bit;
     if (diag) {
       if (r === c) diag[0] &= ~bit;
       if (r + c === N - 1) diag[1] &= ~bit;
@@ -60,7 +81,7 @@ function search(cells, limit, order, rule = null) {
     const bit = 1 << v;
     const r = Math.floor(i / N);
     const c = i % N;
-    if (rows[r] & bit || cols[c] & bit || boxes[boxOf(r, c)] & bit || diagBits(r, c) & bit) return { count: 0, solution: null };
+    if (rows[r] & bit || cols[c] & bit || boxes[boxOf(r, c)] & bit || diagBits(r, c) & bit || groupBits(r, c) & bit) return { count: 0, solution: null };
     if (rule === 'knight') {
       cells[i] = 0; // look at the others only
       const clash = knightBits(r, c) & bit;
@@ -80,7 +101,7 @@ function search(cells, limit, order, rule = null) {
       if (cells[i]) continue;
       const r = Math.floor(i / N);
       const c = i % N;
-      const mask = ALL & ~(rows[r] | cols[c] | boxes[boxOf(r, c)] | diagBits(r, c) | knightBits(r, c));
+      const mask = ALL & ~(rows[r] | cols[c] | boxes[boxOf(r, c)] | diagBits(r, c) | knightBits(r, c) | groupBits(r, c));
       const k = bitCount(mask);
       if (k < bestCount) {
         best = i;

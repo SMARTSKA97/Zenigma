@@ -22,7 +22,7 @@ public static class PuzzleRules
     [
         Queens, Tango,
         .. new[] { "classic", "mini" }.SelectMany(kind => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"sudoku-{kind}-{tier}")),
-        "sudoku-diagonal", "sudoku-knight",
+        "sudoku-diagonal", "sudoku-knight", "sudoku-windoku", "sudoku-disjoint",
         Zip, Patches,
     ];
 
@@ -258,6 +258,25 @@ public static class PuzzleRules
                         int rr = i / n + m[0], cc = i % n + m[1];
                         if (rr >= 0 && rr < n && cc >= 0 && cc < n && cells[rr * n + cc] == cells[i]) return false;
                     }
+                }
+            }
+            else if (rule == "windoku")
+            {
+                foreach (var (r0, c0) in new[] { (1, 1), (1, 5), (5, 1), (5, 5) })
+                {
+                    var window = new HashSet<char>();
+                    for (var a = 0; a < 3; a++)
+                        for (var b = 0; b < 3; b++)
+                            if (!window.Add(cells[(r0 + a) * n + c0 + b])) return false;
+                }
+            }
+            else if (rule == "disjoint")
+            {
+                for (var g = 0; g < 9; g++)
+                {
+                    var spot = new HashSet<char>();
+                    for (var b = 0; b < 9; b++)
+                        if (!spot.Add(cells[(b / 3 * 3 + g / 3) * n + b % 3 * 3 + g % 3])) return false;
                 }
             }
             else

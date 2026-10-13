@@ -15,6 +15,8 @@ export const TRACKS = [
   ...['classic', 'mini'].flatMap((kind) => SUDOKU_TIERS.map((tier) => `sudoku-${kind}-${tier}`)),
   'sudoku-diagonal',
   'sudoku-knight',
+  'sudoku-windoku',
+  'sudoku-disjoint',
   'zip',
   'patches',
 ];
@@ -62,6 +64,8 @@ export function practiceLevel(track, level) {
   const h = hardness(level);
   // Sudoku with one more rule: a single track each that climbs from many clues to few.
   if (game === 'sudoku-diagonal') return generateSudoku(rng, Math.round(38 - 16 * h), 9, 'diagonal');
+  if (game === 'sudoku-windoku') return generateSudoku(rng, Math.round(38 - 14 * h), 9, 'windoku');
+  if (game === 'sudoku-disjoint') return generateSudoku(rng, Math.round(38 - 14 * h), 9, 'disjoint');
   if (game === 'sudoku-knight') return generateSudoku(rng, Math.round(36 - 12 * h), 9, 'knight');
   if (game.startsWith('sudoku-')) return sudokuTierLevel(track, level, rng);
   switch (game) {

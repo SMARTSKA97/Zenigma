@@ -227,6 +227,7 @@ export const GAME_RULES: GameRules[] = [
       'Classic is a 9×9 grid with the numbers 1 to 9 and nine 3×3 boxes. Mini is 6×6 with 1 to 6 and six boxes that are 2 rows tall and 3 columns wide.',
       'Every row, every column and every box contains each number exactly once.',
       'Every puzzle has exactly one solution. You never need to guess.',
+      'Kinds with one more rule: Diagonal (both long diagonals hold 1 to 9), Windoku (four shaded 3×3 windows hold 1 to 9), Disjoint Groups (the cells in the same spot of every box, such as all top-left cells, hold 1 to 9) and Anti-Knight (no number repeats a chess knight’s move away).',
       'Tap a cell, then a number. Use Notes to jot down candidate numbers in a cell; they disappear when you place a number in the cell.',
     ],
     example: {

@@ -4,7 +4,21 @@
  */
 
 /** One more rule on the classic grid: both long diagonals hold 1 to 9 once ('diagonal'), or no digit repeats a chess knight's move away ('knight'). */
-export type SudokuRule = 'diagonal' | 'knight';
+export type SudokuRule = 'diagonal' | 'knight' | 'windoku' | 'disjoint';
+
+/** Which extra group (window or box position) a cell is in under 'windoku' or 'disjoint', or -1. */
+export function extraGroup(rule: SudokuRule | undefined, i: number, n = 9): number {
+  const r = Math.floor(i / n);
+  const c = i % n;
+  if (rule === 'disjoint') return (r % 3) * 3 + (c % 3);
+  if (rule === 'windoku') {
+    const win = (x: number) => (x >= 1 && x <= 3 ? 0 : x >= 5 && x <= 7 ? 1 : -1);
+    const a = win(r);
+    const b = win(c);
+    return a < 0 || b < 0 ? -1 : a * 2 + b;
+  }
+  return -1;
+}
 
 export interface SudokuPuzzle {
   /** One digit per cell, row by row, '0' for an empty cell. */
@@ -28,6 +42,7 @@ export function peersOf(i: number, n: number, rule?: SudokuRule): number[] {
     const rj = Math.floor(j / n);
     const cj = j % n;
     if (rj === r || cj === c || boxOf(j, n) === boxOf(i, n)) out.add(j);
+    if ((rule === 'windoku' || rule === 'disjoint') && extraGroup(rule, i, n) >= 0 && extraGroup(rule, i, n) === extraGroup(rule, j, n)) out.add(j);
     if (rule === 'diagonal' && ((r === c && rj === cj) || (r + c === n - 1 && rj + cj === n - 1))) out.add(j);
   }
   if (rule === 'knight') {

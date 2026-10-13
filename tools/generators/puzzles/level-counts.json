@@ -13,6 +13,8 @@
  "sudoku-mini-insane": 1200,
  "sudoku-diagonal": 2000,
  "sudoku-knight": 2000,
+ "sudoku-windoku": 2000,
+ "sudoku-disjoint": 2000,
  "zip": 2000,
  "patches": 2000
 }

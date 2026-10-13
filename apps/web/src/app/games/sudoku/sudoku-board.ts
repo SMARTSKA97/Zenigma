@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, HostListener, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
 
-import { boxOf, boxShape, onDiagonal, peersOf, sizeOf, SudokuPuzzle } from './engine';
+import { boxOf, boxShape, extraGroup, onDiagonal, peersOf, sizeOf, SudokuPuzzle } from './engine';
 
 @Component({
   selector: 'app-sudoku-board',
@@ -370,6 +370,15 @@ export class SudokuBoard {
       units.push(Array.from({ length: SIZE }, (_, k) => k * SIZE + k));
       units.push(Array.from({ length: SIZE }, (_, k) => k * SIZE + (SIZE - 1 - k)));
     }
+    const rule = this.puzzle().rule;
+    if (rule === 'windoku' || rule === 'disjoint') {
+      const byGroup = new Map<number, number[]>();
+      for (let i = 0; i < SIZE * SIZE; i++) {
+        const g = extraGroup(rule, i, SIZE);
+        if (g >= 0) byGroup.set(g, [...(byGroup.get(g) ?? []), i]);
+      }
+      units.push(...byGroup.values());
+    }
     for (const unit of units) {
       const values = unit.map((i) => board[i]);
       if (!values.includes(0) && new Set(values).size === SIZE) unit.forEach((i) => done.add(i));
@@ -394,7 +403,7 @@ export class SudokuBoard {
       notes: value || !notes[i] ? [] : this.numbers().map((n) => (notes[i] & (1 << n) ? String(n) : '')),
       given: puzzle.givens[i] !== '0',
       selected: sel === i,
-      diag: puzzle.rule === 'diagonal' && onDiagonal(i, SIZE),
+      diag: (puzzle.rule === 'diagonal' && onDiagonal(i, SIZE)) || (puzzle.rule === 'windoku' && extraGroup('windoku', i, SIZE) >= 0),
       peer: sel !== null && sel !== i && peersOf(sel, SIZE, puzzle.rule).includes(i),
       same: sel !== null && sel !== i && selValue !== 0 && value === selValue,
       bad: bad.has(i),

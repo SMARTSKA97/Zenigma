@@ -83,6 +83,8 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
     { id: 'classic', name: 'Classic', blurb: 'The 9 by 9 grid, numbers 1 to 9.', tiered: true },
     { id: 'mini', name: 'Mini', blurb: 'A quick 6 by 6 grid, numbers 1 to 6.', tiered: true },
     { id: 'diagonal', name: 'Diagonal', blurb: 'Classic rules, and both long diagonals hold 1 to 9 as well.' },
+    { id: 'windoku', name: 'Windoku', blurb: 'Classic rules, and four extra shaded 3×3 windows hold 1 to 9 too.' },
+    { id: 'disjoint', name: 'Disjoint Groups', blurb: 'Classic rules, and the cells in the same spot of every box (all top-lefts, all centres…) hold 1 to 9.' },
     { id: 'knight', name: 'Anti-Knight', blurb: 'Classic rules, and no digit repeats a chess knight\'s move away.' },
     // The kinds seen at Sudoku championships (World Sudoku and Puzzle Championships), on the way.
     { id: 'killer', name: 'Killer', blurb: 'Cages with a sum: the digits in each cage add up to its number, with no repeats.', soon: true },
