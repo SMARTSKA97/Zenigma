@@ -227,7 +227,7 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(VectorsDir, "practice-levels.json")));
         var known = doc.RootElement.EnumerateArray().First(c => c.GetProperty("game").GetString() == "queens" && c.GetProperty("level").GetInt32() == 1);
 
-        var mini = doc.RootElement.EnumerateArray().First(c => c.GetProperty("track").GetString() == "sudoku-mini" && c.GetProperty("level").GetInt32() == 1);
+        var mini = doc.RootElement.EnumerateArray().First(c => c.GetProperty("track").GetString() == "sudoku-mini-easy" && c.GetProperty("level").GetInt32() == 1);
 
         object Solved(JsonElement solution, int level) => new
         {
@@ -249,14 +249,14 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
                 {
                     id = Guid.NewGuid(),
                     kind = "puzzle.practice.solved",
-                    payload = new { game = "sudoku", variant = "mini", level = 1, solution = mini.GetProperty("solution"), elapsedMs = 90_000 },
+                    payload = new { game = "sudoku", variant = "mini-easy", level = 1, solution = mini.GetProperty("solution"), elapsedMs = 90_000 },
                     clientCreatedAt = DateTimeOffset.UtcNow,
                 },
                 new
                 {
                     id = Guid.NewGuid(),
                     kind = "puzzle.practice.solved",
-                    payload = new { game = "sudoku", variant = "classic", level = 1, solution = mini.GetProperty("solution"), elapsedMs = 90_000 },   // a mini solution is not a classic one
+                    payload = new { game = "sudoku", variant = "classic-easy", level = 1, solution = mini.GetProperty("solution"), elapsedMs = 90_000 },   // a mini solution is not a classic one
                     clientCreatedAt = DateTimeOffset.UtcNow,
                 },
                 new
