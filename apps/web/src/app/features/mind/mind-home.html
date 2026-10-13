@@ -30,6 +30,14 @@
   }
 </section>
 
+@if (nudge(); as n) {
+  <a class="nudge" [routerLink]="['/mind', n.game.id]">
+    <span aria-hidden="true">{{ n.skill.emoji }}</span>
+    <span><b>{{ n.skill.name }} is your lowest skill ({{ n.mark }}).</b> Try {{ n.game.name }} to bring it up.</span>
+    <span class="go">Play ›</span>
+  </a>
+}
+
 <h2 class="sec">How you compare</h2>
 <section class="card compare">
   @if (!auth.signedIn()) {

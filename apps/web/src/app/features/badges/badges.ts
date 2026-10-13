@@ -6,6 +6,8 @@ import { DAILY_GAMES, PRACTICE_TRACKS, SPEED_GAMES } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 import { SyncService } from '../../core/sync.service';
 import { MindStore } from '../../games/mind/mind-store';
+import { MindDailyService } from '../../games/mind/mind-daily';
+import { MIND_LIVE } from '../../games/catalog';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
 import { ChallengesService, activityFrom } from '../challenges/challenges.service';
@@ -33,6 +35,7 @@ export class Badges implements OnInit {
   private readonly statsApi = inject(StatsService);
   private readonly sync = inject(SyncService);
   private readonly mind = inject(MindStore);
+  private readonly mindDaily = inject(MindDailyService);
   private readonly challenges = inject(ChallengesService);
   private readonly stats = signal<Stats | null>(null);
   private readonly loaded = signal(0);
@@ -131,6 +134,10 @@ export class Badges implements OnInit {
       { id: 'mind10', icon: '🏋️', name: 'Brain gym', text: 'Play 10 different mind-training games', have: this.mind.gamesPlayed(), need: 10 },
       { id: 'mind50', icon: '🧬', name: 'Regular trainee', text: 'Play 50 mind-training games', have: this.mind.totalPlays(), need: 50 },
       { id: 'sharp', icon: '🎓', name: 'Sharp', text: 'Reach an excellent score in a mind game', have: excellent, need: 1 },
+      { id: 'allskills', icon: '🌈', name: 'All-rounder', text: 'Play a game in each of the six mind skills', have: this.mind.skills().filter((s) => s.played > 0).length, need: 6 },
+      { id: 'mindall', icon: '🧩', name: 'Whole gym', text: 'Play every mind-training game', have: this.mind.gamesPlayed(), need: MIND_LIVE.length },
+      { id: 'mindstreak3', icon: '🔥', name: 'Mind streak', text: 'Finish the daily mind set 3 days running', have: this.mindDaily.streak(), need: 3 },
+      { id: 'mindstreak7', icon: '☄️', name: 'Mind marathon', text: 'Finish the daily mind set 7 days running', have: this.mindDaily.streak(), need: 7 },
       { id: 'sharp5', icon: '🧠', name: 'Razor sharp', text: 'Reach an excellent score in 5 mind games', have: excellent, need: 5 },
       { id: 'chal1', icon: '🎯', name: 'Challenge accepted', text: 'Collect your first challenge reward', have: collected, need: 1 },
       { id: 'chal10', icon: '🏁', name: 'Challenge hunter', text: 'Collect 10 challenge rewards', have: collected, need: 10 },
@@ -143,7 +150,7 @@ export class Badges implements OnInit {
     ['Sudoku', ['sudoku100', 'hard25', 'insane1', 'kinds4', 'kinds6']],
     ['Streaks and dailies', ['streak7', 'streak30', 'streak100', 'allDaily', 'daily50', 'daily200']],
     ['Habits', ['clean', 'clean100', 'early', 'owl', 'weekend3', 'bigday', 'days30']],
-    ['Mind training', ['mind3', 'mind10', 'mind50', 'sharp', 'sharp5']],
+    ['Mind training', ['mind3', 'mind10', 'mind50', 'allskills', 'mindall', 'mindstreak3', 'mindstreak7', 'sharp', 'sharp5']],
     ['Challenges', ['chal1', 'chal10', 'chal50']],
   ];
   /** Badges in sections; inside each, the ones you have come first. */

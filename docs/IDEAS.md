@@ -13,7 +13,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 | 0.17.0 | ✅ Weekly level packs, Diagonal / Windoku / Disjoint / Anti-Knight, speed round, challenge links, circle seasons, themes, haptics, Home extras, redo and keyboard play |
 | 0.18.0 | ✅ Weekly/weekend/monthly challenges, more badges, 15 mind games, featured level of the week, seven more Sudoku kinds |
 | 0.19.0 | ✅ Challenges hub, daily mind set, Mind dashboard, profile and Google sign-in, offline mode, warm-up loader, server hint balance, tiers for every logic game |
-| 0.20.0 | ✅ Zip Walls and Blocked cells, Patches Shapes only (see `docs/CHALLENGES.md` for all challenge ideas), five new mind games, LinkedIn-style Patches, leave-game guard, dark-theme audit, more haptics, smoother navigation, strict practice (three strikes) |
+| 0.20.0 | ✅ Zip Walls and Blocked cells, Patches Shapes only (see `docs/CHALLENGES.md` for all challenge ideas), five new mind games, LinkedIn-style Patches, leave-game guard, dark-theme audit, more haptics, smoother navigation, strict practice, blind Sudoku, hide the timer, mind badges, weakest-skill nudge |
 
 ## Hints economy
 
@@ -40,9 +40,9 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Mind dashboard: brain map, radar, overall mark, per-skill detail.
 - ✅ Compare by age group and gender, opt-in, a group needs 5 players before any average shows.
 - ⬜ 🆕 **Mind leaderboard** for the daily set, ranked by total points.
-- ⬜ 🆕 **Mind badges** (7-day mind streak, all six skills above 60, Brain 100).
+- ✅ **Mind badges** (0.20.0): All-rounder, Whole gym, mind streaks. ⬜ Brain 100 (all six skills above 60).
 - ⬜ 🆕 **Skill trend**: a small line of each mark over the last 30 days.
-- ⬜ 🆕 **Weakest-skill nudge**: "Your attention is lowest, try Odd One Out".
+- ✅ **Weakest-skill nudge** on the Mind page (0.20.0).
 - ⬜ 🆕 **Mind age**: a playful single number from the marks, clearly labelled as entertainment.
 - ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.20.0).
 - ⬜ More mind games: Comet Slice and others (see Coming soon in Practice).
@@ -77,7 +77,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ⬜ Home-screen widget with streak and today's dailies.
 - ⬜ Wide-screen layout (board centre, rules and leaderboard beside it).
 - ⬜ 🆕 **Reminders** at a time you choose (local notifications, no server needed).
-- ⬜ 🆕 **Quiet mode**: hide streaks and timers for people who find them stressful.
+- ✅ **Quiet mode**: Hide the timer (0.20.0). ⬜ Hide streaks too.
 - ⬜ 🆕 **Language packs** for Word Guess beyond English.
 
 ## Engineering and growth

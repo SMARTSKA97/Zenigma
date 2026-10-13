@@ -81,6 +81,18 @@
     </app-switch>
   </div>
   <div class="item">
+    <app-switch [checked]="prefs.blind()" (checkedChange)="prefs.setBlind($event)">
+      Blind Sudoku
+      <small>No row, column or matching-number highlights. You find them yourself.</small>
+    </app-switch>
+  </div>
+  <div class="item">
+    <app-switch [checked]="prefs.hideTimer()" (checkedChange)="prefs.setHideTimer($event)">
+      Hide the timer
+      <small>Quiet mode: the clock still runs and your time still counts, you just do not see it.</small>
+    </app-switch>
+  </div>
+  <div class="item">
     <app-switch [checked]="prefs.largeNumbers()" (checkedChange)="prefs.setLargeNumbers($event)">
       Larger numbers
       <small>Bigger digits and letters on the boards, easier to read.</small>

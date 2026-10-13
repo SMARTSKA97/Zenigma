@@ -51,7 +51,7 @@ export class PuzzlePage {
   private readonly route = inject(ActivatedRoute);
   protected readonly nav = inject(BackService);
   private readonly haptics = inject(HapticsService);
-  private readonly prefs = inject(PrefsService);
+  protected readonly prefs = inject(PrefsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);

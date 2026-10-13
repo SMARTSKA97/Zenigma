@@ -68,7 +68,7 @@
       <div class="status" role="status" aria-live="polite">
         <div class="clock">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5" /><path d="M12 9v4l2.5 1.5M9.5 3h5" /></svg>
-          <span class="time" aria-label="Time">{{ time() }}</span>
+          <span class="time" aria-label="Time">{{ prefs.hideTimer() && !solved() ? '--:--' : time() }}</span>
         </div>
         @if (!daily()) {
           <button type="button" class="pause" [attr.aria-label]="paused() ? 'Resume' : 'Pause'" [disabled]="locked()" (click)="togglePause()">
@@ -113,7 +113,7 @@
             <app-patches-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
           }
           @case ('sudoku') {
-            <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
+            <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [blind]="prefs.blind()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
           }
         }
       </div>

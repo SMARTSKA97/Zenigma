@@ -8,7 +8,8 @@ This is the menu of difficulty ideas for every game. ✅ means it is in the app,
 - ⬜ **Par clock**: a countdown to beat the par time for the level, not just a stopwatch.
 - ⬜ **No hints, no Check** badge-run: a toggle on the start of a level, counted for a badge.
 - ⬜ **Fading clues**: givens dim after a few seconds and come back when you hold them (memory pressure).
-- ⬜ **Blind mode**: no highlighting of rows, columns and matching numbers.
+- ✅ **Blind mode** (Sudoku): Settings, Blind Sudoku turns off row, column and matching-number highlights.
+- ✅ **Quiet mode**: Settings, Hide the timer.
 - ✅ Pause cannot be used to study the board: the cover hides it.
 
 ## Zip

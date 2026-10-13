@@ -6,7 +6,7 @@ import { MindSyncService } from '../../core/mind-sync.service';
 import { ProfileService } from '../../core/profile.service';
 import { GAMES, MIND_LIVE, MindGameId, Skill, SKILLS } from '../../games/catalog';
 import { MindDailyService } from '../../games/mind/mind-daily';
-import { MIND_META } from '../../games/mind/mind-meta';
+import { MIND_META, markOf } from '../../games/mind/mind-meta';
 import { MindStore } from '../../games/mind/mind-store';
 import { Glyph } from '../../shared/glyph';
 import { Brain } from './brain';
@@ -43,6 +43,18 @@ export class MindHome implements OnInit {
   });
   protected readonly played = computed(() => this.store.gamesPlayed());
   protected readonly overall = computed(() => Math.round(SKILLS.reduce((n, s) => n + this.marks()[s.id], 0) / SKILLS.length));
+
+  /** Once two or more skills have been played: the lowest one, and the game in it with the lowest mark. */
+  protected readonly nudge = computed(() => {
+    const played = this.store.skills().filter((s) => s.played > 0);
+    if (played.length < 2) return null;
+    const weakest = [...played].sort((a, b) => a.mark - b.mark)[0];
+    const skill = SKILLS.find((s) => s.id === weakest.skill)!;
+    const game = GAMES.filter((g) => g.category === 'mind' && g.live && g.skill === weakest.skill)
+      .map((g) => ({ g, mark: markOf(g.id, this.store.record(g.id).best) }))
+      .sort((a, b) => a.mark - b.mark)[0]?.g;
+    return game ? { skill, mark: weakest.mark, game } : null;
+  });
 
   protected readonly compare = this.mindApi.compare;
   protected readonly active = computed(() => this.compare()?.groups[this.group()] ?? null);

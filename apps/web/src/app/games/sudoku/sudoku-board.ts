@@ -16,6 +16,8 @@ export class SudokuBoard {
   readonly board = input.required<number[]>();
   readonly bad = input<Set<number>>(new Set());
   readonly locked = input(false);
+  /** No row, column or same-number highlighting. */
+  readonly blind = input(false);
   readonly solved = input(false);
   readonly boardChange = output<number[]>();
 
@@ -147,8 +149,8 @@ export class SudokuBoard {
       given: puzzle.givens[i] !== '0',
       selected: sel === i,
       diag: (puzzle.rule === 'diagonal' && onDiagonal(i, SIZE)) || (puzzle.rule === 'windoku' && extraGroup('windoku', i, SIZE) >= 0),
-      peer: sel !== null && sel !== i && peersOf(sel, SIZE, puzzle).includes(i),
-      same: sel !== null && sel !== i && selValue !== 0 && value === selValue,
+      peer: !this.blind() && sel !== null && sel !== i && peersOf(sel, SIZE, puzzle).includes(i),
+      same: !this.blind() && sel !== null && sel !== i && selValue !== 0 && value === selValue,
       bad: bad.has(i),
       flash: done.has(i) && !this.solved(),
       boxLeft: i % SIZE !== 0 && (jig ? this.regionOf(i) !== this.regionOf(i - 1) : (i % SIZE) % bw === 0),
