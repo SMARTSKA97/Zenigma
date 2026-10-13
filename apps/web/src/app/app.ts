@@ -12,6 +12,8 @@ import {
 } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AuthService } from './core/auth.service';
+import { BackService } from './core/back.service';
+import { HintsService } from './core/hints.service';
 import { SyncService } from './core/sync.service';
 import { ReminderService } from './core/reminder.service';
 import { UpdaterService } from './core/updater.service';
@@ -77,11 +79,35 @@ import { WhatsNew } from './shared/whats-new';
 
     <app-update-sheet />
     <app-whats-new />
+    @if (back.toast(); as text) {
+      <div class="exit-toast" role="status">{{ text }}</div>
+    }
   `,
   styles: `
     :host {
       display: block;
       min-height: 100dvh;
+    }
+    .exit-toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(5.5rem + env(safe-area-inset-bottom));
+      z-index: 200;
+      transform: translateX(-50%);
+      padding: 0.6rem 1.1rem;
+      border-radius: 999px;
+      background: var(--text);
+      color: var(--bg);
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-lift);
+      animation: toast-in 0.2s var(--ease);
+    }
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+      }
     }
 
     .progress {
@@ -299,11 +325,14 @@ import { WhatsNew } from './shared/whats-new';
 export class App {
   protected readonly sync = inject(SyncService);
   protected readonly auth = inject(AuthService);
+  protected readonly back = inject(BackService);
   private readonly router = inject(Router);
   private readonly updater = inject(UpdaterService);
   private readonly reminder = inject(ReminderService);
 
   constructor() {
+    this.back.listen();
+    inject(HintsService).visit();
     void this.reminder.restore();
     // Android: look for a new version when the app opens (the update sheet appears only if there is one).
     this.updater.startAutoCheck();

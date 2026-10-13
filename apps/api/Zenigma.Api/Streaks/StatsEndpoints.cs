@@ -17,9 +17,12 @@ public record GameStatsDto(
     double? AverageGuesses,
     int? BestGuesses,
     List<string> Recent,
-    List<string> Frozen);
+    List<string> Frozen,
+    int Freezes,
+    int NextFreezeIn);
 
-public record RewardsDto(int Freezes, int MaxFreezes, int WeekSolved, int WeekGoal);
+/// <summary>Freezes held in total, the most one game can hold, and how many days of play earn one.</summary>
+public record RewardsDto(int Freezes, int MaxFreezes, int DaysPerFreeze);
 
 public record StatsDto(string Date, RewardsDto Rewards, List<GameStatsDto> Games);
 
@@ -34,7 +37,6 @@ public static class StatsEndpoints
         {
             var userId = UserIds.Get(principal);
             var today = IstClock.Today(clock.GetUtcNow());
-            var reward = await StreakService.SettleWeekAsync(db, userId, today, ct);
             var since = today.AddDays(-(RecentDays - 1));
 
             // Three queries for every game together, instead of two per game: the database is a network hop away.
@@ -44,6 +46,7 @@ public static class StatsEndpoints
             var solvedPuzzles = (await db.PuzzleAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Status == "solved").ToListAsync(ct))
                 .ToLookup(a => a.Game);
 
+            var freezeRows = (await db.GameFreezes.Where(r => r.UserId == userId).ToListAsync(ct)).ToDictionary(r => r.Game);
             var games = new List<GameStatsDto>();
             foreach (var game in AllGames)
             {
@@ -76,6 +79,15 @@ public static class StatsEndpoints
                     }
                 }
 
+                var played = solvedDates.Distinct().Count();
+                if (!freezeRows.TryGetValue(game, out var freezeRow))
+                {
+                    freezeRow = new GameFreeze { UserId = userId, Game = game };
+                    freezeRows[game] = freezeRow;
+                    db.GameFreezes.Add(freezeRow);
+                }
+
+                StreakService.Credit(freezeRow, played);
                 var (current, best) = StreakMath.Compute(solvedDates.Concat(frozenDates), today);
                 games.Add(new GameStatsDto(
                     game,
@@ -87,13 +99,15 @@ public static class StatsEndpoints
                     avgGuesses,
                     bestGuesses,
                     solvedDates.Where(d => d >= since).OrderBy(d => d).Select(d => d.ToString("yyyy-MM-dd")).ToList(),
-                    frozenDates.Where(d => d >= since).OrderBy(d => d).Select(d => d.ToString("yyyy-MM-dd")).ToList()));
+                    frozenDates.Where(d => d >= since).OrderBy(d => d).Select(d => d.ToString("yyyy-MM-dd")).ToList(),
+                    freezeRow.Freezes,
+                    StreakService.DaysToNext(played)));
             }
 
-            var weekSolved = await StreakService.CountSolvesAsync(db, userId, StreakMath.WeekStart(today), today, ct);
+            await db.SaveChangesAsync(ct);
             return Results.Ok(new StatsDto(
                 today.ToString("yyyy-MM-dd"),
-                new RewardsDto(reward.Freezes, StreakService.MaxFreezes, weekSolved, StreakService.WeeklyGoal),
+                new RewardsDto(games.Sum(g => g.Freezes), StreakService.MaxFreezes, StreakService.DaysPerFreeze),
                 games));
         }).RequireAuthorization();
     }

@@ -1,5 +1,6 @@
 import evaluateVectors from '../../../../../../tests/vectors/word-guess/evaluate.json';
 import hardModeVectors from '../../../../../../tests/vectors/word-guess/hard-mode.json';
+import { wordHint } from './engine';
 import {
   evaluate,
   Guess,
@@ -90,5 +91,17 @@ describe('share text', () => {
     const lost = replay('crane', ['slate', 'pious', 'dumpy', 'ghost', 'fishy', 'bluff'], false, anyWord)!;
     expect(shareText(lost, 'T')).toMatch(/^T X\/6/);
     expect(shareText(replay('crane', ['crane'], false, anyWord)!, 'T', true)).toContain('🟧🟧🟧🟧🟧');
+  });
+});
+
+describe('wordHint', () => {
+  const base = { answer: 'trace', hard: false, status: 'playing' as const };
+  it('nudges in three steps and never spells the word', () => {
+    const state = { ...base, guesses: [{ word: 'crane', marks: evaluate('crane', 'trace') }] };
+    expect(wordHint(state, 0)).toBe('Letter 1 is a consonant.');
+    expect(wordHint(state, 1)).toBe('The word contains the letter T.');
+    expect(wordHint(state, 2)).toContain('Letter 4');
+    expect(wordHint(state, 3)).toBeNull();
+    expect(wordHint({ ...base, guesses: [{ word: 'trace', marks: evaluate('trace', 'trace') }] }, 0)).toBeNull();
   });
 });

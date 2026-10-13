@@ -1,6 +1,6 @@
 # Ideas: hints economy and UX
 
-> **Built (0.14.0):** coaching hints (point and explain, never fill), free Check, daily wheel, tenth-level milestone hints, 2-star cap for hinted levels, share card, screen-awake and daily screenshot block. **Still open:** server-side balance (needed before purchases), streak-milestone hints, Word Guess hints, rewarded ads.
+> **Built (0.14.0):** coaching hints (point and explain, never fill), free Check, daily wheel, tenth-level milestone hints, 2-star cap for hinted levels, share card, screen-awake and daily screenshot block. **Also built (0.15.0):** Word Guess hints (shared pool), pause in Practice, badges, streak and comeback hint gifts, per-game streak freezes (7 played days earns one, max 2 each). **Still open:** server-side balance (needed before purchases), streak-milestone hints, Word Guess hints, rewarded ads.
 
 ## Hints for practice (and a path to monetisation)
 

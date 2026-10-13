@@ -16,13 +16,19 @@ export interface GameStats {
   recent: string[];
   /** Days a freeze covered. */
   frozen: string[];
+  /** Freezes held for this game. */
+  freezes: number;
+  /** Days of play still needed to earn the next freeze for this game. */
+  nextFreezeIn: number;
 }
 
 export interface Rewards {
+  /** Freezes held across all games. */
   freezes: number;
+  /** The most one game can hold. */
   maxFreezes: number;
-  weekSolved: number;
-  weekGoal: number;
+  /** Days played in a game that earn one freeze for it. */
+  daysPerFreeze: number;
 }
 
 export interface Stats {

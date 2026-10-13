@@ -5,12 +5,14 @@ import { AuthService } from '../../core/auth.service';
 import { CommunityService } from '../../core/community.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { UpdaterService } from '../../core/updater.service';
-import { GAMES, practiceEntry } from '../../games/catalog';
+import { GAMES, gameInfo, practiceEntry } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
+import { FreezeSheet } from '../../shared/freeze-sheet';
+import { HintsService } from '../../core/hints.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Glyph],
+  imports: [RouterLink, Glyph, FreezeSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page" [class.no-promo]="!promo.applicable || promo.dismissed()">
@@ -32,6 +34,13 @@ import { Glyph } from '../../shared/glyph';
         <span class="pulse" aria-hidden="true"></span>
         <span class="utext"><strong>Update {{ updater.update()!.version }} is ready</strong><small>See what's new and install</small></span>
         <span aria-hidden="true">›</span>
+      </button>
+    }
+
+    @if (hints.gift(); as gift) {
+      <button type="button" class="gift" (click)="hints.gift.set(null)">
+        <span>{{ gift }}</span>
+        <span aria-hidden="true">×</span>
       </button>
     }
 
@@ -70,8 +79,8 @@ import { Glyph } from '../../shared/glyph';
             <span class="lab">day streak</span>
           </div>
           <div class="chips">
-            <span>❄ {{ s.rewards.freezes }} {{ s.rewards.freezes === 1 ? 'freeze' : 'freezes' }}</span>
-            <span>{{ s.rewards.weekSolved }}/{{ s.rewards.weekGoal }} this week</span>
+            <span>💡 {{ hints.balance() }} {{ hints.balance() === 1 ? 'hint' : 'hints' }}</span>
+            <span class="tap" role="button" tabindex="0" (click)="openFreezes($event)" (keydown.enter)="openFreezes($event)">❄ {{ s.rewards.freezes }} {{ s.rewards.freezes === 1 ? 'freeze' : 'freezes' }} ›</span>
           </div>
           <span class="go">Details ›</span>
         </div>
@@ -94,6 +103,9 @@ import { Glyph } from '../../shared/glyph';
         <span class="go">Stats ›</span>
       }
     </a>
+    @if (freezesOpen() && stats(); as s) {
+      <app-freeze-sheet [stats]="s" (closed)="freezesOpen.set(false)" />
+    }
 
     <section class="community card" aria-label="Community">
       <div class="stat"><b>{{ fmtN(community.counts()?.players) }}</b><span>players</span></div>
@@ -216,6 +228,21 @@ import { Glyph } from '../../shared/glyph';
         transform: rotateX(90deg);
         background: color-mix(in srgb, var(--ink-contrast) 14%, transparent);
       }
+    }
+
+    .gift {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      text-align: left;
+      font-weight: 650;
+      color: var(--text);
+      background: color-mix(in srgb, #f5b82e 22%, var(--surface));
+      border: 1px solid color-mix(in srgb, #f5b82e 55%, var(--border));
+      border-radius: var(--radius);
     }
 
     /* Update ready (Android) */
@@ -422,6 +449,10 @@ import { Glyph } from '../../shared/glyph';
       border-radius: 99px;
       background: var(--surface-2);
     }
+    .chips .tap {
+      cursor: pointer;
+      background: color-mix(in srgb, #2b8fd6 16%, var(--surface));
+    }
     .go {
       margin-left: auto;
       color: var(--accent);
@@ -607,11 +638,20 @@ export class Home implements OnInit {
   protected readonly community = inject(CommunityService);
   protected readonly promo = inject(ApkPromoService);
   protected readonly updater = inject(UpdaterService);
+  protected readonly hints = inject(HintsService);
   private readonly statsApi = inject(StatsService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly liveGames = GAMES.filter((g) => g.live);
   protected readonly stats = signal<Stats | null>(null);
+  protected readonly freezesOpen = signal(false);
+
+  protected openFreezes(event: Event): void {
+    // The streak card is a link to Stats; the freeze chip opens the per-game list instead.
+    event.preventDefault();
+    event.stopPropagation();
+    this.freezesOpen.set(true);
+  }
 
   ngOnInit(): void {
     void this.community.load();
@@ -626,7 +666,16 @@ export class Home implements OnInit {
   constructor() {
     // The session can be restored after this screen opens, so load the summary whenever someone is (or becomes) signed in.
     effect(() => {
-      if (this.auth.signedIn()) void this.statsApi.load().then((s) => this.stats.set(s)).catch(() => this.stats.set(null));
+      if (this.auth.signedIn()) void this.statsApi
+          .load()
+          .then((s) => {
+            this.stats.set(s);
+            this.hints.claimStreaks(
+              s.games.map((g) => ({ game: g.game, name: gameInfo(g.game)?.name ?? g.game, current: g.current })),
+              s.date,
+            );
+          })
+          .catch(() => this.stats.set(null));
       else this.stats.set(null);
     });
   }

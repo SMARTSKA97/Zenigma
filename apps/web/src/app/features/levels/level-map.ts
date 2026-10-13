@@ -1,3 +1,4 @@
+import { BackService } from '../../core/back.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, afterNextRender, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -87,7 +88,7 @@ const noise = (zone: number, slot: number): number => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="top">
-      <a class="round" [routerLink]="backLink()" aria-label="Back">
+      <a class="round" href="/" aria-label="Back" (click)="nav.up($event)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
       </a>
       <div class="title">
@@ -211,6 +212,7 @@ const noise = (zone: number, slot: number): number => {
   styleUrl: './level-map.scss',
 })
 export class LevelMap {
+  protected readonly nav = inject(BackService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly practice = inject(PracticeStore);

@@ -13,6 +13,10 @@ interface Saved {
   firstWin: string;
   /** `track:level` keys that already paid a milestone hint. */
   milestones: string[];
+  /** India date of the last time the app was opened (for the comeback gift). */
+  lastVisit: string;
+  /** `game:days:streakStart` keys of streak rewards already paid. */
+  streakAwards: string[];
 }
 
 export interface WheelPrize {
@@ -29,9 +33,11 @@ export const indiaDate = (now = Date.now()): string => new Date(now + 5.5 * 3600
 @Injectable({ providedIn: 'root' })
 export class HintsService {
   readonly balance = signal(START_HINTS);
-  private saved: Saved = { balance: START_HINTS, spun: '', firstWin: '', milestones: [] };
+  private saved: Saved = { balance: START_HINTS, spun: '', firstWin: '', milestones: [], lastVisit: '', streakAwards: [] };
   /** Bumped whenever the date or wheel state changes, so the wheel button redraws. */
   readonly spunToday = signal(false);
+  /** A gift just received (comeback or streak), shown once on Home until dismissed. */
+  readonly gift = signal<string | null>(null);
 
   constructor() {
     try {
@@ -105,4 +111,33 @@ export class HintsService {
     this.save();
     return random < 1 / 3 && this.grant(1) > 0;
   }
+
+  /** Opening the app after a week or more away brings a free hint. */
+  visit(now = Date.now()): void {
+    const today = indiaDate(now);
+    const last = this.saved.lastVisit;
+    if (last === today) return;
+    this.saved.lastVisit = today;
+    this.save();
+    if (last && daysBetween(last, today) >= 7 && this.grant(1) > 0) this.gift.set('Welcome back! Here is a free hint 💡');
+  }
+
+  /** A hint for reaching a 7-day and a 30-day streak in a game (once per streak). */
+  claimStreaks(games: { name: string; game: string; current: number }[], today: string): void {
+    const won: string[] = [];
+    for (const g of games) {
+      for (const days of [7, 30]) {
+        if (g.current < days) continue;
+        const key = `${g.game}:${days}:${shiftDate(today, -(g.current - 1))}`;
+        if (this.saved.streakAwards.includes(key)) continue;
+        this.saved.streakAwards = [...this.saved.streakAwards, key].slice(-100);
+        if (this.grant(1) > 0) won.push(`${days}-day ${g.name} streak`);
+      }
+    }
+    this.save();
+    if (won.length) this.gift.set(`${won.join(' and ')}: +${won.length} hint${won.length > 1 ? 's' : ''} 💡`);
+  }
 }
+
+const daysBetween = (a: string, b: string): number => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
+const shiftDate = (date: string, days: number): string => new Date(Date.parse(date) + days * 86_400_000).toISOString().slice(0, 10);

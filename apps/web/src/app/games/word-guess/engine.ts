@@ -159,3 +159,38 @@ export function shareText(state: GameState, title: string, highContrast = false)
   );
   return [`${title} ${score}${state.hard ? '*' : ''}`, '', ...rows].join('\n');
 }
+
+const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
+
+/**
+ * A hint that nudges instead of telling. Step 0: whether the first unsolved place holds a vowel. Step 1: a letter the word
+ * contains that no guess has found yet. Step 2: which half of the alphabet the last unsolved letter is from. Null when
+ * there is nothing more to say (or the word is already found).
+ */
+export function wordHint(state: GameState, step: number): string | null {
+  const answer = state.answer;
+  const solved = new Set<number>();
+  const seen = new Set<string>();
+  for (const g of state.guesses) {
+    g.marks.forEach((m, i) => {
+      if (m === 'correct') solved.add(i);
+      if (m !== 'absent') seen.add(g.word[i]);
+    });
+  }
+  const open = Array.from({ length: WORD_LENGTH }, (_, i) => i).filter((i) => !solved.has(i));
+  if (!open.length) return null;
+  if (step === 0) {
+    const i = open[0];
+    return `Letter ${i + 1} is ${VOWELS.has(answer[i]) ? 'a vowel' : 'a consonant'}.`;
+  }
+  if (step === 1) {
+    const unseen = [...new Set(open.map((i) => answer[i]))].filter((l) => !seen.has(l));
+    if (unseen.length) return `The word contains the letter ${unseen[0].toUpperCase()}.`;
+    return `Letter ${open[open.length - 1] + 1} is in the ${answer[open[open.length - 1]] <= 'm' ? 'first' : 'second'} half of the alphabet (A–M or N–Z).`;
+  }
+  if (step === 2) {
+    const i = open[open.length - 1];
+    return `Letter ${i + 1} is in the ${answer[i] <= 'm' ? 'first' : 'second'} half of the alphabet (A–M or N–Z).`;
+  }
+  return null;
+}

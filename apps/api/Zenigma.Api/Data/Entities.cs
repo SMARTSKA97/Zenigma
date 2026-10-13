@@ -92,3 +92,12 @@ public class UserReward
     public int Freezes { get; set; }
     public DateOnly? LastAwardWeek { get; set; }
 }
+
+/// <summary>Freezes held for one game, and how many sets of seven played days have already earned one.</summary>
+public class GameFreeze
+{
+    public string UserId { get; set; } = "";
+    public string Game { get; set; } = "";
+    public int Freezes { get; set; }
+    public int CreditedBlocks { get; set; }
+}

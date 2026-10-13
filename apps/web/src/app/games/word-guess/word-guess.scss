@@ -430,3 +430,14 @@
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
 }
+
+:host .hint-btn {
+  min-height: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #f5b82e 55%, var(--border));
+  background: color-mix(in srgb, #f5b82e 20%, var(--surface));
+  color: var(--text);
+  font-size: 0.85rem;
+  box-shadow: none;
+}

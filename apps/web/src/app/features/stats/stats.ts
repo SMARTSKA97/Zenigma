@@ -6,14 +6,16 @@ import { GameStats, Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { DAILY_GAMES } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
+import { FreezeList } from '../../shared/freeze-sheet';
 
-/** Per-game streaks, times and a five-week calendar, plus the freezes earned for keeping a weekly habit. */
+/** Per-game streaks, times and a five-week calendar, plus the streak freezes each game has earned. */
 @Component({
   selector: 'app-stats',
-  imports: [RouterLink, Glyph],
+  imports: [RouterLink, Glyph, FreezeList],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Your stats</h1>
+    <p class="muted"><a routerLink="/badges">See your badges ›</a></p>
 
     @if (!auth.signedIn()) {
       <section class="card cta">
@@ -33,27 +35,8 @@ import { Glyph } from '../../shared/glyph';
       </section>
     } @else if (stats(); as s) {
       <section class="rewards card">
-        <div class="freeze">
-          <div class="ice" aria-hidden="true">
-            @for (n of slots(); track n) {
-              <svg viewBox="0 0 24 24" [class.on]="n < s.rewards.freezes"><path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5" /></svg>
-            }
-          </div>
-          <div>
-            <h2>{{ s.rewards.freezes }} streak {{ s.rewards.freezes === 1 ? 'freeze' : 'freezes' }}</h2>
-            <p class="muted">A freeze covers one missed day automatically. You can hold {{ s.rewards.maxFreezes }}.</p>
-          </div>
-        </div>
-        <div class="week">
-          <div class="row">
-            <span>This week</span>
-            <strong>{{ s.rewards.weekSolved }} of {{ s.rewards.weekGoal }} dailies</strong>
-          </div>
-          <div class="bar" role="progressbar" [attr.aria-valuenow]="s.rewards.weekSolved" aria-valuemin="0" [attr.aria-valuemax]="s.rewards.weekGoal">
-            <span [style.width.%]="progress()"></span>
-          </div>
-          <p class="muted small">Solve {{ s.rewards.weekGoal }} dailies in a week to earn a freeze for next week.</p>
-        </div>
+        <h2>❄ Streak freezes</h2>
+        <app-freeze-list [stats]="s" />
       </section>
 
       <div class="list">
@@ -289,11 +272,6 @@ export class StatsPage implements OnInit {
   protected readonly games = computed<GameStats[]>(() => {
     const order = DAILY_GAMES.map((g) => g.id as string);
     return [...(this.stats()?.games ?? [])].sort((a, b) => order.indexOf(a.game) - order.indexOf(b.game));
-  });
-  protected readonly slots = computed(() => Array.from({ length: this.stats()?.rewards.maxFreezes ?? 2 }, (_, i) => i));
-  protected readonly progress = computed(() => {
-    const r = this.stats()?.rewards;
-    return r ? Math.min(100, (r.weekSolved / r.weekGoal) * 100) : 0;
   });
   /** The last 35 days, oldest first, ending today. */
   protected readonly days = computed(() => {

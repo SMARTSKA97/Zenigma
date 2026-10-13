@@ -13,7 +13,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: calc(0.5rem + env(safe-area-inset-top)) 0 0.6rem;
-  background: linear-gradient(var(--bg) 70%, transparent);
+  background: var(--bg);
+  box-shadow: 0 1px 0 var(--border);
 }
 .title {
   flex: 1;
@@ -376,5 +377,20 @@
   .node.now,
   .you {
     animation: none;
+  }
+}
+
+/* On a phone the road fills the screen edge to edge, with no card around it. */
+@media (max-width: 720px) {
+  :host {
+    margin-inline: -1.25rem;
+    max-width: none;
+  }
+  .top {
+    padding-inline: 1.25rem;
+  }
+  .map {
+    border-radius: 0;
+    border-inline: 0;
   }
 }

@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, Eleme
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HapticsService } from '../../core/haptics.service';
+import { BackService } from '../../core/back.service';
 import { AuthService } from '../../core/auth.service';
 import { formatDuration } from '../../core/leaderboard.service';
 import { LocalStore } from '../../core/local-store';
@@ -41,7 +42,7 @@ const WARN_DELAY_MS = 1600;
   template: `
     <div class="page" [attr.data-game]="game()">
       <header class="bar">
-        <a routerLink="/" class="back" aria-label="Back to games">
+        <a href="/" class="back" aria-label="Back" (click)="nav.up($event)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </a>
         <div class="title">
@@ -111,6 +112,15 @@ const WARN_DELAY_MS = 1600;
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5" /><path d="M12 9v4l2.5 1.5M9.5 3h5" /></svg>
               <span class="time" aria-label="Time">{{ time() }}</span>
             </div>
+            @if (!daily()) {
+              <button type="button" class="pause" [attr.aria-label]="paused() ? 'Resume' : 'Pause'" [disabled]="locked()" (click)="togglePause()">
+                @if (paused()) {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" /></svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
+                }
+              </button>
+            }
             <span class="pill">{{ daily() ? 'Daily' + (difficulty() ? ' · ' + difficulty()!.label : '') : 'Level ' + level() }}</span>
             @if (message()) {
               <span class="toast">{{ message() }}</span>
@@ -118,6 +128,13 @@ const WARN_DELAY_MS = 1600;
           </div>
 
           <div class="stage">
+            @if (paused()) {
+              <button type="button" class="pause-cover" (click)="togglePause()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" /></svg>
+                <b>Paused</b>
+                <span>Tap to resume</span>
+              </button>
+            }
             @switch (game()) {
               @case ('queens') {
                 <app-queens-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
@@ -197,7 +214,7 @@ const WARN_DELAY_MS = 1600;
       <app-sheet label="How to play" (closed)="helpOpen.set(false)">
         <h2>How to play</h2>
         <p>{{ help() }}</p>
-        <p><a [routerLink]="['/rules']" [fragment]="ruleAnchor()" (click)="helpOpen.set(false)">Full rules and examples ›</a></p>
+        <p><a [routerLink]="['/rules', game()]" (click)="helpOpen.set(false)">Full rules and examples ›</a></p>
         <button type="button" (click)="helpOpen.set(false)">Got it</button>
       </app-sheet>
     }
@@ -239,6 +256,7 @@ const WARN_DELAY_MS = 1600;
 })
 export class PuzzlePage {
   private readonly route = inject(ActivatedRoute);
+  protected readonly nav = inject(BackService);
   private readonly haptics = inject(HapticsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
@@ -253,7 +271,6 @@ export class PuzzlePage {
   private readonly params = toSignal(this.route.paramMap);
   private readonly data = toSignal(this.route.data);
 
-  protected readonly ruleAnchor = computed(() => this.game().split('-')[0]);
   protected readonly game = computed<PuzzleGameId>(() => {
     const id = this.params()?.get('game') ?? '';
     return isPuzzleGame(id) ? id : 'queens';
@@ -278,6 +295,8 @@ export class PuzzlePage {
   protected readonly message = signal('');
   protected readonly helpOpen = signal(false);
   protected readonly wheelOpen = signal(false);
+  /** Practice only: the board is covered and the clock stops. */
+  protected readonly paused = signal(false);
   protected readonly shareOpen = signal<{ card: CardInput; text: string } | null>(null);
   protected readonly coach = signal<Hint | null>(null);
   /** Hints spent on the level in play (a level solved with help earns at most two stars). */
@@ -311,7 +330,8 @@ export class PuzzlePage {
   protected readonly locked = computed(() => this.solved() || this.checking());
   protected readonly elapsed = computed(() => {
     const now = this.now();
-    return this.daily() ? Math.max(0, now - this.serverStart) : this.baseMs + (now - this.stretchStart);
+    if (this.daily()) return Math.max(0, now - this.serverStart);
+    return this.paused() ? this.baseMs : this.baseMs + (now - this.stretchStart);
   });
   protected readonly time = computed(() => (this.solved() ? this.fmt(this.finalMs()) : this.fmt(this.elapsed())));
   protected readonly stars = computed(() => {
@@ -386,6 +406,7 @@ export class PuzzlePage {
     // Pause the practice clock while the page is hidden.
     const onVisibility = () => {
       if (this.daily() || this.solved()) return;
+      if (this.paused()) return;
       if (document.hidden) {
         this.baseMs += Date.now() - this.stretchStart;
         void this.persist();
@@ -429,6 +450,7 @@ export class PuzzlePage {
     const fresh = ADAPTERS[game].blank(puzzle);
     const adapter = ADAPTERS[game];
     this.dismissCoach();
+    this.paused.set(false);
     const keep = saved && (adapter.fits ? adapter.fits(puzzle, saved.state) : fitsPuzzle(fresh, saved.state));
     this.hintsUsed.set(keep ? (saved as { hints?: number }).hints ?? 0 : 0);
     this.state.set(keep ? saved.state : fresh);
@@ -535,7 +557,7 @@ export class PuzzlePage {
     if (this.daily()) {
       if (this.phase() === 'playing') await this.store.setMeta(this.dailyKey(), { state });
     } else if (this.phase() === 'practice') {
-      const elapsedMs = this.baseMs + (Date.now() - this.stretchStart);
+      const elapsedMs = this.paused() ? this.baseMs : this.baseMs + (Date.now() - this.stretchStart);
       await this.practiceStore.saveBoard(this.track(), { level: this.level(), state, elapsedMs, hints: this.hintsUsed() });
     }
   }
@@ -586,7 +608,7 @@ export class PuzzlePage {
       return;
     }
 
-    const elapsedMs = this.baseMs + (Date.now() - this.stretchStart);
+    const elapsedMs = this.paused() ? this.baseMs : this.baseMs + (Date.now() - this.stretchStart);
     this.finalMs.set(elapsedMs);
     this.solved.set(true);
     this.haptics.success();
@@ -602,6 +624,19 @@ export class PuzzlePage {
   private flash(text: string): void {
     this.message.set(text);
     setTimeout(() => this.message.set(''), 2400);
+  }
+
+  /** Stops the clock and covers the board (practice only: a daily is timed by the server). */
+  protected togglePause(): void {
+    if (this.daily() || this.locked()) return;
+    if (this.paused()) {
+      this.stretchStart = Date.now();
+      this.paused.set(false);
+    } else {
+      this.baseMs += Date.now() - this.stretchStart;
+      this.paused.set(true);
+      void this.persist();
+    }
   }
 
   // ---------------------------------------------------------------------------------------------- hints

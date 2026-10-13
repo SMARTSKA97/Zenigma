@@ -38,4 +38,28 @@ describe('HintsService', () => {
     expect(hints.milestone('queens', 10)).toBe(false);
     expect(hints.milestone('tango', 10)).toBe(true);
   });
+
+  it('gives a comeback hint after a week away, once', () => {
+    const hints = new HintsService();
+    hints.spend();
+    hints.visit(Date.UTC(2026, 9, 1, 6));
+    expect(hints.gift()).toBeNull();
+    hints.visit(Date.UTC(2026, 9, 5, 6));
+    expect(hints.gift()).toBeNull();
+    hints.visit(Date.UTC(2026, 9, 13, 6));
+    expect(hints.gift()).toContain('Welcome back');
+    expect(hints.balance()).toBe(START_HINTS);
+  });
+
+  it('pays a streak hint at 7 and 30 days once per streak', () => {
+    const hints = new HintsService();
+    hints.spend();
+    hints.spend();
+    hints.claimStreaks([{ name: 'Queens', game: 'queens', current: 6 }], '2026-10-13');
+    expect(hints.balance()).toBe(START_HINTS - 2);
+    hints.claimStreaks([{ name: 'Queens', game: 'queens', current: 7 }], '2026-10-13');
+    expect(hints.balance()).toBe(START_HINTS - 1);
+    hints.claimStreaks([{ name: 'Queens', game: 'queens', current: 8 }], '2026-10-14');
+    expect(hints.balance()).toBe(START_HINTS - 1);
+  });
 });

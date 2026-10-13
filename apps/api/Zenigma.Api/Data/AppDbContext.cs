@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<PuzzleAttempt> PuzzleAttempts => Set<PuzzleAttempt>();
     public DbSet<StreakFreeze> StreakFreezes => Set<StreakFreeze>();
     public DbSet<UserReward> UserRewards => Set<UserReward>();
+    public DbSet<GameFreeze> GameFreezes => Set<GameFreeze>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -113,6 +114,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.Game).HasColumnName("game").HasMaxLength(32);
             e.Property(x => x.CoveredDate).HasColumnName("covered_date");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        b.Entity<GameFreeze>(e =>
+        {
+            e.ToTable("game_freezes");
+            e.HasKey(x => new { x.UserId, x.Game });
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Game).HasColumnName("game").HasMaxLength(32);
+            e.Property(x => x.Freezes).HasColumnName("freezes");
+            e.Property(x => x.CreditedBlocks).HasColumnName("credited_blocks");
         });
 
         b.Entity<UserReward>(e =>

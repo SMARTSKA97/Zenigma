@@ -6,10 +6,11 @@ import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { DAILY_GAMES, dailyDifficulty } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
+import { FreezeSheet } from '../../shared/freeze-sheet';
 
 @Component({
   selector: 'app-daily-hub',
-  imports: [RouterLink, Glyph],
+  imports: [RouterLink, Glyph, FreezeSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="hero">
@@ -17,11 +18,13 @@ import { Glyph } from '../../shared/glyph';
       <h1>{{ doneCount() }} of {{ games.length }} done today</h1>
       <p class="lede">One puzzle per game, the same for everyone. Next set in <strong>{{ untilNext() }}</strong>.</p>
       @if (stats(); as s) {
-        <a class="chips" routerLink="/stats" aria-label="Your streaks and stats">
-          <span>❄ {{ s.rewards.freezes }} {{ s.rewards.freezes === 1 ? 'freeze' : 'freezes' }}</span>
-          <span>{{ s.rewards.weekSolved }}/{{ s.rewards.weekGoal }} this week</span>
-          <span class="go">Stats ›</span>
-        </a>
+        <div class="chips">
+          <button type="button" class="chip" (click)="freezesOpen.set(true)">❄ {{ s.rewards.freezes }} {{ s.rewards.freezes === 1 ? 'freeze' : 'freezes' }} ›</button>
+          <a class="chip" routerLink="/stats" aria-label="Your streaks and stats">Stats ›</a>
+        </div>
+        @if (freezesOpen()) {
+          <app-freeze-sheet [stats]="s" (closed)="freezesOpen.set(false)" />
+        }
       }
       @if (difficulty(); as d) {
         <div class="level" [attr.aria-label]="'Difficulty ' + d.label + ', day ' + d.step + ' of 7'">
@@ -105,6 +108,7 @@ export class DailyHub implements OnInit, OnDestroy {
   private readonly api = inject(LeaderboardService);
   private readonly statsApi = inject(StatsService);
   protected readonly stats = signal<Stats | null>(null);
+  protected readonly freezesOpen = signal(false);
 
   protected readonly games = DAILY_GAMES;
   protected readonly hub = signal<Hub | null>(null);

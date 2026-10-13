@@ -48,6 +48,8 @@ export class WordGuessStore implements BoardController {
   readonly state = signal<GameState | null>(null);
   readonly current = signal('');
   readonly message = signal<string | null>(null);
+  /** Hints used on the current word (each one tells a little more). */
+  readonly hintsUsed = signal(0);
   readonly shakeRow = signal<number | null>(null);
   /** How many submitted rows the keyboard may colour. Lags behind while the tiles are still flipping. */
   readonly revealed = signal(0);
@@ -111,6 +113,7 @@ export class WordGuessStore implements BoardController {
     this.current.set('');
     this.revealed.set(0);
     this.message.set(null);
+    this.hintsUsed.set(0);
     await this.persist();
   }
 
@@ -178,6 +181,12 @@ export class WordGuessStore implements BoardController {
 
   private canInput(): boolean {
     return this.state()?.status === 'playing' && !this.revealing();
+  }
+
+  /** Shows a hint for a while (the caller has already paid for it). */
+  showHint(text: string): void {
+    this.hintsUsed.update((n) => n + 1);
+    this.flash(text, 7000);
   }
 
   private flash(text: string, ms = 1600): void {

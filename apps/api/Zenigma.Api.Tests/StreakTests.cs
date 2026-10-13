@@ -52,3 +52,29 @@ public class StreakMathTests
         Assert.Equal(D(5), StreakMath.WeekStart(D(11)));
     }
 }
+
+public class GameFreezeTests
+{
+    [Fact]
+    public void Seven_played_days_earn_one_freeze_and_it_is_paid_once()
+    {
+        var row = new Zenigma.Api.Data.GameFreeze();
+        Zenigma.Api.Streaks.StreakService.Credit(row, 6);
+        Assert.Equal(0, row.Freezes);
+        Zenigma.Api.Streaks.StreakService.Credit(row, 7);
+        Zenigma.Api.Streaks.StreakService.Credit(row, 7);
+        Assert.Equal(1, row.Freezes);
+        Zenigma.Api.Streaks.StreakService.Credit(row, 14);
+        Assert.Equal(2, row.Freezes);
+    }
+
+    [Fact]
+    public void A_game_never_holds_more_than_two_and_counts_days_to_the_next()
+    {
+        var row = new Zenigma.Api.Data.GameFreeze();
+        Zenigma.Api.Streaks.StreakService.Credit(row, 35);
+        Assert.Equal(Zenigma.Api.Streaks.StreakService.MaxFreezes, row.Freezes);
+        Assert.Equal(7, Zenigma.Api.Streaks.StreakService.DaysToNext(35));
+        Assert.Equal(4, Zenigma.Api.Streaks.StreakService.DaysToNext(10));
+    }
+}

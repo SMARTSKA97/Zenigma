@@ -3,6 +3,10 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ShareSheet } from '../../shared/share-sheet';
 import { CardInput, gridFromText } from '../../shared/share-card';
 import { ScreenGuardService } from '../../core/screen-guard.service';
+import { BackService } from '../../core/back.service';
+import { HintsService } from '../../core/hints.service';
+import { HintWheel } from '../../shared/hint-wheel';
+import { wordHint } from './engine';
 import { PrefsService } from '../../core/prefs.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController } from './board';
@@ -16,17 +20,20 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 @Component({
   selector: 'app-word-guess',
-  imports: [RouterLink, Loader, Switch, ShareSheet],
+  imports: [RouterLink, Loader, Switch, ShareSheet, HintWheel],
   template: `
     <div class="game">
       <header class="bar">
-        <a routerLink="/" class="back" aria-label="Back to games">
+        <a href="/" class="back" aria-label="Back" (click)="nav.up($event)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </a>
         <div class="title">
           <h1>Word Guess</h1>
           <p class="muted sub">{{ mode() === 'daily' ? 'Daily' + (daily.date() ? ' · ' + daily.date() : '') : 'Practice' }}</p>
         </div>
+        @if (mode() === 'practice' && !board().finished()) {
+          <button type="button" class="hint-btn" (click)="useHint()" aria-label="Use a hint">💡 <b>{{ hints.balance() }}</b></button>
+        }
         <app-switch [checked]="hardChecked()" [disabled]="hardDisabled()" (checkedChange)="prefs.setHardMode($event)">Hard</app-switch>
       </header>
 
@@ -150,6 +157,9 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
         }
       }
     </div>
+    @if (wheelOpen()) {
+      <app-hint-wheel (closed)="wheelOpen.set(false)" />
+    }
     @if (shareOpen(); as share) {
       <app-share-sheet [card]="share.card" [text]="share.text" [game]="mode() === 'daily' ? 'word-guess' : null" (closed)="shareOpen.set(null)" />
     }
@@ -161,6 +171,9 @@ export class WordGuess implements OnInit, OnDestroy {
   protected readonly daily = inject(DailyStore);
   protected readonly prefs = inject(PrefsService);
   private readonly guard = inject(ScreenGuardService);
+  protected readonly hints = inject(HintsService);
+  protected readonly wheelOpen = signal(false);
+  protected readonly nav = inject(BackService);
     private readonly sync = inject(SyncService);
   private readonly route = inject(ActivatedRoute);
 
@@ -263,6 +276,23 @@ export class WordGuess implements OnInit, OnDestroy {
   protected barWidth(count: number): string {
     const max = Math.max(1, ...this.board().stats().distribution);
     return `${Math.max(8, (count / max) * 100)}%`;
+  }
+
+  /** Practice only. Each hint on a word tells a little more, and costs one from the pool shared with every game. */
+  protected useHint(): void {
+    const state = this.practice.state();
+    if (!state || this.board().finished() || this.board().revealing()) return;
+    if (!this.hints.balance()) {
+      this.wheelOpen.set(true);
+      return;
+    }
+    const text = wordHint(state, this.practice.hintsUsed());
+    if (!text) {
+      this.practice.message.set('No more hints for this word. You have got this!');
+      return;
+    }
+    this.hints.spend();
+    this.practice.showHint(text);
   }
 
   protected share(): void {
