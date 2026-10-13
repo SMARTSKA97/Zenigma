@@ -1,3 +1,4 @@
+import { PrefsService } from '../../core/prefs.service';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApkPromoService } from '../../core/apk-promo.service';
@@ -24,6 +25,7 @@ export class Home implements OnInit {
   protected readonly promo = inject(ApkPromoService);
   protected readonly updater = inject(UpdaterService);
   protected readonly hints = inject(HintsService);
+  protected readonly prefs = inject(PrefsService);
   private readonly statsApi = inject(StatsService);
   private readonly destroyRef = inject(DestroyRef);
 

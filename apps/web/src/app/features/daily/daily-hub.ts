@@ -1,3 +1,4 @@
+import { PrefsService } from '../../core/prefs.service';
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ConnectionService } from '../../core/connection.service';
@@ -19,6 +20,7 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
 })
 export class DailyHub implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
+  protected readonly prefs = inject(PrefsService);
   private readonly sync = inject(SyncService);
   protected readonly conn = inject(ConnectionService);
   private readonly api = inject(LeaderboardService);

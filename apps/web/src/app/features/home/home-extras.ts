@@ -1,3 +1,4 @@
+import { PrefsService } from '../../core/prefs.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -32,6 +33,7 @@ export class HomeExtras implements OnInit {
   private readonly practice = inject(PracticeStore);
   private readonly sync = inject(SyncService);
   protected readonly auth = inject(AuthService);
+  protected readonly prefs = inject(PrefsService);
   private readonly circlesApi = inject(CirclesService);
   private readonly circles = signal<CircleToday[]>([]);
   /** Friends (across all my circles, each once) who have solved at least one daily today. */

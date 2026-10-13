@@ -30,6 +30,10 @@
   }
 </section>
 
+@if (mindAge(); as age) {
+  <p class="age muted">🎈 Your mind age is <b>{{ age }}</b>. Just for fun: it is worked out from your marks and means nothing more.</p>
+}
+
 @if (nudge(); as n) {
   <a class="nudge" [routerLink]="['/mind', n.game.id]">
     <span aria-hidden="true">{{ n.skill.emoji }}</span>

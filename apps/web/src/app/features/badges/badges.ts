@@ -135,6 +135,7 @@ export class Badges implements OnInit {
       { id: 'mind50', icon: '🧬', name: 'Regular trainee', text: 'Play 50 mind-training games', have: this.mind.totalPlays(), need: 50 },
       { id: 'sharp', icon: '🎓', name: 'Sharp', text: 'Reach an excellent score in a mind game', have: excellent, need: 1 },
       { id: 'allskills', icon: '🌈', name: 'All-rounder', text: 'Play a game in each of the six mind skills', have: this.mind.skills().filter((s) => s.played > 0).length, need: 6 },
+      { id: 'brain100', icon: '💡', name: 'Brain 100', text: 'Get all six mind skills above 60', have: this.mind.skills().filter((s) => s.mark > 60).length, need: 6 },
       { id: 'mindall', icon: '🧩', name: 'Whole gym', text: 'Play every mind-training game', have: this.mind.gamesPlayed(), need: MIND_LIVE.length },
       { id: 'mindstreak3', icon: '🔥', name: 'Mind streak', text: 'Finish the daily mind set 3 days running', have: this.mindDaily.streak(), need: 3 },
       { id: 'mindstreak7', icon: '☄️', name: 'Mind marathon', text: 'Finish the daily mind set 7 days running', have: this.mindDaily.streak(), need: 7 },
@@ -150,7 +151,7 @@ export class Badges implements OnInit {
     ['Sudoku', ['sudoku100', 'hard25', 'insane1', 'kinds4', 'kinds6']],
     ['Streaks and dailies', ['streak7', 'streak30', 'streak100', 'allDaily', 'daily50', 'daily200']],
     ['Habits', ['clean', 'clean100', 'early', 'owl', 'weekend3', 'bigday', 'days30']],
-    ['Mind training', ['mind3', 'mind10', 'mind50', 'allskills', 'mindall', 'mindstreak3', 'mindstreak7', 'sharp', 'sharp5']],
+    ['Mind training', ['mind3', 'mind10', 'mind50', 'allskills', 'brain100', 'mindall', 'mindstreak3', 'mindstreak7', 'sharp', 'sharp5']],
     ['Challenges', ['chal1', 'chal10', 'chal50']],
   ];
   /** Badges in sections; inside each, the ones you have come first. */

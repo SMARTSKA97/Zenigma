@@ -44,6 +44,9 @@ export class MindHome implements OnInit {
   protected readonly played = computed(() => this.store.gamesPlayed());
   protected readonly overall = computed(() => Math.round(SKILLS.reduce((n, s) => n + this.marks()[s.id], 0) / SKILLS.length));
 
+  /** A playful single number from the overall mark (18 for a perfect set, 70 for none). Only once a few games have been played. */
+  protected readonly mindAge = computed(() => (this.played() >= 5 ? Math.round(70 - this.overall() * 0.52) : null));
+
   /** Once two or more skills have been played: the lowest one, and the game in it with the lowest mark. */
   protected readonly nudge = computed(() => {
     const played = this.store.skills().filter((s) => s.played > 0);

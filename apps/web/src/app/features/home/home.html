@@ -49,6 +49,7 @@
   </aside>
 }
 
+@if (!prefs.hideStreaks()) {
 <a class="streaks card" routerLink="/stats" aria-label="Your streaks and stats">
   @if (!auth.signedIn()) {
     <div class="sign">
@@ -88,6 +89,7 @@
     <span class="go">Stats ›</span>
   }
 </a>
+}
 @if (freezesOpen() && stats(); as s) {
   <app-freeze-sheet [stats]="s" (closed)="freezesOpen.set(false)" />
 }

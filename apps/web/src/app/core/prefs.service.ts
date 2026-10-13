@@ -15,6 +15,7 @@ interface Prefs {
   strikes: boolean;
   blind: boolean;
   hideTimer: boolean;
+  hideStreaks: boolean;
   accent: string;
   tapHaptics: HapticStrength;
   alertHaptics: HapticStrength;
@@ -34,6 +35,8 @@ export class PrefsService {
   readonly blind = signal(false);
   /** Quiet mode: the clock keeps counting but is not shown, so there is nothing to race. */
   readonly hideTimer = signal(false);
+  /** Quiet mode, part two: streak counts and "your streak ends tonight" warnings are not shown. */
+  readonly hideStreaks = signal(false);
   /** The colour theme (see ACCENTS in the settings page). 'default' is the original blue. */
   readonly accent = signal('default');
   /** How strong the little taps are (a cell chosen, a number placed). */
@@ -52,6 +55,7 @@ export class PrefsService {
       this.strikes.set(saved.strikes === true);
       this.blind.set(saved.blind === true);
       this.hideTimer.set(saved.hideTimer === true);
+      this.hideStreaks.set(saved.hideStreaks === true);
       this.accent.set(typeof saved.accent === 'string' ? saved.accent : 'default');
       this.tapHaptics.set(strength(saved.tapHaptics, 'light'));
       this.alertHaptics.set(strength(saved.alertHaptics, 'strong'));
@@ -99,6 +103,11 @@ export class PrefsService {
     this.save();
   }
 
+  setHideStreaks(value: boolean): void {
+    this.hideStreaks.set(value);
+    this.save();
+  }
+
   setStrikes(value: boolean): void {
     this.strikes.set(value);
     this.save();
@@ -133,7 +142,7 @@ export class PrefsService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), hideStreaks: this.hideStreaks(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

@@ -1,4 +1,4 @@
-@if (atRisk(); as risk) {
+@if (!prefs.hideStreaks() && atRisk(); as risk) {
   <a class="card rescue" routerLink="/challenges">
     <span class="emoji" aria-hidden="true">🔥</span>
     <span class="t">

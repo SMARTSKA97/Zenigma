@@ -93,6 +93,12 @@
     </app-switch>
   </div>
   <div class="item">
+    <app-switch [checked]="prefs.hideStreaks()" (checkedChange)="prefs.setHideStreaks($event)">
+      Hide streaks
+      <small>No streak counts or "ends tonight" warnings, so playing never feels like a chore.</small>
+    </app-switch>
+  </div>
+  <div class="item">
     <app-switch [checked]="prefs.largeNumbers()" (checkedChange)="prefs.setLargeNumbers($event)">
       Larger numbers
       <small>Bigger digits and letters on the boards, easier to read.</small>
@@ -190,6 +196,15 @@
   <a class="item link" routerLink="/badges"><span class="ico">🏅</span><span class="lead">Badges</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/rules"><span class="ico">📖</span><span class="lead">How to play</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/changelog"><span class="ico">🆕</span><span class="lead">Version history</span><span class="chev">›</span></a>
+</section>
+
+<h2 class="group">Your data</h2>
+<section class="list">
+  <button type="button" class="item link" (click)="exportData()">
+    <span class="ico">📦</span>
+    <span class="lead">Export my data<small>Download your progress, scores and settings from this device as a JSON file.</small></span>
+    <span class="chev">›</span>
+  </button>
 </section>
 
 <h2 class="group">About</h2>

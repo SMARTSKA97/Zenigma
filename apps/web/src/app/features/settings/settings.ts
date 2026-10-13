@@ -45,6 +45,32 @@ export class Settings implements OnInit {
     { value: 'dark', label: 'Dark' },
   ];
 
+  /** Everything Zenigma keeps on this device, as one JSON file. Sign-in tokens are left out. */
+  protected exportData(): void {
+    const data: Record<string, unknown> = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith('zenigma.') || /token|auth|jwt|secret|password/i.test(key)) continue;
+        const raw = localStorage.getItem(key) ?? '';
+        try {
+          data[key] = JSON.parse(raw);
+        } catch {
+          data[key] = raw;
+        }
+      }
+    } catch {
+      /* no storage: an empty export */
+    }
+    const blob = new Blob([JSON.stringify({ app: 'Zenigma', exportedAt: new Date().toISOString(), data }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `zenigma-data-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   ngOnInit(): void {
     void this.updater.loadVersion();
   }
