@@ -23,7 +23,8 @@ describe('mind training', () => {
     expect(store.add('quick-sums', 10)).toBe(true);
     expect(store.add('quick-sums', 8)).toBe(false);
     expect(store.add('quick-sums', 12)).toBe(true);
-    expect(store.record('quick-sums')).toEqual({ best: 12, plays: 3, recent: [10, 8, 12] });
+    expect(store.record('quick-sums')).toMatchObject({ best: 12, plays: 3, recent: [10, 8, 12] });
+    expect(store.record('quick-sums').times?.length).toBe(3);
     expect(store.gamesPlayed()).toBe(1);
   });
 
