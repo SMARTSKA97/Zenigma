@@ -79,6 +79,9 @@
             }
           </button>
         }
+        @if (strict()) {
+          <span class="pill strikes" [attr.aria-label]="strikesLeft() + ' strikes left'">{{ '♥'.repeat(strikesLeft()) }}</span>
+        }
         @if (challengeNow(); as c) {
           <span class="pill vs">Beat {{ fmt(c.ms) }}</span>
         }

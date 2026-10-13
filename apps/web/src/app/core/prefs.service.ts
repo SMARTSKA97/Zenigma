@@ -12,6 +12,7 @@ interface Prefs {
   reduceMotion: boolean;
   haptics: boolean;
   largeNumbers: boolean;
+  strikes: boolean;
   accent: string;
   tapHaptics: HapticStrength;
   alertHaptics: HapticStrength;
@@ -25,6 +26,8 @@ export class PrefsService {
   readonly reduceMotion = signal(false);
   readonly haptics = signal(true);
   readonly largeNumbers = signal(false);
+  /** Strict practice: three wrong moves reset the board. */
+  readonly strikes = signal(false);
   /** The colour theme (see ACCENTS in the settings page). 'default' is the original blue. */
   readonly accent = signal('default');
   /** How strong the little taps are (a cell chosen, a number placed). */
@@ -40,6 +43,7 @@ export class PrefsService {
       this.reduceMotion.set(saved.reduceMotion === true);
       this.haptics.set(saved.haptics !== false);
       this.largeNumbers.set(saved.largeNumbers === true);
+      this.strikes.set(saved.strikes === true);
       this.accent.set(typeof saved.accent === 'string' ? saved.accent : 'default');
       this.tapHaptics.set(strength(saved.tapHaptics, 'light'));
       this.alertHaptics.set(strength(saved.alertHaptics, 'strong'));
@@ -77,6 +81,11 @@ export class PrefsService {
     this.apply();
   }
 
+  setStrikes(value: boolean): void {
+    this.strikes.set(value);
+    this.save();
+  }
+
   setLargeNumbers(value: boolean): void {
     this.largeNumbers.set(value);
     this.save();
@@ -106,7 +115,7 @@ export class PrefsService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

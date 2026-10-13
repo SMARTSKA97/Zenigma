@@ -4,7 +4,7 @@ This is the menu of difficulty ideas for every game. ✅ means it is in the app,
 
 ## Rules that work on any puzzle (no new levels needed)
 
-- ⬜ **Strikes**: three wrong moves and the board resets (uses the same mistake check as Check).
+- ✅ **Strikes**: Settings, Strict practice. Three wrong moves (moves that cannot be part of the answer, the same check as Check) reset the board.
 - ⬜ **Par clock**: a countdown to beat the par time for the level, not just a stopwatch.
 - ⬜ **No hints, no Check** badge-run: a toggle on the start of a level, counted for a badge.
 - ⬜ **Fading clues**: givens dim after a few seconds and come back when you hold them (memory pressure).

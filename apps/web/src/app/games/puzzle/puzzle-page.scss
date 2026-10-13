@@ -434,3 +434,8 @@ a.tool {
 .vs-result.won {
   color: var(--good);
 }
+
+.pill.strikes {
+  color: var(--bad);
+  letter-spacing: 0.12em;
+}

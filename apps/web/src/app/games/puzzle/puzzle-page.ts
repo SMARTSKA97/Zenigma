@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, HostListener, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { PrefsService } from '../../core/prefs.service';
 import { HapticsService } from '../../core/haptics.service';
 import { BackService } from '../../core/back.service';
 import { AuthService } from '../../core/auth.service';
@@ -50,6 +51,7 @@ export class PuzzlePage {
   private readonly route = inject(ActivatedRoute);
   protected readonly nav = inject(BackService);
   private readonly haptics = inject(HapticsService);
+  private readonly prefs = inject(PrefsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
   private readonly sync = inject(SyncService);
@@ -104,6 +106,10 @@ export class PuzzlePage {
   protected readonly wheelOpen = signal(false);
   /** Practice only: the board is covered and the clock stops. */
   protected readonly paused = signal(false);
+  /** Strict practice: wrong moves left before the board resets. */
+  protected readonly strikesLeft = signal(3);
+  protected readonly strict = computed(() => this.prefs.strikes() && !this.daily());
+  private wasWrong = false;
   /** Set while "Leave this game?" is open; calling it with the answer lets the navigation go or stops it. */
   protected readonly leaving = signal<((ok: boolean) => void) | null>(null);
   protected readonly shareOpen = signal<{ card: CardInput; text: string } | null>(null);
@@ -287,6 +293,8 @@ export class PuzzlePage {
     this.state.set(keep ? saved.state : fresh);
     this.history.set([]);
     this.future.set([]);
+    this.strikesLeft.set(3);
+    this.wasWrong = false;
     this.baseMs = keep ? saved.elapsedMs : 0;
     this.stretchStart = Date.now();
     this.phase.set('practice');
@@ -366,7 +374,30 @@ export class PuzzlePage {
     this.future.set([]);
     this.state.set(next);
     this.scheduleSave();
+    this.strike();
     void this.checkSolved();
+  }
+
+  /** In strict practice, a move that makes the board impossible to finish costs a strike; the third resets the board. */
+  private strike(): void {
+    const p = this.puzzle();
+    if (!this.strict() || !p) return;
+    const wrong = hasMistake(this.game(), p, this.state());
+    if (wrong && !this.wasWrong) {
+      this.strikesLeft.update((n) => n - 1);
+      this.haptics.error();
+      if (this.strikesLeft() <= 0) {
+        this.flash('Three strikes. The board was reset.');
+        this.strikesLeft.set(3);
+        this.history.set([]);
+        this.future.set([]);
+        this.state.set(ADAPTERS[this.game()].blank(p));
+        this.wasWrong = false;
+        return;
+      }
+      this.flash(`Not quite. ${this.strikesLeft()} ${this.strikesLeft() === 1 ? 'strike' : 'strikes'} left.`);
+    }
+    this.wasWrong = wrong;
   }
 
   protected undo(): void {

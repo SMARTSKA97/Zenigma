@@ -75,6 +75,12 @@
     </app-switch>
   </div>
   <div class="item">
+    <app-switch [checked]="prefs.strikes()" (checkedChange)="prefs.setStrikes($event)">
+      Strict practice
+      <small>Three wrong moves reset the board. Practice only; a wrong move is one that cannot be part of the answer.</small>
+    </app-switch>
+  </div>
+  <div class="item">
     <app-switch [checked]="prefs.largeNumbers()" (checkedChange)="prefs.setLargeNumbers($event)">
       Larger numbers
       <small>Bigger digits and letters on the boards, easier to read.</small>
