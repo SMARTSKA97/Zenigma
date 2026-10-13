@@ -1,52 +1,170 @@
 <a class="back" routerLink="/settings">‹ Settings</a>
+
 @if (auth.user(); as user) {
-  <section class="profile">
-    <div class="avatar" aria-hidden="true">{{ initial(user) }}</div>
-    <h1>{{ user.displayName || user.email }}</h1>
-    @if (user.displayName) {
-      <p class="muted">{{ user.email }}</p>
+  <section class="me">
+    <div class="hero">
+      <div class="avatar" aria-hidden="true">{{ initial(user) }}</div>
+      <div class="who">
+        <h1>{{ user.displayName || user.email }}</h1>
+        <p class="muted">{{ user.email }}</p>
+        <p class="chips">
+          <span class="chip ok">Signed in</span>
+          @if (profile(); as p) {
+            @if (p.hasPassword) { <span class="chip">Email</span> }
+            @if (profileApi.google()) { <span class="chip">Google</span> }
+          }
+        </p>
+      </div>
+    </div>
+
+    @if (notice(); as text) {
+      <p class="toast" role="status">{{ text }}</p>
     }
 
+    @if (!profile()) {
+      <div class="card loading">
+        <app-loader [size]="22" />
+        <span class="muted">{{ conn.offlineMode() ? 'Offline mode is on, so your profile is not loaded.' : 'Loading your profile' }}</span>
+      </div>
+    } @else {
+      <h2 class="group">Your details</h2>
+      <div class="card block">
+        <form class="row" (submit)="$event.preventDefault(); saveName()">
+          <label class="grow">
+            Display name
+            <input name="displayName" maxlength="64" autocomplete="nickname" [value]="nameDraft()" (input)="nameDraft.set($any($event.target).value)" />
+          </label>
+          <button type="submit" [disabled]="saving() || !nameChanged()">Save</button>
+        </form>
+
+        <div class="field">
+          <span class="label">Age group <small>Optional. Used only to group the mind-training comparisons.</small></span>
+          <div class="pills" role="radiogroup" aria-label="Age group">
+            @for (g of ageGroups; track g) {
+              <button type="button" class="pill" role="radio" [attr.aria-checked]="profile()!.ageGroup === g" (click)="setAge(profile()!.ageGroup === g ? null : g)">{{ g }}</button>
+            }
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">Gender <small>Optional, same use. Tap again to clear.</small></span>
+          <div class="pills" role="radiogroup" aria-label="Gender">
+            @for (g of genders; track g.id) {
+              <button type="button" class="pill" role="radio" [attr.aria-checked]="profile()!.gender === g.id" (click)="setGender(profile()!.gender === g.id ? null : g.id)">{{ g.label }}</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <h2 class="group">How you sign in</h2>
+      <div class="card list">
+        <div class="method">
+          <span class="badge" aria-hidden="true">✉</span>
+          <div class="grow">
+            <b>Email and password</b>
+            <span class="muted">{{ profile()!.hasPassword ? user.email : 'Add a password to also sign in with ' + user.email }}</span>
+          </div>
+          <button type="button" class="small" (click)="passwordOpen.set(!passwordOpen())">{{ profile()!.hasPassword ? 'Change' : 'Add' }}</button>
+        </div>
+        @if (passwordOpen()) {
+          <form class="pw" (submit)="savePassword($event)">
+            @if (profile()!.hasPassword) {
+              <label>Current password<input type="password" name="current" autocomplete="current-password" [value]="currentPassword()" (input)="currentPassword.set($any($event.target).value)" /></label>
+            }
+            <label>New password (8 or more characters)<input type="password" name="new" autocomplete="new-password" minlength="8" required [value]="newPassword()" (input)="newPassword.set($any($event.target).value)" /></label>
+            @if (passwordError(); as e) { <p class="alert" role="alert">{{ e }}</p> }
+            <button type="submit" [disabled]="saving() || newPassword().length < 8">Save password</button>
+          </form>
+        }
+
+        <div class="method">
+          <span class="badge g" aria-hidden="true">G</span>
+          <div class="grow">
+            <b>Google</b>
+            <span class="muted">
+              @if (profileApi.google()) { Connected. Sign in with one tap. }
+              @else if (googleNative) { Available on the web app for now. }
+              @else if (googleOffered() === false) { Not set up on this server yet. }
+              @else { Connect it to sign in with one tap. }
+            </span>
+          </div>
+          @if (profileApi.google()) {
+            <button type="button" class="small" [disabled]="saving()" (click)="disconnectGoogle()">Disconnect</button>
+          }
+        </div>
+        @if (!profileApi.google() && !googleNative && googleOffered() !== false) {
+          <div class="gslot" #googleLink></div>
+        }
+      </div>
+
+      <h2 class="group">What Zenigma can use</h2>
+      <p class="muted lede">The data your account holds, why, and the parts you can switch off.</p>
+      <div class="card list perms">
+        <div class="perm">
+          <span class="tick on" aria-hidden="true">✓</span>
+          <div class="grow"><b>Your email address</b><span class="muted">Signs you in and recovers your account. Never shown to other players.</span></div>
+          <span class="req">Required</span>
+        </div>
+        <div class="perm">
+          <span class="tick on" aria-hidden="true">✓</span>
+          <div class="grow"><b>Results, progress and streaks</b><span class="muted">Solved levels, daily results and stats, saved so they follow you to every device.</span></div>
+          <span class="req">Required</span>
+        </div>
+        <div class="perm">
+          <span class="tick on" aria-hidden="true">✓</span>
+          <div class="grow"><b>Hint balance</b><span class="muted">The same count of hints on every device you use.</span></div>
+          <span class="req">Required</span>
+        </div>
+        <div class="perm">
+          <span class="tick" [class.on]="!profile()!.hideName" aria-hidden="true">{{ profile()!.hideName ? '–' : '✓' }}</span>
+          <div class="grow"><b>Show my name</b><span class="muted">Next to your results on leaderboards and in circles. Off shows “Player” and four letters instead.</span></div>
+          <app-switch [checked]="!profile()!.hideName" [disabled]="saving()" (checkedChange)="setShareName($event)" />
+        </div>
+        <div class="perm">
+          <span class="tick" [class.on]="profile()!.shareCohort" aria-hidden="true">{{ profile()!.shareCohort ? '✓' : '–' }}</span>
+          <div class="grow"><b>Mind-training comparisons</b><span class="muted">Counts your best marks, with no name, in the age and gender averages. Off keeps you out of them (you can still see them).</span></div>
+          <app-switch [checked]="profile()!.shareCohort" [disabled]="saving()" (checkedChange)="setShareCohort($event)" />
+        </div>
+      </div>
+      <p class="muted foot">Want nothing to leave this device? Turn on <a routerLink="/settings">offline mode</a> in Settings.</p>
+    }
+
+    <h2 class="group">This device</h2>
     <div class="card stats">
       <div>
         <span class="label">Sync</span>
         <strong>
-          @if (sync.syncing()) {
-            Syncing
-          } @else if (sync.pendingCount() > 0) {
-            {{ sync.pendingCount() }} waiting
-          } @else {
-            Up to date
-          }
+          @if (conn.offlineMode()) { Offline mode }
+          @else if (sync.syncing()) { Syncing }
+          @else if (sync.pendingCount() > 0) { {{ sync.pendingCount() }} waiting }
+          @else { Up to date }
         </strong>
       </div>
       <div>
         <span class="label">Connection</span>
-        <strong>{{ sync.online() ? 'Online' : 'Offline' }}</strong>
+        <strong>{{ conn.offlineMode() ? 'Off by choice' : sync.online() ? 'Online' : 'Offline' }}</strong>
       </div>
     </div>
-
     <a class="button secondary stats-link" routerLink="/stats">Streaks and stats</a>
 
     @if (sync.pendingCount() > 0) {
       <p class="error warning">Signing out deletes {{ sync.pendingCount() }} item(s) that have not synced yet.</p>
     }
     <button type="button" class="secondary" [disabled]="signingOut()" (click)="signOut()">
-      @if (signingOut()) {
-        <app-loader [size]="16" />
-      }
+      @if (signingOut()) { <app-loader [size]="16" /> }
       Sign out
     </button>
 
     <details class="danger" (toggle)="deleteError.set(null)">
       <summary>Delete my account</summary>
-      <p class="muted">This permanently removes your account, results, streaks and circles. It cannot be undone. Enter your password to confirm.</p>
+      <p class="muted">This permanently removes your account, results, streaks and circles. It cannot be undone.{{ profile()?.hasPassword === false ? '' : ' Enter your password to confirm.' }}</p>
       <form (submit)="deleteAccount($event)">
-        <input type="password" name="confirm" autocomplete="current-password" placeholder="Password" [value]="deletePassword()" (input)="deletePassword.set($any($event.target).value)" />
+        @if (profile()?.hasPassword !== false) {
+          <input type="password" name="confirm" autocomplete="current-password" placeholder="Password" [value]="deletePassword()" (input)="deletePassword.set($any($event.target).value)" />
+        }
         @if (deleteError(); as message) {
           <p class="alert" role="alert">{{ message }}</p>
         }
-        <button type="submit" class="delete" [disabled]="deleting() || !deletePassword()">Delete account for good</button>
+        <button type="submit" class="delete" [disabled]="deleting() || (profile()?.hasPassword !== false && !deletePassword())">Delete account for good</button>
       </form>
     </details>
   </section>
@@ -54,62 +172,54 @@
   <section class="auth">
     <app-loader class="mark" [size]="40" [animate]="busy()" />
     <h1>{{ mode() === 'register' ? 'Create your account' : 'Welcome back' }}</h1>
-    <p class="muted lede">
-      Guest mode works fully offline. An account keeps your streaks and history in sync across devices.
-    </p>
+    <p class="muted lede">Guest mode works fully offline. An account keeps your streaks, hints and history in sync across devices.</p>
 
     @if (auth.sessionExpired()) {
       <p class="notice">Your session has ended. Sign in again; nothing on this device was lost.</p>
     }
+    @if (conn.offlineMode()) {
+      <p class="notice">Offline mode is on, so signing in is paused. Turn it off in Settings to sign in.</p>
+    }
 
-    <form class="card form" [class.busy]="busy()" (submit)="submit($event)">
-      <app-segmented
-        label="Sign in or create account"
-        [options]="modes"
-        [value]="mode()"
-        (valueChange)="mode.set($event)"
-      />
-
-      @if (mode() === 'register') {
-        <label>
-          Display name
-          <input name="displayName" autocomplete="nickname" [value]="displayName()" (input)="displayName.set($any($event.target).value)" />
-        </label>
+    <div class="card form" [class.busy]="busy()">
+      @if (googleOffered() !== false && !googleNative) {
+        <div class="gslot" #googleSignIn></div>
+        <p class="or"><span>or use your email</span></p>
       }
-      <label>
-        Email
-        <input name="email" type="email" inputmode="email" autocomplete="email" required [value]="email()" (input)="email.set($any($event.target).value)" />
-      </label>
-      <label>
-        Password
-        <span class="password">
-          <input
-            name="password"
-            [type]="reveal() ? 'text' : 'password'"
-            required
-            minlength="8"
-            [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
-            [value]="password()"
-            (input)="password.set($any($event.target).value)"
-          />
-          <button type="button" class="reveal" (click)="reveal.set(!reveal())" [attr.aria-pressed]="reveal()">
-            {{ reveal() ? 'Hide' : 'Show' }}
-          </button>
-        </span>
-      </label>
-
-      @if (error(); as message) {
-        <p class="alert" role="alert">{{ message }}</p>
-      }
-
-      <button type="submit" class="submit" [disabled]="busy()">
-        @if (busy()) {
-          <app-loader [size]="18" />
-          {{ mode() === 'register' ? 'Creating account' : 'Signing in' }}
-        } @else {
-          {{ mode() === 'register' ? 'Create account' : 'Sign in' }}
+      <app-segmented label="Sign in or create account" [options]="modes" [value]="mode()" (valueChange)="mode.set($event)" />
+      <form class="fields" (submit)="submit($event)">
+        @if (mode() === 'register') {
+          <label>
+            Display name
+            <input name="displayName" autocomplete="nickname" [value]="displayName()" (input)="displayName.set($any($event.target).value)" />
+          </label>
         }
-      </button>
-    </form>
+        <label>
+          Email
+          <input name="email" type="email" inputmode="email" autocomplete="email" required [value]="email()" (input)="email.set($any($event.target).value)" />
+        </label>
+        <label>
+          Password
+          <span class="password">
+            <input name="password" [type]="reveal() ? 'text' : 'password'" required minlength="8" [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'" [value]="password()" (input)="password.set($any($event.target).value)" />
+            <button type="button" class="reveal" (click)="reveal.set(!reveal())" [attr.aria-pressed]="reveal()">{{ reveal() ? 'Hide' : 'Show' }}</button>
+          </span>
+        </label>
+
+        @if (error(); as message) {
+          <p class="alert" role="alert">{{ message }}</p>
+        }
+
+        <button type="submit" class="submit" [disabled]="busy() || conn.offlineMode()">
+          @if (busy()) {
+            <app-loader [size]="18" />
+            {{ mode() === 'register' ? 'Creating account' : 'Signing in' }}
+          } @else {
+            {{ mode() === 'register' ? 'Create account' : 'Sign in' }}
+          }
+        </button>
+      </form>
+    </div>
+    <p class="muted foot">An account needs an email address or a Google account, so you can always get back in.</p>
   </section>
 }

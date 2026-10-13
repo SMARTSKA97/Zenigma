@@ -20,6 +20,37 @@
   <span class="chev" aria-hidden="true">›</span>
 </a>
 
+<h2 class="group">Connection</h2>
+<section class="list">
+  <div class="item">
+    <app-switch [checked]="conn.offlineMode()" (checkedChange)="conn.setOffline($event)">
+      Offline mode
+      <small>
+        @if (conn.offlineMode()) {
+          Nothing leaves this device. Practice, mind games and every level work. Daily challenges and rankings wait.
+        } @else {
+          Turn on to play without the server. While it is off, the server wakes up, dailies open and your progress syncs.
+        }
+      </small>
+    </app-switch>
+  </div>
+  <div class="item conn" role="status">
+    @if (conn.offlineMode()) {
+      <i class="dot warn"></i><span>Playing offline by choice</span>
+    } @else if (!conn.online()) {
+      <i class="dot bad"></i><span>No internet connection</span>
+    } @else if (conn.server() === 'ready') {
+      <i class="dot good"></i><span>Connected{{ sync.pendingCount() > 0 ? ', ' + sync.pendingCount() + ' to sync' : ', everything is synced' }}</span>
+    } @else if (conn.server() === 'warming') {
+      <app-loader [size]="14" /><span>Waking the server, this can take a minute</span>
+    } @else if (conn.server() === 'down') {
+      <i class="dot bad"></i><span>Can’t reach the server</span><button type="button" class="link" (click)="conn.wake()">Try again</button>
+    } @else {
+      <i class="dot"></i><span>Not connected yet</span><button type="button" class="link" (click)="conn.wake()">Connect</button>
+    }
+  </div>
+</section>
+
 <h2 class="group">Appearance</h2>
 <section class="list">
   <div class="item stack">

@@ -152,3 +152,38 @@ small {
 .stack p {
   margin: 0;
 }
+
+.conn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.conn .dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.conn .dot.good {
+  background: var(--good, #2e9e5b);
+}
+.conn .dot.warn {
+  background: #f5b82e;
+}
+.conn .dot.bad {
+  background: var(--bad);
+}
+:host .conn .link {
+  min-height: 0;
+  margin-left: auto;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: none;
+}

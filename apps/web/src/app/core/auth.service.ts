@@ -47,6 +47,22 @@ export class AuthService {
     await this.adopt(response);
   }
 
+  /** Signs in (or creates the account) with a Google ID token from Google Identity Services. */
+  async loginWithGoogle(idToken: string): Promise<void> {
+    const deviceId = await this.device.deviceId();
+    const response = await firstValueFrom(this.http.post<AuthSession>(`${environment.apiBaseUrl}/auth/google`, { idToken, deviceId }));
+    await this.adopt(response);
+  }
+
+  /** Keeps the stored session's name in step after the profile changes it. */
+  async rename(displayName: string | null): Promise<void> {
+    const current = this.session();
+    if (!current) return;
+    const next = { ...current, user: { ...current.user, displayName } };
+    await this.store.setMeta(SESSION_KEY, next);
+    this.session.set(next);
+  }
+
   /**
    * Swaps the refresh token for a new session. Only a definite "no" from the server ends the session;
    * being offline or the API waking up just returns null and leaves the session alone.
@@ -73,9 +89,9 @@ export class AuthService {
     this.sessionExpired.set(false);
   }
 
-  /** Deletes the account on the server (it needs the password), then clears this device like a sign out. Throws if refused. */
-  async deleteAccount(password: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/delete-account`, { password }));
+  /** Deletes the account on the server (it needs the password, or just a confirmation for Google-only accounts), then clears this device. Throws if refused. */
+  async deleteAccount(password: string | null): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/delete-account`, password === null ? { confirm: true } : { password }));
     await this.store.reset(KEEP_ON_SIGN_OUT);
     this.session.set(null);
     this.sessionExpired.set(false);

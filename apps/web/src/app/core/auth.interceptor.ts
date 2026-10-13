@@ -4,7 +4,7 @@ import { catchError, from, switchMap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
-const isAuthEndpoint = (url: string) => /\/auth\/(login|register|refresh|logout)$/.test(url);
+const isAuthEndpoint = (url: string) => /\/auth\/(login|register|refresh|logout|google|config)$/.test(url);
 
 /** Adds the bearer token to API calls and retries once after a refresh when the access token has expired. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
