@@ -240,7 +240,7 @@ export class FeaturedLevel implements OnInit {
               @if (c.isClaimed(s)) {
                 <span class="got">Collected</span>
               } @else if (s.done) {
-                <button type="button" class="collect" (click)="collect(s)">+{{ s.template.reward }} 💡</button>
+                <button type="button" class="collect" [disabled]="c.full()" (click)="collect(s)">{{ c.full() ? 'Stash full' : '+' + c.owed(s) + ' 💡' }}</button>
               } @else {
                 <span class="num">{{ min(s) }}/{{ s.template.target }}</span>
                 <span class="reward">+{{ s.template.reward }} 💡</span>
@@ -390,7 +390,7 @@ export class ChallengesPage implements OnInit {
 
   protected collect(s: ChallengeState): void {
     const added = this.c.claim(s);
-    this.message.set(added > 0 ? `+${added} ${added === 1 ? 'hint' : 'hints'} collected` : 'Collected. Your hint stash is full, so spend a few first.');
+    this.message.set(added > 0 ? `+${added} ${added === 1 ? 'hint' : 'hints'} collected${this.c.owed(s) > 0 ? '. Spend a few and collect the rest.' : ''}` : 'Your hint stash is full. Spend a few, then collect.');
     setTimeout(() => this.message.set(''), 3000);
   }
 }

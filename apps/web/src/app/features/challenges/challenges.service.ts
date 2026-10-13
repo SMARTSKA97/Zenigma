@@ -1,12 +1,13 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AuthService } from '../../core/auth.service';
-import { HintsService } from '../../core/hints.service';
+import { FREE_CAP, HintsService } from '../../core/hints.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { MindStore } from '../../games/mind/mind-store';
 import { Activity, ChallengeState, Period, progressFor, windowOf } from './challenge-engine';
 
 const CLAIMED_KEY = 'zenigma.challenges.claimed';
+const PAID_KEY = 'zenigma.challenges.paid';
 
 /** What the player solved, from the event log (practice, Word Guess) and the daily stats (signed in). */
 export function activityFrom(events: { kind: string; payload: unknown; clientCreatedAt: string }[], stats: Stats | null, mind: { id: string; at: number }[] = []): Activity[] {
@@ -40,6 +41,8 @@ export class ChallengesService {
   readonly stats = signal<Stats | null>(null);
   readonly now = signal(new Date());
   private readonly claimed = signal<string[]>(this.readClaimed());
+  /** Hints already paid out for a goal whose reward did not fit in the stash (the rest stays collectable). */
+  private readonly paid = signal<Record<string, number>>(this.readPaid());
 
   readonly activity = computed(() => activityFrom(this.sync.events(), this.stats(), this.mind.plays()));
 
@@ -72,18 +75,49 @@ export class ChallengesService {
     return this.claimed().includes(c.claimKey);
   }
 
-  /** Collects the hints for a finished goal. Returns how many were added (the free cap may allow fewer). */
+  /** Hints still to collect for a goal (its reward minus anything already paid). */
+  owed(c: ChallengeState): number {
+    return this.isClaimed(c) ? 0 : c.template.reward - (this.paid()[c.claimKey] ?? 0);
+  }
+
+  /** True when the hint stash has no room, so collecting would pay nothing. */
+  readonly full = computed(() => this.hints.balance() >= FREE_CAP);
+
+  /**
+   * Collects the hints for a finished goal. Only what fits in the stash is paid; the rest stays collectable, so a full
+   * stash never wastes a reward. Returns how many were added.
+   */
   claim(c: ChallengeState): number {
     if (!c.done || this.isClaimed(c)) return 0;
-    const added = this.hints.grant(c.template.reward);
-    const next = [...this.claimed(), c.claimKey].slice(-400);
-    this.claimed.set(next);
+    const added = this.hints.grant(this.owed(c));
+    if (added === 0) return 0;
+    const paid = { ...this.paid(), [c.claimKey]: (this.paid()[c.claimKey] ?? 0) + added };
+    if (paid[c.claimKey] >= c.template.reward) {
+      delete paid[c.claimKey];
+      const next = [...this.claimed(), c.claimKey].slice(-400);
+      this.claimed.set(next);
+      this.store(CLAIMED_KEY, next);
+    }
+    this.paid.set(paid);
+    this.store(PAID_KEY, paid);
+    return added;
+  }
+
+  private store(key: string, value: unknown): void {
     try {
-      localStorage.setItem(CLAIMED_KEY, JSON.stringify(next));
+      localStorage.setItem(key, JSON.stringify(value));
     } catch {
       /* ignore */
     }
-    return added;
+  }
+
+  private readPaid(): Record<string, number> {
+    try {
+      const raw = JSON.parse(localStorage.getItem(PAID_KEY) ?? '{}') as unknown;
+      return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, number>) : {};
+    } catch {
+      return {};
+    }
   }
 
   private readClaimed(): string[] {
