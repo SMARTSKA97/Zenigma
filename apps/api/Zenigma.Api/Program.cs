@@ -16,6 +16,9 @@ using Zenigma.Api.Streaks;
 using Zenigma.Api.Leaderboards;
 using Zenigma.Api.Infrastructure;
 using Zenigma.Api.Sync;
+using Zenigma.Api.Hints;
+using Zenigma.Api.Mind;
+using Zenigma.Api.Profile;
 
 // Local development: read secrets from the git-ignored .env (see .env.example). Production uses real environment variables.
 if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Production", StringComparison.OrdinalIgnoreCase)
@@ -54,6 +57,8 @@ builder.Services
     .AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.Section));
+builder.Services.AddHttpClient<IGoogleTokenVerifier, GoogleTokenVerifier>(c => c.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddSingleton<WordList>();
 builder.Services.AddSingleton<PracticeLevels>();
 builder.Services.AddSingleton<PracticeRecorder>();
@@ -125,6 +130,9 @@ app.MapGet("/time", (TimeProvider clock) =>
 
 app.MapAuth();
 app.MapSync();
+app.MapProfile();
+app.MapHints();
+app.MapMind();
 app.MapDaily();
 app.MapPuzzleDaily();
 app.MapLeaderboards();

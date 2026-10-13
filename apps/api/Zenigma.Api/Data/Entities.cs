@@ -6,6 +6,9 @@ namespace Zenigma.Api.Data;
 public class ApplicationUser : IdentityUser
 {
     public string? DisplayName { get; set; }
+
+    /// <summary>When true, boards and circles show "Player XXXX" instead of the display name.</summary>
+    public bool HideName { get; set; }
 }
 
 public class Device
@@ -100,4 +103,30 @@ public class GameFreeze
     public string Game { get; set; } = "";
     public int Freezes { get; set; }
     public int CreditedBlocks { get; set; }
+}
+
+public class UserProfile
+{
+    public string UserId { get; set; } = "";
+    public string? AgeGroup { get; set; }
+    public string? Gender { get; set; }
+    public bool ShareCohort { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public class HintBalance
+{
+    public string UserId { get; set; } = "";
+    public int Balance { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public class MindScore
+{
+    public string UserId { get; set; } = "";
+    public string Game { get; set; } = "";
+    public string Skill { get; set; } = "";
+    public int Pct { get; set; }
+    public int Plays { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }

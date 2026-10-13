@@ -10,7 +10,8 @@ public record RegisterRequest(string? Email, string? Password, string? DisplayNa
 public record LoginRequest(string? Email, string? Password, Guid? DeviceId);
 public record RefreshRequest(string? RefreshToken, Guid? DeviceId);
 public record LogoutRequest(string? RefreshToken);
-public record DeleteAccountRequest(string? Password);
+public record DeleteAccountRequest(string? Password, bool? Confirm);
+public record GoogleLoginRequest(string? IdToken, Guid? DeviceId, string? DisplayName);
 
 public static class AuthEndpoints
 {
@@ -69,6 +70,44 @@ public static class AuthEndpoints
             return Results.Ok(await tokens.IssueAsync(user, request.DeviceId, ct));
         });
 
+        // What the sign-in screen needs to know: whether Google sign-in is set up, and the public client id for it.
+        group.MapGet("/config", (Microsoft.Extensions.Options.IOptions<GoogleOptions> google) =>
+            Results.Ok(new { googleClientId = google.Value.ClientId.Length > 0 ? google.Value.ClientId : null }));
+
+        // Sign in with Google: finds the account connected to this Google identity, else the account with the same verified email
+        // (and connects it), else creates a new account that has no password.
+        group.MapPost("/google", async (
+            GoogleLoginRequest request,
+            UserManager<ApplicationUser> users,
+            IGoogleTokenVerifier google,
+            Microsoft.Extensions.Options.IOptions<GoogleOptions> options,
+            TokenService tokens,
+            CancellationToken ct) =>
+        {
+            if (options.Value.ClientId.Length == 0)
+                return Results.Problem(statusCode: StatusCodes.Status501NotImplemented, title: "Google sign-in is not set up on this server.");
+            var identity = await google.VerifyAsync(request.IdToken ?? "", ct);
+            if (identity is null || !identity.EmailVerified)
+                return Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Google sign-in could not be verified.");
+
+            var user = await users.FindByLoginAsync("Google", identity.Subject);
+            if (user is null)
+            {
+                user = await users.FindByEmailAsync(identity.Email);
+                if (user is null)
+                {
+                    var name = string.IsNullOrWhiteSpace(request.DisplayName) ? identity.Name : request.DisplayName.Trim();
+                    user = new ApplicationUser { UserName = identity.Email, Email = identity.Email, EmailConfirmed = true, DisplayName = name is { Length: > 64 } ? name[..64] : name };
+                    var created = await users.CreateAsync(user);
+                    if (!created.Succeeded) return Results.Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Could not create the account.");
+                }
+                var linked = await users.AddLoginAsync(user, new UserLoginInfo("Google", identity.Subject, "Google"));
+                if (!linked.Succeeded) return Results.Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Could not connect Google.");
+            }
+
+            return Results.Ok(await tokens.IssueAsync(user, request.DeviceId, ct));
+        });
+
         group.MapPost("/refresh", async (
             RefreshRequest request,
             UserManager<ApplicationUser> users,
@@ -95,7 +134,11 @@ public static class AuthEndpoints
         {
             var user = await users.FindByIdAsync(UserIds.Get(principal));
             if (user is null) return Results.Unauthorized();
-            if (string.IsNullOrEmpty(request.Password) || !await users.CheckPasswordAsync(user, request.Password))
+            // An account with a password confirms with it; one that only signs in with Google confirms with the explicit flag.
+            var confirmed = await users.HasPasswordAsync(user)
+                ? !string.IsNullOrEmpty(request.Password) && await users.CheckPasswordAsync(user, request.Password)
+                : request.Confirm == true;
+            if (!confirmed)
                 return Results.Problem(statusCode: StatusCodes.Status403Forbidden, title: "That password is not right.");
             var result = await users.DeleteAsync(user);
             return result.Succeeded ? Results.NoContent() : Results.Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Could not delete the account.");

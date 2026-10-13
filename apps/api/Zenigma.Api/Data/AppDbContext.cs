@@ -17,6 +17,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<StreakFreeze> StreakFreezes => Set<StreakFreeze>();
     public DbSet<UserReward> UserRewards => Set<UserReward>();
     public DbSet<GameFreeze> GameFreezes => Set<GameFreeze>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<HintBalance> HintBalances => Set<HintBalance>();
+    public DbSet<MindScore> MindScores => Set<MindScore>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -133,6 +136,38 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.UserId).HasColumnName("user_id");
             e.Property(x => x.Freezes).HasColumnName("freezes");
             e.Property(x => x.LastAwardWeek).HasColumnName("last_award_week");
+        });
+
+        b.Entity<UserProfile>(e =>
+        {
+            e.ToTable("user_profiles");
+            e.HasKey(x => x.UserId);
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.AgeGroup).HasColumnName("age_group").HasMaxLength(8);
+            e.Property(x => x.Gender).HasColumnName("gender").HasMaxLength(12);
+            e.Property(x => x.ShareCohort).HasColumnName("share_cohort");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        b.Entity<HintBalance>(e =>
+        {
+            e.ToTable("hint_balances");
+            e.HasKey(x => x.UserId);
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Balance).HasColumnName("balance");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        b.Entity<MindScore>(e =>
+        {
+            e.ToTable("mind_scores");
+            e.HasKey(x => new { x.UserId, x.Game });
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Game).HasColumnName("game").HasMaxLength(32);
+            e.Property(x => x.Skill).HasColumnName("skill").HasMaxLength(16);
+            e.Property(x => x.Pct).HasColumnName("pct");
+            e.Property(x => x.Plays).HasColumnName("plays");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });
     }
 }
