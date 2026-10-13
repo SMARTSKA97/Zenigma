@@ -15,6 +15,13 @@
  "sudoku-knight": 2000,
  "sudoku-windoku": 2000,
  "sudoku-disjoint": 2000,
+ "sudoku-even-odd": 1000,
+ "sudoku-consecutive": 1000,
+ "sudoku-thermo": 1000,
+ "sudoku-killer": 1000,
+ "sudoku-jigsaw": 1000,
+ "sudoku-arrow": 1000,
+ "sudoku-sandwich": 1000,
  "zip": 2000,
  "patches": 2000
 }

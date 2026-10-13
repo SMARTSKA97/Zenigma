@@ -1,5 +1,6 @@
 import { generateQueens, solveQueens } from './queens.mjs';
 import { generateSudoku, solveSudoku } from './sudoku.mjs';
+import { generateKind, isKindRule, KIND_RULES } from './sudoku-kinds.mjs';
 import { generateZip, solveZip } from './zip.mjs';
 import { generatePatches, solvePatches } from './patches.mjs';
 import { generateTango, solveTango } from './tango.mjs';
@@ -15,6 +16,7 @@ export const TRACKS = [
   ...['classic', 'mini'].flatMap((kind) => SUDOKU_TIERS.map((tier) => `sudoku-${kind}-${tier}`)),
   'sudoku-diagonal',
   'sudoku-knight',
+  ...KIND_RULES.map((k) => `sudoku-${k}`),
   'sudoku-windoku',
   'sudoku-disjoint',
   'zip',
@@ -64,6 +66,7 @@ export function practiceLevel(track, level) {
   const h = hardness(level);
   // Sudoku with one more rule: a single track each that climbs from many clues to few.
   if (game === 'sudoku-diagonal') return generateSudoku(rng, Math.round(38 - 16 * h), 9, 'diagonal');
+  if (isKindRule(game.slice(7))) return generateKind(rng, game.slice(7), h);
   if (game === 'sudoku-windoku') return generateSudoku(rng, Math.round(38 - 14 * h), 9, 'windoku');
   if (game === 'sudoku-disjoint') return generateSudoku(rng, Math.round(38 - 14 * h), 9, 'disjoint');
   if (game === 'sudoku-knight') return generateSudoku(rng, Math.round(36 - 12 * h), 9, 'knight');

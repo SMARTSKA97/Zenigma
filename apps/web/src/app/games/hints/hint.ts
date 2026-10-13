@@ -4,7 +4,7 @@
  * - Otherwise it points at the place with the most to learn next and says why, in words.
  */
 import { PuzzleGameId } from '../catalog';
-import { boxOf, boxShape, sizeOf, SudokuRule } from '../sudoku/engine';
+import { boxOf, boxShape, sizeOf, SudokuPuzzle } from '../sudoku/engine';
 import * as queens from '../queens/engine';
 import * as tango from '../tango/engine';
 import * as zip from '../zip/engine';
@@ -32,7 +32,7 @@ export function hintFor(game: PuzzleGameId, puzzle: unknown, state: unknown): Hi
     case 'tango':
       return tangoHint(puzzle as tango.TangoPuzzle, state as tango.TangoCell[]);
     case 'sudoku':
-      return sudokuHint(puzzle as { givens: string; rule?: SudokuRule }, state as number[]);
+      return sudokuHint(puzzle as SudokuPuzzle, state as number[]);
     case 'zip':
       return zipHint(puzzle as zip.ZipPuzzle, state as zip.ZipPath);
     case 'patches':
@@ -153,32 +153,33 @@ function tangoHint(puzzle: tango.TangoPuzzle, board: tango.TangoCell[]): Hint {
 
 // ------------------------------------------------------------------------------------------------ Sudoku
 
-function sudokuHint(puzzle: { givens: string; rule?: SudokuRule }, board: number[]): Hint {
+function sudokuHint(puzzle: SudokuPuzzle, board: number[]): Hint {
   const n = sizeOf(board.length);
   const rule = puzzle.rule;
-  const sol = solveSudoku([...puzzle.givens].map(Number), rule);
+  const boxId = (j: number): number => (rule === 'jigsaw' ? Number(puzzle.regions![j]) : boxOf(j, n));
+  const sol = solveSudoku([...puzzle.givens].map(Number), puzzle);
   if (!sol) return none;
   if (!board.includes(0) && board.join('') === sol) return done;
 
   for (let i = 0; i < board.length; i++) {
     if (board[i] && puzzle.givens[i] === '0' && String(board[i]) !== sol[i]) {
-      const box = boxOf(i, n);
-      const cells = board.map((_, j) => (boxOf(j, n) === box ? j : -1)).filter((j) => j >= 0);
-      return { kind: 'mistake', cells, title: 'Something is off in this box', text: 'One of the numbers you placed in this box is not right. It may not clash with anything yet, but the puzzle cannot be finished with it.' };
+      const box = boxId(i);
+      const cells = board.map((_, j) => (boxId(j) === box ? j : -1)).filter((j) => j >= 0);
+      return { kind: 'mistake', cells, title: rule === 'jigsaw' ? 'Something is off in this region' : 'Something is off in this box', text: 'One of the numbers you placed in this box is not right. It may not clash with anything yet, but the puzzle cannot be finished with it.' };
     }
   }
 
   const empties = board.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
-  const cand = new Map(empties.map((i) => [i, sudokuCandidates(board, i, rule)]));
+  const cand = new Map(empties.map((i) => [i, sudokuCandidates(board, i, puzzle)]));
 
   // A cell with only one number left.
   const naked = empties.find((i) => cand.get(i)!.length === 1);
-  if (naked !== undefined) return { kind: 'nudge', cells: [naked], title: 'Only one number fits here', text: `Everything else is already taken by this cell’s row, column or box${rule === 'diagonal' ? ', or its diagonal' : rule === 'knight' ? ', or a knight’s move away' : rule === 'windoku' ? ', or its shaded window' : rule === 'disjoint' ? ', or the cells in the same spot of the other boxes' : ''}. Which number is left?` };
+  if (naked !== undefined) return { kind: 'nudge', cells: [naked], title: 'Only one number fits here', text: `Everything else is already taken by this cell’s row, column or box${rule === 'diagonal' ? ', or its diagonal' : rule === 'knight' ? ', or a knight’s move away' : rule === 'windoku' ? ', or its shaded window' : rule === 'disjoint' ? ', or the cells in the same spot of the other boxes' : rule === 'killer' ? ', or its cage' : rule === 'jigsaw' ? ', or its region' : rule === 'thermo' ? ', or the thermometer it sits on' : rule === 'arrow' ? ', or its arrow' : rule === 'even-odd' ? ', or its even/odd shape' : rule === 'consecutive' ? ', or the bars and gaps next to it' : rule === 'sandwich' ? ', or the sandwich clues' : ''}. Which number is left?` };
 
   // A number that has only one home in a row, column or box.
   const houses: { cells: number[]; label: string }[] = [];
   const [bh, bw] = boxShape(n);
-  for (let b = 0; b < n; b++) houses.push({ cells: board.map((_, j) => (boxOf(j, n) === b ? j : -1)).filter((j) => j >= 0), label: 'box' });
+  for (let b = 0; b < n; b++) houses.push({ cells: board.map((_, j) => (boxId(j) === b ? j : -1)).filter((j) => j >= 0), label: rule === 'jigsaw' ? 'region' : 'box' });
   for (let k = 0; k < n; k++) houses.push({ cells: line(n, 'row', k), label: 'row' }, { cells: line(n, 'col', k), label: 'column' });
   void bh;
   void bw;

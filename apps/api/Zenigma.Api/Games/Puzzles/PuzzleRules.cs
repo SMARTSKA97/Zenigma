@@ -23,6 +23,7 @@ public static class PuzzleRules
         Queens, Tango,
         .. new[] { "classic", "mini" }.SelectMany(kind => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"sudoku-{kind}-{tier}")),
         "sudoku-diagonal", "sudoku-knight", "sudoku-windoku", "sudoku-disjoint",
+        .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich" }.Select(kind => $"sudoku-{kind}"),
         Zip, Patches,
     ];
 
@@ -210,6 +211,10 @@ public static class PuzzleRules
         var boxRows = n == 6 ? 2 : 3;
         var boxCols = 3;
         if (cells.Any(c => c < '1' || c > '0' + n)) return false;
+        var rule = puzzle.TryGetProperty("rule", out var ruleElement) && ruleElement.ValueKind == JsonValueKind.String ? ruleElement.GetString() : null;
+        // Jigsaw: nine irregular regions (81 characters, '0' to '8') take the place of the 3x3 boxes.
+        var regionIds = rule == "jigsaw" ? puzzle.GetProperty("regions").GetString()! : null;
+        if (regionIds is not null && (regionIds.Length != 81 || regionIds.Any(c => c < '0' || c > '8'))) return false;
 
         for (var i = 0; i < n * n; i++)
         {
@@ -230,12 +235,11 @@ public static class PuzzleRules
         {
             var r = i / n;
             var c = i % n;
-            var box = r / boxRows * (n / boxCols) + c / boxCols;
+            var box = regionIds is not null ? regionIds[i] - '0' : r / boxRows * (n / boxCols) + c / boxCols;
             if (!rows[r].Add(cells[i]) || !cols[c].Add(cells[i]) || !boxes[box].Add(cells[i])) return false;
         }
 
         // One more rule on the classic grid: both long diagonals hold each digit once ("diagonal"), or no digit repeats a knight's move away ("knight").
-        var rule = puzzle.TryGetProperty("rule", out var ruleElement) && ruleElement.ValueKind == JsonValueKind.String ? ruleElement.GetString() : null;
         if (rule is not null)
         {
             if (n != 9) return false;
@@ -279,6 +283,10 @@ public static class PuzzleRules
                         if (!spot.Add(cells[(b / 3 * 3 + g / 3) * n + b % 3 * 3 + g % 3])) return false;
                 }
             }
+            else if (rule is "even-odd" or "consecutive" or "thermo" or "killer" or "jigsaw" or "arrow" or "sandwich")
+            {
+                return VerifySudokuKind(rule, puzzle, cells);
+            }
             else
             {
                 return false;
@@ -286,5 +294,87 @@ public static class PuzzleRules
         }
 
         return true;
+    }
+
+    /// <summary>The extra rules of the Sudoku kinds that carry data (the plain row, column and box rules have been checked already).</summary>
+    private static bool VerifySudokuKind(string rule, JsonElement puzzle, string cells)
+    {
+        int[] v = cells.Select(c => c - '0').ToArray();
+        static int[] Ints(JsonElement e) => e.EnumerateArray().Select(x => x.GetInt32()).ToArray();
+        switch (rule)
+        {
+            case "even-odd":
+            {
+                var parity = puzzle.GetProperty("parity").GetString()!;
+                if (parity.Length != 81) return false;
+                for (var i = 0; i < 81; i++)
+                {
+                    if (parity[i] == '.') continue;
+                    if (parity[i] != 'e' && parity[i] != 'o') return false;
+                    if ((parity[i] == 'e') != (v[i] % 2 == 0)) return false;
+                }
+                return true;
+            }
+            case "consecutive":
+            {
+                var bars = new HashSet<(int, int)>();
+                foreach (var pair in puzzle.GetProperty("bars").EnumerateArray())
+                {
+                    var p = Ints(pair);
+                    bars.Add((Math.Min(p[0], p[1]), Math.Max(p[0], p[1])));
+                }
+                for (var i = 0; i < 81; i++)
+                {
+                    if (i % 9 < 8 && (Math.Abs(v[i] - v[i + 1]) == 1) != bars.Contains((i, i + 1))) return false;
+                    if (i / 9 < 8 && (Math.Abs(v[i] - v[i + 9]) == 1) != bars.Contains((i, i + 9))) return false;
+                }
+                return true;
+            }
+            case "thermo":
+                foreach (var t in puzzle.GetProperty("thermos").EnumerateArray())
+                {
+                    var cs = Ints(t);
+                    for (var p = 1; p < cs.Length; p++) if (v[cs[p]] <= v[cs[p - 1]]) return false;
+                }
+                return true;
+            case "killer":
+                foreach (var cage in puzzle.GetProperty("cages").EnumerateArray())
+                {
+                    var all = Ints(cage);
+                    var cs = all.Skip(1).ToArray();
+                    if (cs.Select(c => v[c]).Distinct().Count() != cs.Length || cs.Sum(c => v[c]) != all[0]) return false;
+                }
+                return true;
+            case "jigsaw":
+                return true; // the regions were used in place of the boxes above
+            case "arrow":
+                foreach (var arrow in puzzle.GetProperty("arrows").EnumerateArray())
+                {
+                    var all = Ints(arrow);
+                    if (all.Skip(1).Sum(c => v[c]) != v[all[0]]) return false;
+                }
+                return true;
+            case "sandwich":
+            {
+                var rows = Ints(puzzle.GetProperty("rows"));
+                var cols = Ints(puzzle.GetProperty("cols"));
+                if (rows.Length != 9 || cols.Length != 9) return false;
+                static int Between(int[] line)
+                {
+                    var a = Array.IndexOf(line, 1);
+                    var b = Array.IndexOf(line, 9);
+                    int lo = Math.Min(a, b), hi = Math.Max(a, b);
+                    return line.Skip(lo + 1).Take(hi - lo - 1).Sum();
+                }
+                for (var k = 0; k < 9; k++)
+                {
+                    if (Between(Enumerable.Range(0, 9).Select(j => v[k * 9 + j]).ToArray()) != rows[k]) return false;
+                    if (Between(Enumerable.Range(0, 9).Select(j => v[j * 9 + k]).ToArray()) != cols[k]) return false;
+                }
+                return true;
+            }
+            default:
+                return false;
+        }
     }
 }

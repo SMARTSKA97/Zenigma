@@ -228,6 +228,7 @@ export const GAME_RULES: GameRules[] = [
       'Every row, every column and every box contains each number exactly once.',
       'Every puzzle has exactly one solution. You never need to guess.',
       'Kinds with one more rule: Diagonal (both long diagonals hold 1 to 9), Windoku (four shaded 3×3 windows hold 1 to 9), Disjoint Groups (the cells in the same spot of every box, such as all top-left cells, hold 1 to 9) and Anti-Knight (no number repeats a chess knight’s move away).',
+      'Kinds with clues drawn on the grid: Killer (dashed cages with a sum; a cage never repeats a number), Thermo (numbers rise from the round bulb to the tip), Jigsaw (nine irregular regions replace the 3×3 boxes), Arrow (the numbers along an arrow add up to the number in its circle), Sandwich (the clue outside a row or column is the sum of the numbers between its 1 and its 9), Consecutive (a bar between two cells means their numbers differ by 1, and cells with no bar never do) and Even-Odd (a circle holds an even number, a square an odd one).',
       'Tap a cell, then a number. Use Notes to jot down candidate numbers in a cell; they disappear when you place a number in the cell.',
     ],
     example: {

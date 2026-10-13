@@ -5,6 +5,7 @@ import { rngFrom } from './rng.mjs';
 import { generateQueens, solveQueens } from './queens.mjs';
 import { generateTango, solveTango } from './tango.mjs';
 import { generateZip, solveZip } from './zip.mjs';
+import { KIND_RULES, generateKind, verifyKind } from './sudoku-kinds.mjs';
 import { generateSudoku, solveSudoku } from './sudoku.mjs';
 import { generatePatches, solvePatches } from './patches.mjs';
 
@@ -94,6 +95,30 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
     const changed = [...solution];
     changed[0] = String((Number(changed[0]) % 9) + 1);
     cases.push({ name: `9x9 ${rule} changed digit`, puzzle, solution: changed.join(''), valid: false });
+  }
+  // Kinds that carry extra data: each has a valid grid, a changed digit, a plain grid that ignores the extras, and a tampered puzzle.
+  {
+    const plainGrid = solveSudoku(generateSudoku(rngFrom('vector-sudoku-plain-for-kinds'), 36, 9)).solution;
+    for (const rule of KIND_RULES) {
+      const puzzle = generateKind(rngFrom(`vector-sudoku-${rule}`), rule, 0.6);
+      const solution = solveSudoku(puzzle).solution;
+      cases.push({ name: `9x9 ${rule} valid`, puzzle, solution, valid: verifyKind(puzzle, solution) });
+      const changed = [...solution];
+      changed[0] = String((Number(changed[0]) % 9) + 1);
+      cases.push({ name: `9x9 ${rule} changed digit`, puzzle, solution: changed.join(''), valid: false });
+      const open = { ...puzzle, givens: '0'.repeat(81) };
+      cases.push({ name: `9x9 ${rule} plain grid`, puzzle: open, solution: plainGrid, valid: verifyKind(open, plainGrid) });
+      cases.push({ name: `9x9 ${rule} extras ignored by a different grid`, puzzle: open, solution, valid: verifyKind(open, solution) });
+      const tampered = { ...open };
+      if (rule === 'thermo') tampered.thermos = puzzle.thermos.map((t) => [...t].reverse());
+      else if (rule === 'killer') tampered.cages = puzzle.cages.map(([s, ...c]) => [s + 1, ...c]);
+      else if (rule === 'arrow') tampered.arrows = puzzle.arrows.map(([c, ...p]) => [c, ...p.reverse().slice(1), c]);
+      else if (rule === 'sandwich') tampered.rows = puzzle.rows.map((x) => x + 1);
+      else if (rule === 'even-odd') tampered.parity = puzzle.parity.replace(/e/g, 'x').replace(/o/g, 'e').replace(/x/g, 'o');
+      else if (rule === 'consecutive') tampered.bars = puzzle.bars.slice(1);
+      else if (rule === 'jigsaw') tampered.regions = '012345678'.repeat(9);
+      cases.push({ name: `9x9 ${rule} tampered extras`, puzzle: tampered, solution, valid: verifyKind(tampered, solution) });
+    }
   }
   write('sudoku', cases);
 }

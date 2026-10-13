@@ -2,7 +2,8 @@
  * Small solvers used only to coach the player: every level has exactly one solution, so the solution tells
  * whether something on the board is wrong. They are never used to hand over an answer.
  */
-import { boxShape, peersOf, sizeOf, SudokuRule } from '../sudoku/engine';
+import { boxShape, peersOf, Rules, sizeOf } from '../sudoku/engine';
+import { isKindRule, kindCandidates, KindData, solveKind } from '../sudoku/kinds';
 import { TangoPuzzle, SIZE as TANGO } from '../tango/engine';
 import { QueensPuzzle } from '../queens/engine';
 import { ZipPuzzle } from '../zip/engine';
@@ -87,22 +88,24 @@ export function solveTango(puzzle: TangoPuzzle): string | null {
 }
 
 /** Digits that can still go in an empty cell, as a list. */
-export function sudokuCandidates(board: number[], i: number, rule?: SudokuRule): number[] {
+export function sudokuCandidates(board: number[], i: number, rules?: Rules): number[] {
   const n = sizeOf(board.length);
-  const taken = new Set(peersOf(i, n, rule).map((j) => board[j]));
+  if (rules && typeof rules === 'object' && isKindRule(rules.rule)) return kindCandidates(rules as KindData, board, i);
+  const taken = new Set(peersOf(i, n, rules).map((j) => board[j]));
   const out: number[] = [];
   for (let d = 1; d <= n; d++) if (!taken.has(d)) out.push(d);
   return out;
 }
 
-export function solveSudoku(givens: number[], rule?: SudokuRule): string | null {
+export function solveSudoku(givens: number[], rules?: Rules): string | null {
+  if (rules && typeof rules === 'object' && isKindRule(rules.rule)) return solveKind({ ...(rules as KindData), givens: givens.join('') });
   const board = [...givens];
   const search = (): boolean => {
     let best = -1;
     let options: number[] = [];
     for (let i = 0; i < board.length; i++) {
       if (board[i]) continue;
-      const cand = sudokuCandidates(board, i, rule);
+      const cand = sudokuCandidates(board, i, rules);
       if (cand.length === 0) return false;
       if (best < 0 || cand.length < options.length) {
         best = i;

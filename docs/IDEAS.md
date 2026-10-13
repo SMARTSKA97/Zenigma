@@ -68,7 +68,7 @@
 ### Games
 - **Patches variants**: rectangles with no shape hints (harder), or a "shape only" mode where the clue shows the shape and the player works out the area.
 - **Daily "Perfect" badge** for finishing every daily in a day with no mistakes and no hints; a rare cosmetic.
-- **Sudoku championship kinds** (already listed as coming soon): build Killer, Thermo and Jigsaw first. They are the most familiar and need only new rules in the engine and verifier.
+- **Sudoku championship kinds**: DONE in 0.17.0 (Killer, Thermo, Jigsaw, Arrow, Sandwich, Consecutive, Even-Odd; generator `sudoku-kinds.mjs`, verifier in `PuzzleRules.cs`, player rules in `sudoku/kinds.ts`). Next candidates: Anti-King, Renban, Little Killer.
 - **Mini-games from the same engine**: a "speed round" of 5 easy levels against a 3-minute clock, with its own leaderboard.
 - **Puzzle of the week**: one extra-hard puzzle open for 7 days, any number of tries, ranked by fewest mistakes.
 

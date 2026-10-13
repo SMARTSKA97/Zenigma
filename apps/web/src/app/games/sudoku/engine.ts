@@ -1,10 +1,17 @@
+import { isKindRule, KindData, KindRule, modelOf } from './kinds';
+
 /**
  * Sudoku in two sizes: the classic 9x9 grid (3x3 boxes) and a mini 6x6 grid (boxes 2 rows by 3 columns).
  * Every row, column and box holds 1 to n once. The size follows from the puzzle: 36 cells is mini, 81 is classic.
  */
 
 /** One more rule on the classic grid: both long diagonals hold 1 to 9 once ('diagonal'), or no digit repeats a chess knight's move away ('knight'). */
-export type SudokuRule = 'diagonal' | 'knight' | 'windoku' | 'disjoint';
+export type SudokuRule = 'diagonal' | 'knight' | 'windoku' | 'disjoint' | KindRule;
+
+/** What the rule functions take: a plain rule name, or the puzzle itself (the kinds that carry data need it). */
+export type Rules = SudokuRule | (KindData & { rule?: SudokuRule }) | undefined;
+const ruleName = (rules: Rules): SudokuRule | undefined => (typeof rules === 'string' ? rules : (rules?.rule as SudokuRule | undefined));
+const kindOf = (rules: Rules): KindData | undefined => (rules && typeof rules === 'object' && isKindRule(rules.rule) ? rules : undefined);
 
 /** Which extra group (window or box position) a cell is in under 'windoku' or 'disjoint', or -1. */
 export function extraGroup(rule: SudokuRule | undefined, i: number, n = 9): number {
@@ -20,7 +27,7 @@ export function extraGroup(rule: SudokuRule | undefined, i: number, n = 9): numb
   return -1;
 }
 
-export interface SudokuPuzzle {
+export interface SudokuPuzzle extends KindData {
   /** One digit per cell, row by row, '0' for an empty cell. */
   givens: string;
   rule?: SudokuRule;
@@ -30,7 +37,10 @@ const KNIGHT: [number, number][] = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2
 const peerCache = new Map<string, number[]>();
 
 /** Every other cell that may not hold the same digit as cell `i`: its row, column and box, plus the rule's extras. */
-export function peersOf(i: number, n: number, rule?: SudokuRule): number[] {
+export function peersOf(i: number, n: number, rules?: Rules): number[] {
+  const kind = kindOf(rules);
+  if (kind) return modelOf(kind).peers[i];
+  const rule = ruleName(rules);
   const key = `${n}:${rule ?? ''}:${i}`;
   let found = peerCache.get(key);
   if (found) return found;
@@ -75,12 +85,17 @@ export function boxOf(index: number, n: number): number {
 }
 
 /** Filled cells that repeat a number in their row, column or box (and, with a rule, on the diagonals or a knight's move apart). */
-export function conflicts(board: number[], rule?: SudokuRule): Set<number> {
+export function conflicts(board: number[], rules?: Rules): Set<number> {
   const n = sizeOf(board.length);
   const bad = new Set<number>();
+  const kind = kindOf(rules);
+  if (kind) {
+    const m = modelOf(kind);
+    for (let i = 0; i < board.length; i++) if (board[i] && (!(m.dom[i] & (1 << board[i])) || !m.check(board, i))) bad.add(i);
+  }
   for (let i = 0; i < board.length; i++) {
     if (!board[i]) continue;
-    for (const j of peersOf(i, n, rule)) {
+    for (const j of peersOf(i, n, rules)) {
       if (j > i && board[j] === board[i]) {
         bad.add(i);
         bad.add(j);
@@ -101,7 +116,7 @@ export function verify(puzzle: SudokuPuzzle, solution: unknown): boolean {
   if (![...solution].every((c) => c >= '1' && c <= String(n))) return false;
   for (let i = 0; i < total; i++) if (puzzle.givens[i] !== '0' && puzzle.givens[i] !== solution[i]) return false;
   if (puzzle.rule && total !== 81) return false;
-  return conflicts([...solution].map(Number), puzzle.rule).size === 0;
+  return conflicts([...solution].map(Number), puzzle).size === 0;
 }
 
 export function isSolved(puzzle: SudokuPuzzle, board: number[]): boolean {

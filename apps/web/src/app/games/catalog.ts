@@ -149,13 +149,13 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
     { id: 'disjoint', name: 'Disjoint Groups', blurb: 'Classic rules, and the cells in the same spot of every box (all top-lefts, all centres…) hold 1 to 9.' },
     { id: 'knight', name: 'Anti-Knight', blurb: 'Classic rules, and no digit repeats a chess knight\'s move away.' },
     // The kinds seen at Sudoku championships (World Sudoku and Puzzle Championships), on the way.
-    { id: 'killer', name: 'Killer', blurb: 'Cages with a sum: the digits in each cage add up to its number, with no repeats.', soon: true },
-    { id: 'thermo', name: 'Thermo', blurb: 'Digits climb along every thermometer, from the bulb to the tip.', soon: true },
-    { id: 'jigsaw', name: 'Jigsaw', blurb: 'Boxes are irregular shapes instead of squares.', soon: true },
-    { id: 'arrow', name: 'Arrow', blurb: 'The digits along an arrow add up to the number in its circle.', soon: true },
-    { id: 'sandwich', name: 'Sandwich', blurb: 'Clues give the sum of the digits caught between the 1 and the 9 in a row or column.', soon: true },
-    { id: 'consecutive', name: 'Consecutive', blurb: 'A bar between two cells means their digits differ by exactly 1.', soon: true },
-    { id: 'even-odd', name: 'Even-Odd', blurb: 'Shaded cells hold only even digits (squares) or only odd digits (circles).', soon: true },
+    { id: 'killer', name: 'Killer', blurb: 'Cages with a sum: the digits in each cage add up to its number, with no repeats.' },
+    { id: 'thermo', name: 'Thermo', blurb: 'Digits climb along every thermometer, from the bulb to the tip.' },
+    { id: 'jigsaw', name: 'Jigsaw', blurb: 'Boxes are irregular shapes instead of squares.' },
+    { id: 'arrow', name: 'Arrow', blurb: 'The digits along an arrow add up to the number in its circle.' },
+    { id: 'sandwich', name: 'Sandwich', blurb: 'Clues give the sum of the digits caught between the 1 and the 9 in a row or column.' },
+    { id: 'consecutive', name: 'Consecutive', blurb: 'A bar between two cells means their digits differ by exactly 1.' },
+    { id: 'even-odd', name: 'Even-Odd', blurb: 'Shaded cells hold only even digits (circles) or only odd digits (squares).' },
   ],
 };
 
@@ -221,6 +221,11 @@ export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
     { name: 'Speed Guess', blurb: 'Solve as many words as you can in three minutes.' },
     { name: 'Duel', blurb: 'The same word, you against a friend.' },
     { name: 'Themed Words', blurb: 'Animals, food, places: every word in a theme.' },
+  ],
+  sudoku: [
+    { name: 'Anti-King', blurb: 'Classic rules, and no digit repeats a king’s step away, diagonals included.' },
+    { name: 'Renban', blurb: 'Purple lines hold a run of consecutive digits, in any order.' },
+    { name: 'Little Killer', blurb: 'Arrows outside the grid give the sum along a diagonal.' },
   ],
   queens: [
     { name: 'Mini Queens', blurb: 'Small boards for a quick break.' },

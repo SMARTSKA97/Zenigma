@@ -16,6 +16,8 @@ export function extraGroup(rule, r, c) {
   return -1;
 }
 
+import { isKindRule, solveKind } from './sudoku-kinds.mjs';
+
 export const sizeOf = (givens) => Math.round(Math.sqrt(givens.length));
 /** Box height and width for a grid of side n. */
 const boxShape = (n) => (n === 6 ? [2, 3] : [3, 3]);
@@ -136,6 +138,7 @@ function search(cells, limit, order, rule = null) {
 const digits = (n) => Array.from({ length: n }, (_, i) => i + 1);
 
 export function solveSudoku(puzzle, limit = 2) {
+  if (isKindRule(puzzle.rule)) return solveKind(puzzle, limit);
   return search([...puzzle.givens].map(Number), limit, digits(sizeOf(puzzle.givens)), puzzle.rule ?? null);
 }
 

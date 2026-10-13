@@ -38,7 +38,7 @@ export const ADAPTERS: Record<PuzzleGameId, PuzzleAdapter> = {
   },
   'sudoku': {
     blank: (p) => sudoku.boardFrom(p as sudoku.SudokuPuzzle),
-    conflicts: (p, s) => sudoku.conflicts(s as number[], (p as sudoku.SudokuPuzzle).rule),
+    conflicts: (p, s) => sudoku.conflicts(s as number[], p as sudoku.SudokuPuzzle),
     isSolved: (p, s) => sudoku.isSolved(p as sudoku.SudokuPuzzle, s as number[]),
     solution: (_, s) => sudoku.solutionOf(s as number[]),
     touched: (p, s) => (s as number[]).join('') !== (p as sudoku.SudokuPuzzle).givens,

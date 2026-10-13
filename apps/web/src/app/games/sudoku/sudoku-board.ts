@@ -2,11 +2,25 @@ import { ChangeDetectionStrategy, Component, computed, HostListener, inject, inp
 import { HapticsService } from '../../core/haptics.service';
 
 import { boxOf, boxShape, extraGroup, onDiagonal, peersOf, sizeOf, SudokuPuzzle } from './engine';
+import { isKindRule } from './kinds';
 
 @Component({
   selector: 'app-sudoku-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <div class="frame" [class.sand]="sandwich()">
+      @if (sandwich(); as sw) {
+        <div class="clues top" aria-hidden="true">
+          @for (v of sw.cols; track $index) {
+            <i>{{ v }}</i>
+          }
+        </div>
+        <div class="clues side" aria-hidden="true">
+          @for (v of sw.rows; track $index) {
+            <i>{{ v }}</i>
+          }
+        </div>
+      }
     <div class="grid" role="grid" aria-label="Sudoku board" [class.mini]="size() === 6" [style.--n]="size()">
       @for (cell of cells(); track cell.i) {
         <button
@@ -40,6 +54,36 @@ import { boxOf, boxShape, extraGroup, onDiagonal, peersOf, sizeOf, SudokuPuzzle 
           }
         </button>
       }
+      @if (art(); as a) {
+        <svg class="art" viewBox="0 0 9 9" preserveAspectRatio="none" aria-hidden="true">
+          @for (s of a.shapes; track $index) {
+            @if (s.circle) {
+              <circle class="shape" [attr.cx]="s.x" [attr.cy]="s.y" [attr.r]="0.36" />
+            } @else {
+              <rect class="shape" [attr.x]="s.x - 0.32" [attr.y]="s.y - 0.32" width="0.64" height="0.64" rx="0.06" />
+            }
+          }
+          @for (t of a.thermos; track $index) {
+            <polyline class="thermo" [attr.points]="t.points" />
+            <circle class="bulb" [attr.cx]="t.bx" [attr.cy]="t.by" r="0.33" />
+          }
+          @for (w of a.arrows; track $index) {
+            <circle class="ring" [attr.cx]="w.cx" [attr.cy]="w.cy" r="0.4" />
+            <polyline class="arrow" [attr.points]="w.points" />
+            <polyline class="arrow" [attr.points]="w.head" />
+          }
+          @for (l of a.cageLines; track $index) {
+            <line class="cage" [attr.x1]="l[0]" [attr.y1]="l[1]" [attr.x2]="l[2]" [attr.y2]="l[3]" />
+          }
+          @for (b of a.bars; track $index) {
+            <rect class="bar" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h" rx="0.04" />
+          }
+          @for (t of a.sums; track $index) {
+            <text class="sum" [attr.x]="t.x" [attr.y]="t.y">{{ t.sum }}</text>
+          }
+        </svg>
+      }
+    </div>
     </div>
 
     <div class="controls">
@@ -90,6 +134,92 @@ import { boxOf, boxShape, extraGroup, onDiagonal, peersOf, sizeOf, SudokuPuzzle 
         margin: 0;
       }
     }
+    .frame {
+      width: var(--board, min(100%, 26rem));
+      margin: 0 auto;
+    }
+    .frame.sand {
+      display: grid;
+      grid-template-columns: 1.4rem minmax(0, 1fr);
+      grid-template-rows: 1.4rem auto;
+    }
+    .clues {
+      display: grid;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .clues i {
+      display: grid;
+      place-items: center;
+      font-style: normal;
+    }
+    .clues.top {
+      grid-column: 2;
+      grid-row: 1;
+      grid-template-columns: repeat(9, 1fr);
+    }
+    .clues.side {
+      grid-column: 1;
+      grid-row: 2;
+      grid-template-rows: repeat(9, 1fr);
+    }
+    .frame.sand .grid {
+      grid-column: 2;
+      grid-row: 2;
+    }
+    .art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+      overflow: visible;
+    }
+    .art .shape {
+      fill: color-mix(in srgb, var(--muted) 30%, transparent);
+    }
+    .art .thermo {
+      fill: none;
+      stroke: color-mix(in srgb, var(--muted) 55%, transparent);
+      stroke-width: 0.26;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .art .bulb {
+      fill: color-mix(in srgb, var(--muted) 55%, transparent);
+    }
+    .art .ring {
+      fill: none;
+      stroke: var(--muted);
+      stroke-width: 0.04;
+    }
+    .art .arrow {
+      fill: none;
+      stroke: var(--muted);
+      stroke-width: 0.05;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .art .cage {
+      stroke: var(--ink);
+      stroke-width: 0.03;
+      stroke-dasharray: 0.12 0.08;
+    }
+    .art .bar {
+      fill: var(--ink);
+    }
+    .art .sum {
+      font-family: var(--font-body);
+      font-size: 0.24px;
+      font-weight: 700;
+      fill: var(--ink);
+      paint-order: stroke;
+      stroke: var(--surface);
+      stroke-width: 0.07px;
+    }
     .grid {
       --line: color-mix(in srgb, var(--ink) 22%, var(--bg));
       container-type: inline-size;
@@ -97,7 +227,8 @@ import { boxOf, boxShape, extraGroup, onDiagonal, peersOf, sizeOf, SudokuPuzzle 
       grid-template-columns: repeat(var(--n, 9), minmax(0, 1fr));
       grid-template-rows: repeat(var(--n, 9), minmax(0, 1fr));
       gap: 1px;
-      width: var(--board, min(100%, 26rem));
+      position: relative;
+      width: 100%;
       aspect-ratio: 1;
       margin: 0 auto;
       border: 2.5px solid var(--ink);
@@ -365,7 +496,7 @@ export class SudokuBoard {
       units.push(Array.from({ length: SIZE }, (_, j) => k * SIZE + j));
       units.push(Array.from({ length: SIZE }, (_, j) => j * SIZE + k));
     }
-    for (let b = 0; b < SIZE; b++) units.push(Array.from({ length: SIZE * SIZE }, (_, i) => i).filter((i) => boxOf(i, SIZE) === b));
+    for (let b = 0; b < SIZE; b++) units.push(Array.from({ length: SIZE * SIZE }, (_, i) => i).filter((i) => this.regionOf(i) === b));
     if (this.puzzle().rule === 'diagonal') {
       units.push(Array.from({ length: SIZE }, (_, k) => k * SIZE + k));
       units.push(Array.from({ length: SIZE }, (_, k) => k * SIZE + (SIZE - 1 - k)));
@@ -386,6 +517,70 @@ export class SudokuBoard {
     return done;
   });
 
+  /** The region (or box) a cell belongs to. */
+  private regionOf(i: number): number {
+    const p = this.puzzle();
+    return p.rule === 'jigsaw' ? Number(p.regions![i]) : boxOf(i, this.size());
+  }
+
+  protected readonly sandwich = computed(() => {
+    const p = this.puzzle();
+    return p.rule === 'sandwich' ? { rows: p.rows!, cols: p.cols! } : null;
+  });
+
+  /** What is drawn over the grid: thermometers, arrows, cages, bars and the even/odd shapes. */
+  protected readonly art = computed(() => {
+    const p = this.puzzle();
+    if (!isKindRule(p.rule) || this.size() !== 9) return null;
+    const xy = (i: number) => ({ x: (i % 9) + 0.5, y: Math.floor(i / 9) + 0.5 });
+    const shapes: { x: number; y: number; circle: boolean }[] = [];
+    const thermos: { points: string; bx: number; by: number }[] = [];
+    const arrows: { cx: number; cy: number; points: string; head: string }[] = [];
+    const cageLines: number[][] = [];
+    const bars: { x: number; y: number; w: number; h: number }[] = [];
+    const sums: { x: number; y: number; sum: number }[] = [];
+    if (p.rule === 'even-odd') {
+      for (let i = 0; i < 81; i++) if (p.parity![i] !== '.') shapes.push({ ...xy(i), circle: p.parity![i] === 'e' });
+    }
+    for (const t of p.thermos ?? []) {
+      const b = xy(t[0]);
+      thermos.push({ points: t.map((c) => `${xy(c).x},${xy(c).y}`).join(' '), bx: b.x, by: b.y });
+    }
+    for (const [circle, ...path] of p.arrows ?? []) {
+      const c = xy(circle);
+      const first = xy(path[0]);
+      const len = Math.hypot(first.x - c.x, first.y - c.y) || 1;
+      const start = { x: c.x + ((first.x - c.x) / len) * 0.4, y: c.y + ((first.y - c.y) / len) * 0.4 };
+      const pts = [start, ...path.map(xy)];
+      const end = pts[pts.length - 1];
+      const prev = pts[pts.length - 2];
+      const ang = Math.atan2(end.y - prev.y, end.x - prev.x);
+      const wing = (d: number) => `${end.x - Math.cos(ang + d) * 0.24},${end.y - Math.sin(ang + d) * 0.24}`;
+      arrows.push({ cx: c.x, cy: c.y, points: pts.map((q) => `${q.x},${q.y}`).join(' '), head: `${wing(0.5)} ${end.x},${end.y} ${wing(-0.5)}` });
+    }
+    for (const [sum, ...cs] of p.cages ?? []) {
+      const set = new Set(cs);
+      const inset = 0.09;
+      for (const c of cs) {
+        const x = c % 9;
+        const y = Math.floor(c / 9);
+        if (!set.has(c - 9) || y === 0) cageLines.push([x + inset, y + inset, x + 1 - inset, y + inset]);
+        if (!set.has(c + 9) || y === 8) cageLines.push([x + inset, y + 1 - inset, x + 1 - inset, y + 1 - inset]);
+        if (!set.has(c - 1) || x === 0) cageLines.push([x + inset, y + inset, x + inset, y + 1 - inset]);
+        if (!set.has(c + 1) || x === 8) cageLines.push([x + 1 - inset, y + inset, x + 1 - inset, y + 1 - inset]);
+      }
+      const head = Math.min(...cs);
+      sums.push({ x: (head % 9) + 0.12, y: Math.floor(head / 9) + 0.3, sum });
+    }
+    for (const [a, b] of p.bars ?? []) {
+      const lo = Math.min(a, b);
+      const hi = Math.max(a, b);
+      if (hi - lo === 1) bars.push({ x: (hi % 9) - 0.07, y: Math.floor(hi / 9) + 0.32, w: 0.14, h: 0.36 });
+      else bars.push({ x: (hi % 9) + 0.32, y: Math.floor(hi / 9) - 0.07, w: 0.36, h: 0.14 });
+    }
+    return { shapes, thermos, arrows, cageLines, bars, sums };
+  });
+
   protected readonly cells = computed(() => {
     const puzzle = this.puzzle();
     const SIZE = this.size();
@@ -396,6 +591,7 @@ export class SudokuBoard {
     const done = this.completed();
     const notes = this.notes();
     const selValue = sel === null ? 0 : board[sel];
+    const jig = puzzle.rule === 'jigsaw';
     return board.map((value, i) => ({
       i,
       delay: ((i % SIZE) + Math.floor(i / SIZE)) * 0.03 + 's',
@@ -404,12 +600,12 @@ export class SudokuBoard {
       given: puzzle.givens[i] !== '0',
       selected: sel === i,
       diag: (puzzle.rule === 'diagonal' && onDiagonal(i, SIZE)) || (puzzle.rule === 'windoku' && extraGroup('windoku', i, SIZE) >= 0),
-      peer: sel !== null && sel !== i && peersOf(sel, SIZE, puzzle.rule).includes(i),
+      peer: sel !== null && sel !== i && peersOf(sel, SIZE, puzzle).includes(i),
       same: sel !== null && sel !== i && selValue !== 0 && value === selValue,
       bad: bad.has(i),
       flash: done.has(i) && !this.solved(),
-      boxLeft: i % SIZE !== 0 && (i % SIZE) % bw === 0,
-      boxTop: Math.floor(i / SIZE) % bh === 0 && i >= SIZE,
+      boxLeft: i % SIZE !== 0 && (jig ? this.regionOf(i) !== this.regionOf(i - 1) : (i % SIZE) % bw === 0),
+      boxTop: i >= SIZE && (jig ? this.regionOf(i) !== this.regionOf(i - SIZE) : Math.floor(i / SIZE) % bh === 0),
       label: `Row ${Math.floor(i / SIZE) + 1}, column ${(i % SIZE) + 1}, ${value ? value : 'empty'}${puzzle.givens[i] !== '0' ? ', fixed' : ''}`,
     }));
   });
@@ -442,7 +638,7 @@ export class SudokuBoard {
         const SIZE = this.size();
         for (let i = 0; i < SIZE * SIZE; i++) {
           if (out[i] === undefined) continue;
-          const sees = i !== sel && peersOf(sel, SIZE, this.puzzle().rule).includes(i);
+          const sees = i !== sel && peersOf(sel, SIZE, this.puzzle()).includes(i);
           if (sees) out[i] &= ~(1 << next[sel]);
         }
       }

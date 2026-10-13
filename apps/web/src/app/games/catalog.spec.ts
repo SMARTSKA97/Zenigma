@@ -8,7 +8,7 @@ describe('practice tracks', () => {
   });
 
   it('gives Sudoku a classic and a mini variant, and no other game variants', () => {
-    expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini', 'diagonal', 'windoku', 'disjoint', 'knight']);
+    expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini', 'diagonal', 'windoku', 'disjoint', 'knight', 'killer', 'thermo', 'jigsaw', 'arrow', 'sandwich', 'consecutive', 'even-odd']);
     expect(variantsOf('queens')).toEqual([]);
     expect(variantsOf('word-guess')).toEqual([]);
   });
@@ -23,6 +23,7 @@ describe('practice tracks', () => {
       'sudoku-windoku',
       'sudoku-disjoint',
       'sudoku-knight',
+      ...['killer', 'thermo', 'jigsaw', 'arrow', 'sandwich', 'consecutive', 'even-odd'].map((k) => `sudoku-${k}`),
       'zip',
       'patches',
     ]);
@@ -50,8 +51,8 @@ describe('practice tracks', () => {
     expect(new Set(GAMES.map((g) => g.id)).size).toBe(GAMES.length);
   });
 
-  it('lists what is coming soon for a live game, including unplayable Sudoku kinds', () => {
-    expect(soonKindsOf('sudoku').map((k) => k.name)).toContain('Killer');
+  it('lists what is coming soon for a live game, including Sudoku kinds that are still planned', () => {
+    expect(soonKindsOf('sudoku').map((k) => k.name)).toContain('Renban');
     expect(soonKindsOf('word-guess').length).toBeGreaterThan(0);
     expect(soonKindsOf('pinpoint')).toEqual([]);
   });
