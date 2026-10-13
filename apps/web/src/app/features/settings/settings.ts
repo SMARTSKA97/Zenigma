@@ -120,6 +120,7 @@ import { UpdaterService } from '../../core/updater.service';
       <h2>About</h2>
       <p class="muted">What Zenigma is, who makes it, and how your data is handled.</p>
       <div class="row">
+        <a class="button secondary" routerLink="/rules">How to play</a>
         <a class="button secondary" routerLink="/about">About Zenigma</a>
         <a class="button secondary" routerLink="/privacy">Privacy policy</a>
       </div>

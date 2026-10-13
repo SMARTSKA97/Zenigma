@@ -17,8 +17,10 @@ public static class CommunityEndpoints
 
     public static void MapCommunity(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/public/community", async (AppDbContext db, TimeProvider clock, CancellationToken ct) =>
+        app.MapGet("/public/community", async (HttpContext http, AppDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
+            // Let browsers (and a CDN, if one is ever put in front) reuse the answer for a few seconds.
+            http.Response.Headers.CacheControl = "public, max-age=15";
             var now = clock.GetUtcNow();
             if (_cached is { } hit && now - hit.At < Fresh) return Results.Ok(hit.Value);
 

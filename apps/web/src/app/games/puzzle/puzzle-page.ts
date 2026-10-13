@@ -163,6 +163,7 @@ const WARN_DELAY_MS = 1600;
       <app-sheet label="How to play" (closed)="helpOpen.set(false)">
         <h2>How to play</h2>
         <p>{{ help() }}</p>
+        <p><a [routerLink]="['/rules']" [fragment]="ruleAnchor()" (click)="helpOpen.set(false)">Full rules and examples ›</a></p>
         <button type="button" (click)="helpOpen.set(false)">Got it</button>
       </app-sheet>
     }
@@ -215,6 +216,7 @@ export class PuzzlePage {
   private readonly params = toSignal(this.route.paramMap);
   private readonly data = toSignal(this.route.data);
 
+  protected readonly ruleAnchor = computed(() => this.game().split('-')[0]);
   protected readonly game = computed<PuzzleGameId>(() => {
     const id = this.params()?.get('game') ?? '';
     return isPuzzleGame(id) ? id : 'queens';

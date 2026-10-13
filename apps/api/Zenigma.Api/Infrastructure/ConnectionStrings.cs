@@ -26,6 +26,9 @@ public static class ConnectionStrings
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : null,
             SslMode = SslMode.Require,
+            // A small, free database: few connections, and idle ones are closed so the database can go to sleep.
+            MaxPoolSize = 12,
+            ConnectionIdleLifetime = 30,
         };
 
         foreach (var pair in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))

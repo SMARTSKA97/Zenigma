@@ -37,10 +37,17 @@ public static class StatsEndpoints
             var reward = await StreakService.SettleWeekAsync(db, userId, today, ct);
             var since = today.AddDays(-(RecentDays - 1));
 
+            // Three queries for every game together, instead of two per game: the database is a network hop away.
+            var freezes = (await db.StreakFreezes.AsNoTracking().Where(f => f.UserId == userId).Select(f => new { f.Game, f.CoveredDate }).ToListAsync(ct))
+                .ToLookup(f => f.Game, f => f.CoveredDate);
+            var wonWords = await db.DailyAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Game == "word-guess" && a.Status == "won").ToListAsync(ct);
+            var solvedPuzzles = (await db.PuzzleAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Status == "solved").ToListAsync(ct))
+                .ToLookup(a => a.Game);
+
             var games = new List<GameStatsDto>();
             foreach (var game in AllGames)
             {
-                var frozenDates = await db.StreakFreezes.AsNoTracking().Where(f => f.UserId == userId && f.Game == game).Select(f => f.CoveredDate).ToListAsync(ct);
+                var frozenDates = freezes[game].ToList();
                 List<DateOnly> solvedDates;
                 long? bestMs = null;
                 long? avgMs = null;
@@ -49,7 +56,7 @@ public static class StatsEndpoints
 
                 if (game == "word-guess")
                 {
-                    var won = await db.DailyAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Game == game && a.Status == "won").ToListAsync(ct);
+                    var won = wonWords;
                     solvedDates = won.Select(a => a.PuzzleDate).ToList();
                     if (won.Count > 0)
                     {
@@ -59,7 +66,7 @@ public static class StatsEndpoints
                 }
                 else
                 {
-                    var solved = await db.PuzzleAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Game == game && a.Status == "solved").ToListAsync(ct);
+                    var solved = solvedPuzzles[game].ToList();
                     solvedDates = solved.Select(a => a.PuzzleDate).ToList();
                     var times = solved.Where(a => a.ElapsedMs != null).Select(a => (long)a.ElapsedMs!.Value).ToList();
                     if (times.Count > 0)

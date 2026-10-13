@@ -30,7 +30,7 @@ export const covers = (r: Rect, size: number, cell: number): boolean => {
   return row >= r[0] && row <= r[2] && col >= r[1] && col <= r[3];
 };
 
-const overlap = (a: Rect, b: Rect): boolean => a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
+export const overlap = (a: Rect, b: Rect): boolean => a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
 
 /** Adds a rectangle, taking away any it would overlap. */
 export const place = (rects: Rect[], rect: Rect): Rect[] => [...rects.filter((r) => !overlap(r, rect)), rect];

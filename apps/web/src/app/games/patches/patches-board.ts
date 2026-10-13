@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
-import { between, covers, PatchesClue, PatchesPuzzle, place, Rect, rectAt, removeAt } from './engine';
+import { between, covers, overlap, PatchesClue, PatchesPuzzle, place, Rect, rectAt, removeAt } from './engine';
 
 @Component({
   selector: 'app-patches-board',
@@ -26,9 +26,9 @@ import { between, covers, PatchesClue, PatchesPuzzle, place, Rect, rectAt, remov
               @if (clue[2] > 0) {
                 <svg class="shape" viewBox="0 0 24 24" aria-hidden="true">
                   @switch (clue[2]) {
-                    @case (1) { <rect x="2" y="7" width="20" height="10" rx="2.5" /> }
-                    @case (2) { <rect x="7" y="2" width="10" height="20" rx="2.5" /> }
-                    @default { <rect x="4" y="4" width="16" height="16" rx="2.5" /> }
+                    @case (1) { <rect x="1.5" y="6.5" width="21" height="11" rx="2.5" /> }
+                    @case (2) { <rect x="6.5" y="1.5" width="11" height="21" rx="2.5" /> }
+                    @default { <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" /> }
                   }
                 </svg>
               }
@@ -37,7 +37,7 @@ import { between, covers, PatchesClue, PatchesPuzzle, place, Rect, rectAt, remov
         </div>
       }
       @for (r of shown(); track r.key) {
-        <div class="patch" [class.bad]="r.bad" [class.draft]="r.draft" [style.--hue]="r.hue" [style.top.%]="r.top" [style.left.%]="r.left" [style.width.%]="r.width" [style.height.%]="r.height"></div>
+        <div class="patch" [class.bad]="r.bad" [class.draft]="r.draft" [class.blocked]="r.draft && blocked()" [style.--hue]="r.hue" [style.top.%]="r.top" [style.left.%]="r.left" [style.width.%]="r.width" [style.height.%]="r.height"></div>
       }
     </div>
   `,
@@ -77,35 +77,51 @@ import { between, covers, PatchesClue, PatchesPuzzle, place, Rect, rectAt, remov
       position: relative;
       z-index: 3;
       display: grid;
-      justify-items: center;
-      line-height: 1;
+      place-items: center;
+      width: 66%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--surface);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 70%, transparent), 0 2px 4px rgb(0 0 0 / 0.18);
       pointer-events: none;
+      line-height: 1;
     }
     .clue b {
       font-family: var(--font-display);
-      font-weight: 700;
-      font-size: clamp(0.85rem, 6.2cqw, 1.5rem);
+      font-weight: 750;
+      font-size: clamp(0.95rem, 7cqw, 1.6rem);
       color: var(--ink);
     }
+    /* Which shape the patch must be: a small outline of it tucked into the corner of the badge. */
     .shape {
-      width: clamp(0.7rem, 30cqw, 1.15rem);
-      margin-top: 0.1rem;
+      position: absolute;
+      right: -0.28rem;
+      bottom: -0.28rem;
+      width: clamp(0.85rem, 3.4cqw, 1.2rem);
+      padding: 0.12rem;
+      border-radius: 0.3rem;
+      background: var(--ink);
       fill: none;
-      stroke: var(--ink);
-      stroke-width: 2.6;
-      opacity: 0.7;
+      stroke: var(--ink-contrast);
+      stroke-width: 3;
+      box-sizing: content-box;
     }
     .patch {
       position: absolute;
       z-index: 2;
       box-sizing: border-box;
       margin: 2px;
-      border: 2px solid oklch(0.62 0.14 calc(var(--hue) * 1deg));
-      border-radius: 10px;
-      background: color-mix(in srgb, oklch(0.72 0.14 calc(var(--hue) * 1deg)) 34%, var(--surface));
+      border: 2.5px solid oklch(0.58 0.15 calc(var(--hue) * 1deg));
+      border-radius: 12px;
+      background: color-mix(in srgb, oklch(0.76 0.14 calc(var(--hue) * 1deg)) 52%, var(--surface));
+      box-shadow: inset 0 -3px 0 color-mix(in srgb, oklch(0.5 0.15 calc(var(--hue) * 1deg)) 25%, transparent);
       pointer-events: none;
       transition: background-color 0.2s var(--ease);
       animation: settle 0.22s var(--spring) backwards;
+    }
+    .patch.blocked {
+      border-color: var(--bad);
+      animation: nudge 0.3s;
     }
     .patch.draft {
       border-style: dashed;
@@ -118,6 +134,10 @@ import { between, covers, PatchesClue, PatchesPuzzle, place, Rect, rectAt, remov
     }
     .win .patch {
       animation: win 0.7s var(--ease) both;
+    }
+    @keyframes nudge {
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
     }
     @keyframes settle {
       from {
@@ -147,6 +167,8 @@ export class PatchesBoard {
   private last = -1;
   private pointer = -1;
   private moved = false;
+  /** True while the pointer is over a spot the rectangle cannot grow into (it would run into another one). */
+  protected readonly blocked = signal(false);
 
   protected readonly cells = computed(() => {
     const p = this.puzzle();
@@ -192,6 +214,7 @@ export class PatchesBoard {
     this.from = this.last = cell;
     this.pointer = event.pointerId;
     this.moved = false;
+    this.blocked.set(false);
     try {
       (event.currentTarget as HTMLElement | null)?.setPointerCapture(event.pointerId);
     } catch {
@@ -206,7 +229,17 @@ export class PatchesBoard {
     if (cell < 0 || cell === this.last) return;
     this.last = cell;
     this.moved = true;
-    this.draft.set(between(this.puzzle().size, this.from, cell));
+    // A drag never covers another rectangle: starting on one does nothing, and growing into one stops at it.
+    // (The earlier rectangle is only ever taken away by tapping it.)
+    if (rectAt(this.board(), this.puzzle().size, this.from)) return;
+    const next = between(this.puzzle().size, this.from, cell);
+    if (this.board().some((r) => overlap(r, next))) {
+      if (!this.blocked()) this.haptics.error();
+      this.blocked.set(true);
+      return;
+    }
+    this.blocked.set(false);
+    this.draft.set(next);
     this.haptics.tick();
   }
 
@@ -215,14 +248,13 @@ export class PatchesBoard {
     const size = this.puzzle().size;
     const rects = this.board();
     const start = this.from;
+    const drawn = this.draft();
     this.from = -1;
     this.draft.set(null);
-    const end = this.cellAt(event);
-    const to = end < 0 ? this.last : end;
-    if (!this.moved || to === start) {
+    this.blocked.set(false);
+    if (!this.moved) {
       // A tap: take away the rectangle on that cell, or drop a single cell where there is none.
-      const hit = rectAt(rects, size, start);
-      if (hit) {
+      if (rectAt(rects, size, start)) {
         this.haptics.tap();
         this.boardChange.emit(removeAt(rects, size, start));
       } else {
@@ -231,7 +263,9 @@ export class PatchesBoard {
       }
       return;
     }
-    this.haptics.place();
-    this.boardChange.emit(place(rects, between(size, start, to)));
+    if (drawn) {
+      this.haptics.place();
+      this.boardChange.emit(place(rects, drawn));
+    }
   }
 }

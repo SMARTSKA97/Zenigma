@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Zenigma.Api.Auth;
@@ -88,6 +89,15 @@ builder.Services.AddRateLimiter(o =>
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
 builder.Services.AddProblemDetails();
 
+// JSON compresses to a fraction of its size; bandwidth and the time on slow phone connections both drop.
+builder.Services.AddResponseCompression(o =>
+{
+    o.EnableForHttps = true;
+    o.Providers.Add<BrotliCompressionProvider>();
+    o.Providers.Add<GzipCompressionProvider>();
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(o => o.Level = System.IO.Compression.CompressionLevel.Fastest);
+
 var app = builder.Build();
 
 // Render terminates TLS in front of the container, so trust its forwarded headers for the client IP.
@@ -97,6 +107,7 @@ forwarded.KnownProxies.Clear();
 app.UseForwardedHeaders(forwarded);
 
 app.UseExceptionHandler();
+app.UseResponseCompression();
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
