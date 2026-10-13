@@ -1,0 +1,19 @@
+@if (conn.notice() === 'warming' && conn.waited() >= 2) {
+  <div class="notice" role="status">
+    <app-loader [size]="22" />
+    <div class="text">
+      <b>Waking the server{{ conn.waited() >= 8 ? ' (' + conn.waited() + 's)' : '' }}</b>
+      <span>This can take up to a minute after a quiet spell. Keep playing: practice, mind games and your levels work now, and your progress syncs when it is ready.</span>
+    </div>
+    <button type="button" class="link" (click)="goOffline()">Stay offline</button>
+  </div>
+} @else if (conn.notice() === 'down') {
+  <div class="notice down" role="status">
+    <span class="icon" aria-hidden="true">!</span>
+    <div class="text">
+      <b>Can’t reach the server</b>
+      <span>You are playing offline. Your progress is saved here and syncs when the server is back.</span>
+    </div>
+    <button type="button" class="link" (click)="retry()">Try again</button>
+  </div>
+}

@@ -30,7 +30,13 @@
   </nav>
 
   <div class="status" aria-live="polite">
-    @if (sync.syncing()) {
+    @if (conn.offlineMode()) {
+      <i class="dot warn"></i>
+      <span>Offline mode</span>
+    } @else if (conn.notice() === 'warming') {
+      <app-loader [size]="14" />
+      <span>Waking server</span>
+    } @else if (sync.syncing()) {
       <app-loader [size]="14" />
       <span>Syncing</span>
     } @else if (!sync.online()) {
@@ -45,6 +51,8 @@
     }
   </div>
 </header>
+
+<app-server-notice />
 
 <main [class.immersive]="immersive()">
   <router-outlet />

@@ -89,7 +89,7 @@ export class ChallengesService {
    */
   claim(c: ChallengeState): number {
     if (!c.done || this.isClaimed(c)) return 0;
-    const added = this.hints.grant(this.owed(c));
+    const added = this.hints.grant(this.owed(c), 'challenge');
     if (added === 0) return 0;
     const paid = { ...this.paid(), [c.claimKey]: (this.paid()[c.claimKey] ?? 0) + added };
     if (paid[c.claimKey] >= c.template.reward) {

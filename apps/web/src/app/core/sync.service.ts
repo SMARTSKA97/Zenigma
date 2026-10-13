@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { ConnectionService } from './connection.service';
 import { DeviceService } from './device.service';
 import { LocalStore } from './local-store';
 import { PullResponse, PushResponse, StoredEvent } from './types';
@@ -22,6 +23,7 @@ export class SyncService {
   private readonly store = inject(LocalStore);
   private readonly auth = inject(AuthService);
   private readonly device = inject(DeviceService);
+  private readonly connection = inject(ConnectionService);
 
   readonly online = signal(typeof navigator === 'undefined' ? true : navigator.onLine);
   readonly syncing = signal(false);
@@ -37,12 +39,11 @@ export class SyncService {
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
         this.online.set(true);
-        void this.sync();
+        void this.sync(); // waits for the server to answer first
       });
       window.addEventListener('offline', () => this.online.set(false));
     }
     await this.refreshLocal();
-    void this.sync();
   }
 
   /** Saves an event on this device and queues it for the server. Works with no connection and no account. */
@@ -86,6 +87,9 @@ export class SyncService {
   private async syncOnce(): Promise<void> {
     // Guests keep playing: their events wait in the outbox until an account exists.
     if (!this.auth.signedIn()) return;
+    // Offline mode keeps everything on this device; otherwise wait for the server to wake (the app stays usable meanwhile).
+    if (this.connection.offlineMode()) return;
+    if (!(await this.connection.wake())) return;
 
     this.syncing.set(true);
     try {

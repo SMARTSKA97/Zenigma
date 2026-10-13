@@ -62,4 +62,29 @@ describe('HintsService', () => {
     hints.claimStreaks([{ name: 'Queens', game: 'queens', current: 8 }], '2026-10-14');
     expect(hints.balance()).toBe(START_HINTS - 1);
   });
+
+  it('does not use up the spin, a milestone or the first win when the stash is full', () => {
+    const hints = new HintsService();
+    hints.grant(10);
+    expect(hints.balance()).toBe(10);
+    expect(hints.canSpin()).toBe(false);
+    expect(hints.milestone('queens', 10)).toBe(false);
+    expect(hints.firstWinOfDay(0)).toBe(false);
+    hints.spend();
+    // Everything is still available once there is room.
+    expect(hints.canSpin()).toBe(true);
+    expect(hints.milestone('queens', 10)).toBe(true);
+  });
+
+  it('queues earns and spends for the server and follows the balance it returns', () => {
+    const hints = new HintsService();
+    hints.spend();
+    hints.grant(2, 'wheel');
+    const sent = hints.pending();
+    expect(sent.map((e) => e.delta)).toEqual([-1, 2]);
+    hints.spend(); // made while the request was on its way
+    hints.applyServer(sent.map((e) => e.id), 7);
+    expect(hints.balance()).toBe(6);
+    expect(hints.pending().map((e) => e.delta)).toEqual([-1]);
+  });
 });

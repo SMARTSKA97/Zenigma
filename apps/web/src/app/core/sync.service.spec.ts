@@ -1,7 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { AuthService } from './auth.service';
+import { ConnectionService } from './connection.service';
 import { LocalStore } from './local-store';
 import { MemoryStore } from './memory-store';
 import { SyncService } from './sync.service';
@@ -16,7 +18,10 @@ describe('SyncService', () => {
   beforeEach(() => {
     store = new MemoryStore();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: LocalStore, useValue: store }],
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: LocalStore, useValue: store },
+        // The server is taken to be awake, so the sync itself is what is under test.
+        { provide: ConnectionService, useValue: { offlineMode: signal(false), wake: () => Promise.resolve(true) } },
+      ],
     });
     sync = TestBed.inject(SyncService);
     http = TestBed.inject(HttpTestingController);

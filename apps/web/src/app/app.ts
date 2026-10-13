@@ -14,7 +14,10 @@ import { filter, map } from 'rxjs';
 import { AuthService } from './core/auth.service';
 import { BackService } from './core/back.service';
 import { HintsService } from './core/hints.service';
+import { HintsSyncService } from './core/hints-sync.service';
 import { SyncService } from './core/sync.service';
+import { ConnectionService } from './core/connection.service';
+import { ServerNotice } from './shared/server-notice';
 import { ReminderService } from './core/reminder.service';
 import { UpdaterService } from './core/updater.service';
 import { Loader } from './shared/loader';
@@ -23,12 +26,13 @@ import { WhatsNew } from './shared/whats-new';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, ServerNotice],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   protected readonly sync = inject(SyncService);
+  protected readonly conn = inject(ConnectionService);
   protected readonly auth = inject(AuthService);
   protected readonly back = inject(BackService);
   private readonly router = inject(Router);
@@ -38,6 +42,7 @@ export class App {
   constructor() {
     this.back.listen();
     inject(HintsService).visit();
+    inject(HintsSyncService);
     void this.reminder.restore();
     // Android: look for a new version when the app opens (the update sheet appears only if there is one).
     this.updater.startAutoCheck();

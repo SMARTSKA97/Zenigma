@@ -12,6 +12,8 @@ import { Capacitor } from '@capacitor/core';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth.service';
 import { authInterceptor } from './core/auth.interceptor';
+import { offlineInterceptor } from './core/offline.interceptor';
+import { ConnectionService } from './core/connection.service';
 import { IndexedDbStore } from './core/indexeddb-store';
 import { LocalStore } from './core/local-store';
 import { MemoryStore } from './core/memory-store';
@@ -23,7 +25,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withViewTransitions()),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([offlineInterceptor, authInterceptor])),
     {
       provide: LocalStore,
       useFactory: () => (typeof indexedDB === 'undefined' ? new MemoryStore() : new IndexedDbStore()),
@@ -39,10 +41,13 @@ export const appConfig: ApplicationConfig = {
       const prefs = inject(PrefsService);
       const auth = inject(AuthService);
       const sync = inject(SyncService);
+      const connection = inject(ConnectionService);
       theme.apply();
       prefs.apply();
       await auth.restore();
-      void sync.init();
+      await sync.init();
+      // Wake the server in the background (a sleeping free host takes up to a minute); sync starts when it answers.
+      void connection.wake().then((up) => { if (up) void sync.sync(); });
     }),
   ],
 };
