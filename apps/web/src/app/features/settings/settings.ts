@@ -30,10 +30,10 @@ export class Settings implements OnInit {
   private readonly practice = inject(PracticeStore);
   protected readonly accents = [
     { id: 'default', name: 'Ocean', color: '#2b3dae', need: 0 },
-    { id: 'sunset', name: 'Sunset', color: '#c2410c', need: 10 },
-    { id: 'forest', name: 'Forest', color: '#15803d', need: 100 },
-    { id: 'orchid', name: 'Orchid', color: '#a21caf', need: 300 },
-    { id: 'gold', name: 'Gold', color: '#a16207', need: 1000 },
+    { id: 'sunset', name: 'Sunset', color: '#c2410c', need: 0 },
+    { id: 'forest', name: 'Forest', color: '#15803d', need: 0 },
+    { id: 'orchid', name: 'Orchid', color: '#a21caf', need: 0 },
+    { id: 'gold', name: 'Gold', color: '#a16207', need: 0 },
   ];
   /** Practice levels cleared in all games on this device. */
   protected readonly solvedTotal = computed(() => PRACTICE_TRACKS.reduce((n, t) => n + this.practice.solvedLevels(t.track)().size, 0));

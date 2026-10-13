@@ -27,13 +27,12 @@
     <app-segmented label="Theme" [options]="themes" [value]="theme.mode()" (valueChange)="theme.set($event)" />
   </div>
   <div class="item stack">
-    <span class="lead">Colour <small>New colours unlock as you clear practice levels ({{ solvedTotal() }} so far).</small></span>
+    <span class="lead">Colour <small>Pick the accent used across the app. It changes right away.</small></span>
     <div class="swatches" role="radiogroup" aria-label="Colour">
       @for (a of accents; track a.id) {
-        <button type="button" class="sw-btn" role="radio" [attr.aria-checked]="prefs.accent() === a.id" [disabled]="solvedTotal() < a.need" [style.--c]="a.color" (click)="prefs.setAccent(a.id)">
+        <button type="button" class="sw-btn" role="radio" [attr.aria-checked]="prefs.accent() === a.id" [style.--c]="a.color" (click)="prefs.setAccent(a.id)">
           <i></i>
           <span>{{ a.name }}</span>
-          @if (solvedTotal() < a.need) { <small>{{ a.need }} levels</small> }
         </button>
       }
     </div>

@@ -98,8 +98,8 @@
   line-height: 1;
 }
 .swatches {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.2rem, 1fr));
   gap: 0.5rem;
 }
 :host .sw-btn {
@@ -107,8 +107,8 @@
   justify-items: center;
   gap: 0.15rem;
   min-height: 0;
-  width: 4.2rem;
-  padding: 0.45rem 0.2rem;
+  width: 100%;
+  padding: 0.55rem 0.2rem;
   border: 2px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
@@ -119,6 +119,8 @@
 }
 :host .sw-btn[aria-checked='true'] {
   border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 10%, var(--surface));
+  font-weight: 700;
 }
 :host .sw-btn:disabled {
   opacity: 0.5;
