@@ -5,6 +5,7 @@ import thermo from '../../../../public/levels/sudoku-thermo-0.json';
 import killer from '../../../../public/levels/sudoku-killer-0.json';
 import jigsaw from '../../../../public/levels/sudoku-jigsaw-0.json';
 import arrow from '../../../../public/levels/sudoku-arrow-0.json';
+import renban from '../../../../public/levels/sudoku-renban-0.json';
 import sandwich from '../../../../public/levels/sudoku-sandwich-0.json';
 import { conflicts, SudokuPuzzle, verify } from './engine';
 import { solveKind } from './kinds';
@@ -17,6 +18,7 @@ const PACKS: Record<string, SudokuPuzzle[]> = {
   'jigsaw': jigsaw as SudokuPuzzle[],
   'arrow': arrow as SudokuPuzzle[],
   'sandwich': sandwich as SudokuPuzzle[],
+  'renban': renban as SudokuPuzzle[],
 };
 
 describe('Sudoku kinds', () => {

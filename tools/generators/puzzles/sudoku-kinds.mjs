@@ -2,13 +2,14 @@
 //   even-odd     { givens, rule, parity }   parity: 81 chars, 'e' (even digit), 'o' (odd digit) or '.' (free)
 //   consecutive  { givens, rule, bars }     bars: [a, b] pairs of side-by-side cells whose digits differ by 1; no other side-by-side pair does
 //   thermo       { givens, rule, thermos }  thermos: lists of cells, bulb first; digits strictly increase along each
+//   renban       { givens, rule, lines }    lines: lists of cells; each line holds different digits that form a run of consecutive numbers, in any order
 //   killer       { givens, rule, cages }    cages: [sum, cell, cell, ...]; digits in a cage differ and add up to the sum
 //   jigsaw       { givens, rule, regions }  regions: 81 chars '0'..'8': the nine irregular regions that replace the 3x3 boxes
 //   arrow        { givens, rule, arrows }   arrows: [circle, cell, cell, ...]; the digits on the arrow add up to the circle's digit
 //   sandwich     { givens, rule, rows, cols }  rows/cols: nine sums; the digits between the 1 and the 9 of that line add up to it
 // Every row and column holds 1 to 9 once, and so does every box (every region, for jigsaw).
 
-export const KIND_RULES = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich'];
+export const KIND_RULES = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich', 'renban'];
 export const isKindRule = (rule) => KIND_RULES.includes(rule);
 
 const N = 9;
@@ -104,6 +105,23 @@ export function modelOf(puzzle) {
           return true;
         });
       });
+    }
+  } else if (rule === 'renban') {
+    for (const line of puzzle.lines) {
+      const L = line.length;
+      for (const a of line) {
+        for (const b of line) if (a !== b) peerSets[a].add(b);
+        checks[a].push((cells) => {
+          let lo = 10;
+          let hi = 0;
+          for (const c of line) {
+            if (!cells[c]) continue;
+            lo = Math.min(lo, cells[c]);
+            hi = Math.max(hi, cells[c]);
+          }
+          return hi - lo < L;
+        });
+      }
     }
   } else if (rule === 'killer') {
     for (const [sum, ...cs] of puzzle.cages) {
@@ -297,6 +315,30 @@ function thermosFrom(sol, rng, want) {
   return out;
 }
 
+/** Lines of side-by-side cells whose digits form a run of consecutive numbers (a purple Renban line). */
+function renbanFrom(sol, rng, want) {
+  const used = new Set();
+  const out = [];
+  for (let attempt = 0; attempt < 3000 && out.length < want; attempt++) {
+    const start = rng.int(81);
+    if (used.has(start)) continue;
+    const path = [start];
+    const len = 3 + rng.int(3); // 3 to 5 cells
+    while (path.length < len) {
+      const here = path[path.length - 1];
+      const nexts = orth(here).filter((n) => !used.has(n) && !path.includes(n));
+      if (!nexts.length) break;
+      path.push(rng.pick(nexts));
+    }
+    if (path.length < 3) continue;
+    const ds = path.map((c) => sol[c]);
+    if (Math.max(...ds) - Math.min(...ds) !== path.length - 1 || new Set(ds).size !== path.length) continue;
+    path.forEach((c) => used.add(c));
+    out.push(path);
+  }
+  return out;
+}
+
 function cagesFrom(sol, rng) {
   const caged = new Array(81).fill(false);
   const cages = [];
@@ -362,6 +404,7 @@ const CLUES = {
   jigsaw: [36, 24],
   arrow: [22, 8],
   sandwich: [26, 14],
+  renban: [24, 10],
 };
 
 /** A puzzle of a kind: build the extras from a finished grid, then take numbers away while the solution stays unique. */
@@ -392,6 +435,9 @@ export function generateKind(rng, rule, h) {
       }
       case 'thermo':
         extras = { thermos: thermosFrom(sol, rng, 9 + rng.int(3)) };
+        break;
+      case 'renban':
+        extras = { lines: renbanFrom(sol, rng, 8 + rng.int(3)) };
         break;
       case 'killer':
         extras = { cages: cagesFrom(sol, rng) };
@@ -450,6 +496,8 @@ export function verifyKind(puzzle, solution) {
     }
     case 'thermo':
       return puzzle.thermos.every((t) => t.every((c, p) => p === 0 || cells[c] > cells[t[p - 1]]));
+    case 'renban':
+      return puzzle.lines.every((t) => new Set(t.map((c) => cells[c])).size === t.length && Math.max(...t.map((c) => cells[c])) - Math.min(...t.map((c) => cells[c])) === t.length - 1);
     case 'killer':
       return puzzle.cages.every(([sum, ...cs]) => unique(cs) && cs.reduce((s, c) => s + cells[c], 0) === sum);
     case 'jigsaw':

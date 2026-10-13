@@ -23,7 +23,7 @@ public static class PuzzleRules
         .. new[] { Queens, Tango }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
         .. new[] { "classic", "mini" }.SelectMany(kind => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"sudoku-{kind}-{tier}")),
         "sudoku-diagonal", "sudoku-knight", "sudoku-king", "sudoku-nonconsec", "sudoku-windoku", "sudoku-disjoint",
-        .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich" }.Select(kind => $"sudoku-{kind}"),
+        .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich", "renban" }.Select(kind => $"sudoku-{kind}"),
         .. new[] { Zip, Patches }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
         "zip-walls", "zip-holes", "patches-shapes",
     ];
@@ -316,7 +316,7 @@ public static class PuzzleRules
                         if (!spot.Add(cells[(b / 3 * 3 + g / 3) * n + b % 3 * 3 + g % 3])) return false;
                 }
             }
-            else if (rule is "even-odd" or "consecutive" or "thermo" or "killer" or "jigsaw" or "arrow" or "sandwich")
+            else if (rule is "even-odd" or "consecutive" or "thermo" or "killer" or "jigsaw" or "arrow" or "sandwich" or "renban")
             {
                 return VerifySudokuKind(rule, puzzle, cells);
             }
@@ -368,6 +368,14 @@ public static class PuzzleRules
                 {
                     var cs = Ints(t);
                     for (var p = 1; p < cs.Length; p++) if (v[cs[p]] <= v[cs[p - 1]]) return false;
+                }
+                return true;
+            case "renban":
+                foreach (var line in puzzle.GetProperty("lines").EnumerateArray())
+                {
+                    var cs = Ints(line);
+                    var ds = cs.Select(c => v[c]).ToArray();
+                    if (ds.Distinct().Count() != cs.Length || ds.Max() - ds.Min() != cs.Length - 1) return false;
                 }
                 return true;
             case "killer":

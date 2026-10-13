@@ -3,8 +3,8 @@
  * documents the formats; this is the player's side: who sees whom, what each cell may hold, and the checks.
  */
 
-export type KindRule = 'even-odd' | 'consecutive' | 'thermo' | 'killer' | 'jigsaw' | 'arrow' | 'sandwich';
-export const KIND_RULES: KindRule[] = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich'];
+export type KindRule = 'even-odd' | 'consecutive' | 'thermo' | 'killer' | 'jigsaw' | 'arrow' | 'sandwich' | 'renban';
+export const KIND_RULES: KindRule[] = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich', 'renban'];
 export const isKindRule = (rule: string | undefined): rule is KindRule => !!rule && (KIND_RULES as string[]).includes(rule);
 
 /** The extra data of a kind (what comes with the givens). */
@@ -13,6 +13,7 @@ export interface KindData {
   parity?: string;
   bars?: [number, number][];
   thermos?: number[][];
+  lines?: number[][];
   cages?: number[][];
   regions?: string;
   arrows?: number[][];
@@ -102,6 +103,23 @@ export function modelOf(puzzle: KindData): KindModel {
           return true;
         });
       });
+    }
+  } else if (rule === 'renban') {
+    for (const line of puzzle.lines!) {
+      const L = line.length;
+      for (const a of line) {
+        for (const b of line) if (a !== b) peerSets[a].add(b);
+        checks[a].push((cells) => {
+          let lo = 10;
+          let hi = 0;
+          for (const c of line) {
+            if (!cells[c]) continue;
+            lo = Math.min(lo, cells[c]);
+            hi = Math.max(hi, cells[c]);
+          }
+          return hi - lo < L;
+        });
+      }
     }
   } else if (rule === 'killer') {
     for (const [sum, ...cs] of puzzle.cages!) {

@@ -78,6 +78,13 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.art .renban {
+  fill: none;
+  stroke: color-mix(in srgb, #9b6bd6 60%, transparent);
+  stroke-width: 0.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .art .bulb {
   fill: color-mix(in srgb, var(--muted) 55%, transparent);
 }

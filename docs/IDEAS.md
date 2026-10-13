@@ -54,7 +54,8 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Sudoku kinds: Diagonal, Windoku, Disjoint Groups, Anti-Knight, Killer, Thermo, Jigsaw, Arrow, Sandwich, Consecutive, Even-Odd.
 - ✅ Speed round, featured level of the week, 1000 new levels per track every week.
 - ✅ Sudoku kinds **Anti-King** and **Non-consecutive** (0.20.0).
-- ⬜ 🆕 Sudoku kinds: **Renban**, **Little Killer**, **Kropki**.
+- ✅ Sudoku kind **Renban** (0.20.0).
+- ⬜ 🆕 Sudoku kinds: **Little Killer**, **Kropki**.
 - ✅ Patches variant with hidden numbers (shape only). ⬜ Numbers-only, blocked cells.
 - ⬜ Daily "Perfect" badge: every daily in a day, no mistakes, no hints.
 - ⬜ 🆕 **Tutorials**: a 20-second interactive first level per game.

@@ -77,12 +77,13 @@ export class SudokuBoard {
     return p.rule === 'sandwich' ? { rows: p.rows!, cols: p.cols! } : null;
   });
 
-  /** What is drawn over the grid: thermometers, arrows, cages, bars and the even/odd shapes. */
+  /** What is drawn over the grid: thermometers, Renban lines, arrows, cages, bars and the even/odd shapes. */
   protected readonly art = computed(() => {
     const p = this.puzzle();
     if (!isKindRule(p.rule) || this.size() !== 9) return null;
     const xy = (i: number) => ({ x: (i % 9) + 0.5, y: Math.floor(i / 9) + 0.5 });
     const shapes: { x: number; y: number; circle: boolean }[] = [];
+    const lines: string[] = [];
     const thermos: { points: string; bx: number; by: number }[] = [];
     const arrows: { cx: number; cy: number; points: string; head: string }[] = [];
     const cageLines: number[][] = [];
@@ -95,6 +96,7 @@ export class SudokuBoard {
       const b = xy(t[0]);
       thermos.push({ points: t.map((c) => `${xy(c).x},${xy(c).y}`).join(' '), bx: b.x, by: b.y });
     }
+    for (const l of p.lines ?? []) lines.push(l.map((c) => `${xy(c).x},${xy(c).y}`).join(' '));
     for (const [circle, ...path] of p.arrows ?? []) {
       const c = xy(circle);
       const first = xy(path[0]);
@@ -127,7 +129,7 @@ export class SudokuBoard {
       if (hi - lo === 1) bars.push({ x: (hi % 9) - 0.07, y: Math.floor(hi / 9) + 0.32, w: 0.14, h: 0.36 });
       else bars.push({ x: (hi % 9) + 0.32, y: Math.floor(hi / 9) - 0.07, w: 0.36, h: 0.14 });
     }
-    return { shapes, thermos, arrows, cageLines, bars, sums };
+    return { shapes, lines, thermos, arrows, cageLines, bars, sums };
   });
 
   protected readonly cells = computed(() => {

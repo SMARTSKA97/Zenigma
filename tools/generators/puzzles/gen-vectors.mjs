@@ -125,6 +125,7 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
       cases.push({ name: `9x9 ${rule} extras ignored by a different grid`, puzzle: open, solution, valid: verifyKind(open, solution) });
       const tampered = { ...open };
       if (rule === 'thermo') tampered.thermos = puzzle.thermos.map((t) => [...t].reverse());
+      else if (rule === 'renban') tampered.lines = puzzle.lines.map((l) => l.slice(0, -1).concat((l[l.length - 1] + 40) % 81));
       else if (rule === 'killer') tampered.cages = puzzle.cages.map(([s, ...c]) => [s + 1, ...c]);
       else if (rule === 'arrow') tampered.arrows = puzzle.arrows.map(([c, ...p]) => [c, ...p.reverse().slice(1), c]);
       else if (rule === 'sandwich') tampered.rows = puzzle.rows.map((x) => x + 1);

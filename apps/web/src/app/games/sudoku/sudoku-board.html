@@ -53,6 +53,9 @@
           <rect class="shape" [attr.x]="s.x - 0.32" [attr.y]="s.y - 0.32" width="0.64" height="0.64" rx="0.06" />
         }
       }
+      @for (l of a.lines; track $index) {
+        <polyline class="renban" [attr.points]="l" />
+      }
       @for (t of a.thermos; track $index) {
         <polyline class="thermo" [attr.points]="t.points" />
         <circle class="bulb" [attr.cx]="t.bx" [attr.cy]="t.by" r="0.33" />

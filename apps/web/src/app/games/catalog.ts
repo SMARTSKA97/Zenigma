@@ -164,6 +164,7 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
     { id: 'jigsaw', name: 'Jigsaw', blurb: 'Boxes are irregular shapes instead of squares.' },
     { id: 'arrow', name: 'Arrow', blurb: 'The digits along an arrow add up to the number in its circle.' },
     { id: 'sandwich', name: 'Sandwich', blurb: 'Clues give the sum of the digits caught between the 1 and the 9 in a row or column.' },
+    { id: 'renban', name: 'Renban', blurb: 'Purple lines hold a run of consecutive digits, in any order.' },
     { id: 'consecutive', name: 'Consecutive', blurb: 'A bar between two cells means their digits differ by exactly 1.' },
     { id: 'even-odd', name: 'Even-Odd', blurb: 'Shaded cells hold only even digits (circles) or only odd digits (squares).' },
   ],
@@ -251,7 +252,6 @@ export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
     { name: 'Themed Words', blurb: 'Animals, food, places: every word in a theme.' },
   ],
   sudoku: [
-    { name: 'Renban', blurb: 'Purple lines hold a run of consecutive digits, in any order.' },
     { name: 'Little Killer', blurb: 'Arrows outside the grid give the sum along a diagonal.' },
   ],
   queens: [
