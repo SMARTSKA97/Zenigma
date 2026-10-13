@@ -11,14 +11,15 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 | 0.15.0 | ✅ Word Guess hints, pause in Practice, badges, streak and comeback gifts, per-game streak freezes |
 | 0.16.0 | ✅ Sudoku difficulty tiers, Practice Play / Coming soon, redesigned Settings, larger numbers |
 | 0.17.0 | ✅ Weekly level packs, Diagonal / Windoku / Disjoint / Anti-Knight, speed round, challenge links, circle seasons, themes, haptics, Home extras, redo and keyboard play |
-| 0.18.0 | ✅ Challenges hub, daily mind set, Mind dashboard, profile and Google sign-in, offline mode, warm-up loader, server hint balance, tiers for every logic game, seven Sudoku kinds, featured level, new badges |
+| 0.18.0 | ✅ Weekly/weekend/monthly challenges, more badges, 15 mind games, featured level of the week, seven more Sudoku kinds |
+| 0.19.0 | ✅ Challenges hub, daily mind set, Mind dashboard, profile and Google sign-in, offline mode, warm-up loader, server hint balance, tiers for every logic game, seven Sudoku kinds, featured level, new badges |
 
 ## Hints economy
 
 ### The currency
 - ✅ One shared balance of Hints, a local copy so it works offline, start with 3, free sources capped at 10.
 - ✅ Hint behaviour per game (Queens, Tango, Sudoku, Zip, Word Guess), with a short "why".
-- ✅ **Server-side balance** (0.18.0): a ledger on the server, idempotent by entry id, the first sync adopts the device balance. Prerequisite for purchases.
+- ✅ **Server-side balance** (0.19.0): a ledger on the server, idempotent by entry id, the first sync adopts the device balance. Prerequisite for purchases.
 - ⬜ Reconcile edge cases: two devices spending at once (today the server never goes below zero, the loser sees a small correction).
 
 ### Free ways to earn
@@ -33,7 +34,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 
 ## Challenges and Mind
 
-- ✅ Challenges hub with tabs Puzzles | Mind | Goals (0.18.0), replacing Daily.
+- ✅ Challenges hub with tabs Puzzles | Mind | Goals (0.19.0), replacing Daily.
 - ✅ 15 mind games across six skills, each with its own best, and a daily mind set (3 games, 3 skills, same for everyone, India date).
 - ✅ Mind dashboard: brain map, radar, overall mark, per-skill detail.
 - ✅ Compare by age group and gender, opt-in, a group needs 5 players before any average shows.
@@ -47,7 +48,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 
 ## Games
 
-- ✅ Sudoku tiers Easy to Insane, now also for Queens, Tango, Zip and Patches (0.18.0).
+- ✅ Sudoku tiers Easy to Insane, now also for Queens, Tango, Zip and Patches (0.19.0).
 - ✅ Sudoku kinds: Diagonal, Windoku, Disjoint Groups, Anti-Knight, Killer, Thermo, Jigsaw, Arrow, Sandwich, Consecutive, Even-Odd.
 - ✅ Speed round, featured level of the week, 1000 new levels per track every week.
 - ⬜ 🆕 Sudoku kinds: **Anti-King**, **Renban**, **Little Killer**, **Kropki**, **Non-consecutive**.
@@ -69,8 +70,8 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 ## UX
 
 - ✅ Undo and redo, pause, result screen with percentile, friends strip, weekly recap, themes, keyboard play, predictive back, resume where you left, haptic strengths, larger numbers, spoken board descriptions.
-- ✅ Practice reorganised: filter by kind, Mind has its own page (0.18.0).
-- ✅ Update sheet and Version history in sections: New, Improved, Fixed, Coming up (0.18.0).
+- ✅ Practice reorganised: filter by kind, Mind has its own page (0.19.0).
+- ✅ Update sheet and Version history in sections: New, Improved, Fixed, Coming up (0.19.0).
 - ⬜ Home-screen widget with streak and today's dailies.
 - ⬜ Wide-screen layout (board centre, rules and leaderboard beside it).
 - ⬜ 🆕 **Reminders** at a time you choose (local notifications, no server needed).
