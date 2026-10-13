@@ -50,6 +50,7 @@ export class BackService {
       if (parts.length === 3 && variantsOf(b).some((v) => v.id === c && v.tiered)) return '/'; // a difficulty chooser
       return parts.length === 3 ? `/games/${b}/${c}/levels` : parts.length === 2 ? this.mapOrPicker(b) : '/';
     }
+    if (a === 'speed') return '/practice';
     if (a === 'daily') return parts.length === 1 ? '/' : '/daily';
     if (a === 'rules') return parts.length === 1 ? '/settings' : '/rules';
     if (a === 'ranks' && parts.length > 1) return '/ranks';

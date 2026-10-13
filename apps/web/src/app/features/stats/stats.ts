@@ -7,11 +7,13 @@ import { SyncService } from '../../core/sync.service';
 import { DAILY_GAMES } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
 import { FreezeList } from '../../shared/freeze-sheet';
+import { CardInput } from '../../shared/share-card';
+import { ShareSheet } from '../../shared/share-sheet';
 
 /** Per-game streaks, times and a five-week calendar, plus the streak freezes each game has earned. */
 @Component({
   selector: 'app-stats',
-  imports: [RouterLink, Glyph, FreezeList],
+  imports: [RouterLink, Glyph, FreezeList, ShareSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Your stats</h1>
@@ -34,6 +36,10 @@ import { FreezeList } from '../../shared/freeze-sheet';
         <button type="button" (click)="load()">Try again</button>
       </section>
     } @else if (stats(); as s) {
+      <button type="button" class="secondary share-streak" (click)="shareStreak()">Share my streak</button>
+      @if (shareCard(); as c) {
+        <app-share-sheet [card]="c.card" [text]="c.text" (closed)="shareCard.set(null)" />
+      }
       <section class="rewards card">
         <h2>❄ Streak freezes</h2>
         <app-freeze-list [stats]="s" />
@@ -80,6 +86,9 @@ import { FreezeList } from '../../shared/freeze-sheet';
       display: block;
       max-width: 40rem;
       margin: 0 auto;
+    }
+    .share-streak {
+      margin: 0.5rem 0 1rem;
     }
     h1 {
       margin-bottom: 1.25rem;
@@ -280,6 +289,21 @@ export class StatsPage implements OnInit {
     const end = Date.parse(`${today}T00:00:00Z`);
     return Array.from({ length: 35 }, (_, i) => new Date(end - (34 - i) * 86_400_000).toISOString().slice(0, 10));
   });
+
+  protected readonly shareCard = signal<{ card: CardInput; text: string } | null>(null);
+
+  /** A picture of the last four weeks: a green square for each day any daily was solved, blue when a freeze covered it. */
+  protected shareStreak(): void {
+    const s = this.stats();
+    if (!s) return;
+    const days = this.days().slice(7); // four weeks
+    const mark = (d: string) => (s.games.some((g) => g.recent.includes(d)) ? '🟩' : s.games.some((g) => g.frozen.includes(d)) ? '🟦' : '⬛');
+    const grid = Array.from({ length: 4 }, (_, w) => days.slice(w * 7, w * 7 + 7).map(mark));
+    const streak = Math.max(0, ...s.games.map((g) => g.current));
+    const best = Math.max(0, ...s.games.map((g) => g.best));
+    const text = [`Zenigma · ${streak}-day streak`, '', ...grid.map((r) => r.join('')), '', `Best streak ${best} days`].join('\n');
+    this.shareCard.set({ text, card: { name: 'Zenigma', label: `${streak}-day streak`, hue: 25, grid, streak, score: `Best ${best}` } });
+  }
 
   ngOnInit(): void {
     void this.load();

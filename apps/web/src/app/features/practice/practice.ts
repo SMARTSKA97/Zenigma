@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { GAMES, isPuzzleGame, PRACTICE_TRACKS, practiceEntry, SOON_KINDS, variantsOf } from '../../games/catalog';
+import { GAMES, SPEED_GAMES, isPuzzleGame, PRACTICE_TRACKS, practiceEntry, SOON_KINDS, variantsOf } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 import { Glyph } from '../../shared/glyph';
 import { HintWheel } from '../../shared/hint-wheel';
@@ -39,6 +39,14 @@ import { HintsService } from '../../core/hints.service';
       }
     </div>
 
+    <h2 class="sec">Speed round</h2>
+    <p class="muted sub2">Five easy levels, three minutes. Beat your best.</p>
+    <div class="speed">
+      @for (g of speedGames; track g.id) {
+        <a class="speed-chip" [routerLink]="['/speed', g.id]" [style.--h]="g.hue">⚡ {{ g.name }}</a>
+      }
+    </div>
+
     <h2 class="sec">Coming soon</h2>
     <p class="muted sub2">New games and new kinds of the ones you know.</p>
     <div class="grid">
@@ -69,6 +77,7 @@ import { HintsService } from '../../core/hints.service';
 export class Practice implements OnInit {
   private readonly practice = inject(PracticeStore);
   protected readonly live = GAMES.filter((g) => g.live);
+  protected readonly speedGames = SPEED_GAMES.map((id) => GAMES.find((g) => g.id === id)!);
   protected readonly soon = GAMES.filter((g) => !g.live);
   /** New kinds of games that are live: the ones set in the catalog, plus Sudoku's championship kinds. */
   protected readonly soonKinds = GAMES.filter((g) => g.live)

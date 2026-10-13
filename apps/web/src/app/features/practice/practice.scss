@@ -184,3 +184,19 @@
 .kind-card li b {
   display: block;
 }
+
+.speed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.speed-chip {
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+}

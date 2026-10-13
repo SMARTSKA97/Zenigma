@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { LEVELS as QUEENS } from '../queens/levels.data';
-import { LEVELS as TANGO } from '../tango/levels.data';
-import { LEVELS as SUDOKU } from '../sudoku/levels-classic-insane.data';
-import { LEVELS as MINI } from '../sudoku/levels-mini-insane.data';
-import { LEVELS as ZIP } from '../zip/levels.data';
-import { LEVELS as PATCHES } from '../patches/levels.data';
+import QUEENS from '../../../../public/levels/queens-0.json';
+import TANGO from '../../../../public/levels/tango-0.json';
+import SUDOKU from '../../../../public/levels/sudoku-classic-insane-0.json';
+import MINI from '../../../../public/levels/sudoku-mini-insane-0.json';
+import ZIP from '../../../../public/levels/zip-0.json';
+import PATCHES from '../../../../public/levels/patches-0.json';
 import * as queens from '../queens/engine';
 import * as tango from '../tango/engine';
 import * as sudoku from '../sudoku/engine';
@@ -17,7 +17,7 @@ const pick = <T>(levels: T[]): T[] => [0, 4, 9, 14, 99, 500, 999].map((i) => lev
 
 describe('hints coach without giving the answer', () => {
   it('queens', () => {
-    for (const p of pick(QUEENS as queens.QueensPuzzle[])) {
+    for (const p of pick(QUEENS as unknown as queens.QueensPuzzle[])) {
       const sol = solveQueens(p)!;
       const board = queens.emptyBoard(p);
       expect(hintFor('queens', p, board).kind).toBe('nudge');
@@ -37,7 +37,7 @@ describe('hints coach without giving the answer', () => {
   });
 
   it('tango', () => {
-    for (const p of pick(TANGO as tango.TangoPuzzle[])) {
+    for (const p of pick(TANGO as unknown as tango.TangoPuzzle[])) {
       const sol = solveTango(p)!;
       const board = tango.boardFrom(p);
       expect(['nudge']).toContain(hintFor('tango', p, board).kind);
@@ -50,7 +50,7 @@ describe('hints coach without giving the answer', () => {
   });
 
   it('sudoku (classic and mini)', () => {
-    for (const p of [...pick(SUDOKU as sudoku.SudokuPuzzle[]), ...pick(MINI as sudoku.SudokuPuzzle[])]) {
+    for (const p of [...pick(SUDOKU as unknown as sudoku.SudokuPuzzle[]), ...pick(MINI as unknown as sudoku.SudokuPuzzle[])]) {
       const sol = solveSudoku([...p.givens].map(Number))!;
       const board = sudoku.boardFrom(p);
       expect(hintFor('sudoku', p, board).kind).toBe('nudge');
@@ -63,7 +63,7 @@ describe('hints coach without giving the answer', () => {
   });
 
   it('zip', () => {
-    for (const p of pick(ZIP as zip.ZipPuzzle[])) {
+    for (const p of pick(ZIP as unknown as zip.ZipPuzzle[])) {
       const sol = solveZip(p)!;
       expect(hintFor('zip', p, zip.blankPath(p)).kind).toBe('nudge');
       expect(hintFor('zip', p, sol).kind).toBe('done');
@@ -76,7 +76,7 @@ describe('hints coach without giving the answer', () => {
   });
 
   it('patches', () => {
-    for (const p of pick(PATCHES as patches.PatchesPuzzle[])) {
+    for (const p of pick(PATCHES as unknown as patches.PatchesPuzzle[])) {
       const sol = solvePatches(p)!;
       expect(hintFor('patches', p, []).kind).toBe('nudge');
       expect(hintFor('patches', p, sol).kind).toBe('done');

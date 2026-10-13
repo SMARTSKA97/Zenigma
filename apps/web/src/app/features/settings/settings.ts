@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { SyncService } from '../../core/sync.service';
@@ -6,8 +6,11 @@ import { ReminderService } from '../../core/reminder.service';
 import { Loader } from '../../shared/loader';
 import { Segmented, SegmentOption } from '../../shared/segmented';
 import { Switch } from '../../shared/switch';
-import { PrefsService } from '../../core/prefs.service';
+import { InstallService } from '../../core/install.service';
+import { HapticStrength, PrefsService } from '../../core/prefs.service';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
+import { PracticeStore } from '../../games/puzzle/practice.store';
+import { PRACTICE_TRACKS } from '../../games/catalog';
 import { UpdaterService } from '../../core/updater.service';
 
 @Component({
@@ -42,6 +45,18 @@ import { UpdaterService } from '../../core/updater.service';
         <span class="lead">Theme</span>
         <app-segmented label="Theme" [options]="themes" [value]="theme.mode()" (valueChange)="theme.set($event)" />
       </div>
+      <div class="item stack">
+        <span class="lead">Colour <small>New colours unlock as you clear practice levels ({{ solvedTotal() }} so far).</small></span>
+        <div class="swatches" role="radiogroup" aria-label="Colour">
+          @for (a of accents; track a.id) {
+            <button type="button" class="sw-btn" role="radio" [attr.aria-checked]="prefs.accent() === a.id" [disabled]="solvedTotal() < a.need" [style.--c]="a.color" (click)="prefs.setAccent(a.id)">
+              <i></i>
+              <span>{{ a.name }}</span>
+              @if (solvedTotal() < a.need) { <small>{{ a.need }} levels</small> }
+            </button>
+          }
+        </div>
+      </div>
       <div class="item">
         <app-switch [checked]="prefs.highContrast()" (checkedChange)="prefs.setHighContrast($event)">
           Colour-blind friendly
@@ -66,6 +81,16 @@ import { UpdaterService } from '../../core/updater.service';
           <small>Small taps as you play, and a pattern for mistakes and wins.</small>
         </app-switch>
       </div>
+      @if (prefs.haptics()) {
+        <div class="item stack">
+          <span class="lead">Taps <small>A cell chosen, a number placed.</small></span>
+          <app-segmented label="Tap strength" [options]="strengths" [value]="prefs.tapHaptics()" (valueChange)="prefs.setTapHaptics($event)" />
+        </div>
+        <div class="item stack">
+          <span class="lead">Mistakes and wins <small>The pattern for a wrong move or a solved puzzle.</small></span>
+          <app-segmented label="Alert strength" [options]="strengths" [value]="prefs.alertHaptics()" (valueChange)="prefs.setAlertHaptics($event)" />
+        </div>
+      }
     </section>
 
     @if (reminder.supported) {
@@ -116,6 +141,17 @@ import { UpdaterService } from '../../core/updater.service';
             <button type="button" class="secondary" (click)="updater.check()">Check for updates</button>
           }
         </div>
+      </section>
+    }
+
+    @if (install.available()) {
+      <h2 class="group">Install</h2>
+      <section class="list">
+        <button type="button" class="item link" (click)="install.install()">
+          <span class="ico">⬇</span>
+          <span class="lead">Install Zenigma<small>Opens like an app and works offline.</small></span>
+          <span class="chev">›</span>
+        </button>
       </section>
     }
 
@@ -214,6 +250,17 @@ import { UpdaterService } from '../../core/updater.service';
       color: var(--text);
       text-decoration: none;
     }
+    :host button.item {
+      width: 100%;
+      min-height: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
     .ico {
       width: 1.6rem;
       text-align: center;
@@ -222,6 +269,38 @@ import { UpdaterService } from '../../core/updater.service';
       color: var(--muted);
       font-size: 1.4rem;
       line-height: 1;
+    }
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    :host .sw-btn {
+      display: grid;
+      justify-items: center;
+      gap: 0.15rem;
+      min-height: 0;
+      width: 4.2rem;
+      padding: 0.45rem 0.2rem;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: none;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.78rem;
+    }
+    :host .sw-btn[aria-checked='true'] {
+      border-color: var(--c);
+    }
+    :host .sw-btn:disabled {
+      opacity: 0.5;
+    }
+    .sw-btn i {
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      background: var(--c);
     }
     .time input {
       width: auto;
@@ -253,6 +332,22 @@ export class Settings implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly sync = inject(SyncService);
   protected readonly reminder = inject(ReminderService);
+  protected readonly install = inject(InstallService);
+  private readonly practice = inject(PracticeStore);
+  protected readonly accents = [
+    { id: 'default', name: 'Ocean', color: '#2b3dae', need: 0 },
+    { id: 'sunset', name: 'Sunset', color: '#c2410c', need: 10 },
+    { id: 'forest', name: 'Forest', color: '#15803d', need: 100 },
+    { id: 'orchid', name: 'Orchid', color: '#a21caf', need: 300 },
+    { id: 'gold', name: 'Gold', color: '#a16207', need: 1000 },
+  ];
+  /** Practice levels cleared in all games on this device. */
+  protected readonly solvedTotal = computed(() => PRACTICE_TRACKS.reduce((n, t) => n + this.practice.solvedLevels(t.track)().size, 0));
+  protected readonly strengths: SegmentOption<HapticStrength>[] = [
+    { value: 'off', label: 'Off' },
+    { value: 'light', label: 'Light' },
+    { value: 'strong', label: 'Strong' },
+  ];
   protected readonly themes: SegmentOption<ThemeMode>[] = [
     { value: 'system', label: 'System' },
     { value: 'light', label: 'Light' },
@@ -260,6 +355,7 @@ export class Settings implements OnInit {
   ];
 
   ngOnInit(): void {
+    for (const t of PRACTICE_TRACKS) void this.practice.load(t.track);
     void this.updater.loadVersion();
   }
 }

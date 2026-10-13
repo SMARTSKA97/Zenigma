@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, HostListener, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
 
-import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
+import { boxOf, boxShape, onDiagonal, peersOf, sizeOf, SudokuPuzzle } from './engine';
 
 @Component({
   selector: 'app-sudoku-board',
@@ -16,6 +16,7 @@ import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
           [class.given]="cell.given"
           [class.selected]="cell.selected"
           [class.peer]="cell.peer"
+          [class.diag]="cell.diag"
           [class.same]="cell.same"
           [class.bad]="cell.bad"
           [class.flash]="cell.flash"
@@ -149,6 +150,9 @@ import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
     :host .cell:disabled {
       opacity: 1;
       cursor: default;
+    }
+    :host .diag {
+      background: color-mix(in srgb, var(--accent) 7%, var(--surface));
     }
     :host .peer {
       background: var(--surface-2);
@@ -362,6 +366,10 @@ export class SudokuBoard {
       units.push(Array.from({ length: SIZE }, (_, j) => j * SIZE + k));
     }
     for (let b = 0; b < SIZE; b++) units.push(Array.from({ length: SIZE * SIZE }, (_, i) => i).filter((i) => boxOf(i, SIZE) === b));
+    if (this.puzzle().rule === 'diagonal') {
+      units.push(Array.from({ length: SIZE }, (_, k) => k * SIZE + k));
+      units.push(Array.from({ length: SIZE }, (_, k) => k * SIZE + (SIZE - 1 - k)));
+    }
     for (const unit of units) {
       const values = unit.map((i) => board[i]);
       if (!values.includes(0) && new Set(values).size === SIZE) unit.forEach((i) => done.add(i));
@@ -386,7 +394,8 @@ export class SudokuBoard {
       notes: value || !notes[i] ? [] : this.numbers().map((n) => (notes[i] & (1 << n) ? String(n) : '')),
       given: puzzle.givens[i] !== '0',
       selected: sel === i,
-      peer: sel !== null && sel !== i && (Math.floor(sel / SIZE) === Math.floor(i / SIZE) || sel % SIZE === i % SIZE || boxOf(sel, SIZE) === boxOf(i, SIZE)),
+      diag: puzzle.rule === 'diagonal' && onDiagonal(i, SIZE),
+      peer: sel !== null && sel !== i && peersOf(sel, SIZE, puzzle.rule).includes(i),
       same: sel !== null && sel !== i && selValue !== 0 && value === selValue,
       bad: bad.has(i),
       flash: done.has(i) && !this.solved(),
@@ -424,7 +433,7 @@ export class SudokuBoard {
         const SIZE = this.size();
         for (let i = 0; i < SIZE * SIZE; i++) {
           if (out[i] === undefined) continue;
-          const sees = Math.floor(i / SIZE) === Math.floor(sel / SIZE) || i % SIZE === sel % SIZE || boxOf(i, SIZE) === boxOf(sel, SIZE);
+          const sees = i !== sel && peersOf(sel, SIZE, this.puzzle().rule).includes(i);
           if (sees) out[i] &= ~(1 << next[sel]);
         }
       }

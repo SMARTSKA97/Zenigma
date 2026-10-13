@@ -5,6 +5,7 @@
   "description": "Generates Queens, Tango, Sudoku and Zip puzzles with exactly one solution. No dependencies.",
   "scripts": {
     "levels": "node build-levels.mjs",
+    "grow": "node grow-levels.mjs",
     "vectors": "node gen-vectors.mjs",
     "schedule": "node --env-file-if-exists=../../../.env schedule-puzzles.mjs"
   }

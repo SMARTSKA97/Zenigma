@@ -3,8 +3,8 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, after
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { gameInfo, levelCountOf, TIERS, isPuzzleGame, playLink, PuzzleGameId, trackOf, variantsOf } from '../../games/catalog';
-import { ADAPTERS } from '../../games/puzzle/adapters';
 import { difficultyOf, parMs, starsFor } from '../../games/puzzle/par';
+import { loadPack, packOf, PACK_SIZE } from '../../games/puzzle/level-source';
 import { PracticeStore, ZONE_SIZE } from '../../games/puzzle/practice.store';
 import { formatDuration } from '../../core/leaderboard.service';
 import { Glyph } from '../../shared/glyph';
@@ -13,6 +13,8 @@ import { Sheet } from '../../shared/sheet';
 /** The drawing of one zone is 360 wide by 920 tall (84 per level, plus room for the banner); everything is placed in those units and scales with the screen. */
 const W = 360;
 const GAP = 84;
+/** The map draws at most this many zones (the latest ones), so very long tracks stay light. */
+const MAX_ZONES = 60;
 const ZONE_H = GAP * ZONE_SIZE;
 /** Room above the first row for the zone's banner. */
 const TOP = 80;
@@ -259,7 +261,7 @@ export class LevelMap {
     const levels = this.levels();
     const lastZone = Math.min(this.count() / ZONE_SIZE - 1, Math.floor((frontier - 1) / ZONE_SIZE) + 2);
     const zones: ZoneView[] = [];
-    for (let z = lastZone; z >= 0; z--) {
+    for (let z = lastZone; z >= Math.max(0, lastZone - MAX_ZONES + 1); z--) {
       const first = z * ZONE_SIZE + 1;
       const nodes: NodeView[] = [];
       const pts: [number, number][] = [];
@@ -303,9 +305,20 @@ export class LevelMap {
 
   constructor() {
     void (async () => {
-      const game = this.game();
       await this.practice.load(this.track());
-      this.levels.set(await ADAPTERS[game].levels(this.variant()));
+      // Load the packs of levels the map shows (the latest zones, up to a few beyond the current level).
+      const frontier = this.practice.frontier(this.track());
+      const lastLevel = Math.min(this.count(), (Math.floor((frontier - 1) / ZONE_SIZE) + 3) * ZONE_SIZE);
+      const firstLevel = Math.max(1, lastLevel - MAX_ZONES * ZONE_SIZE + 1);
+      const levels: unknown[] = [];
+      try {
+        for (let pack = packOf(firstLevel); pack <= packOf(lastLevel); pack++) {
+          (await loadPack(this.track(), pack)).forEach((puzzle, i) => (levels[pack * PACK_SIZE + i] = puzzle));
+        }
+      } catch {
+        /* offline and never opened: the map still works, stars just use a default par */
+      }
+      this.levels.set(levels);
       this.ready.set(true);
     })();
     afterNextRender(() => {

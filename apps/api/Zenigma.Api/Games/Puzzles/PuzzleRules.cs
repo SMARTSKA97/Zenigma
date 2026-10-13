@@ -22,6 +22,7 @@ public static class PuzzleRules
     [
         Queens, Tango,
         .. new[] { "classic", "mini" }.SelectMany(kind => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"sudoku-{kind}-{tier}")),
+        "sudoku-diagonal", "sudoku-knight",
         Zip, Patches,
     ];
 
@@ -231,6 +232,38 @@ public static class PuzzleRules
             var c = i % n;
             var box = r / boxRows * (n / boxCols) + c / boxCols;
             if (!rows[r].Add(cells[i]) || !cols[c].Add(cells[i]) || !boxes[box].Add(cells[i])) return false;
+        }
+
+        // One more rule on the classic grid: both long diagonals hold each digit once ("diagonal"), or no digit repeats a knight's move away ("knight").
+        var rule = puzzle.TryGetProperty("rule", out var ruleElement) && ruleElement.ValueKind == JsonValueKind.String ? ruleElement.GetString() : null;
+        if (rule is not null)
+        {
+            if (n != 9) return false;
+            if (rule == "diagonal")
+            {
+                var main = new HashSet<char>();
+                var anti = new HashSet<char>();
+                for (var k = 0; k < n; k++)
+                {
+                    if (!main.Add(cells[k * n + k]) || !anti.Add(cells[k * n + (n - 1 - k)])) return false;
+                }
+            }
+            else if (rule == "knight")
+            {
+                int[][] moves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+                for (var i = 0; i < n * n; i++)
+                {
+                    foreach (var m in moves)
+                    {
+                        int rr = i / n + m[0], cc = i % n + m[1];
+                        if (rr >= 0 && rr < n && cc >= 0 && cc < n && cells[rr * n + cc] == cells[i]) return false;
+                    }
+                }
+            }
+            else
+            {
+                return false;
+            }
         }
 
         return true;

@@ -8,11 +8,12 @@ import { UpdaterService } from '../../core/updater.service';
 import { GAMES, gameInfo, practiceEntry } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
 import { FreezeSheet } from '../../shared/freeze-sheet';
+import { HomeExtras } from './home-extras';
 import { HintsService } from '../../core/hints.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Glyph, FreezeSheet],
+  imports: [RouterLink, Glyph, FreezeSheet, HomeExtras],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page" [class.no-promo]="!promo.applicable || promo.dismissed()">
@@ -43,6 +44,8 @@ import { HintsService } from '../../core/hints.service';
         <span aria-hidden="true">×</span>
       </button>
     }
+
+    <app-home-extras [stats]="stats()" />
 
     @if (promo.applicable && !promo.dismissed()) {
       <aside class="promo" aria-label="Get the Android app">
@@ -145,6 +148,7 @@ import { HintsService } from '../../core/hints.service';
     }
     .hero,
     .update,
+    app-home-extras,
     .promo,
     .streaks,
     .community,
@@ -160,7 +164,8 @@ import { HintsService } from '../../core/hints.service';
         grid-column: 2;
         grid-row: 1;
       }
-      .update {
+      .update,
+      app-home-extras {
         grid-column: 1 / -1;
       }
       .streaks {

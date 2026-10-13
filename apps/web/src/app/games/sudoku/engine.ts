@@ -3,10 +3,47 @@
  * Every row, column and box holds 1 to n once. The size follows from the puzzle: 36 cells is mini, 81 is classic.
  */
 
+/** One more rule on the classic grid: both long diagonals hold 1 to 9 once ('diagonal'), or no digit repeats a chess knight's move away ('knight'). */
+export type SudokuRule = 'diagonal' | 'knight';
+
 export interface SudokuPuzzle {
   /** One digit per cell, row by row, '0' for an empty cell. */
   givens: string;
+  rule?: SudokuRule;
 }
+
+const KNIGHT: [number, number][] = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+const peerCache = new Map<string, number[]>();
+
+/** Every other cell that may not hold the same digit as cell `i`: its row, column and box, plus the rule's extras. */
+export function peersOf(i: number, n: number, rule?: SudokuRule): number[] {
+  const key = `${n}:${rule ?? ''}:${i}`;
+  let found = peerCache.get(key);
+  if (found) return found;
+  const r = Math.floor(i / n);
+  const c = i % n;
+  const out = new Set<number>();
+  for (let j = 0; j < n * n; j++) {
+    if (j === i) continue;
+    const rj = Math.floor(j / n);
+    const cj = j % n;
+    if (rj === r || cj === c || boxOf(j, n) === boxOf(i, n)) out.add(j);
+    if (rule === 'diagonal' && ((r === c && rj === cj) || (r + c === n - 1 && rj + cj === n - 1))) out.add(j);
+  }
+  if (rule === 'knight') {
+    for (const [dr, dc] of KNIGHT) {
+      const rr = r + dr;
+      const cc = c + dc;
+      if (rr >= 0 && rr < n && cc >= 0 && cc < n) out.add(rr * n + cc);
+    }
+  }
+  found = [...out];
+  peerCache.set(key, found);
+  return found;
+}
+
+/** The cells on the two long diagonals (for drawing them and for the diagonal rule). */
+export const onDiagonal = (i: number, n: number): boolean => Math.floor(i / n) === i % n || Math.floor(i / n) + (i % n) === n - 1;
 
 /** Side of the grid for a number of cells (6 for 36, 9 for 81). */
 export const sizeOf = (cells: number): number => Math.round(Math.sqrt(cells));
@@ -22,17 +59,14 @@ export function boxOf(index: number, n: number): number {
   return Math.floor(Math.floor(index / n) / bh) * (n / bw) + Math.floor((index % n) / bw);
 }
 
-/** Filled cells that repeat a number in their row, column or box. */
-export function conflicts(board: number[]): Set<number> {
+/** Filled cells that repeat a number in their row, column or box (and, with a rule, on the diagonals or a knight's move apart). */
+export function conflicts(board: number[], rule?: SudokuRule): Set<number> {
   const n = sizeOf(board.length);
   const bad = new Set<number>();
   for (let i = 0; i < board.length; i++) {
     if (!board[i]) continue;
-    for (let j = i + 1; j < board.length; j++) {
-      if (board[j] !== board[i]) continue;
-      const sameRow = Math.floor(i / n) === Math.floor(j / n);
-      const sameCol = i % n === j % n;
-      if (sameRow || sameCol || boxOf(i, n) === boxOf(j, n)) {
+    for (const j of peersOf(i, n, rule)) {
+      if (j > i && board[j] === board[i]) {
         bad.add(i);
         bad.add(j);
       }
@@ -51,7 +85,8 @@ export function verify(puzzle: SudokuPuzzle, solution: unknown): boolean {
   if (typeof solution !== 'string' || solution.length !== total) return false;
   if (![...solution].every((c) => c >= '1' && c <= String(n))) return false;
   for (let i = 0; i < total; i++) if (puzzle.givens[i] !== '0' && puzzle.givens[i] !== solution[i]) return false;
-  return conflicts([...solution].map(Number)).size === 0;
+  if (puzzle.rule && total !== 81) return false;
+  return conflicts([...solution].map(Number), puzzle.rule).size === 0;
 }
 
 export function isSolved(puzzle: SudokuPuzzle, board: number[]): boolean {

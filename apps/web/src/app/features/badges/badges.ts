@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } 
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { Stats, StatsService } from '../../core/stats.service';
-import { DAILY_GAMES, PRACTICE_TRACKS } from '../../games/catalog';
+import { DAILY_GAMES, PRACTICE_TRACKS, SPEED_GAMES } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 
 interface Badge {
@@ -121,6 +121,15 @@ export class Badges implements OnInit {
     const bestStreak = Math.max(0, ...(stats?.games.map((g) => Math.max(g.best, g.current)) ?? [0]));
     const dailiesPlayed = DAILY_GAMES.filter((g) => (stats?.games.find((s) => s.game === g.id)?.solved ?? 0) > 0).length;
     const dailySolved = stats?.games.reduce((n, g) => n + g.solved, 0) ?? 0;
+    let speedWins = 0;
+    for (const g of SPEED_GAMES) {
+      try {
+        const best = JSON.parse(localStorage.getItem(`zenigma.speed.${g}`) ?? 'null') as { solved: number } | null;
+        if (best && best.solved >= 5) speedWins++;
+      } catch {
+        /* no storage: no speed badge */
+      }
+    }
     let levels = 0;
     let clean = 0;
     let bosses = 0;
@@ -137,6 +146,8 @@ export class Badges implements OnInit {
       { id: 'lv10', icon: '🔟', name: 'Ten levels', text: 'Clear 10 practice levels', have: levels, need: 10 },
       { id: 'lv100', icon: '💯', name: 'Centurion', text: 'Clear 100 practice levels', have: levels, need: 100 },
       { id: 'lv500', icon: '🏔️', name: 'Mountaineer', text: 'Clear 500 practice levels', have: levels, need: 500 },
+      { id: 'lv1000', icon: '🚀', name: 'Marathoner', text: 'Clear 1,000 practice levels', have: levels, need: 1000 },
+      { id: 'speed', icon: '⚡', name: 'Speed demon', text: 'Solve all five levels of a speed round', have: speedWins, need: 1 },
       { id: 'boss', icon: '👑', name: 'Zone boss', text: 'Clear a 10th level', have: bosses, need: 1 },
       { id: 'clean', icon: '🧠', name: 'No help needed', text: 'Clear 25 levels without a hint', have: clean, need: 25 },
       { id: 'all', icon: '🎲', name: 'Collector', text: 'Clear a level in every puzzle game', have: gamesWithLevels.size, need: 5 },

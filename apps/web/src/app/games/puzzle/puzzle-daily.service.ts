@@ -13,6 +13,8 @@ export interface PuzzleAttempt {
   activeOnThisDevice: boolean;
   /** Sent only to the device that is playing, and only while the attempt is open. */
   puzzle: unknown | null;
+  /** How many players have solved today's puzzle (for "faster than 70%"). */
+  finishers?: number | null;
 }
 
 export interface PuzzleDailyState {

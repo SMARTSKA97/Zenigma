@@ -4,7 +4,7 @@
  * - Otherwise it points at the place with the most to learn next and says why, in words.
  */
 import { PuzzleGameId } from '../catalog';
-import { boxOf, boxShape, sizeOf } from '../sudoku/engine';
+import { boxOf, boxShape, sizeOf, SudokuRule } from '../sudoku/engine';
 import * as queens from '../queens/engine';
 import * as tango from '../tango/engine';
 import * as zip from '../zip/engine';
@@ -32,7 +32,7 @@ export function hintFor(game: PuzzleGameId, puzzle: unknown, state: unknown): Hi
     case 'tango':
       return tangoHint(puzzle as tango.TangoPuzzle, state as tango.TangoCell[]);
     case 'sudoku':
-      return sudokuHint(puzzle as { givens: string }, state as number[]);
+      return sudokuHint(puzzle as { givens: string; rule?: SudokuRule }, state as number[]);
     case 'zip':
       return zipHint(puzzle as zip.ZipPuzzle, state as zip.ZipPath);
     case 'patches':
@@ -153,9 +153,10 @@ function tangoHint(puzzle: tango.TangoPuzzle, board: tango.TangoCell[]): Hint {
 
 // ------------------------------------------------------------------------------------------------ Sudoku
 
-function sudokuHint(puzzle: { givens: string }, board: number[]): Hint {
+function sudokuHint(puzzle: { givens: string; rule?: SudokuRule }, board: number[]): Hint {
   const n = sizeOf(board.length);
-  const sol = solveSudoku([...puzzle.givens].map(Number));
+  const rule = puzzle.rule;
+  const sol = solveSudoku([...puzzle.givens].map(Number), rule);
   if (!sol) return none;
   if (!board.includes(0) && board.join('') === sol) return done;
 
@@ -168,11 +169,11 @@ function sudokuHint(puzzle: { givens: string }, board: number[]): Hint {
   }
 
   const empties = board.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
-  const cand = new Map(empties.map((i) => [i, sudokuCandidates(board, i)]));
+  const cand = new Map(empties.map((i) => [i, sudokuCandidates(board, i, rule)]));
 
   // A cell with only one number left.
   const naked = empties.find((i) => cand.get(i)!.length === 1);
-  if (naked !== undefined) return { kind: 'nudge', cells: [naked], title: 'Only one number fits here', text: 'Everything else is already taken by this cell’s row, column or box. Which number is left?' };
+  if (naked !== undefined) return { kind: 'nudge', cells: [naked], title: 'Only one number fits here', text: `Everything else is already taken by this cell’s row, column or box${rule === 'diagonal' ? ', or its diagonal' : rule === 'knight' ? ', or a knight’s move away' : ''}. Which number is left?` };
 
   // A number that has only one home in a row, column or box.
   const houses: { cells: number[]; label: string }[] = [];
@@ -181,6 +182,10 @@ function sudokuHint(puzzle: { givens: string }, board: number[]): Hint {
   for (let k = 0; k < n; k++) houses.push({ cells: line(n, 'row', k), label: 'row' }, { cells: line(n, 'col', k), label: 'column' });
   void bh;
   void bw;
+  if (rule === 'diagonal') {
+    houses.push({ cells: board.map((_, j) => (Math.floor(j / n) === j % n ? j : -1)).filter((j) => j >= 0), label: 'diagonal' });
+    houses.push({ cells: board.map((_, j) => (Math.floor(j / n) + (j % n) === n - 1 ? j : -1)).filter((j) => j >= 0), label: 'diagonal' });
+  }
   for (const h of houses) {
     for (let d = 1; d <= n; d++) {
       if (h.cells.some((i) => board[i] === d)) continue;

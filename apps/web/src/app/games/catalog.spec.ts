@@ -8,7 +8,7 @@ describe('practice tracks', () => {
   });
 
   it('gives Sudoku a classic and a mini variant, and no other game variants', () => {
-    expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini']);
+    expect(variantsOf('sudoku').filter((v) => !v.soon).map((v) => v.id)).toEqual(['classic', 'mini', 'diagonal', 'knight']);
     expect(variantsOf('queens')).toEqual([]);
     expect(variantsOf('word-guess')).toEqual([]);
   });
@@ -19,6 +19,8 @@ describe('practice tracks', () => {
       'queens',
       'tango',
       ...['classic', 'mini'].flatMap((k) => tiers.map((t) => `sudoku-${k}-${t}`)),
+      'sudoku-diagonal',
+      'sudoku-knight',
       'zip',
       'patches',
     ]);

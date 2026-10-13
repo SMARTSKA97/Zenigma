@@ -2,12 +2,19 @@ import { Injectable, signal } from '@angular/core';
 
 const KEY = 'zenigma.prefs';
 
+export type HapticStrength = 'off' | 'light' | 'strong';
+const strengths: HapticStrength[] = ['off', 'light', 'strong'];
+const strength = (v: unknown, fallback: HapticStrength): HapticStrength => (strengths.includes(v as HapticStrength) ? (v as HapticStrength) : fallback);
+
 interface Prefs {
   hardMode: boolean;
   highContrast: boolean;
   reduceMotion: boolean;
   haptics: boolean;
   largeNumbers: boolean;
+  accent: string;
+  tapHaptics: HapticStrength;
+  alertHaptics: HapticStrength;
 }
 
 /** Small per-device settings (not synced). Kept in localStorage so they apply before anything else loads. */
@@ -18,6 +25,12 @@ export class PrefsService {
   readonly reduceMotion = signal(false);
   readonly haptics = signal(true);
   readonly largeNumbers = signal(false);
+  /** The colour theme (see ACCENTS in the settings page). 'default' is the original blue. */
+  readonly accent = signal('default');
+  /** How strong the little taps are (a cell chosen, a number placed). */
+  readonly tapHaptics = signal<HapticStrength>('light');
+  /** How strong the patterns for a mistake, a refused move and a win are. */
+  readonly alertHaptics = signal<HapticStrength>('strong');
 
   constructor() {
     try {
@@ -27,6 +40,9 @@ export class PrefsService {
       this.reduceMotion.set(saved.reduceMotion === true);
       this.haptics.set(saved.haptics !== false);
       this.largeNumbers.set(saved.largeNumbers === true);
+      this.accent.set(typeof saved.accent === 'string' ? saved.accent : 'default');
+      this.tapHaptics.set(strength(saved.tapHaptics, 'light'));
+      this.alertHaptics.set(strength(saved.alertHaptics, 'strong'));
     } catch {
       /* storage unavailable: defaults */
     }
@@ -40,6 +56,8 @@ export class PrefsService {
     else document.documentElement.removeAttribute('data-motion');
     if (this.largeNumbers()) document.documentElement.setAttribute('data-large', 'true');
     else document.documentElement.removeAttribute('data-large');
+    if (this.accent() !== 'default') document.documentElement.setAttribute('data-accent', this.accent());
+    else document.documentElement.removeAttribute('data-accent');
   }
 
   setHardMode(value: boolean): void {
@@ -65,6 +83,22 @@ export class PrefsService {
     this.apply();
   }
 
+  setAccent(value: string): void {
+    this.accent.set(value);
+    this.save();
+    this.apply();
+  }
+
+  setTapHaptics(value: HapticStrength): void {
+    this.tapHaptics.set(value);
+    this.save();
+  }
+
+  setAlertHaptics(value: HapticStrength): void {
+    this.alertHaptics.set(value);
+    this.save();
+  }
+
   setHaptics(value: boolean): void {
     this.haptics.set(value);
     this.save();
@@ -72,7 +106,7 @@ export class PrefsService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

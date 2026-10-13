@@ -1,3 +1,5 @@
+import { LEVEL_COUNTS } from './level-counts.data';
+
 export type GameId =
   | 'word-guess'
   | 'queens'
@@ -40,6 +42,9 @@ export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => 
 /** Games with a daily challenge and leaderboards. */
 export const DAILY_GAMES = GAMES.filter((g) => g.daily);
 
+/** Games with a speed round (five easy levels against a three-minute clock). */
+export const SPEED_GAMES = ['queens', 'tango', 'sudoku', 'zip', 'patches'] as const;
+
 export const PUZZLE_GAMES = ['queens', 'tango', 'sudoku', 'zip', 'patches'] as const;
 export type PuzzleGameId = (typeof PUZZLE_GAMES)[number];
 export const isPuzzleGame = (id: string): id is PuzzleGameId => (PUZZLE_GAMES as readonly string[]).includes(id);
@@ -69,18 +74,16 @@ export const TIERS: Tier[] = [
   { id: 'insane', name: 'Insane', blurb: 'As few clues as a puzzle can have.' },
 ];
 
-/** Levels in each tier of a tiered kind. */
-export const LEVELS_PER_TIER = 200;
-/** Levels in an ordinary track. */
-export const LEVELS_PER_TRACK = 1000;
-/** How many levels a practice track has: 200 for a tier of a tiered kind, 1000 otherwise. */
-export const levelCountOf = (track: string): number => (track.startsWith('sudoku-') ? LEVELS_PER_TIER : LEVELS_PER_TRACK);
+/** How many levels a practice track has (it grows every week: see tools/generators/puzzles/grow-levels.mjs). */
+export const levelCountOf = (track: string): number => LEVEL_COUNTS[track] ?? 1000;
 
 /** Games that offer more than one kind of practice. Each variant has its own levels, map and progress. Add a variant here to add one. */
 export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
   sudoku: [
     { id: 'classic', name: 'Classic', blurb: 'The 9 by 9 grid, numbers 1 to 9.', tiered: true },
     { id: 'mini', name: 'Mini', blurb: 'A quick 6 by 6 grid, numbers 1 to 6.', tiered: true },
+    { id: 'diagonal', name: 'Diagonal', blurb: 'Classic rules, and both long diagonals hold 1 to 9 as well.' },
+    { id: 'knight', name: 'Anti-Knight', blurb: 'Classic rules, and no digit repeats a chess knight\'s move away.' },
     // The kinds seen at Sudoku championships (World Sudoku and Puzzle Championships), on the way.
     { id: 'killer', name: 'Killer', blurb: 'Cages with a sum: the digits in each cage add up to its number, with no repeats.', soon: true },
     { id: 'thermo', name: 'Thermo', blurb: 'Digits climb along every thermometer, from the bulb to the tip.', soon: true },
@@ -89,8 +92,6 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
     { id: 'sandwich', name: 'Sandwich', blurb: 'Clues give the sum of the digits caught between the 1 and the 9 in a row or column.', soon: true },
     { id: 'consecutive', name: 'Consecutive', blurb: 'A bar between two cells means their digits differ by exactly 1.', soon: true },
     { id: 'even-odd', name: 'Even-Odd', blurb: 'Shaded cells hold only even digits (squares) or only odd digits (circles).', soon: true },
-    { id: 'anti-knight', name: 'Anti-Knight', blurb: 'No digit repeats a chess knight\'s move apart.', soon: true },
-    { id: 'x', name: 'Diagonal', blurb: 'Both long diagonals hold 1 to 9 as well.', soon: true },
   ],
 };
 

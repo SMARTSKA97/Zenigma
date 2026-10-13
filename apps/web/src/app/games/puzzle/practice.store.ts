@@ -12,6 +12,10 @@ interface Progress {
   best: Record<number, number>;
   /** Levels solved with the help of a hint (they earn at most two stars). */
   hinted?: number[];
+  /** Levels up to this one are open even though they were skipped ("skip ahead" after a run of quick, clean wins). */
+  skip?: number;
+  /** Quick, clean wins in a row (3-star levels without a hint). */
+  quick?: number;
 }
 
 interface SavedBoard {
@@ -20,6 +24,8 @@ interface SavedBoard {
   elapsedMs: number;
   /** Hints used on this level so far. */
   hints?: number;
+  /** When it was saved (ms), so Home can offer the most recent board. */
+  savedAt?: number;
 }
 
 const progressKey = (game: string) => `puzzle.progress.${game}`;
@@ -55,7 +61,8 @@ export class PracticeStore {
   /** The level to play next: one past the furthest level solved (levels further on stay locked until it is solved). */
   frontier(game: string): number {
     const solved = this.all()[game]?.solved ?? [];
-    return Math.min(levelCountOf(game), (solved.length ? Math.max(...solved) : 0) + 1);
+    const top = Math.max(solved.length ? Math.max(...solved) : 0, this.all()[game]?.skip ?? 0);
+    return Math.min(levelCountOf(game), top + 1);
   }
 
   isUnlocked(game: string, level: number): boolean {
@@ -76,13 +83,35 @@ export class PracticeStore {
     // A level solved clean once stays clean; one solved with help is marked until it is replayed without.
     const was = current.hinted ?? [];
     const hintedList = hinted ? (was.includes(level) ? was : [...was, level]) : was.filter((l) => l !== level);
-    const next = { solved, best, hinted: hintedList };
+    const next = { ...current, solved, best, hinted: hintedList };
+    this.all.update((all) => ({ ...all, [game]: next }));
+    await this.store.setMeta(progressKey(game), next);
+  }
+
+  /** Quick, clean wins in a row on a track. */
+  quickWins(game: string): number {
+    return this.all()[game]?.quick ?? 0;
+  }
+
+  /** Counts a win towards the "skip ahead" offer: three stars with no hint adds one, anything else starts again. */
+  async noteWin(game: string, stars: number, hinted: boolean): Promise<void> {
+    const current = this.all()[game] ?? { solved: [], best: {} };
+    const next = { ...current, quick: stars >= 3 && !hinted ? (current.quick ?? 0) + 1 : 0 };
+    this.all.update((all) => ({ ...all, [game]: next }));
+    await this.store.setMeta(progressKey(game), next);
+  }
+
+  /** Opens the next `count` levels after the furthest one solved, for players who are finding it too easy. */
+  async skipAhead(game: string, count = 5): Promise<void> {
+    const current = this.all()[game] ?? { solved: [], best: {} };
+    const top = Math.max(current.solved.length ? Math.max(...current.solved) : 0, current.skip ?? 0);
+    const next = { ...current, skip: Math.min(levelCountOf(game) - 1, top + count), quick: 0 };
     this.all.update((all) => ({ ...all, [game]: next }));
     await this.store.setMeta(progressKey(game), next);
   }
 
   saveBoard(game: string, board: SavedBoard): Promise<void> {
-    return this.store.setMeta(saveKey(game), board);
+    return this.store.setMeta(saveKey(game), { ...board, savedAt: Date.now() });
   }
 
   loadBoard(game: string): Promise<SavedBoard | undefined> {

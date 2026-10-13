@@ -10,6 +10,7 @@ const hasVariants: CanMatchFn = (_route, segments) => variantsOf(segments[1]?.pa
 
 export const routes: Routes = [
   { path: 'games/word-guess', loadComponent: wordGuess, data: { mode: 'practice' } },
+  { path: 'speed/:game', loadComponent: () => import('./features/speed/speed-round').then((m) => m.SpeedRound) },
   { path: 'games/:game/levels', loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
   { path: 'games/:game/:variant/levels', canMatch: [variantPlayable], loadComponent: () => import('./features/levels/level-map').then((m) => m.LevelMap) },
   { path: 'games/:game/:variant', canMatch: [variantPlayable], loadComponent: puzzle, data: { mode: 'practice' } },

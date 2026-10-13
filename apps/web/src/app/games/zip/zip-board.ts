@@ -10,7 +10,7 @@ import { cutTo, step, ZipPath, ZipPuzzle } from './engine';
     <div
       class="grid"
       role="application"
-      aria-label="Zip board. Drag from 1 through every cell, reaching the numbers in order."
+      [attr.aria-label]="description()"
       tabindex="0"
       [style.--n]="puzzle().size"
       [class.win]="solved()"
@@ -144,6 +144,17 @@ export class ZipBoard {
   private pointer = -1;
 
   private readonly path = computed(() => this.draft() ?? this.board());
+
+  /** For screen readers: the size, where each number is, and how far the path has got. */
+  protected readonly description = computed(() => {
+    const p = this.puzzle();
+    const where = p.numbers
+      .map((number, i) => (number ? { number, i } : null))
+      .filter((x): x is { number: number; i: number } => x !== null)
+      .sort((a, b) => a.number - b.number)
+      .map((x) => `${x.number} at row ${Math.floor(x.i / p.size) + 1}, column ${(x.i % p.size) + 1}`);
+    return `Zip board, ${p.size} by ${p.size}. Draw one path through every cell, reaching the numbers in order. Numbers: ${where.join('; ')}. Path covers ${this.path().length} of ${p.size * p.size} cells.`;
+  });
 
   protected readonly cells = computed(() => {
     const puzzle = this.puzzle();

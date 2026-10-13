@@ -50,7 +50,14 @@ public class PuzzleRulesTests
     public void Every_shipped_level_set_is_complete()
     {
         var levels = new PracticeLevels();
-        foreach (var track in PuzzleRules.Tracks) Assert.Equal(track.StartsWith("sudoku-") ? 200 : 1000, levels.Count(track));
+        foreach (var track in PuzzleRules.Tracks)
+        {
+            var count = levels.Count(track);
+            Assert.True(count >= 200, track);
+            Assert.NotNull(levels.Get(track, 1));
+            Assert.NotNull(levels.Get(track, count));          // the last pack loads too
+            Assert.Null(levels.Get(track, count + 1));
+        }
     }
 
     [Fact]
@@ -335,6 +342,18 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         Assert.Contains("CircleAda", names);
         Assert.Contains("CircleBob", names);
         Assert.DoesNotContain("CircleEve", names);
+
+        // "Who played today": Ada sees Bob (a friend who solved one), never herself or Eve.
+        var today = await ada.GetFromJsonAsync<JsonElement[]>("/circles/today", Json);
+        var friends = today!.Single().GetProperty("friends").EnumerateArray().ToList();
+        Assert.Equal("CircleBob", friends.Single().GetProperty("name").GetString());
+        Assert.Equal(1, friends.Single().GetProperty("solved").GetInt32());
+
+        // The month's season table: Ada has solved a daily this month, so she is on the podium of her circle.
+        var seasons = await ada.GetFromJsonAsync<JsonElement>("/circles/seasons", Json);
+        var podium = seasons.GetProperty("current").GetProperty("circles").EnumerateArray().Single().GetProperty("top").EnumerateArray()
+            .Select(e => e.GetProperty("name").GetString()).ToList();
+        Assert.Contains("CircleAda", podium);
 
         // Non-members cannot look inside.
         Assert.Equal(HttpStatusCode.NotFound, (await eve.GetAsync($"/leaderboards/queens?kind=daily&period=today&circle={id}")).StatusCode);

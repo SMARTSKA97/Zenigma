@@ -2,11 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { CircleSeasons } from '../../shared/circle-seasons';
 import { Circle, CirclesService, inviteLink } from '../../core/circles.service';
 
 @Component({
   selector: 'app-circles',
-  imports: [RouterLink],
+  imports: [RouterLink, CircleSeasons],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a class="back" routerLink="/ranks">← Leaderboards</a>
@@ -34,6 +35,8 @@ import { Circle, CirclesService, inviteLink } from '../../core/circles.service';
       @if (message(); as m) {
         <p class="note" role="status">{{ m }}</p>
       }
+
+      <app-circle-seasons />
 
       @if (loading()) {
         <div class="skeleton line"></div>

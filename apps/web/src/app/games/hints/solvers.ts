@@ -2,7 +2,7 @@
  * Small solvers used only to coach the player: every level has exactly one solution, so the solution tells
  * whether something on the board is wrong. They are never used to hand over an answer.
  */
-import { boxOf, boxShape, sizeOf } from '../sudoku/engine';
+import { boxShape, peersOf, sizeOf, SudokuRule } from '../sudoku/engine';
 import { TangoPuzzle, SIZE as TANGO } from '../tango/engine';
 import { QueensPuzzle } from '../queens/engine';
 import { ZipPuzzle } from '../zip/engine';
@@ -87,28 +87,22 @@ export function solveTango(puzzle: TangoPuzzle): string | null {
 }
 
 /** Digits that can still go in an empty cell, as a list. */
-export function sudokuCandidates(board: number[], i: number): number[] {
+export function sudokuCandidates(board: number[], i: number, rule?: SudokuRule): number[] {
   const n = sizeOf(board.length);
+  const taken = new Set(peersOf(i, n, rule).map((j) => board[j]));
   const out: number[] = [];
-  for (let d = 1; d <= n; d++) {
-    let clash = false;
-    for (let j = 0; j < board.length && !clash; j++) {
-      if (board[j] !== d || j === i) continue;
-      if (Math.floor(j / n) === Math.floor(i / n) || j % n === i % n || boxOf(j, n) === boxOf(i, n)) clash = true;
-    }
-    if (!clash) out.push(d);
-  }
+  for (let d = 1; d <= n; d++) if (!taken.has(d)) out.push(d);
   return out;
 }
 
-export function solveSudoku(givens: number[]): string | null {
+export function solveSudoku(givens: number[], rule?: SudokuRule): string | null {
   const board = [...givens];
   const search = (): boolean => {
     let best = -1;
     let options: number[] = [];
     for (let i = 0; i < board.length; i++) {
       if (board[i]) continue;
-      const cand = sudokuCandidates(board, i);
+      const cand = sudokuCandidates(board, i, rule);
       if (cand.length === 0) return false;
       if (best < 0 || cand.length < options.length) {
         best = i;

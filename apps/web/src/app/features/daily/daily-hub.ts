@@ -13,6 +13,17 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
   imports: [RouterLink, Glyph, FreezeSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    @if (countdown(); as c) {
+      <div class="rollover" role="status" aria-live="polite">
+        @if (c > 0) {
+          <span class="num" [attr.data-n]="c">{{ c }}</span>
+          <span>New puzzles in</span>
+        } @else {
+          <span class="num ok">✨</span>
+          <span>Fresh puzzles are here</span>
+        }
+      </div>
+    }
     <section class="hero">
       <p class="eyebrow">Daily challenge{{ difficulty() ? ' · ' + difficulty()!.day : '' }}</p>
       <h1>{{ doneCount() }} of {{ games.length }} done today</h1>
@@ -131,8 +142,32 @@ export class DailyHub implements OnInit, OnDestroy {
     return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
   });
 
+  /** The last seconds before the next set arrives: 5, 4, 3, 2, 1, then 0 (arrived) for a moment. Null the rest of the time. */
+  protected readonly countdown = signal<number | null>(null);
+  private arrived = false;
+
+  private watch(): void {
+    const target = this.hub()?.nextRolloverUtc;
+    if (!target) return;
+    const left = Math.ceil((Date.parse(target) - Date.now()) / 1000);
+    if (left > 0 && left <= 5) {
+      this.countdown.set(left);
+    } else if (left <= 0 && left > -3 && this.countdown() !== null && !this.arrived) {
+      this.arrived = true;
+      this.countdown.set(0);
+      void this.load();
+      setTimeout(() => {
+        this.countdown.set(null);
+        this.arrived = false;
+      }, 2500);
+    }
+  }
+
   ngOnInit(): void {
-    this.tick = setInterval(() => this.now.set(Date.now()), 30_000);
+    this.tick = setInterval(() => {
+      this.now.set(Date.now());
+      this.watch();
+    }, 1000);
     void this.load();
   }
 

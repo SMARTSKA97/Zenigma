@@ -3,6 +3,7 @@ import { generateSudoku, solveSudoku } from './sudoku.mjs';
 import { generateZip, solveZip } from './zip.mjs';
 import { generatePatches, solvePatches } from './patches.mjs';
 import { generateTango, solveTango } from './tango.mjs';
+import { readFileSync } from 'node:fs';
 import { rngFrom } from './rng.mjs';
 
 export const GAMES = ['queens', 'tango', 'sudoku', 'zip', 'patches'];
@@ -12,14 +13,19 @@ export const TRACKS = [
   'queens',
   'tango',
   ...['classic', 'mini'].flatMap((kind) => SUDOKU_TIERS.map((tier) => `sudoku-${kind}-${tier}`)),
+  'sudoku-diagonal',
+  'sudoku-knight',
   'zip',
   'patches',
 ];
 export const gameOfTrack = (track) => track.split('-')[0];
-export const LEVELS_PER_GAME = 1000;
-/** Sudoku kinds are split into difficulty tiers, each its own track of this many levels. */
+/** The first 200 levels of a Sudoku tier climb through its clue range; later levels stay near the hard end. */
 export const LEVELS_PER_TIER = 200;
-export const levelsOf = (track) => (track.startsWith('sudoku-') ? LEVELS_PER_TIER : LEVELS_PER_GAME);
+/** Levels are shipped in packs of this many, so apps and the API load only the packs a player reaches. */
+export const PACK_SIZE = 1000;
+/** How many levels each track has now: level-counts.json is the one place to change it (grow-levels.mjs adds a week's worth). */
+export const LEVEL_COUNTS = JSON.parse(readFileSync(new URL('./level-counts.json', import.meta.url), 'utf8'));
+export const levelsOf = (track) => LEVEL_COUNTS[track];
 
 /** Numbers left in the grid at the start and end of each tier (the end of a tier is a touch harder than its start). */
 const SUDOKU_CLUES = {
@@ -29,7 +35,7 @@ const SUDOKU_CLUES = {
 function sudokuTierLevel(track, level, rng) {
   const [, kind, tier] = track.split('-');
   const [from, to] = SUDOKU_CLUES[kind][tier];
-  const along = 0.5 * ((level - 1) / (LEVELS_PER_TIER - 1)) + 0.5 * (((level - 1) % LEVELS_PER_ZONE) / (LEVELS_PER_ZONE - 1));
+  const along = 0.5 * Math.min(1, (level - 1) / (LEVELS_PER_TIER - 1)) + 0.5 * (((level - 1) % LEVELS_PER_ZONE) / (LEVELS_PER_ZONE - 1));
   return generateSudoku(rng, Math.round(from - (from - to) * along), kind === 'mini' ? 6 : 9);
 }
 
@@ -54,6 +60,9 @@ export function practiceLevel(track, level) {
   const game = track;
   const rng = rngFrom(`zenigma-practice:${track}:${level}`);
   const h = hardness(level);
+  // Sudoku with one more rule: a single track each that climbs from many clues to few.
+  if (game === 'sudoku-diagonal') return generateSudoku(rng, Math.round(38 - 16 * h), 9, 'diagonal');
+  if (game === 'sudoku-knight') return generateSudoku(rng, Math.round(36 - 12 * h), 9, 'knight');
   if (game.startsWith('sudoku-')) return sudokuTierLevel(track, level, rng);
   switch (game) {
     case 'queens': {

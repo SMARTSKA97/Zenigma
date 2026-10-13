@@ -65,6 +65,34 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
     cases.push({ name: `${tag} wrong length`, puzzle, solution: solution.slice(1), valid: false });
     cases.push({ name: `${tag} digit out of range`, puzzle, solution: String(n + 1) + solution.slice(1), valid: false });
   }
+  // Extra rules on the classic grid: 'diagonal' and 'knight'.
+  const breaks = {
+    diagonal: (sol) => {
+      const main = new Set(); const anti = new Set();
+      for (let k = 0; k < 9; k++) { main.add(sol[k * 9 + k]); anti.add(sol[k * 9 + 8 - k]); }
+      return main.size < 9 || anti.size < 9;
+    },
+    knight: (sol) => {
+      const moves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+      for (let i = 0; i < 81; i++) for (const [dr, dc] of moves) {
+        const r = Math.floor(i / 9) + dr; const c = (i % 9) + dc;
+        if (r >= 0 && r < 9 && c >= 0 && c < 9 && sol[r * 9 + c] === sol[i]) return true;
+      }
+      return false;
+    },
+  };
+  const plain = generateSudoku(rngFrom('vector-sudoku-plain-for-rules'), 40, 9);
+  const plainSolution = solveSudoku(plain).solution;
+  for (const rule of ['diagonal', 'knight']) {
+    const puzzle = generateSudoku(rngFrom(`vector-sudoku-${rule}`), 30, 9, rule);
+    const solution = solveSudoku(puzzle).solution;
+    cases.push({ name: `9x9 ${rule} valid`, puzzle, solution, valid: true });
+    // A solution of the plain puzzle with the same givens is only fine if it happens to satisfy the rule too.
+    cases.push({ name: `9x9 ${rule} plain solution`, puzzle: { givens: plain.givens, rule }, solution: plainSolution, valid: !breaks[rule](plainSolution) });
+    const changed = [...solution];
+    changed[0] = String((Number(changed[0]) % 9) + 1);
+    cases.push({ name: `9x9 ${rule} changed digit`, puzzle, solution: changed.join(''), valid: false });
+  }
   write('sudoku', cases);
 }
 
@@ -105,7 +133,7 @@ const write = (name, cases) => writeFileSync(new URL(`${name}.json`, out), JSON.
   const { TRACKS, levelsOf } = await import('./games.mjs');
   for (const track of TRACKS) {
     const game = track.split('-')[0];
-    for (const level of [1, 2, 3, 10, 11, 150, 500, 1000].filter((l) => l <= levelsOf(track)).concat(levelsOf(track) < 1000 ? [levelsOf(track)] : [])) {
+    for (const level of [1, 2, 3, 10, 11, 150, 500, 1000, 1001, 1500].filter((l) => l <= levelsOf(track)).concat(levelsOf(track) < 1000 ? [levelsOf(track)] : [])) {
       cases.push({ game, track, level, solution: solve(track, practiceLevel(track, level)).solution });
     }
   }

@@ -51,11 +51,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      # The levels shipped in the app and the API, and the shared test vectors, are generated. If the generators change,
-      # regenerate them (npm run levels / npm run vectors in tools/generators/puzzles) and commit.
+      # The levels shipped in the app and the API, and the shared test vectors, are generated. Levels grow every week, so
+      # this checks the packs are complete and regenerates a sample of levels to prove they still match. If the generators
+      # change, regenerate them (npm run levels -- --all / npm run vectors in tools/generators/puzzles) and commit.
       - working-directory: tools/generators/puzzles
         run: |
-          node build-levels.mjs
+          node build-levels.mjs --verify
           node gen-vectors.mjs
       - run: git diff --exit-code -- apps tests
 

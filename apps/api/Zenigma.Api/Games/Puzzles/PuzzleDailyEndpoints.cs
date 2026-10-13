@@ -20,7 +20,8 @@ public record PuzzleAttemptDto(
     int? ElapsedMs,
     int? Rank,
     bool ActiveOnThisDevice,
-    JsonElement? Puzzle);
+    JsonElement? Puzzle,
+    int? Finishers = null);
 
 public record PuzzleDailyStateDto(string Date, DateTimeOffset NextRolloverUtc, PuzzleAttemptDto? Attempt);
 
@@ -226,10 +227,13 @@ public static class PuzzleDailyEndpoints
         {
             var active = deviceId is not null && attempt.DeviceId == deviceId;
             int? rank = null;
+            int? finishers = null;
             if (attempt is { Status: "solved", ElapsedMs: { } ms })
             {
                 rank = 1 + await db.PuzzleAttempts.AsNoTracking()
                     .CountAsync(a => a.Game == game && a.PuzzleDate == date && a.Status == "solved" && a.ElapsedMs < ms, ct);
+                finishers = await db.PuzzleAttempts.AsNoTracking()
+                    .CountAsync(a => a.Game == game && a.PuzzleDate == date && a.Status == "solved", ct);
             }
 
             // The puzzle itself goes only to the device that is playing it.
@@ -240,7 +244,8 @@ public static class PuzzleDailyEndpoints
                 attempt.ElapsedMs,
                 rank,
                 active,
-                attempt.Status == "playing" && active ? puzzle.RootElement.Clone() : null);
+                attempt.Status == "playing" && active ? puzzle.RootElement.Clone() : null,
+                finishers);
         }
 
         return new PuzzleDailyStateDto(date.ToString("yyyy-MM-dd"), IstClock.NextRollover(now).ToUniversalTime(), dto);

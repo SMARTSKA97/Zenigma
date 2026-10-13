@@ -20,39 +20,46 @@ export class HapticsService {
   /** A very light tick: selecting a cell, stepping a path, a key press. */
   tick(): void {
     // (Android only vibrates for selectionChanged after a selection has started, so a short plain vibration is used.)
-    this.run(() => Haptics.vibrate({ duration: 14 }), 14);
+    const strong = this.prefs.tapHaptics() === 'strong';
+    this.run('tap', () => Haptics.vibrate({ duration: strong ? 26 : 14 }), strong ? 26 : 14);
   }
 
   /** A light tap: a mark or a number placed. */
   tap(): void {
-    this.run(() => Haptics.impact({ style: ImpactStyle.Light }), 14);
+    const strong = this.prefs.tapHaptics() === 'strong';
+    this.run('tap', () => Haptics.impact({ style: strong ? ImpactStyle.Medium : ImpactStyle.Light }), strong ? 26 : 14);
   }
 
   /** A firmer tap: a queen placed, a word submitted. */
   place(): void {
-    this.run(() => Haptics.impact({ style: ImpactStyle.Medium }), 24);
+    const strong = this.prefs.tapHaptics() === 'strong';
+    this.run('tap', () => Haptics.impact({ style: strong ? ImpactStyle.Heavy : ImpactStyle.Medium }), strong ? 40 : 24);
   }
 
   /** Something is wrong, shown after the player pauses. */
   warning(): void {
-    this.run(() => Haptics.notification({ type: NotificationType.Warning }), [18, 40, 18]);
+    this.run('alert', () => Haptics.notification({ type: NotificationType.Warning }), [18, 40, 18], () => Haptics.impact({ style: ImpactStyle.Light }));
   }
 
   /** A refused move or word. */
   error(): void {
-    this.run(() => Haptics.notification({ type: NotificationType.Error }), [30, 50, 30, 50, 30]);
+    this.run('alert', () => Haptics.notification({ type: NotificationType.Error }), [30, 50, 30, 50, 30], () => Haptics.impact({ style: ImpactStyle.Light }));
   }
 
   /** The puzzle is solved. */
   success(): void {
-    this.run(() => Haptics.notification({ type: NotificationType.Success }), [20, 60, 20, 60, 60]);
+    this.run('alert', () => Haptics.notification({ type: NotificationType.Success }), [20, 60, 20, 60, 60], () => Haptics.impact({ style: ImpactStyle.Medium }));
   }
 
-  private run(native: () => Promise<void>, web: number | number[]): void {
+  /** `light` is the gentler version used when the person chose light alerts (one short tap instead of a pattern). */
+  private run(kind: 'tap' | 'alert', native: () => Promise<void>, web: number | number[], light?: () => Promise<void>): void {
     if (!this.on) return;
+    const strength = kind === 'tap' ? this.prefs.tapHaptics() : this.prefs.alertHaptics();
+    if (strength === 'off') return;
+    const gentle = kind === 'alert' && strength === 'light';
     try {
-      if (this.native) void native().catch(() => undefined);
-      else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(web);
+      if (this.native) void (gentle && light ? light() : native()).catch(() => undefined);
+      else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(gentle ? 16 : web);
     } catch {
       /* no vibration motor, or blocked: play on silently */
     }

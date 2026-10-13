@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, HostListener, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HapticsService } from '../../core/haptics.service';
@@ -17,13 +17,15 @@ import { CardInput, gridFromText } from '../../shared/share-card';
 import { HintsService } from '../../core/hints.service';
 import { ScreenGuardService } from '../../core/screen-guard.service';
 import { Hint, hasMistake, hintFor } from '../hints/hint';
-import { dailyDifficulty, gameInfo, levelCountOf, isPuzzleGame, mapLink, PuzzleGameId, trackOf } from '../catalog';
+import { dailyDifficulty, gameInfo, levelCountOf, isPuzzleGame, mapLink, playLink, PuzzleGameId, trackOf } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
 import { ZipBoard } from '../zip/zip-board';
 import { PatchesBoard } from '../patches/patches-board';
 import { TangoBoard } from '../tango/tango-board';
 import { ADAPTERS } from './adapters';
+import { levelAt } from './level-source';
+import { RULES_BY_ID } from '../../features/rules/rules-data';
 import { PracticeStore } from './practice.store';
 import { parMs, starsFor } from './par';
 import { shareCard } from './share';
@@ -121,6 +123,9 @@ const WARN_DELAY_MS = 1600;
                 }
               </button>
             }
+            @if (challengeNow(); as c) {
+              <span class="pill vs">Beat {{ fmt(c.ms) }}</span>
+            }
             <span class="pill">{{ daily() ? 'Daily' + (difficulty() ? ' · ' + difficulty()!.label : '') : 'Level ' + level() }}</span>
             @if (message()) {
               <span class="toast">{{ message() }}</span>
@@ -169,6 +174,10 @@ const WARN_DELAY_MS = 1600;
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
               <span>Undo</span>
             </button>
+            <button type="button" class="tool" [disabled]="!future().length || locked()" (click)="redo()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3" /></svg>
+              <span>Redo</span>
+            </button>
             <button type="button" class="tool" [disabled]="!touched() || locked()" (click)="clear()">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5" /></svg>
               <span>Reset</span>
@@ -213,7 +222,16 @@ const WARN_DELAY_MS = 1600;
     @if (helpOpen()) {
       <app-sheet label="How to play" (closed)="helpOpen.set(false)">
         <h2>How to play</h2>
-        <p>{{ help() }}</p>
+        @if (rules(); as r) {
+          <p><b>{{ r.goal }}</b></p>
+          <ol class="how">
+            @for (line of r.rules; track line) {
+              <li>{{ line }}</li>
+            }
+          </ol>
+        } @else {
+          <p>{{ help() }}</p>
+        }
         <p><a [routerLink]="['/rules', game()]" (click)="helpOpen.set(false)">Full rules and examples ›</a></p>
         <button type="button" (click)="helpOpen.set(false)">Got it</button>
       </app-sheet>
@@ -227,6 +245,9 @@ const WARN_DELAY_MS = 1600;
           @if (daily()) {
             @if (attempt()?.rank) {
               <p class="muted">You are #{{ attempt()!.rank }} so far today.</p>
+              @if (percentile(); as pct) {
+                <p class="pct">Faster than <b>{{ pct }}%</b> of players today</p>
+              }
             }
             <div class="actions">
               <a class="button" [routerLink]="['/ranks']" [queryParams]="{ game: game(), kind: 'daily' }" (click)="resultOpen.set(false)">Leaderboard</a>
@@ -238,10 +259,19 @@ const WARN_DELAY_MS = 1600;
                 <svg viewBox="0 0 24 24" [class.on]="n <= stars()" [style.--i]="n"><path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z" /></svg>
               }
             </div>
+            @if (challengeNow(); as c) {
+              <p class="vs-result" [class.won]="finalMs() < c.ms">
+                {{ finalMs() < c.ms ? 'You beat the challenge by ' + fmt(c.ms - finalMs()) + '!' : 'Missed the challenge by ' + fmt(finalMs() - c.ms) + '. Try again?' }}
+              </p>
+            }
             @if (bestMs() !== null && bestMs()! < finalMs()) {
               <p class="muted">Your best on this level is {{ fmt(bestMs()!) }}.</p>
             }
             <div class="actions">
+              @if (canSkip()) {
+                <p class="skip muted">Three quick wins in a row. Want something harder?</p>
+                <button type="button" class="secondary" (click)="skipAhead()">Skip ahead 5 levels</button>
+              }
               <button type="button" (click)="nextLevel()">Next level</button>
               <a class="button secondary" [routerLink]="mapLink()" (click)="resultOpen.set(false)">Map</a>
               <button type="button" class="secondary" (click)="share()">Share</button>
@@ -288,12 +318,27 @@ export class PuzzlePage {
   protected readonly puzzle = signal<unknown>(null);
   protected readonly state = signal<unknown>(null);
   protected readonly history = signal<unknown[]>([]);
+  /** Boards undone, newest first, for Redo. A new move clears them. */
+  protected readonly future = signal<unknown[]>([]);
   protected readonly level = signal(1);
   protected readonly attempt = signal<PuzzleAttempt | null>(null);
   protected readonly nextRollover = signal<string | null>(null);
   protected readonly busy = signal(false);
   protected readonly message = signal('');
   protected readonly helpOpen = signal(false);
+  /** The share of today's finishers this player was faster than (hidden until at least two people have finished). */
+  protected readonly percentile = computed(() => {
+    const a = this.attempt();
+    if (!a?.rank || !a.finishers || a.finishers < 2) return null;
+    return Math.round(((a.finishers - a.rank) / a.finishers) * 100);
+  });
+  /** A friend's time on a level (from a challenge link) to beat. */
+  protected readonly challenge = signal<{ level: number; ms: number } | null>(null);
+  protected readonly challengeNow = computed(() => {
+    const c = this.challenge();
+    return c && c.level === this.level() && !this.daily() ? c : null;
+  });
+  protected readonly rules = computed(() => RULES_BY_ID.get(this.game()));
   protected readonly wheelOpen = signal(false);
   /** Practice only: the board is covered and the clock stops. */
   protected readonly paused = signal(false);
@@ -433,19 +478,35 @@ export class PuzzlePage {
     const asked = Number(this.route.snapshot.queryParamMap.get('level'));
     const frontier = this.practiceStore.frontier(track);
     // A level asked for on the map, else the one in progress, else the next one to play. Levels not unlocked yet stay closed.
-    const level = asked >= 1 && asked <= frontier ? asked : saved && saved.level <= frontier ? saved.level : frontier;
+    // A challenge link (?level=N&vs=ms) opens its level even when it is not unlocked yet.
+    const vs = Number(this.route.snapshot.queryParamMap.get('vs'));
+    this.challenge.set(asked >= 1 && vs > 0 ? { level: asked, ms: vs } : null);
+    const level = asked >= 1 && (asked <= frontier || this.challenge()) ? asked : saved && saved.level <= frontier ? saved.level : frontier;
     await this.openLevel(level, saved?.level === level ? saved : undefined);
+  }
+
+  /** The first time someone opens one of a game's first levels, show how to play (once per game, on this device). */
+  private firstTimeHelp(level: number): void {
+    if (this.daily() || level > 3) return;
+    const key = `zenigma.tutorial.${this.game()}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, '1');
+    } catch {
+      return;
+    }
+    this.helpOpen.set(true);
   }
 
   protected async openLevel(level: number, saved?: { state: unknown; elapsedMs: number }): Promise<void> {
     const game = this.game();
-    if (!this.practiceStore.isUnlocked(this.track(), level)) return;
-    const levels = await ADAPTERS[game].levels(this.variant());
-    const puzzle = levels[level - 1];
+    if (!this.practiceStore.isUnlocked(this.track(), level) && this.challenge()?.level !== level) return;
+    const puzzle = await levelAt(this.track(), level).catch(() => null);
     if (!puzzle) return;
     this.resultOpen.set(false);
     this.solved.set(false);
     this.level.set(level);
+    this.firstTimeHelp(level);
     this.puzzle.set(puzzle);
     const fresh = ADAPTERS[game].blank(puzzle);
     const adapter = ADAPTERS[game];
@@ -455,10 +516,19 @@ export class PuzzlePage {
     this.hintsUsed.set(keep ? (saved as { hints?: number }).hints ?? 0 : 0);
     this.state.set(keep ? saved.state : fresh);
     this.history.set([]);
+    this.future.set([]);
     this.baseMs = keep ? saved.elapsedMs : 0;
     this.stretchStart = Date.now();
     this.phase.set('practice');
     await this.persist();
+  }
+
+  /** Offered after three quick, clean wins in a row. */
+  protected readonly canSkip = computed(() => this.solved() && !this.daily() && this.practiceStore.quickWins(this.track()) >= 3 && this.level() < levelCountOf(this.track()) - 5);
+
+  protected async skipAhead(): Promise<void> {
+    await this.practiceStore.skipAhead(this.track(), 5);
+    void this.openLevel(this.practiceStore.frontier(this.track()));
   }
 
   protected nextLevel(): void {
@@ -507,6 +577,7 @@ export class PuzzlePage {
     this.serverStart = Date.parse(attempt.startedAt);
     this.puzzle.set(attempt.puzzle);
     this.history.set([]);
+    this.future.set([]);
     void this.store.getMeta<{ state: unknown }>(this.dailyKey()).then((saved) => {
       this.state.set(saved?.state ?? ADAPTERS[this.game()].blank(attempt.puzzle));
       this.phase.set('playing');
@@ -522,6 +593,7 @@ export class PuzzlePage {
     clearTimeout(this.wrongTimer);
     this.clearGlow();
     this.history.update((h) => [...h.slice(-99), this.state()]);
+    this.future.set([]);
     this.state.set(next);
     this.scheduleSave();
     void this.checkSolved();
@@ -531,9 +603,34 @@ export class PuzzlePage {
     clearTimeout(this.wrongTimer);
     const h = this.history();
     if (!h.length) return;
+    this.future.update((f) => [this.state(), ...f]);
     this.state.set(h[h.length - 1]);
     this.history.set(h.slice(0, -1));
     this.scheduleSave();
+  }
+
+  protected redo(): void {
+    clearTimeout(this.wrongTimer);
+    const f = this.future();
+    if (!f.length || this.locked()) return;
+    this.history.update((h) => [...h.slice(-99), this.state()]);
+    this.state.set(f[0]);
+    this.future.set(f.slice(1));
+    this.scheduleSave();
+    void this.checkSolved();
+  }
+
+  /** Keyboard: Ctrl or Cmd + Z undoes, Ctrl or Cmd + Shift + Z (or Y) redoes. */
+  @HostListener('window:keydown', ['$event'])
+  protected onKey(e: KeyboardEvent): void {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    const target = e.target as HTMLElement | null;
+    if (target && ['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+    const k = e.key.toLowerCase();
+    if (k === 'z' && !e.shiftKey) this.undo();
+    else if ((k === 'z' && e.shiftKey) || k === 'y') this.redo();
+    else return;
+    e.preventDefault();
   }
 
   protected clear(): void {
@@ -614,6 +711,7 @@ export class PuzzlePage {
     this.haptics.success();
     const level = this.level();
     await this.practiceStore.markSolved(this.track(), level, elapsedMs, this.hintsUsed() > 0);
+    await this.practiceStore.noteWin(this.track(), this.stars(), this.hintsUsed() > 0);
     this.dismissCoach();
     this.reward(level);
     await this.practiceStore.clearBoard(this.track());
@@ -727,14 +825,15 @@ export class PuzzlePage {
       ms,
       rank: this.daily() ? this.attempt()?.rank : null,
     };
-    const text = shareCard(input);
+    const board = shareCard(input);
+    const text = this.daily() ? board : `${board}\n\nBeat my time: ${location.origin}${playLink(this.game(), this.variant()).join('/')}?level=${this.level()}&vs=${ms}`;
     this.shareOpen.set({
       text,
       card: {
         name: input.name,
         label: input.label,
         hue: this.info()?.hue ?? 160,
-        grid: gridFromText(text),
+        grid: gridFromText(board),
         time: formatDuration(ms),
         rank: input.rank,
         stars: this.daily() ? undefined : this.stars(),
