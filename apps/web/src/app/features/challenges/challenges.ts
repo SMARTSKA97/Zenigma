@@ -3,6 +3,10 @@ import { RouterLink } from '@angular/router';
 import { HintsService } from '../../core/hints.service';
 import { ChallengeState, PERIOD_NAMES, Period, timeLeft } from './challenge-engine';
 import { ChallengesService } from './challenges.service';
+import { featuredFor } from './featured';
+import { PracticeStore } from '../../games/puzzle/practice.store';
+import { gameInfo } from '../../games/catalog';
+import { Glyph } from '../../shared/glyph';
 
 const ORDER: Period[] = ['weekly', 'weekend', 'monthly'];
 
@@ -123,15 +127,92 @@ export class ChallengeStrip implements OnInit {
   }
 }
 
+/** The featured level of the week: one hard level, the same for everyone, open all week. */
+@Component({
+  selector: 'app-featured-level',
+  imports: [RouterLink, Glyph],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <a class="feat" [routerLink]="link()" [queryParams]="{ level: f.level, featured: 1 }" [style.--h]="hue()">
+      <span class="art"><app-glyph [game]="f.game" /></span>
+      <span class="t">
+        <small>Featured level of the week</small>
+        <b>{{ f.name }} · level {{ f.level }}</b>
+        <span class="muted">{{ done() ? 'Solved. A new one arrives Monday.' : 'A hard one, open until Sunday. Hints are allowed.' }}</span>
+      </span>
+      <span class="go" [class.ok]="done()">{{ done() ? '✓' : 'Play' }}</span>
+    </a>
+  `,
+  styles: `
+    .feat {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid color-mix(in srgb, #f5b82e 55%, var(--border));
+      background: linear-gradient(120deg, color-mix(in srgb, #f5b82e 14%, var(--surface)), var(--surface));
+      color: var(--text);
+      text-decoration: none;
+    }
+    .art {
+      width: 3rem;
+      height: 3rem;
+      padding: 0.5rem;
+      border-radius: 14px;
+      background: oklch(var(--tile-l) var(--tile-c) calc(var(--h) * 1deg));
+      color: oklch(var(--glyph-l) var(--glyph-c) calc(var(--h) * 1deg));
+    }
+    .t {
+      display: grid;
+      font-size: 0.85rem;
+    }
+    small {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .go {
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-contrast, #fff);
+      font-weight: 700;
+    }
+    .go.ok {
+      background: var(--good, #2e9e5b);
+    }
+  `,
+})
+export class FeaturedLevel implements OnInit {
+  private readonly practice = inject(PracticeStore);
+  protected readonly f = featuredFor(new Date());
+  protected readonly hue = () => gameInfo(this.f.game)?.hue ?? 200;
+  private readonly loaded = signal(0);
+  protected readonly done = computed(() => {
+    this.loaded();
+    return this.practice.isSolved(this.f.track, this.f.level);
+  });
+  protected readonly link = () => ['/games', this.f.game, ...(this.f.variant ? [this.f.variant] : [])];
+
+  ngOnInit(): void {
+    void this.practice.load(this.f.track).then(() => this.loaded.update((n) => n + 1));
+  }
+}
+
 /** All weekly, weekend and monthly goals, with progress and the hints they earn. */
 @Component({
   selector: 'app-challenges',
-  imports: [RouterLink],
+  imports: [RouterLink, FeaturedLevel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a class="back" routerLink="/daily">‹ Daily</a>
     <h1>Challenges</h1>
     <p class="muted lede">Goals that change every week, weekend and month. Finish one to earn hints for practice. Progress is counted on this device{{ signedIn() ? '' : ' (sign in to include your dailies)' }}.</p>
+    <app-featured-level />
     <p class="hint-line"><span aria-hidden="true">💡</span> You have <b>{{ hints.balance() }}</b> {{ hints.balance() === 1 ? 'hint' : 'hints' }}</p>
 
     @if (message(); as m) {
@@ -313,3 +394,4 @@ export class ChallengesPage implements OnInit {
     setTimeout(() => this.message.set(''), 3000);
   }
 }
+

@@ -467,6 +467,9 @@ export class PuzzlePage {
 
   // ---------------------------------------------------------------------------------------------- practice
 
+  /** The level opened from the featured card this visit (it may be beyond the unlocked levels). */
+  private featuredLevel = 0;
+
   private async loadPractice(game: PuzzleGameId): Promise<void> {
     clearInterval(this.heartbeat);
     this.phase.set('loading');
@@ -481,7 +484,10 @@ export class PuzzlePage {
     // A challenge link (?level=N&vs=ms) opens its level even when it is not unlocked yet.
     const vs = Number(this.route.snapshot.queryParamMap.get('vs'));
     this.challenge.set(asked >= 1 && vs > 0 ? { level: asked, ms: vs } : null);
-    const level = asked >= 1 && (asked <= frontier || this.challenge()) ? asked : saved && saved.level <= frontier ? saved.level : frontier;
+    // The featured level of the week (?featured=1) also opens out of turn.
+    const featured = this.route.snapshot.queryParamMap.get('featured') === '1';
+    this.featuredLevel = featured && asked >= 1 ? asked : 0;
+    const level = asked >= 1 && (asked <= frontier || this.challenge() || featured) ? asked : saved && saved.level <= frontier ? saved.level : frontier;
     await this.openLevel(level, saved?.level === level ? saved : undefined);
   }
 
@@ -500,7 +506,7 @@ export class PuzzlePage {
 
   protected async openLevel(level: number, saved?: { state: unknown; elapsedMs: number }): Promise<void> {
     const game = this.game();
-    if (!this.practiceStore.isUnlocked(this.track(), level) && this.challenge()?.level !== level) return;
+    if (!this.practiceStore.isUnlocked(this.track(), level) && this.challenge()?.level !== level && this.featuredLevel !== level) return;
     const puzzle = await levelAt(this.track(), level).catch(() => null);
     if (!puzzle) return;
     this.resultOpen.set(false);

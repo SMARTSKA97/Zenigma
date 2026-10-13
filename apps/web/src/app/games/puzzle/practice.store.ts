@@ -28,6 +28,17 @@ interface SavedBoard {
   savedAt?: number;
 }
 
+/**
+ * The furthest level reached: the unbroken run of solved levels from the start (or from a "skip ahead"), so a level solved out of
+ * turn (a friend's challenge link, the featured level of the week) never opens the levels in between.
+ */
+export function reach(p: Pick<Progress, 'solved' | 'skip'> | undefined): number {
+  const solved = new Set(p?.solved ?? []);
+  let top = p?.skip ?? 0;
+  while (solved.has(top + 1)) top++;
+  return top;
+}
+
 const progressKey = (game: string) => `puzzle.progress.${game}`;
 const saveKey = (game: string) => `puzzle.save.${game}`;
 
@@ -60,9 +71,7 @@ export class PracticeStore {
 
   /** The level to play next: one past the furthest level solved (levels further on stay locked until it is solved). */
   frontier(game: string): number {
-    const solved = this.all()[game]?.solved ?? [];
-    const top = Math.max(solved.length ? Math.max(...solved) : 0, this.all()[game]?.skip ?? 0);
-    return Math.min(levelCountOf(game), top + 1);
+    return Math.min(levelCountOf(game), reach(this.all()[game]) + 1);
   }
 
   isUnlocked(game: string, level: number): boolean {
@@ -104,7 +113,7 @@ export class PracticeStore {
   /** Opens the next `count` levels after the furthest one solved, for players who are finding it too easy. */
   async skipAhead(game: string, count = 5): Promise<void> {
     const current = this.all()[game] ?? { solved: [], best: {} };
-    const top = Math.max(current.solved.length ? Math.max(...current.solved) : 0, current.skip ?? 0);
+    const top = reach(current);
     const next = { ...current, skip: Math.min(levelCountOf(game) - 1, top + count), quick: 0 };
     this.all.update((all) => ({ ...all, [game]: next }));
     await this.store.setMeta(progressKey(game), next);

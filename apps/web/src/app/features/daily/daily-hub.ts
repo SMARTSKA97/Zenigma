@@ -5,14 +5,14 @@ import { DailyGameStatus, DailyHub as Hub, formatDuration, LeaderboardService } 
 import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { CATEGORIES, DAILY_GAMES, dailyDifficulty } from '../../games/catalog';
-import { ChallengeStrip } from '../challenges/challenges';
+import { ChallengeStrip, FeaturedLevel } from '../challenges/challenges';
 import { Insights } from '../stats/insights';
 import { Glyph } from '../../shared/glyph';
 import { FreezeSheet } from '../../shared/freeze-sheet';
 
 @Component({
   selector: 'app-daily-hub',
-  imports: [RouterLink, Glyph, FreezeSheet, ChallengeStrip, Insights],
+  imports: [RouterLink, Glyph, FreezeSheet, ChallengeStrip, FeaturedLevel, Insights],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (countdown(); as c) {
@@ -114,6 +114,7 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
       }
     }
 
+    <app-featured-level class="block" />
     <app-challenge-strip class="block" />
 
     @if (stats(); as s) {
@@ -124,7 +125,7 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
       <h2>Coming to Daily <span class="pill">Soon</span></h2>
       <ul>
         <li><b>Sudoku challenges</b> Killer, Thermo, Jigsaw and more, as extra dailies with their own ranks.</li>
-        <li><b>Puzzle of the week</b> One extra-hard puzzle open for seven days, ranked by fewest mistakes.</li>
+        <li><b>Ranked puzzle of the week</b> The featured level above will get its own leaderboard, ranked by fewest mistakes.</li>
         <li><b>Mind training dailies</b> A short memory, focus and maths set every day.</li>
       </ul>
     </section>
