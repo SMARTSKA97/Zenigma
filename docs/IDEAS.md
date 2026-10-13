@@ -26,8 +26,8 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 ### Free ways to earn
 - ✅ Daily wheel, every 10th level, streak and comeback gifts.
 - ✅ Weekly, weekend and monthly challenges pay hints (0.18.0), collected up to the cap and the rest waits.
-- ⬜ First win of the day: 1-in-3 chance of a hint.
-- ⬜ Streak milestone hints at 7 and 30 days (freezes exist, hints do not yet).
+- ✅ First win of the day: 1-in-3 chance of a hint.
+- ✅ Streak milestone hints at 7 and 30 days.
 
 ### Later (needs real players first)
 - ⬜ Rewarded ads, hint packs, "Zenigma Plus". Ads are out of scope for now.
@@ -40,10 +40,10 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Mind dashboard: brain map, radar, overall mark, per-skill detail.
 - ✅ Compare by age group and gender, opt-in, a group needs 5 players before any average shows.
 - ⬜ 🆕 **Mind leaderboard** for the daily set, ranked by total points.
-- ✅ **Mind badges** (0.20.0): All-rounder, Whole gym, mind streaks. ⬜ Brain 100 (all six skills above 60).
+- ✅ **Mind badges** (0.20.0): All-rounder, Whole gym, mind streaks. ✅ Brain 100 (0.20.0).
 - ⬜ 🆕 **Skill trend**: a small line of each mark over the last 30 days.
 - ✅ **Weakest-skill nudge** on the Mind page (0.20.0).
-- ⬜ 🆕 **Mind age**: a playful single number from the marks, clearly labelled as entertainment.
+- ✅ **Mind age** (0.20.0): a playful single number from the marks, clearly labelled as entertainment.
 - ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.20.0).
 - ⬜ More mind games: Comet Slice and others (see Coming soon in Practice).
 - ⬜ Ranked puzzle of the week for the featured level, by fewest mistakes.
@@ -68,7 +68,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Offline mode switch and warm-up loader; daily challenges pause offline, everything else works.
 - ⬜ 🆕 **Google sign-in on Android** needs a native plugin (the WebView cannot run Google Identity Services). The button is hidden there until then.
 - ⬜ 🆕 Link or unlink Google from an existing email account in Profile.
-- ⬜ 🆕 Export my data (JSON) next to Delete account.
+- ✅ Export my data (JSON), in Settings (0.20.0).
 - ⬜ Offline daily: download tomorrow's puzzle ahead of time.
 
 ## UX
@@ -78,8 +78,8 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Update sheet and Version history in sections: New, Improved, Fixed, Coming up (0.19.0).
 - ⬜ Home-screen widget with streak and today's dailies.
 - ⬜ Wide-screen layout (board centre, rules and leaderboard beside it).
-- ⬜ 🆕 **Reminders** at a time you choose (local notifications, no server needed).
-- ✅ **Quiet mode**: Hide the timer (0.20.0). ⬜ Hide streaks too.
+- ✅ **Reminders** at a time you choose (local notifications, no server needed).
+- ✅ **Quiet mode**: Hide the timer (0.20.0). ✅ Hide streaks too (0.20.0).
 - ⬜ 🆕 **Language packs** for Word Guess beyond English.
 
 ## Engineering and growth
