@@ -10,12 +10,16 @@ interface Progress {
   solved: number[];
   /** Best time in ms for each solved level. */
   best: Record<number, number>;
+  /** Levels solved with the help of a hint (they earn at most two stars). */
+  hinted?: number[];
 }
 
 interface SavedBoard {
   level: number;
   state: unknown;
   elapsedMs: number;
+  /** Hints used on this level so far. */
+  hints?: number;
 }
 
 const progressKey = (game: string) => `puzzle.progress.${game}`;
@@ -40,6 +44,10 @@ export class PracticeStore {
     return (this.all()[game]?.solved ?? []).includes(level);
   }
 
+  isHinted(game: string, level: number): boolean {
+    return (this.all()[game]?.hinted ?? []).includes(level);
+  }
+
   bestMs(game: string, level: number): number | null {
     return this.all()[game]?.best[level] ?? null;
   }
@@ -61,11 +69,14 @@ export class PracticeStore {
     return LEVEL_COUNT;
   }
 
-  async markSolved(game: string, level: number, elapsedMs: number): Promise<void> {
+  async markSolved(game: string, level: number, elapsedMs: number, hinted = false): Promise<void> {
     const current = this.all()[game] ?? { solved: [], best: {} };
     const solved = current.solved.includes(level) ? current.solved : [...current.solved, level].sort((a, b) => a - b);
     const best = { ...current.best, [level]: Math.min(current.best[level] ?? Infinity, elapsedMs) };
-    const next = { solved, best };
+    // A level solved clean once stays clean; one solved with help is marked until it is replayed without.
+    const was = current.hinted ?? [];
+    const hintedList = hinted ? (was.includes(level) ? was : [...was, level]) : was.filter((l) => l !== level);
+    const next = { solved, best, hinted: hintedList };
     this.all.update((all) => ({ ...all, [game]: next }));
     await this.store.setMeta(progressKey(game), next);
   }

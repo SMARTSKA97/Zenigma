@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HapticsService } from '../../core/haptics.service';
@@ -10,6 +10,12 @@ import { SyncService } from '../../core/sync.service';
 import { Confetti } from '../../shared/confetti';
 import { Loader } from '../../shared/loader';
 import { Sheet } from '../../shared/sheet';
+import { HintWheel } from '../../shared/hint-wheel';
+import { ShareSheet } from '../../shared/share-sheet';
+import { CardInput, gridFromText } from '../../shared/share-card';
+import { HintsService } from '../../core/hints.service';
+import { ScreenGuardService } from '../../core/screen-guard.service';
+import { Hint, hasMistake, hintFor } from '../hints/hint';
 import { dailyDifficulty, gameInfo, isPuzzleGame, mapLink, PuzzleGameId, trackOf } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
@@ -30,7 +36,7 @@ const WARN_DELAY_MS = 1600;
 
 @Component({
   selector: 'app-puzzle-page',
-  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
+  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, HintWheel, ShareSheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page" [attr.data-game]="game()">
@@ -64,7 +70,7 @@ const WARN_DELAY_MS = 1600;
             <p class="muted">Your time was {{ attempt()?.elapsedMs ? fmt(attempt()!.elapsedMs!) : '' }}. The next puzzle arrives in {{ untilNext() }}.</p>
             <div class="actions">
               <a class="button" [routerLink]="['/ranks']" [queryParams]="{ game: game(), kind: 'daily' }">See leaderboard</a>
-              <button type="button" class="secondary" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
+              <button type="button" class="secondary" (click)="share()">Share</button>
               <a class="button secondary" [routerLink]="['/games', game()]">Practice</a>
             </div>
           </section>
@@ -131,6 +137,16 @@ const WARN_DELAY_MS = 1600;
             }
           </div>
 
+          @if (coach(); as c) {
+            <div class="coach" [class.mistake]="c.kind === 'mistake'" role="status">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" /></svg>
+              <div class="body">
+                <b>{{ c.title }}</b>
+                <p>{{ c.text }}</p>
+              </div>
+              <button type="button" class="secondary" (click)="dismissCoach()">Got it</button>
+            </div>
+          } @else {
           <div class="tools" role="toolbar" aria-label="Tools">
             <button type="button" class="tool" [disabled]="!history().length || locked()" (click)="undo()">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
@@ -141,6 +157,15 @@ const WARN_DELAY_MS = 1600;
               <span>Reset</span>
             </button>
             @if (!daily()) {
+              <button type="button" class="tool" [disabled]="locked()" (click)="check()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                <span>Check</span>
+              </button>
+              <button type="button" class="tool hint" [disabled]="locked()" (click)="useHint()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" /></svg>
+                <span>Hint</span>
+                <i class="count" [class.empty]="!hints.balance()" aria-label="Hints left">{{ hints.balance() }}</i>
+              </button>
               <a class="tool" [routerLink]="mapLink()">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></svg>
                 <span>Map</span>
@@ -151,9 +176,18 @@ const WARN_DELAY_MS = 1600;
               <span>Rules</span>
             </button>
           </div>
+          }
         </div>
       }
     </ng-template>
+
+    @if (shareOpen(); as card) {
+      <app-share-sheet [card]="card.card" [text]="card.text" [game]="daily() ? game() : null" (closed)="closeShare()" />
+    }
+
+    @if (wheelOpen()) {
+      <app-hint-wheel (closed)="wheelOpen.set(false)" />
+    }
 
     @if (resultOpen()) {
       <app-confetti />
@@ -179,7 +213,7 @@ const WARN_DELAY_MS = 1600;
             }
             <div class="actions">
               <a class="button" [routerLink]="['/ranks']" [queryParams]="{ game: game(), kind: 'daily' }" (click)="resultOpen.set(false)">Leaderboard</a>
-              <button type="button" class="secondary" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
+              <button type="button" class="secondary" (click)="share()">Share</button>
             </div>
           } @else {
             <div class="stars" role="img" [attr.aria-label]="stars() + ' of 3 stars'">
@@ -193,7 +227,7 @@ const WARN_DELAY_MS = 1600;
             <div class="actions">
               <button type="button" (click)="nextLevel()">Next level</button>
               <a class="button secondary" [routerLink]="mapLink()" (click)="resultOpen.set(false)">Map</a>
-              <button type="button" class="secondary" (click)="share()">{{ copied() ? 'Copied' : 'Share' }}</button>
+              <button type="button" class="secondary" (click)="share()">Share</button>
               <button type="button" class="secondary" (click)="openLevel(level())">Replay</button>
             </div>
           }
@@ -212,6 +246,9 @@ export class PuzzlePage {
   private readonly store = inject(LocalStore);
   private readonly practiceStore = inject(PracticeStore);
   private readonly dailyApi = inject(PuzzleDailyService);
+  protected readonly hints = inject(HintsService);
+  private readonly guard = inject(ScreenGuardService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   private readonly params = toSignal(this.route.paramMap);
   private readonly data = toSignal(this.route.data);
@@ -240,8 +277,13 @@ export class PuzzlePage {
   protected readonly busy = signal(false);
   protected readonly message = signal('');
   protected readonly helpOpen = signal(false);
+  protected readonly wheelOpen = signal(false);
+  protected readonly shareOpen = signal<{ card: CardInput; text: string } | null>(null);
+  protected readonly coach = signal<Hint | null>(null);
+  /** Hints spent on the level in play (a level solved with help earns at most two stars). */
+  private readonly hintsUsed = signal(0);
+  private glowTimer?: ReturnType<typeof setTimeout>;
   protected readonly resultOpen = signal(false);
-  protected readonly copied = signal(false);
   protected readonly solved = signal(false);
   protected readonly finalMs = signal(0);
   protected readonly dateLabel = signal('');
@@ -274,7 +316,7 @@ export class PuzzlePage {
   protected readonly time = computed(() => (this.solved() ? this.fmt(this.finalMs()) : this.fmt(this.elapsed())));
   protected readonly stars = computed(() => {
     const p = this.puzzle();
-    return p ? starsFor(this.finalMs(), parMs(this.game(), p)) : 0;
+    return p ? (Math.min(this.hintsUsed() > 0 ? 2 : 3, starsFor(this.finalMs(), parMs(this.game(), p))) as 0 | 1 | 2 | 3) : 0;
   });
   protected readonly bestMs = computed(() => this.practiceStore.bestMs(this.track(), this.level()));
 
@@ -334,6 +376,13 @@ export class PuzzlePage {
         }
       });
     });
+    // Keep the screen on while a puzzle is open; the daily also blocks screenshots (Android).
+    effect(() => {
+      const open = this.phase() === 'playing' || this.phase() === 'practice';
+      const secure = this.daily();
+      untracked(() => (open ? this.guard.enter(secure) : this.guard.leave()));
+    });
+    this.destroyRef.onDestroy(() => this.guard.leave());
     // Pause the practice clock while the page is hidden.
     const onVisibility = () => {
       if (this.daily() || this.solved()) return;
@@ -379,7 +428,9 @@ export class PuzzlePage {
     this.puzzle.set(puzzle);
     const fresh = ADAPTERS[game].blank(puzzle);
     const adapter = ADAPTERS[game];
+    this.dismissCoach();
     const keep = saved && (adapter.fits ? adapter.fits(puzzle, saved.state) : fitsPuzzle(fresh, saved.state));
+    this.hintsUsed.set(keep ? (saved as { hints?: number }).hints ?? 0 : 0);
     this.state.set(keep ? saved.state : fresh);
     this.history.set([]);
     this.baseMs = keep ? saved.elapsedMs : 0;
@@ -447,6 +498,7 @@ export class PuzzlePage {
   protected change(next: unknown): void {
     if (this.locked()) return;
     clearTimeout(this.wrongTimer);
+    this.clearGlow();
     this.history.update((h) => [...h.slice(-99), this.state()]);
     this.state.set(next);
     this.scheduleSave();
@@ -484,7 +536,7 @@ export class PuzzlePage {
       if (this.phase() === 'playing') await this.store.setMeta(this.dailyKey(), { state });
     } else if (this.phase() === 'practice') {
       const elapsedMs = this.baseMs + (Date.now() - this.stretchStart);
-      await this.practiceStore.saveBoard(this.track(), { level: this.level(), state, elapsedMs });
+      await this.practiceStore.saveBoard(this.track(), { level: this.level(), state, elapsedMs, hints: this.hintsUsed() });
     }
   }
 
@@ -539,7 +591,9 @@ export class PuzzlePage {
     this.solved.set(true);
     this.haptics.success();
     const level = this.level();
-    await this.practiceStore.markSolved(this.track(), level, elapsedMs);
+    await this.practiceStore.markSolved(this.track(), level, elapsedMs, this.hintsUsed() > 0);
+    this.dismissCoach();
+    this.reward(level);
     await this.practiceStore.clearBoard(this.track());
     await this.sync.record('puzzle.practice.solved', { game, variant: this.variant() ?? undefined, level, solution, elapsedMs });
     setTimeout(() => this.resultOpen.set(true), 900);
@@ -550,25 +604,107 @@ export class PuzzlePage {
     setTimeout(() => this.message.set(''), 2400);
   }
 
-  protected async share(): Promise<void> {
+  // ---------------------------------------------------------------------------------------------- hints
+
+  /** Spends a hint and coaches: points at a mistake, or at where to look next. Never fills a cell. */
+  protected useHint(): void {
+    const p = this.puzzle();
+    const s = this.state();
+    if (this.locked() || this.daily() || !p || !s) return;
+    if (!this.hints.balance()) {
+      this.wheelOpen.set(true);
+      return;
+    }
+    const hint = hintFor(this.game(), p, s);
+    if (hint.kind === 'done' || hint.kind === 'none') {
+      this.flash(hint.text);
+      return;
+    }
+    this.hints.spend();
+    this.hintsUsed.update((n) => n + 1);
+    this.coach.set(hint);
+    this.glow(hint);
+    this.haptics.tap();
+    void this.persist();
+  }
+
+  /** Free: says whether the board holds a mistake, without saying where. */
+  protected check(): void {
+    const p = this.puzzle();
+    const s = this.state();
+    if (this.locked() || !p || !s) return;
+    if (hasMistake(this.game(), p, s)) {
+      this.flash('Something on the board is off. A hint can point to where.');
+      this.haptics.warning();
+    } else {
+      this.flash('No mistakes so far. Keep going!');
+      this.haptics.tap();
+    }
+  }
+
+  protected dismissCoach(): void {
+    this.coach.set(null);
+    this.clearGlow();
+  }
+
+  private glow(hint: Hint): void {
+    this.clearGlow();
+    const wanted = new Set(hint.cells);
+    this.host.nativeElement.querySelectorAll<HTMLElement>('.stage [data-i]').forEach((el) => {
+      if (!wanted.has(Number(el.getAttribute('data-i')))) return;
+      el.classList.add('hint-glow');
+      if (hint.kind === 'mistake') el.classList.add('hint-mistake');
+    });
+    // The light stays on until the next move or "Got it", with a long safety timeout.
+    this.glowTimer = setTimeout(() => this.clearGlow(), 20_000);
+  }
+
+  private clearGlow(): void {
+    clearTimeout(this.glowTimer);
+    this.host.nativeElement.querySelectorAll('.hint-glow').forEach((el) => el.classList.remove('hint-glow', 'hint-mistake'));
+  }
+
+  /** Free hints for playing: the zone boss every tenth level, and a one in three first win each day. */
+  private reward(level: number): void {
+    const gained = (this.hints.milestone(this.track(), level) ? 1 : 0) + (this.hints.firstWinOfDay() ? 1 : 0);
+    if (gained) setTimeout(() => this.flash(`+${gained} hint${gained > 1 ? 's' : ''} earned 💡`), 1200);
+  }
+
+  private reopenResult = false;
+
+  protected closeShare(): void {
+    this.shareOpen.set(null);
+    if (this.reopenResult) this.resultOpen.set(true);
+    this.reopenResult = false;
+  }
+
+  protected share(): void {
+    this.reopenResult = this.resultOpen();
+    this.resultOpen.set(false);
     const game = this.game();
-    const text = shareCard({
+    const ms = this.finalMs() || this.attempt()?.elapsedMs || 0;
+    const input = {
       game,
       name: this.info()?.name ?? 'Zenigma',
       label: this.daily() ? `Daily ${this.dateLabel()}` : `Level ${this.level()}`,
       puzzle: this.puzzle(),
       state: this.state(),
-      ms: this.finalMs() || this.attempt()?.elapsedMs || 0,
+      ms,
       rank: this.daily() ? this.attempt()?.rank : null,
+    };
+    const text = shareCard(input);
+    this.shareOpen.set({
+      text,
+      card: {
+        name: input.name,
+        label: input.label,
+        hue: this.info()?.hue ?? 160,
+        grid: gridFromText(text),
+        time: formatDuration(ms),
+        rank: input.rank,
+        stars: this.daily() ? undefined : this.stars(),
+      },
     });
-    try {
-      if (navigator.share) await navigator.share({ text });
-      else await navigator.clipboard.writeText(text);
-      this.copied.set(true);
-      setTimeout(() => this.copied.set(false), 1800);
-    } catch {
-      /* cancelled */
-    }
   }
 }
 

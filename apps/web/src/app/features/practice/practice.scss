@@ -105,3 +105,39 @@
     grid-template-columns: 1fr;
   }
 }
+
+:host .wheel-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  margin: 0 0 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, #f5b82e 55%, var(--border));
+  background: linear-gradient(120deg, color-mix(in srgb, #f5b82e 22%, var(--surface)), var(--surface));
+  color: var(--text);
+  text-align: left;
+  font-weight: 500;
+  box-shadow: none;
+  min-height: 0;
+}
+.wheel-card .bulb {
+  font-size: 1.8rem;
+}
+.wheel-card .txt {
+  display: grid;
+  flex: 1;
+  gap: 0.1rem;
+  font-size: 0.85rem;
+}
+.wheel-card .txt b {
+  font-size: 1.05rem;
+}
+.wheel-card .go {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: #f5b82e;
+  color: #3b2a00;
+  font-weight: 800;
+}

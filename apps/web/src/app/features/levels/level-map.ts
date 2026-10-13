@@ -264,7 +264,7 @@ export class LevelMap {
           y,
           state: isDone ? 'done' : level === frontier ? 'now' : level < frontier ? 'open' : 'locked',
           hard: i === ZONE_SIZE - 1,
-          stars: isDone && puzzle ? starsFor(best, parMs(game, puzzle)) || 1 : 0,
+          stars: isDone && puzzle ? Math.min(this.practice.isHinted(track, level) ? 2 : 3, starsFor(best, parMs(game, puzzle)) || 1) : 0,
         });
       }
       const lastLevel = first + ZONE_SIZE - 1;
@@ -331,7 +331,7 @@ export class LevelMap {
     const locked = level > this.frontier();
     const best = this.practice.bestMs(game, level);
     const par = puzzle ? parMs(this.game(), puzzle) : 60_000;
-    this.picked.set({ level, hard: (level - 1) % ZONE_SIZE === ZONE_SIZE - 1, difficulty: difficultyOf(level), locked, stars: this.practice.isSolved(game, level) ? starsFor(best, par) || 1 : 0, best, par });
+    this.picked.set({ level, hard: (level - 1) % ZONE_SIZE === ZONE_SIZE - 1, difficulty: difficultyOf(level), locked, stars: this.practice.isSolved(game, level) ? Math.min(this.practice.isHinted(game, level) ? 2 : 3, starsFor(best, par) || 1) : 0, best, par });
   }
 
   protected play(level: number): void {

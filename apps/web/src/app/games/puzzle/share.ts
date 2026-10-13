@@ -34,7 +34,17 @@ export function shareCard(input: ShareInput): string {
     for (let r = 0; r < 6; r++) lines.push(board.slice(r * 6, r * 6 + 6).map((v) => (v === 's' ? '🌞' : '🌙')).join(''));
   }
 
-  else if (input.game === 'patches') {
+  else if (input.game === 'sudoku') {
+    // Digits stay hidden: the boxes alternate in two colours, so only the shape of the grid shows.
+    const total = (input.puzzle as { givens: string }).givens.length;
+    const n = total === 36 ? 6 : 9;
+    const [bh, bw] = n === 6 ? [2, 3] : [3, 3];
+    for (let r = 0; r < n; r++) {
+      let row = '';
+      for (let c = 0; c < n; c++) row += (Math.floor(r / bh) + Math.floor(c / bw)) % 2 ? '🟦' : '🟩';
+      lines.push(row);
+    }
+  } else if (input.game === 'patches') {
     // Each patch gets a colour, so the cut of the grid shows without giving the clues away.
     const puzzle = input.puzzle as { size: number };
     const rects = input.state as number[][];

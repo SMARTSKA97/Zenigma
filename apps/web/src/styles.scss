@@ -435,3 +435,30 @@ label {
     font-weight: 400;
   }
 }
+
+/* A hint lights up the cells it is about (set from the puzzle page on any board that tags its cells with data-i). */
+.hint-glow {
+  position: relative;
+  z-index: 4;
+  animation: hint-glow 1.2s ease-in-out infinite;
+}
+.hint-glow.hint-mistake {
+  --hint: #e8742a;
+}
+@keyframes hint-glow {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--hint, #f5b82e) 45%, transparent);
+    background-color: color-mix(in srgb, var(--hint, #f5b82e) 14%, transparent);
+  }
+  50% {
+    box-shadow: inset 0 0 0 3px var(--hint, #f5b82e), 0 0 14px color-mix(in srgb, var(--hint, #f5b82e) 70%, transparent);
+    background-color: color-mix(in srgb, var(--hint, #f5b82e) 34%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint-glow {
+    animation: none;
+    box-shadow: inset 0 0 0 3px var(--hint, #f5b82e);
+  }
+}

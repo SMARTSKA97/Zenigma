@@ -32,6 +32,7 @@ import { nextCell, SIZE, TangoCell, TangoPuzzle } from './engine';
             [disabled]="locked() || cell.given"
             [style.--d]="cell.delay"
             [attr.aria-label]="cell.label"
+            [attr.data-i]="cell.i"
             (click)="tap(cell.i)"
           >
             @if (cell.value === 's') {

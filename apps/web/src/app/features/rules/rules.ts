@@ -19,6 +19,20 @@ interface Rule {
 
 const RULES: Rule[] = [
   {
+    id: 'hints',
+    name: 'Hints',
+    goal: 'A hint points you the right way. It never fills in the answer.',
+    rules: [
+      'Hints work in Practice only. Daily puzzles and leaderboards never use them.',
+      'Tap Hint to light up the area worth looking at and read a short reason why. If something you placed cannot be part of the solution, the hint shows the area it is in instead (orange).',
+      'Check is free. It only tells you whether the board has a mistake, not where.',
+      'A hint costs 1. You start with 3. Spin the daily wheel on the Practice tab for 1 to 3 more, and earn one every 10th level. You can keep up to 10 from free sources.',
+      'A level solved with a hint can still earn up to 2 stars.',
+    ],
+    figures: [{ rows: [['.', '+', '.'], ['.', '.', '.']], caption: 'The glow marks where to look. You still work out what goes there.' }],
+    tips: ['Try Check first. Often one more look is all you need.', 'Read the reason, not just the glow: it is the technique you can reuse next time.'],
+  },
+  {
     id: 'word-guess',
     name: 'Word Guess',
     goal: 'Find the hidden five-letter word in six guesses.',

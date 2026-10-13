@@ -281,3 +281,80 @@ a.tool {
     opacity: 0;
   }
 }
+
+:host .tool.hint {
+  position: relative;
+}
+:host .tool .count {
+  position: absolute;
+  top: 0.1rem;
+  right: 18%;
+  min-width: 1.1rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: #f5b82e;
+  color: #3b2a00;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.1rem;
+  text-align: center;
+}
+:host .tool .count.empty {
+  background: var(--surface-2);
+  color: var(--text-muted, var(--text));
+}
+.coach {
+  grid-area: tools;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 20px;
+  background: color-mix(in srgb, #f5b82e 16%, var(--surface));
+  border: 1px solid color-mix(in srgb, #f5b82e 60%, var(--border));
+  animation: coach-in 0.25s var(--ease);
+  > svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: #b07a00;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  b {
+    font-size: 0.9rem;
+  }
+  p {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+}
+:host .coach button {
+  min-height: 0;
+  padding: 0.45rem 0.8rem;
+}
+.coach.mistake {
+  background: color-mix(in srgb, #e8742a 14%, var(--surface));
+  border-color: color-mix(in srgb, #e8742a 55%, var(--border));
+  > svg {
+    stroke: #c2561a;
+  }
+}
+@keyframes coach-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (min-width: 900px) {
+  .coach {
+    grid-template-columns: auto 1fr;
+    button {
+      grid-column: 1 / -1;
+    }
+  }
+}

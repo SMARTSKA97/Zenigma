@@ -2,4 +2,6 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Downloaded update APKs live in cache/updates (see ApkInstallerPlugin). -->
     <cache-path name="updates" path="updates/" />
+    <!-- Result cards handed to the share sheet (see ShareCardPlugin). -->
+    <cache-path name="share" path="share/" />
 </paths>

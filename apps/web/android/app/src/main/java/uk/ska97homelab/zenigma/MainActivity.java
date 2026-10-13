@@ -9,6 +9,8 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Local plugins must be registered before the bridge starts.
         registerPlugin(ApkInstallerPlugin.class);
+        registerPlugin(ScreenGuardPlugin.class);
+        registerPlugin(ShareCardPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

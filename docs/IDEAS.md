@@ -1,5 +1,7 @@
 # Ideas: hints economy and UX
 
+> **Built (0.14.0):** coaching hints (point and explain, never fill), free Check, daily wheel, tenth-level milestone hints, 2-star cap for hinted levels, share card, screen-awake and daily screenshot block. **Still open:** server-side balance (needed before purchases), streak-milestone hints, Word Guess hints, rewarded ads.
+
 ## Hints for practice (and a path to monetisation)
 
 **Principle:** hints exist only in practice. Dailies and leaderboards stay hint-free, so nothing that can be bought ever touches a ranking. That keeps the game fair and keeps any future monetisation easy to defend.

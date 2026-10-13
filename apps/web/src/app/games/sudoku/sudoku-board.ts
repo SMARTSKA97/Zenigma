@@ -25,6 +25,7 @@ import { boxOf, boxShape, sizeOf, SudokuPuzzle } from './engine';
           [disabled]="locked()"
           [style.--d]="cell.delay"
           [attr.aria-label]="cell.label"
+          [attr.data-i]="cell.i"
           (click)="select(cell.i)"
         >
           @if (cell.value) {
