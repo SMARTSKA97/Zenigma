@@ -4,13 +4,15 @@ import { AuthService } from '../../core/auth.service';
 import { DailyGameStatus, DailyHub as Hub, formatDuration, LeaderboardService } from '../../core/leaderboard.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
-import { DAILY_GAMES, dailyDifficulty } from '../../games/catalog';
+import { CATEGORIES, DAILY_GAMES, dailyDifficulty } from '../../games/catalog';
+import { ChallengeStrip } from '../challenges/challenges';
+import { Insights } from '../stats/insights';
 import { Glyph } from '../../shared/glyph';
 import { FreezeSheet } from '../../shared/freeze-sheet';
 
 @Component({
   selector: 'app-daily-hub',
-  imports: [RouterLink, Glyph, FreezeSheet],
+  imports: [RouterLink, Glyph, FreezeSheet, ChallengeStrip, Insights],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (countdown(); as c) {
@@ -76,8 +78,10 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
         <button type="button" (click)="load()">Try again</button>
       </section>
     } @else {
+      @for (grp of groups; track grp.id) {
+      <h2 class="group">{{ grp.name }}</h2>
       <div class="list">
-        @for (g of games; track g.id) {
+        @for (g of grp.games; track g.id) {
           @let st = statusOf(g.id);
           <article class="item" [style.--h]="g.hue">
             <span class="art"><app-glyph [game]="g.id" /></span>
@@ -107,11 +111,22 @@ import { FreezeSheet } from '../../shared/freeze-sheet';
           </article>
         }
       </div>
+      }
+    }
+
+    <app-challenge-strip class="block" />
+
+    @if (stats(); as s) {
+      <app-insights [stats]="s" [limit]="3" class="block" />
     }
 
     <section class="soon-card">
-      <h2>Sudoku challenges <span class="pill">Soon</span></h2>
-      <p class="muted">Special Sudoku puzzles (Killer, Thermo, Jigsaw and more) will appear here as extra daily challenges, with their own ranks.</p>
+      <h2>Coming to Daily <span class="pill">Soon</span></h2>
+      <ul>
+        <li><b>Sudoku challenges</b> Killer, Thermo, Jigsaw and more, as extra dailies with their own ranks.</li>
+        <li><b>Puzzle of the week</b> One extra-hard puzzle open for seven days, ranked by fewest mistakes.</li>
+        <li><b>Mind training dailies</b> A short memory, focus and maths set every day.</li>
+      </ul>
     </section>
 
     <p class="foot muted">Want to play for fun? Practice is endless and works offline. <a routerLink="/">Open practice</a></p>
@@ -127,6 +142,8 @@ export class DailyHub implements OnInit, OnDestroy {
   protected readonly freezesOpen = signal(false);
 
   protected readonly games = DAILY_GAMES;
+  /** Today's puzzles by kind: logic puzzles, Sudoku, words. */
+  protected readonly groups = CATEGORIES.map((c) => ({ ...c, games: DAILY_GAMES.filter((g) => g.category === c.id) })).filter((c) => c.games.length > 0);
   protected readonly hub = signal<Hub | null>(null);
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);

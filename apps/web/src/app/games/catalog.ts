@@ -10,7 +10,31 @@ export type GameId =
   | 'pinpoint'
   | 'crossclimb'
   | 'wend'
-  | 'comet-slice';
+  | 'comet-slice'
+  | MindGameId;
+
+/** Mind-training games on the way, by the skill they train (generic names: they are Zenigma's own takes on classic brain exercises). */
+export type MindGameId =
+  | 'echo-sequence'
+  | 'grid-recall'
+  | 'number-recall'
+  | 'pair-match'
+  | 'colour-clash'
+  | 'odd-one-out'
+  | 'spot-change'
+  | 'target-tap'
+  | 'quick-reflex'
+  | 'back-track'
+  | 'quick-sums'
+  | 'target-number'
+  | 'anagram-rush'
+  | 'missing-letters'
+  | 'what-next'
+  | 'mental-turn';
+
+/** Where a game sits in the apps: logic puzzles, Sudoku, words or mind training. */
+export type Category = 'logic' | 'sudoku' | 'word' | 'mind';
+export type Skill = 'memory' | 'attention' | 'speed' | 'math' | 'language' | 'logic';
 
 export interface GameInfo {
   id: GameId;
@@ -22,19 +46,54 @@ export interface GameInfo {
   live: boolean;
   /** Has a daily challenge and leaderboards. */
   daily: boolean;
+  category: Category;
+  /** Mind-training games: the skill they train. */
+  skill?: Skill;
 }
 
+export const CATEGORIES: { id: Category; name: string; blurb: string }[] = [
+  { id: 'logic', name: 'Logic puzzles', blurb: 'Queens, Tango, Zip, Patches and friends.' },
+  { id: 'sudoku', name: 'Sudoku', blurb: 'Classic, mini and special rules, Easy to Insane.' },
+  { id: 'word', name: 'Words', blurb: 'Guess, climb and find words.' },
+  { id: 'mind', name: 'Mind training', blurb: 'Short exercises for memory, focus, speed and maths.' },
+];
+
+export const SKILLS: { id: Skill; name: string; emoji: string }[] = [
+  { id: 'memory', name: 'Memory', emoji: '🧩' },
+  { id: 'attention', name: 'Focus', emoji: '🎯' },
+  { id: 'speed', name: 'Speed', emoji: '⚡' },
+  { id: 'math', name: 'Maths', emoji: '➕' },
+  { id: 'language', name: 'Language', emoji: '🔤' },
+  { id: 'logic', name: 'Reasoning', emoji: '🔮' },
+];
+
 export const GAMES: GameInfo[] = [
-  { id: 'word-guess', name: 'Word Guess', blurb: 'Five letters, six tries.', hue: 160, live: true, daily: true },
-  { id: 'queens', name: 'Queens', blurb: 'One queen per row, column and colour.', hue: 330, live: true, daily: true },
-  { id: 'tango', name: 'Tango', blurb: 'Suns and moons, never three in a row.', hue: 55, live: true, daily: true },
-  { id: 'sudoku', name: 'Sudoku', blurb: 'The classic: 1 to 9, once per row, column and box.', hue: 250, live: true, daily: true },
-  { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25, live: true, daily: true },
-  { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: true, daily: true },
-  { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: false, daily: false },
-  { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: false, daily: false },
-  { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: false, daily: false },
-  { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice comets, dodge bombs, keep your lives.', hue: 15, live: false, daily: false },
+  { id: 'word-guess', name: 'Word Guess', blurb: 'Five letters, six tries.', hue: 160, live: true, daily: true, category: 'word' },
+  { id: 'queens', name: 'Queens', blurb: 'One queen per row, column and colour.', hue: 330, live: true, daily: true, category: 'logic' },
+  { id: 'tango', name: 'Tango', blurb: 'Suns and moons, never three in a row.', hue: 55, live: true, daily: true, category: 'logic' },
+  { id: 'sudoku', name: 'Sudoku', blurb: 'The classic: 1 to 9, once per row, column and box.', hue: 250, live: true, daily: true, category: 'sudoku' },
+  { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25, live: true, daily: true, category: 'logic' },
+  { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: true, daily: true, category: 'logic' },
+  { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: false, daily: false, category: 'word' },
+  { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: false, daily: false, category: 'word' },
+  { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: false, daily: false, category: 'word' },
+  { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice comets, dodge bombs, keep your lives.', hue: 15, live: false, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'echo-sequence', name: 'Echo Sequence', blurb: 'Watch a pattern of lights, then repeat it. It grows by one each round.', hue: 120, live: false, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'grid-recall', name: 'Grid Recall', blurb: 'Memorise which tiles lit up, then tap them from memory.', hue: 140, live: false, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'number-recall', name: 'Number Recall', blurb: 'See a number for a moment, then type it back.', hue: 180, live: false, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'pair-match', name: 'Pair Match', blurb: 'Flip cards and find every matching pair in as few flips as you can.', hue: 210, live: false, daily: false, category: 'mind', skill: 'memory' },
+  { id: 'colour-clash', name: 'Colour Clash', blurb: 'The word says one colour, the ink shows another. Tap the ink.', hue: 20, live: false, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'odd-one-out', name: 'Odd One Out', blurb: 'Spot the one tile that is different, before time runs out.', hue: 70, live: false, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'spot-change', name: 'Spot the Change', blurb: 'Two scenes flash by. Find what changed.', hue: 100, live: false, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'target-tap', name: 'Target Tap', blurb: 'Tap the right shapes, ignore the wrong ones.', hue: 335, live: false, daily: false, category: 'mind', skill: 'attention' },
+  { id: 'quick-reflex', name: 'Quick Reflex', blurb: 'Tap the moment the screen changes. How fast are you?', hue: 10, live: false, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'back-track', name: 'Back Track', blurb: 'Is this the same as two steps ago? A classic working-memory workout.', hue: 230, live: false, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'quick-sums', name: 'Quick Sums', blurb: 'Answer as many sums as you can before the clock runs out.', hue: 40, live: false, daily: false, category: 'mind', skill: 'math' },
+  { id: 'target-number', name: 'Target Number', blurb: 'Combine the numbers you are given to reach the target.', hue: 60, live: false, daily: false, category: 'mind', skill: 'math' },
+  { id: 'anagram-rush', name: 'Anagram Rush', blurb: 'Unscramble the letters into a word, fast.', hue: 165, live: false, daily: false, category: 'mind', skill: 'language' },
+  { id: 'missing-letters', name: 'Missing Letters', blurb: 'Fill in the blanks to complete the word.', hue: 190, live: false, daily: false, category: 'mind', skill: 'language' },
+  { id: 'what-next', name: 'What Comes Next', blurb: 'Find the rule and pick the piece that comes next in the pattern.', hue: 285, live: false, daily: false, category: 'mind', skill: 'logic' },
+  { id: 'mental-turn', name: 'Mental Turn', blurb: 'Which shape is the same one, just turned around?', hue: 310, live: false, daily: false, category: 'mind', skill: 'logic' },
 ];
 
 export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => g.id === id);
@@ -168,3 +227,11 @@ export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
   zip: [{ name: 'Zip Walls', blurb: 'Walls block the path between some cells.' }],
   patches: [{ name: 'Patches Big', blurb: 'Bigger grids with more shapes.' }],
 };
+
+/** Everything on the way for a live game: its own coming-soon kinds plus the variants not playable yet. */
+export const soonKindsOf = (game: string): SoonKind[] => [
+  ...(SOON_KINDS[game as GameId] ?? []),
+  ...variantsOf(game)
+    .filter((v) => v.soon)
+    .map((v) => ({ name: v.name, blurb: v.blurb })),
+];

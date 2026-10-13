@@ -200,3 +200,58 @@
   font-weight: 600;
   font-size: 0.9rem;
 }
+
+.tabs {
+  margin: 1rem 0 0.25rem;
+}
+.more {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+:host .link {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.skill h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+}
+.mlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.5rem;
+}
+.mrow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 16px;
+  border: 1px dashed var(--border);
+  background: var(--surface);
+}
+.mrow .art {
+  grid-area: auto;
+  margin: 0;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0.45rem;
+  border-radius: 12px;
+  opacity: 0.75;
+}
+.mtext {
+  grid-area: auto;
+  display: grid;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+.mtext b {
+  font-size: 0.92rem;
+}

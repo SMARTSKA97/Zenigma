@@ -9,11 +9,12 @@ import { Glyph } from '../../shared/glyph';
 import { FreezeList } from '../../shared/freeze-sheet';
 import { CardInput } from '../../shared/share-card';
 import { ShareSheet } from '../../shared/share-sheet';
+import { Insights } from './insights';
 
 /** Per-game streaks, times and a five-week calendar, plus the streak freezes each game has earned. */
 @Component({
   selector: 'app-stats',
-  imports: [RouterLink, Glyph, FreezeList, ShareSheet],
+  imports: [RouterLink, Glyph, FreezeList, ShareSheet, Insights],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Your stats</h1>
@@ -40,6 +41,7 @@ import { ShareSheet } from '../../shared/share-sheet';
       @if (shareCard(); as c) {
         <app-share-sheet [card]="c.card" [text]="c.text" (closed)="shareCard.set(null)" />
       }
+      <app-insights [stats]="s" [limit]="5" class="ins" />
       <section class="rewards card">
         <h2>❄ Streak freezes</h2>
         <app-freeze-list [stats]="s" />
@@ -86,6 +88,9 @@ import { ShareSheet } from '../../shared/share-sheet';
       display: block;
       max-width: 40rem;
       margin: 0 auto;
+    }
+    .ins {
+      margin-bottom: 1rem;
     }
     .share-streak {
       margin: 0.5rem 0 1rem;

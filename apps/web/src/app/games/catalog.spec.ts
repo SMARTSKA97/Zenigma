@@ -1,4 +1,4 @@
-import { mapLink, playLink, PRACTICE_TRACKS, practiceEntry, trackOf, variantsOf } from './catalog';
+import { GAMES, mapLink, playLink, PRACTICE_TRACKS, practiceEntry, soonKindsOf, trackOf, variantsOf } from './catalog';
 
 describe('practice tracks', () => {
   it('names a track after its game and variant', () => {
@@ -38,5 +38,19 @@ describe('practice tracks', () => {
     expect(practiceEntry('sudoku')).toEqual(['/games', 'sudoku']);
     expect(practiceEntry('queens')).toEqual(['/games', 'queens', 'levels']);
     expect(practiceEntry('word-guess')).toEqual(['/games', 'word-guess']);
+  });
+
+  it('sorts every game into a category and keeps mind training as coming soon', () => {
+    expect(GAMES.every((g) => g.category)).toBe(true);
+    const mind = GAMES.filter((g) => g.category === 'mind');
+    expect(mind.length).toBeGreaterThanOrEqual(12);
+    expect(mind.every((g) => !g.live && !g.daily && g.skill)).toBe(true);
+    expect(new Set(GAMES.map((g) => g.id)).size).toBe(GAMES.length);
+  });
+
+  it('lists what is coming soon for a live game, including unplayable Sudoku kinds', () => {
+    expect(soonKindsOf('sudoku').map((k) => k.name)).toContain('Killer');
+    expect(soonKindsOf('word-guess').length).toBeGreaterThan(0);
+    expect(soonKindsOf('pinpoint')).toEqual([]);
   });
 });

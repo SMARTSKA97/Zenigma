@@ -13,6 +13,7 @@ import { BoardController } from './board';
 import { DailyStore } from './daily.store';
 import { Loader } from '../../shared/loader';
 import { Switch } from '../../shared/switch';
+import { SoonPill } from '../../shared/soon-pill';
 import { Mark } from './engine';
 import { WordGuessStore } from './word-guess.store';
 
@@ -20,7 +21,7 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 @Component({
   selector: 'app-word-guess',
-  imports: [RouterLink, Loader, Switch, ShareSheet, HintWheel],
+  imports: [RouterLink, Loader, Switch, ShareSheet, HintWheel, SoonPill],
   template: `
     <div class="game">
       <header class="bar">
@@ -30,6 +31,9 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
         <div class="title">
           <h1>Word Guess</h1>
           <p class="muted sub">{{ mode() === 'daily' ? 'Daily' + (daily.date() ? ' · ' + daily.date() : '') : 'Practice' }}</p>
+          @if (mode() === 'practice') {
+            <app-soon-pill game="word-guess" />
+          }
         </div>
         @if (mode() === 'practice' && !board().finished()) {
           <button type="button" class="hint-btn" (click)="useHint()" aria-label="Use a hint">💡 <b>{{ hints.balance() }}</b></button>

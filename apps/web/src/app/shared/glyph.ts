@@ -57,6 +57,12 @@ import { GameId } from '../games/catalog';
           <circle cx="31" cy="17" r="8" fill="currentColor" stroke="none" />
           <path d="M26 22 L8 40 M23 14 L8 29 M34 25 L19 40" stroke-width="2" />
         }
+        @default {
+          <circle cx="16" cy="17" r="5" />
+          <circle cx="32" cy="17" r="5" fill="currentColor" stroke="none" />
+          <circle cx="16" cy="33" r="5" fill="currentColor" stroke="none" />
+          <circle cx="32" cy="33" r="5" />
+        }
       }
     </svg>
   `,

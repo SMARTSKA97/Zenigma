@@ -9,6 +9,7 @@ import { PracticeStore, ZONE_SIZE } from '../../games/puzzle/practice.store';
 import { formatDuration } from '../../core/leaderboard.service';
 import { Glyph } from '../../shared/glyph';
 import { Sheet } from '../../shared/sheet';
+import { SoonPill } from '../../shared/soon-pill';
 
 /** The drawing of one zone is 360 wide by 920 tall (84 per level, plus room for the banner); everything is placed in those units and scales with the screen. */
 const W = 360;
@@ -86,7 +87,7 @@ const noise = (zone: number, slot: number): number => {
 
 @Component({
   selector: 'app-level-map',
-  imports: [RouterLink, Glyph, Sheet],
+  imports: [RouterLink, Glyph, Sheet, SoonPill],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="top">
@@ -96,6 +97,7 @@ const noise = (zone: number, slot: number): number => {
       <div class="title">
         <h1>{{ info()?.name }}@if (variantName()) { <span class="variant">· {{ variantName() }}</span> }</h1>
         <p class="muted">Level {{ frontier() }} · {{ solvedCount() }} solved</p>
+        <app-soon-pill [game]="game()" />
       </div>
       <a class="round" [routerLink]="['/ranks']" [queryParams]="{ game: game(), kind: 'practice' }" aria-label="Leaderboard">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20V11M12 20V4M17 20v-6" /></svg>

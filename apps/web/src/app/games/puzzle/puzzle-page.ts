@@ -715,7 +715,7 @@ export class PuzzlePage {
     this.dismissCoach();
     this.reward(level);
     await this.practiceStore.clearBoard(this.track());
-    await this.sync.record('puzzle.practice.solved', { game, variant: this.variant() ?? undefined, level, solution, elapsedMs });
+    await this.sync.record('puzzle.practice.solved', { game, variant: this.variant() ?? undefined, level, solution, elapsedMs, hinted: this.hintsUsed() > 0 });
     setTimeout(() => this.resultOpen.set(true), 900);
   }
 

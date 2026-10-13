@@ -4,6 +4,8 @@ import { AuthService } from '../../core/auth.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { DAILY_GAMES, PRACTICE_TRACKS, SPEED_GAMES } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
+import { SyncService } from '../../core/sync.service';
+import { ChallengesService, activityFrom } from '../challenges/challenges.service';
 
 interface Badge {
   id: string;
@@ -23,8 +25,10 @@ interface Badge {
     <a class="back" routerLink="/stats">‹ Stats</a>
     <h1>Badges</h1>
     <p class="muted lede">{{ earned() }} of {{ badges().length }} earned. Streak badges need you to be signed in.</p>
-    <div class="grid">
-      @for (b of badges(); track b.id) {
+    @for (g of groups(); track g.name) {
+      <h2 class="group">{{ g.name }} <span class="muted">{{ g.earned }}/{{ g.items.length }}</span></h2>
+      <div class="grid">
+      @for (b of g.items; track b.id) {
         <article class="badge" [class.on]="b.have >= b.need">
           <span class="icon" aria-hidden="true">{{ b.icon }}</span>
           <b>{{ b.name }}</b>
@@ -35,7 +39,8 @@ interface Badge {
           <span class="num">{{ b.have >= b.need ? 'Earned' : min(b) + ' / ' + b.need }}</span>
         </article>
       }
-    </div>
+      </div>
+    }
   `,
   styles: `
     :host {
@@ -55,6 +60,13 @@ interface Badge {
     }
     .lede {
       margin: 0.3rem 0 1rem;
+    }
+    .group {
+      margin: 1.4rem 0 0.6rem;
+      font-size: 1.05rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }
     .grid {
       display: grid;
@@ -112,6 +124,8 @@ export class Badges implements OnInit {
   private readonly practice = inject(PracticeStore);
   private readonly auth = inject(AuthService);
   private readonly statsApi = inject(StatsService);
+  private readonly sync = inject(SyncService);
+  private readonly challenges = inject(ChallengesService);
   private readonly stats = signal<Stats | null>(null);
   private readonly loaded = signal(0);
 
@@ -141,6 +155,35 @@ export class Badges implements OnInit {
       bosses += solved.filter((l) => l % 10 === 0).length;
       if (solved.length) gamesWithLevels.add(t.game);
     }
+    // Things only the event log knows: when and what kind of puzzle was solved.
+    const activity = activityFrom(this.sync.events(), stats);
+    const practice = activity.filter((a) => a.kind === 'practice');
+    const perGame = (g: string) => new Set(practice.filter((a) => a.game === g).map((a) => a.id)).size;
+    const kinds = new Set(practice.filter((a) => a.game === 'sudoku').map((a) => (a.variant ?? '').replace(/-(easy|medium|hard|challenging|insane)$/, '')));
+    const hardSudoku = new Set(practice.filter((a) => a.game === 'sudoku' && /-(hard|challenging|insane)$/.test(a.variant ?? '')).map((a) => a.id)).size;
+    const insane = new Set(practice.filter((a) => a.game === 'sudoku' && /-insane$/.test(a.variant ?? '')).map((a) => a.id)).size;
+    const words = new Set(practice.filter((a) => a.game === 'word-guess').map((a) => a.id)).size;
+    const earlyBird = activity.filter((a) => a.kind === 'practice' && a.at.getHours() >= 4 && a.at.getHours() < 7).length;
+    const nightOwl = activity.filter((a) => a.kind === 'practice' && (a.at.getHours() >= 23 || a.at.getHours() < 4)).length;
+    const days = new Set(activity.map((a) => `${a.at.getFullYear()}-${a.at.getMonth()}-${a.at.getDate()}`));
+    const perDay = new Map<string, Set<string>>();
+    for (const a of practice) {
+      const k = `${a.at.getFullYear()}-${a.at.getMonth()}-${a.at.getDate()}`;
+      perDay.set(k, (perDay.get(k) ?? new Set()).add(a.id));
+    }
+    const bigDay = Math.max(0, ...[...perDay.values()].map((v) => v.size));
+    // A weekend counts when you played on both its Saturday and its Sunday.
+    const weekendDays = new Map<string, Set<number>>();
+    for (const a of activity) {
+      const wd = a.at.getDay();
+      if (wd !== 6 && wd !== 0) continue;
+      const sat = new Date(a.at.getFullYear(), a.at.getMonth(), a.at.getDate() - (wd === 0 ? 1 : 0));
+      const k = `${sat.getFullYear()}-${sat.getMonth()}-${sat.getDate()}`;
+      weekendDays.set(k, (weekendDays.get(k) ?? new Set()).add(wd));
+    }
+    const fullWeekends = [...weekendDays.values()].filter((v) => v.size === 2).length;
+    const collected = this.challenges.collected();
+    const cleanAll = activity.filter((a) => a.kind === 'practice' && a.clean === true).length;
     return [
       { id: 'first', icon: '🌱', name: 'First steps', text: 'Solve your first puzzle', have: levels + dailySolved, need: 1 },
       { id: 'lv10', icon: '🔟', name: 'Ten levels', text: 'Clear 10 practice levels', have: levels, need: 10 },
@@ -156,11 +199,51 @@ export class Badges implements OnInit {
       { id: 'streak100', icon: '☄️', name: 'Unstoppable', text: 'A 100-day streak in any game', have: bestStreak, need: 100 },
       { id: 'allDaily', icon: '📅', name: 'Daily sampler', text: 'Solve a daily in every game', have: dailiesPlayed, need: DAILY_GAMES.length },
       { id: 'daily50', icon: '🏅', name: 'Regular', text: 'Solve 50 dailies in total', have: dailySolved, need: 50 },
+      { id: 'daily200', icon: '🏆', name: 'Daily legend', text: 'Solve 200 dailies in total', have: dailySolved, need: 200 },
+      { id: 'lv250', icon: '🥉', name: 'Quarter thousand', text: 'Clear 250 practice levels', have: levels, need: 250 },
+      { id: 'lv2500', icon: '🌌', name: 'Cosmic', text: 'Clear 2,500 practice levels', have: levels, need: 2500 },
+      { id: 'queens50', icon: '👸', name: 'Queen bee', text: 'Clear 50 Queens levels', have: perGame('queens'), need: 50 },
+      { id: 'tango50', icon: '☯️', name: 'Tango dancer', text: 'Clear 50 Tango levels', have: perGame('tango'), need: 50 },
+      { id: 'zip50', icon: '🧵', name: 'Zip master', text: 'Clear 50 Zip levels', have: perGame('zip'), need: 50 },
+      { id: 'patches50', icon: '🧱', name: 'Patchwork', text: 'Clear 50 Patches levels', have: perGame('patches'), need: 50 },
+      { id: 'sudoku100', icon: '🔢', name: 'Sudoku fan', text: 'Clear 100 Sudoku levels', have: perGame('sudoku'), need: 100 },
+      { id: 'hard25', icon: '💎', name: 'Hard head', text: 'Clear 25 Sudoku levels on Hard or above', have: hardSudoku, need: 25 },
+      { id: 'insane1', icon: '🤯', name: 'Insane in the brain', text: 'Clear an Insane Sudoku level', have: insane, need: 1 },
+      { id: 'kinds4', icon: '🧭', name: 'Kind collector', text: 'Solve Sudoku in 4 different kinds', have: kinds.size, need: 4 },
+      { id: 'kinds6', icon: '🗺️', name: 'Sudoku atlas', text: 'Solve Sudoku in 6 different kinds', have: kinds.size, need: 6 },
+      { id: 'words10', icon: '🔤', name: 'Word wizard', text: 'Win 10 Word Guess practice games', have: words, need: 10 },
+      { id: 'clean100', icon: '✨', name: 'Pure thinker', text: 'Clear 100 levels without a hint', have: cleanAll, need: 100 },
+      { id: 'early', icon: '🌅', name: 'Early bird', text: 'Clear 3 levels between 4 and 7 in the morning', have: earlyBird, need: 3 },
+      { id: 'owl', icon: '🦉', name: 'Night owl', text: 'Clear 3 levels between 11 at night and 4 in the morning', have: nightOwl, need: 3 },
+      { id: 'weekend3', icon: '🏖️', name: 'Weekend warrior', text: 'Play on both days of 3 weekends', have: fullWeekends, need: 3 },
+      { id: 'bigday', icon: '🎢', name: 'Big day', text: 'Clear 20 levels in one day', have: bigDay, need: 20 },
+      { id: 'days30', icon: '🗓️', name: 'Thirty days', text: 'Play on 30 different days', have: days.size, need: 30 },
+      { id: 'chal1', icon: '🎯', name: 'Challenge accepted', text: 'Collect your first challenge reward', have: collected, need: 1 },
+      { id: 'chal10', icon: '🏁', name: 'Challenge hunter', text: 'Collect 10 challenge rewards', have: collected, need: 10 },
+      { id: 'chal50', icon: '🥇', name: 'Challenge legend', text: 'Collect 50 challenge rewards', have: collected, need: 50 },
     ];
+  });
+  private static readonly GROUPS: [string, string[]][] = [
+    ['Getting started', ['first', 'lv10', 'lv100', 'lv250', 'lv500', 'lv1000', 'lv2500', 'boss']],
+    ['Games', ['all', 'queens50', 'tango50', 'zip50', 'patches50', 'words10', 'speed']],
+    ['Sudoku', ['sudoku100', 'hard25', 'insane1', 'kinds4', 'kinds6']],
+    ['Streaks and dailies', ['streak7', 'streak30', 'streak100', 'allDaily', 'daily50', 'daily200']],
+    ['Habits', ['clean', 'clean100', 'early', 'owl', 'weekend3', 'bigday', 'days30']],
+    ['Challenges', ['chal1', 'chal10', 'chal50']],
+  ];
+  /** Badges in sections; inside each, the ones you have come first. */
+  protected readonly groups = computed(() => {
+    const all = this.badges();
+    return Badges.GROUPS.map(([name, ids]) => {
+      const items = ids.map((id) => all.find((b) => b.id === id)).filter((b): b is Badge => !!b);
+      items.sort((a, b) => Number(b.have >= b.need) - Number(a.have >= a.need));
+      return { name, items, earned: items.filter((b) => b.have >= b.need).length };
+    }).filter((g) => g.items.length > 0);
   });
   protected readonly earned = computed(() => this.badges().filter((b) => b.have >= b.need).length);
 
   ngOnInit(): void {
+    void this.challenges.load();
     for (const t of PRACTICE_TRACKS) void this.practice.load(t.track).then(() => this.loaded.update((n) => n + 1));
     if (this.auth.signedIn()) void this.statsApi.load().then((s) => this.stats.set(s)).catch(() => undefined);
   }

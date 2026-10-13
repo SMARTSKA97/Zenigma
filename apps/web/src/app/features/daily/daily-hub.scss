@@ -236,3 +236,28 @@
 @media (prefers-reduced-motion: reduce) {
   .rollover .num { animation: none; }
 }
+
+.group {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.block {
+  margin-top: 1rem;
+}
+.soon-card ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.soon-card li b {
+  display: block;
+  color: var(--text);
+}

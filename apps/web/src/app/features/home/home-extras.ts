@@ -7,6 +7,8 @@ import { Stats } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { gameInfo, playLink, PRACTICE_TRACKS, PracticeTrack } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
+import { ChallengeStrip } from '../challenges/challenges';
+import { ChallengesService } from '../challenges/challenges.service';
 
 const RECAP_KEY = 'zenigma.recap.dismissed';
 
@@ -21,7 +23,7 @@ const mondayOf = (d: Date): Date => {
 /** Two small cards for Home: pick up an unfinished practice board, and a recap of last week (shown on Monday and Tuesday). */
 @Component({
   selector: 'app-home-extras',
-  imports: [RouterLink, CircleSeasons],
+  imports: [RouterLink, CircleSeasons, ChallengeStrip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (atRisk(); as risk) {
@@ -43,6 +45,9 @@ const mondayOf = (d: Date): Date => {
         </span>
         <span class="go" aria-hidden="true">›</span>
       </a>
+    }
+    @if (challenges.toCollect() > 0) {
+      <app-challenge-strip />
     }
     @if (played().length) {
       <a class="card friends" routerLink="/ranks/circles" aria-label="Friends who played today">
@@ -231,7 +236,10 @@ export class HomeExtras implements OnInit {
     return { solved, days: days.size, favourite: top ? (gameInfo(top[0])?.name ?? null) : null, key };
   });
 
+  protected readonly challenges = inject(ChallengesService);
+
   async ngOnInit(): Promise<void> {
+    void this.challenges.load();
     if (this.auth.signedIn()) void this.circlesApi.today().then((c) => this.circles.set(c)).catch(() => undefined);
     // The most recently saved unfinished board among all practice tracks.
     let best: { track: PracticeTrack; level: number; saved: number } | null = null;
