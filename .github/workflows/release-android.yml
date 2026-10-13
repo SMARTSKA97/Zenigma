@@ -66,6 +66,15 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon -PzenVersionName=${{ steps.v.outputs.version }} -PzenVersionCode=${{ steps.v.outputs.code }}
 
+      - name: Verify release APK signature
+        run: |
+          set -euo pipefail
+          OUT=apps/web/android/app/build/outputs/apk/release
+          test "$(ls "$OUT"/*.apk | wc -l)" -eq 1 || { echo "Expected exactly one release APK:"; ls "$OUT"; exit 1; }
+          APK="$(ls "$OUT"/*.apk)"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
+          sha256sum "$APK"
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
