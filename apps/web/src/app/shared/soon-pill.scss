@@ -1,0 +1,32 @@
+:host {
+  display: inline-block;
+}
+:host .pill {
+  min-height: 0;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+h2 {
+  margin: 0 0 0.6rem;
+}
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+li {
+  display: grid;
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+li span {
+  font-size: 0.85rem;
+}

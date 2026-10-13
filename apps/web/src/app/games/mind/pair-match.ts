@@ -14,14 +14,7 @@ interface Card {
   selector: 'app-pair-match',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ flips() }} flips</span><span>{{ pairs() }} / 8 pairs</span></div>
-    <div class="tiles" style="grid-template-columns: repeat(4, 1fr)">
-      @for (c of cards(); track $index) {
-        <button type="button" class="tile" [class.good]="c.matched" [class.on]="c.up && !c.matched" [disabled]="c.up || c.matched" (click)="flip($index)" [attr.aria-label]="c.up ? c.face : 'Hidden card'">{{ c.up ? c.face : '' }}</button>
-      }
-    </div>
-  `,
+  templateUrl: './pair-match.html',
 })
 export class PairMatch implements OnInit {
   readonly done = output<MindResult>();

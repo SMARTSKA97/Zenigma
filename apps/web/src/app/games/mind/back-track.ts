@@ -8,19 +8,8 @@ const TOTAL = 26;
 @Component({
   selector: 'app-back-track',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ score() }} points</span><span>{{ index() }} / {{ total }}</span></div>
-    <div class="prompt" aria-live="polite">{{ letter() }}</div>
-    <p class="say">Same as two letters ago?</p>
-    <button type="button" class="opt wide" [class.flash-bad]="miss()" (pointerdown)="match()">Match</button>
-  `,
-  styles: `
-    :host .wide {
-      width: min(100%, 18rem);
-      min-height: 4.2rem;
-    }
-  `,
+  templateUrl: './back-track.html',
+  styleUrls: ['./mind.scss', './back-track.scss'],
 })
 export class BackTrack implements OnInit {
   readonly done = output<MindResult>();

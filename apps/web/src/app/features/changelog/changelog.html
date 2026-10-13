@@ -1,0 +1,42 @@
+<header class="head">
+  <a routerLink="/settings" class="back" aria-label="Back">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  </a>
+  <div>
+    <h1>Version history</h1>
+    <p class="muted">What changed in every release.</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="timeline" aria-busy="true">
+    @for (n of [1, 2, 3]; track n) {
+      <div class="skeleton block"></div>
+    }
+  </div>
+} @else if (!entries().length) {
+  <section class="card"><p class="muted">The version history is not available right now.</p></section>
+} @else {
+  <ol class="timeline">
+    @for (e of entries(); track e.version; let first = $first) {
+      <li [class.latest]="first" [style.--i]="$index">
+        <span class="dot" aria-hidden="true"></span>
+        <article class="card">
+          <div class="top">
+            <h2>{{ e.version }}</h2>
+            @if (first) {
+              <span class="tag">Latest</span>
+            }
+            @if (e.version === current()) {
+              <span class="tag you">Installed</span>
+            }
+            @if (e.date) {
+              <time class="muted" [attr.datetime]="e.date">{{ pretty(e.date) }}</time>
+            }
+          </div>
+          <app-notes [text]="e.notes" />
+        </article>
+      </li>
+    }
+  </ol>
+}

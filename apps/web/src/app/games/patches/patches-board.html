@@ -1,0 +1,34 @@
+<div
+  class="grid"
+  role="application"
+  [attr.aria-label]="description()"
+  [style.--n]="puzzle().size"
+  [class.win]="solved()"
+  (pointerdown)="down($event)"
+  (pointermove)="move($event)"
+  (pointerup)="up($event)"
+  (pointercancel)="up($event)"
+  (contextmenu)="$event.preventDefault()"
+>
+  @for (cell of cells(); track cell.i) {
+    <div class="cell" [attr.data-i]="cell.i">
+      @if (cell.clue; as clue) {
+        <span class="clue" [class.done]="cell.covered">
+          <b>{{ clue[1] }}</b>
+          @if (clue[2] > 0) {
+            <svg class="shape" viewBox="0 0 24 24" aria-hidden="true">
+              @switch (clue[2]) {
+                @case (1) { <rect x="1.5" y="6.5" width="21" height="11" rx="2.5" /> }
+                @case (2) { <rect x="6.5" y="1.5" width="11" height="21" rx="2.5" /> }
+                @default { <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" /> }
+              }
+            </svg>
+          }
+        </span>
+      }
+    </div>
+  }
+  @for (r of shown(); track r.key) {
+    <div class="patch" [class.bad]="r.bad" [class.draft]="r.draft" [class.blocked]="r.draft && blocked()" [style.--hue]="r.hue" [style.top.%]="r.top" [style.left.%]="r.left" [style.width.%]="r.width" [style.height.%]="r.height"></div>
+  }
+</div>

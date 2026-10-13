@@ -1,0 +1,16 @@
+@if (service.open()) {
+  <app-sheet label="What's new" (closed)="service.open.set(false)">
+    <div class="head">
+      <span class="badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" /></svg>
+      </span>
+      <div>
+        <h2>What's new</h2>
+        <p class="muted">You are on version {{ service.version() }}</p>
+      </div>
+    </div>
+    <div class="whats"><app-notes [text]="service.notes()" /></div>
+    <a class="history" routerLink="/changelog" (click)="service.open.set(false)">Full version history</a>
+    <button type="button" class="done" (click)="service.open.set(false)">Got it</button>
+  </app-sheet>
+}

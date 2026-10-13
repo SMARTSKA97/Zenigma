@@ -1,0 +1,10 @@
+<figure>
+  <div class="fig" [style.--cols]="cols()" role="img" [attr.aria-label]="figure().caption">
+    @for (row of figure().rows; track $index) {
+      @for (cell of row; track $index) {
+        <span [class]="classes(cell)">{{ text(cell) }}</span>
+      }
+    }
+  </div>
+  <figcaption>{{ figure().caption }}</figcaption>
+</figure>

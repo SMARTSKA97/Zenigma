@@ -8,15 +8,7 @@ const PADS = ['#d93f3f', '#2f6fe0', '#2e9e5b', '#d8a800'];
   selector: 'app-echo-sequence',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>Round {{ seq().length || 1 }}</span><span>Best run {{ best() }}</span></div>
-    <p class="say">{{ phase() === 'show' ? 'Watch…' : phase() === 'input' ? 'Your turn' : '' }}</p>
-    <div class="pads">
-      @for (c of pads; track $index) {
-        <button type="button" class="pad" [class.lit]="lit() === $index" [style.background]="c" [disabled]="phase() !== 'input'" (click)="press($index)" [attr.aria-label]="'Pad ' + ($index + 1)"></button>
-      }
-    </div>
-  `,
+  templateUrl: './echo-sequence.html',
 })
 export class EchoSequence implements OnInit {
   readonly done = output<MindResult>();

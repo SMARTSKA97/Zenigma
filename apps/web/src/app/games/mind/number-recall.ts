@@ -5,24 +5,8 @@ import { MindResult, randInt, useTimers } from './mind-util';
 @Component({
   selector: 'app-number-recall',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ length() }} digits</span><span class="lives" aria-label="Lives left">{{ '♥'.repeat(lives()) }}</span></div>
-    <div class="prompt">{{ phase() === 'show' ? number() : typed() || '…' }}</div>
-    <p class="say">{{ phase() === 'show' ? 'Remember it…' : phase() === 'input' ? 'Type what you saw' : feedback() }}</p>
-    <div class="options keys">
-      @for (k of keys; track k) {
-        <button type="button" class="opt" [disabled]="phase() !== 'input'" (click)="press(k)">{{ k }}</button>
-      }
-      <button type="button" class="opt" [disabled]="phase() !== 'input'" (click)="back()" aria-label="Delete">⌫</button>
-      <button type="button" class="opt" [disabled]="phase() !== 'input' || typed().length === 0" (click)="check()">OK</button>
-    </div>
-  `,
-  styles: `
-    .keys {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  `,
+  templateUrl: './number-recall.html',
+  styleUrls: ['./mind.scss', './number-recall.scss'],
 })
 export class NumberRecall implements OnInit {
   readonly done = output<MindResult>();

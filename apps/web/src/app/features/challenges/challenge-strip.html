@@ -1,0 +1,25 @@
+<a class="strip" routerLink="/challenges" aria-label="Challenges: weekly, weekend and monthly">
+  <span class="head">
+    <b>Challenges</b>
+    @if (c.toCollect(); as n) {
+      <span class="pill">{{ n }} to collect</span>
+    } @else {
+      <span class="muted">Earn hints</span>
+    }
+    <span class="go" aria-hidden="true">›</span>
+  </span>
+  <span class="rows">
+    @for (p of order; track p) {
+      @let items = c.sets()[p];
+      <span class="row" [class.closed]="!items[0]?.window.open">
+        <span class="name">{{ names[p] }}</span>
+        <span class="dots" aria-hidden="true">
+          @for (i of items; track i.claimKey) {
+            <i [class.on]="i.done" [style.--p]="progress(i)"></i>
+          }
+        </span>
+        <span class="num">{{ !items[0]?.window.open ? 'Sat' : done(items) + '/' + items.length }}</span>
+      </span>
+    }
+  </span>
+</a>

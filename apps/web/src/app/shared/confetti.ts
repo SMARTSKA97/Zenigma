@@ -6,44 +6,8 @@ const COLOURS = ['#f0a21a', '#4f63e6', '#e8556d', '#2f9e5f', '#8c5cf0', '#18a7c9
 @Component({
   selector: 'app-confetti',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @for (p of pieces; track $index) {
-      <i [style.--x]="p.x" [style.--r]="p.r" [style.--d]="p.d" [style.--s]="p.s" [style.--w]="p.w" [style.background]="p.c"></i>
-    }
-  `,
-  styles: `
-    :host {
-      position: fixed;
-      inset: 0;
-      z-index: 120;
-      overflow: hidden;
-      pointer-events: none;
-    }
-    i {
-      position: absolute;
-      top: 38%;
-      left: 50%;
-      width: calc(var(--s) * 1px);
-      height: calc(var(--s) * 0.5px);
-      border-radius: 2px;
-      opacity: 0;
-      animation: burst 1.7s cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
-      animation-delay: var(--d);
-    }
-    @keyframes burst {
-      0% {
-        opacity: 1;
-        transform: translate(0, 0) rotate(0);
-      }
-      70% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        transform: translate(calc(var(--x) * 1vw), calc(var(--w) * 1vh)) rotate(calc(var(--r) * 1deg));
-      }
-    }
-  `,
+  templateUrl: './confetti.html',
+  styleUrl: './confetti.scss',
 })
 export class Confetti {
   /** Fixed pseudo-random pieces so the burst looks the same every time and needs no randomness at runtime. */

@@ -1,0 +1,9 @@
+<a class="feat" [routerLink]="link()" [queryParams]="{ level: f.level, featured: 1 }" [style.--h]="hue()">
+  <span class="art"><app-glyph [game]="f.game" /></span>
+  <span class="t">
+    <small>Featured level of the week</small>
+    <b>{{ f.name }} · level {{ f.level }}</b>
+    <span class="muted">{{ done() ? 'Solved. A new one arrives Monday.' : 'A hard one, open until Sunday. Hints are allowed.' }}</span>
+  </span>
+  <span class="go" [class.ok]="done()">{{ done() ? '✓' : 'Play' }}</span>
+</a>

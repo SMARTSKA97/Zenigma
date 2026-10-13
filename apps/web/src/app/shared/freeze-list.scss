@@ -1,0 +1,78 @@
+.rule {
+  margin: 0 0 0.8rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+.art {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 12px;
+  background: oklch(0.92 0.06 calc(var(--h) * 1deg));
+}
+.art :is(svg) {
+  width: 70%;
+  height: 70%;
+}
+.mid {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 0.15rem;
+  text-align: left;
+}
+.mid .muted {
+  font-size: 0.74rem;
+}
+.pips {
+  display: flex;
+  gap: 3px;
+}
+.pips i {
+  width: 100%;
+  max-width: 1rem;
+  height: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text) 14%, transparent);
+}
+.pips i.on {
+  background: #2b8fd6;
+}
+.ice {
+  display: flex;
+  gap: 0.25rem;
+  flex: none;
+}
+.ice svg {
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0.3rem;
+  border-radius: 10px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  background: var(--surface);
+}
+.ice svg.on {
+  stroke: #2b8fd6;
+  background: color-mix(in srgb, #2b8fd6 18%, var(--surface));
+}

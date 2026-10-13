@@ -20,47 +20,8 @@ interface Insight {
 @Component({
   selector: 'app-insights',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @if (shown().length) {
-      <section class="insights" aria-label="Insights">
-        @for (i of shown(); track i.title) {
-          <article>
-            <span class="icon" aria-hidden="true">{{ i.icon }}</span>
-            <span class="body"><b>{{ i.title }}</b><span class="muted">{{ i.text }}</span></span>
-          </article>
-        }
-      </section>
-    }
-  `,
-  styles: `
-    :host {
-      display: block;
-    }
-    .insights {
-      display: grid;
-      gap: 0.5rem;
-    }
-    article {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.7rem 0.95rem;
-      border-radius: 18px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-    }
-    .icon {
-      font-size: 1.5rem;
-    }
-    .body {
-      display: grid;
-      font-size: 0.85rem;
-    }
-    .body b {
-      font-size: 0.95rem;
-    }
-  `,
+  templateUrl: './insights.html',
+  styleUrl: './insights.scss',
 })
 export class Insights implements OnInit {
   private readonly practice = inject(PracticeStore);

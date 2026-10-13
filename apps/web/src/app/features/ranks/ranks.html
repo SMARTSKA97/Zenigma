@@ -1,0 +1,69 @@
+<h1>Leaderboards</h1>
+
+<div class="chips" role="tablist" aria-label="Game">
+  @for (g of games; track g.id) {
+    <button type="button" role="tab" class="chip" [class.on]="game() === g.id" [attr.aria-selected]="game() === g.id" [style.--h]="g.hue" (click)="pickGame(g.id)">
+      <span class="ico"><app-glyph [game]="g.id" /></span>{{ g.name }}
+    </button>
+  }
+</div>
+
+@if (circles().length > 0) {
+  <div class="chips scope" role="tablist" aria-label="Who">
+    <button type="button" role="tab" class="chip plain" [class.on]="!circle()" [attr.aria-selected]="!circle()" (click)="pickCircle(null)">Everyone</button>
+    @for (c of circles(); track c.id) {
+      <button type="button" role="tab" class="chip plain" [class.on]="circle() === c.id" [attr.aria-selected]="circle() === c.id" (click)="pickCircle(c.id)">{{ c.name }}</button>
+    }
+    <a class="chip plain manage" routerLink="/ranks/circles">Manage</a>
+  </div>
+} @else if (auth.signedIn()) {
+  <p class="muted caption"><a routerLink="/ranks/circles">Compete with friends in a private circle →</a></p>
+}
+
+<app-segmented class="seg" label="Board" [options]="kindOptions" [value]="kind()" (valueChange)="pickKind($event)" />
+@if (kind() === 'daily') {
+  <app-segmented class="seg" label="Period" [options]="dailyPeriods" [value]="period()" (valueChange)="period.set($event)" />
+} @else {
+  <app-segmented class="seg" label="Period" [options]="practicePeriods" [value]="period()" (valueChange)="period.set($event)" />
+}
+
+<p class="muted caption">{{ caption() }}</p>
+
+@if (loading()) {
+  <div class="list" aria-busy="true">
+    @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+      <div class="skeleton line"></div>
+    }
+  </div>
+} @else if (failed()) {
+  <section class="card empty">
+    <p class="muted">Could not load the leaderboard{{ sync.online() ? '' : ' while offline' }}.</p>
+    <button type="button" (click)="load()">Try again</button>
+  </section>
+} @else if (board(); as b) {
+  @if (b.entries.length === 0) {
+    <section class="card empty">
+      <h2>No one yet</h2>
+      <p class="muted">{{ kind() === 'daily' ? 'Be the first to finish today.' : 'Solve a level to get on the board.' }}</p>
+      <a class="button" [routerLink]="kind() === 'daily' ? ['/daily', game()] : ['/games', game()]">Play {{ gameName() }}</a>
+    </section>
+  } @else {
+    <ol class="list">
+      @for (e of b.entries; track e.rank) {
+        <li class="line" [class.me]="e.isMe" [style.--i]="$index">
+          <span class="pos" [attr.data-top]="e.rank <= 3 ? e.rank : null">{{ e.rank }}</span>
+          <span class="who">{{ e.name }}@if (e.isMe) { <em>you</em> }</span>
+          <span class="val">{{ valueOf(e.value, e.secondary) }}</span>
+        </li>
+      }
+      @if (b.me && !inList(b)) {
+        <li class="gap" aria-hidden="true">···</li>
+        <li class="line me">
+          <span class="pos">{{ b.me.rank }}</span>
+          <span class="who">{{ b.me.name }} <em>you</em></span>
+          <span class="val">{{ valueOf(b.me.value, b.me.secondary) }}</span>
+        </li>
+      }
+    </ol>
+  }
+}

@@ -1,0 +1,10 @@
+.nums {
+  grid-template-columns: repeat(4, 1fr);
+}
+.ops {
+  grid-template-columns: repeat(3, 1fr);
+}
+:host .opt.pick {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}

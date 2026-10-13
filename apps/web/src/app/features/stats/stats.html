@@ -1,0 +1,65 @@
+<h1>Your stats</h1>
+<p class="muted"><a routerLink="/badges">See your badges ›</a></p>
+
+@if (!auth.signedIn()) {
+  <section class="card cta">
+    <div>
+      <h2>Sign in to see your stats</h2>
+      <p class="muted">Streaks and times come from your daily results.</p>
+    </div>
+    <a class="button" routerLink="/account">Sign in</a>
+  </section>
+} @else if (loading()) {
+  <div class="skeleton block"></div>
+  <div class="skeleton block tall"></div>
+} @else if (failed()) {
+  <section class="card cta">
+    <p class="muted">Could not load your stats{{ sync.online() ? '' : ' while offline' }}.</p>
+    <button type="button" (click)="load()">Try again</button>
+  </section>
+} @else if (stats(); as s) {
+  <button type="button" class="secondary share-streak" (click)="shareStreak()">Share my streak</button>
+  @if (shareCard(); as c) {
+    <app-share-sheet [card]="c.card" [text]="c.text" (closed)="shareCard.set(null)" />
+  }
+  <app-insights [stats]="s" [limit]="5" class="ins" />
+  <section class="rewards card">
+    <h2>❄ Streak freezes</h2>
+    <app-freeze-list [stats]="s" />
+  </section>
+
+  <div class="list">
+    @for (g of games(); track g.game; let i = $index) {
+      <article class="card game" [style.--h]="hue(g.game)" [style.--i]="i">
+        <header>
+          <span class="art"><app-glyph [game]="$any(g.game)" /></span>
+          <div class="name">
+            <h2>{{ name(g.game) }}</h2>
+            <p class="muted">{{ g.solved }} {{ g.solved === 1 ? 'daily' : 'dailies' }} solved</p>
+          </div>
+          <div class="streak" [class.on]="g.current > 0" [attr.aria-label]="g.current + ' day streak'">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.5 3-1.5 4.7-3 6.4-1.3 1.5-2.3 3-2.3 5.2a5.3 5.3 0 0 0 10.6 0c0-1.7-.6-3-1.5-4.2-.3 1.2-1 1.9-1.8 2.2.4-3.2-.5-6.5-2-9.6z" /></svg>
+            <strong>{{ g.current }}</strong>
+          </div>
+        </header>
+
+        <dl>
+          <div><dt>Best streak</dt><dd>{{ g.best }}</dd></div>
+          @if (g.game === 'word-guess') {
+            <div><dt>Best</dt><dd>{{ g.bestGuesses ?? '–' }}</dd></div>
+            <div><dt>Average</dt><dd>{{ g.averageGuesses ?? '–' }}</dd></div>
+          } @else {
+            <div><dt>Best time</dt><dd>{{ g.bestMs !== null ? time(g.bestMs) : '–' }}</dd></div>
+            <div><dt>Average</dt><dd>{{ g.averageMs !== null ? time(g.averageMs) : '–' }}</dd></div>
+          }
+        </dl>
+
+        <div class="calendar" role="img" [attr.aria-label]="'Last five weeks: ' + g.recent.length + ' days solved'">
+          @for (d of days(); track d) {
+            <i [class.solved]="g.recent.includes(d)" [class.frozen]="g.frozen.includes(d)" [class.today]="d === s.date" [attr.title]="d"></i>
+          }
+        </div>
+      </article>
+    }
+  </div>
+}

@@ -1,0 +1,7 @@
+<div class="hud"><span>{{ score() }} points</span><span>{{ count() }} / 40</span></div>
+<button type="button" class="big" (pointerdown)="tap()" aria-label="Tap if this is a green circle">
+  @if (shape(); as s) {
+    <span [style.color]="s.colour">{{ s.glyph }}</span>
+  }
+</button>
+<p class="say">Tap only the green circles</p>

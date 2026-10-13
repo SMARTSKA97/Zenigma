@@ -1,0 +1,18 @@
+<app-sheet label="Share your result" (closed)="closed.emit()">
+  <div class="wrap">
+    <h2>Share your result</h2>
+    <div class="preview" [class.loading]="!url()">
+      @if (url(); as src) {
+        <img [src]="src" alt="Result card showing your finished board, time and streak" />
+      }
+    </div>
+    <div class="actions">
+      <button type="button" [disabled]="!blob()" (click)="send()">Share</button>
+      <button type="button" class="secondary" [disabled]="!blob()" (click)="save()">Save image</button>
+      <button type="button" class="secondary" (click)="copy()">{{ copied() ? 'Copied' : 'Copy text' }}</button>
+    </div>
+    @if (note()) {
+      <p class="muted" role="status">{{ note() }}</p>
+    }
+  </div>
+</app-sheet>

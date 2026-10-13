@@ -1,0 +1,54 @@
+<header class="top">
+  <a class="round" href="/" aria-label="Back" (click)="nav.up($event)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  </a>
+  <div class="title">
+    <h1>Speed round · {{ info()?.name }}</h1>
+    <p class="muted">Solve {{ total }} easy levels in 3 minutes</p>
+  </div>
+</header>
+
+@if (phase() === 'ready') {
+  <section class="card intro">
+    <p>Five quick levels, one clock. Solve as many as you can before three minutes run out.</p>
+    @if (best(); as b) {
+      <p class="muted">Your best: {{ b.solved }} of {{ total }}{{ b.solved === total ? ' in ' + fmt(b.ms) : '' }}</p>
+    }
+    <button type="button" (click)="start()">Start</button>
+    <div class="others">
+      @for (g of games; track g.id) {
+        <a [routerLink]="['/speed', g.id]" [class.on]="g.id === game()">{{ g.name }}</a>
+      }
+    </div>
+  </section>
+} @else if (phase() === 'playing') {
+  <div class="bar">
+    <span class="clock" [class.low]="left() < 30_000">{{ fmt(left()) }}</span>
+    <span class="count">{{ done() }} / {{ total }} solved</span>
+  </div>
+  <div class="board">
+    @if (puzzle(); as p) {
+      @switch (game()) {
+        @case ('queens') { <app-queens-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="none" [locked]="false" [solved]="false" (boardChange)="change($event)" /> }
+        @case ('tango') { <app-tango-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="none" [locked]="false" [solved]="false" (boardChange)="change($event)" /> }
+        @case ('zip') { <app-zip-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="none" [locked]="false" [solved]="false" (boardChange)="change($event)" /> }
+        @case ('patches') { <app-patches-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="none" [locked]="false" [solved]="false" (boardChange)="change($event)" /> }
+        @case ('sudoku') { <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="none" [locked]="false" [solved]="false" (boardChange)="change($event)" /> }
+      }
+    } @else {
+      <p class="muted">Loading</p>
+    }
+  </div>
+} @else {
+  <section class="card result">
+    <h2>{{ done() === total ? 'All ' + total + ' solved!' : done() + ' of ' + total + ' solved' }}</h2>
+    <p class="muted">{{ done() === total ? 'in ' + fmt(finalMs()) : 'Time ran out' }}</p>
+    @if (newBest()) {
+      <p class="pb">New personal best</p>
+    }
+    <div class="actions">
+      <button type="button" (click)="start()">Go again</button>
+      <a class="button secondary" routerLink="/practice">Practice</a>
+    </div>
+  </section>
+}

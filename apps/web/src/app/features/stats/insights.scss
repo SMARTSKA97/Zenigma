@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+.insights {
+  display: grid;
+  gap: 0.5rem;
+}
+article {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.icon {
+  font-size: 1.5rem;
+}
+.body {
+  display: grid;
+  font-size: 0.85rem;
+}
+.body b {
+  font-size: 0.95rem;
+}

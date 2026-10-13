@@ -15,67 +15,8 @@ const ShareCard = registerPlugin<ShareCardPlugin>('ShareCard');
   selector: 'app-share-sheet',
   imports: [Sheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <app-sheet label="Share your result" (closed)="closed.emit()">
-      <div class="wrap">
-        <h2>Share your result</h2>
-        <div class="preview" [class.loading]="!url()">
-          @if (url(); as src) {
-            <img [src]="src" alt="Result card showing your finished board, time and streak" />
-          }
-        </div>
-        <div class="actions">
-          <button type="button" [disabled]="!blob()" (click)="send()">Share</button>
-          <button type="button" class="secondary" [disabled]="!blob()" (click)="save()">Save image</button>
-          <button type="button" class="secondary" (click)="copy()">{{ copied() ? 'Copied' : 'Copy text' }}</button>
-        </div>
-        @if (note()) {
-          <p class="muted" role="status">{{ note() }}</p>
-        }
-      </div>
-    </app-sheet>
-  `,
-  styles: `
-    .wrap {
-      display: grid;
-      gap: 0.9rem;
-      justify-items: center;
-    }
-    h2 {
-      margin: 0;
-    }
-    .preview {
-      width: min(18rem, 62vw);
-      aspect-ratio: 1080 / 1350;
-      border-radius: 18px;
-      overflow: hidden;
-      background: var(--surface-2);
-      box-shadow: 0 8px 24px rgb(0 0 0 / 0.22);
-    }
-    .preview.loading {
-      animation: pulse 1.2s ease-in-out infinite;
-    }
-    img {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    .muted {
-      margin: 0;
-      font-size: 0.85rem;
-    }
-    @keyframes pulse {
-      50% {
-        opacity: 0.55;
-      }
-    }
-  `,
+  templateUrl: './share-sheet.html',
+  styleUrl: './share-sheet.scss',
 })
 export class ShareSheet {
   private readonly auth = inject(AuthService);

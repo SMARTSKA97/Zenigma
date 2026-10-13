@@ -1,0 +1,8 @@
+<div class="hud"><span>{{ score() }} words</span><span>{{ seconds() }}s</span></div>
+<div class="time"><i [style.width.%]="(clock.left() / 60000) * 100"></i></div>
+<div class="prompt" [class.flash-bad]="bad()">{{ q().shown }}</div>
+<div class="options">
+  @for (o of q().options; track o) {
+    <button type="button" class="opt" (click)="answer(o)">{{ o.toUpperCase() }}</button>
+  }
+</div>

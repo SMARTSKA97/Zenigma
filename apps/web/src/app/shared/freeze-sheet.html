@@ -1,0 +1,5 @@
+<app-sheet label="Streak freezes" (closed)="closed.emit()">
+  <h2>❄ Streak freezes</h2>
+  <app-freeze-list [stats]="stats()" />
+  <button type="button" class="secondary" (click)="closed.emit()">Close</button>
+</app-sheet>

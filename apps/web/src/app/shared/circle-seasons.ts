@@ -8,84 +8,8 @@ const monthName = (label: string): string => new Date(`${label}-01T12:00:00`).to
 @Component({
   selector: 'app-circle-seasons',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @if (shown(); as blocks) {
-      @for (b of blocks; track b.key) {
-        <section class="card season">
-          <p class="eyebrow">{{ b.title }}</p>
-          @for (c of b.season.circles; track c.id) {
-            @if (c.top.length) {
-              <div class="circle">
-                <b>{{ c.name }}</b>
-                <ol>
-                  @for (e of c.top; track $index) {
-                    <li [class.me]="e.isMe"><span class="medal">{{ medal($index) }}</span><span class="n">{{ e.name }}</span><span class="v">{{ e.solved }}</span></li>
-                  }
-                </ol>
-              </div>
-            }
-          }
-          <p class="muted tiny">Ranked by dailies solved in the month. Tables start again on the 1st.</p>
-        </section>
-      }
-    }
-  `,
-  styles: `
-    :host {
-      display: grid;
-      gap: 0.75rem;
-    }
-    :host:empty {
-      display: none;
-    }
-    .season {
-      padding: 0.9rem 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .eyebrow {
-      margin: 0 0 0.5rem;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-    .circle + .circle {
-      margin-top: 0.75rem;
-    }
-    ol {
-      list-style: none;
-      margin: 0.3rem 0 0;
-      padding: 0;
-      display: grid;
-      gap: 0.2rem;
-    }
-    li {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-    }
-    li.me {
-      font-weight: 700;
-    }
-    .n {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .v {
-      font-variant-numeric: tabular-nums;
-      color: var(--muted);
-    }
-    .tiny {
-      margin: 0.6rem 0 0;
-      font-size: 0.75rem;
-    }
-  `,
+  templateUrl: './circle-seasons.html',
+  styleUrl: './circle-seasons.scss',
 })
 export class CircleSeasons implements OnInit {
   private readonly api = inject(CirclesService);

@@ -1,0 +1,20 @@
+@if (shown(); as blocks) {
+  @for (b of blocks; track b.key) {
+    <section class="card season">
+      <p class="eyebrow">{{ b.title }}</p>
+      @for (c of b.season.circles; track c.id) {
+        @if (c.top.length) {
+          <div class="circle">
+            <b>{{ c.name }}</b>
+            <ol>
+              @for (e of c.top; track $index) {
+                <li [class.me]="e.isMe"><span class="medal">{{ medal($index) }}</span><span class="n">{{ e.name }}</span><span class="v">{{ e.solved }}</span></li>
+              }
+            </ol>
+          </div>
+        }
+      }
+      <p class="muted tiny">Ranked by dailies solved in the month. Tables start again on the 1st.</p>
+    </section>
+  }
+}

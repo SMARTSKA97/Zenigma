@@ -8,15 +8,7 @@ const COLOURS = ['#d93f3f', '#2f6fe0', '#2e9e5b', '#d8a800', '#8a4fd6', '#e07a00
   selector: 'app-spot-change',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>Round {{ round() }}</span><span class="lives" aria-label="Lives left">{{ '♥'.repeat(lives()) }}</span></div>
-    <p class="say">{{ phase() === 'first' ? 'Memorise…' : phase() === 'blank' ? '' : phase() === 'second' ? 'Which tile changed?' : '' }}</p>
-    <div class="tiles" [style.grid-template-columns]="'repeat(' + n() + ', 1fr)'">
-      @for (c of cells(); track $index) {
-        <button type="button" class="tile" [class.bad]="chosen() === $index && chosen() !== changed()" [class.good]="phase() === 'over' && $index === changed()" [style.background]="shown($index)" [disabled]="phase() !== 'second'" (click)="tap($index)" aria-label="Tile"></button>
-      }
-    </div>
-  `,
+  templateUrl: './spot-change.html',
 })
 export class SpotChange implements OnInit {
   readonly done = output<MindResult>();

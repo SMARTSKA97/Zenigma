@@ -1,0 +1,42 @@
+<a class="back" routerLink="/daily">‹ Daily</a>
+<h1>Challenges</h1>
+<p class="muted lede">Goals that change every week, weekend and month. Finish one to earn hints for practice. Progress is counted on this device{{ signedIn() ? '' : ' (sign in to include your dailies)' }}.</p>
+<app-featured-level />
+<p class="hint-line"><span aria-hidden="true">💡</span> You have <b>{{ hints.balance() }}</b> {{ hints.balance() === 1 ? 'hint' : 'hints' }}</p>
+
+@if (message(); as m) {
+  <p class="toast" role="status">{{ m }}</p>
+}
+
+@for (p of order; track p) {
+  @let items = c.sets()[p];
+  <section class="period">
+    <header>
+      <h2>{{ names[p] }}</h2>
+      <span class="muted">{{ left(items) }}</span>
+    </header>
+    @for (s of items; track s.claimKey) {
+      <article class="goal" [class.done]="s.done" [class.closed]="!s.window.open">
+        <span class="icon" aria-hidden="true">{{ s.template.icon }}</span>
+        <div class="body">
+          <b>{{ s.template.title }}</b>
+          <span class="text">{{ s.template.text }}</span>
+          <span class="bar" role="progressbar" [attr.aria-valuenow]="min(s)" aria-valuemin="0" [attr.aria-valuemax]="s.template.target">
+            <i [style.width.%]="(min(s) / s.template.target) * 100"></i>
+          </span>
+        </div>
+        <div class="end">
+          @if (c.isClaimed(s)) {
+            <span class="got">Collected</span>
+          } @else if (s.done) {
+            <button type="button" class="collect" [disabled]="c.full()" (click)="collect(s)">{{ c.full() ? 'Stash full' : '+' + c.owed(s) + ' 💡' }}</button>
+          } @else {
+            <span class="num">{{ min(s) }}/{{ s.template.target }}</span>
+            <span class="reward">+{{ s.template.reward }} 💡</span>
+          }
+        </div>
+      </article>
+    }
+  </section>
+}
+<p class="muted foot">Hints never touch dailies or leaderboards. You can hold up to 10 from free sources.</p>

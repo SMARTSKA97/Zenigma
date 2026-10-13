@@ -1,0 +1,13 @@
+@if (kinds().length) {
+  <button type="button" class="pill" (click)="open.set(true)">✨ {{ kinds().length }} more {{ kinds().length === 1 ? 'kind' : 'kinds' }} coming soon</button>
+  @if (open()) {
+    <app-sheet label="Coming soon" (closed)="open.set(false)">
+      <h2>Coming soon</h2>
+      <ul>
+        @for (k of kinds(); track k.name) {
+          <li><b>{{ k.name }}</b><span class="muted">{{ k.blurb }}</span></li>
+        }
+      </ul>
+    </app-sheet>
+  }
+}

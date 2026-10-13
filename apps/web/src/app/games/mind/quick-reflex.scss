@@ -1,0 +1,18 @@
+:host .zone {
+  width: 100%;
+  min-height: 16rem;
+  border-radius: 28px;
+  border: 0;
+  box-shadow: none;
+  background: #d93f3f;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 800;
+  touch-action: manipulation;
+}
+:host .zone.go {
+  background: #2e9e5b;
+}
+:host .zone.early {
+  background: #8a8f98;
+}

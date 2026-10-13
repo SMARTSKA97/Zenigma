@@ -6,15 +6,7 @@ import { MindResult, randInt, useClock } from './mind-util';
   selector: 'app-odd-one-out',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ score() }} found</span><span>{{ seconds() }}s</span></div>
-    <div class="time"><i [style.width.%]="(clock.left() / 45000) * 100"></i></div>
-    <div class="tiles" [style.grid-template-columns]="'repeat(' + round().n + ', 1fr)'">
-      @for (c of cells(); track c) {
-        <button type="button" class="tile" [style.background]="c === round().odd ? round().oddColour : round().colour" (click)="tap(c)" aria-label="Tile"></button>
-      }
-    </div>
-  `,
+  templateUrl: './odd-one-out.html',
 })
 export class OddOneOut implements OnInit {
   readonly done = output<MindResult>();

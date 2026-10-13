@@ -12,16 +12,7 @@ interface Question {
   selector: 'app-what-next',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ score() }} correct</span><span>{{ seconds() }}s</span></div>
-    <div class="time"><i [style.width.%]="(clock.left() / 60000) * 100"></i></div>
-    <div class="prompt" [class.flash-bad]="bad()">{{ q().shown }}</div>
-    <div class="options">
-      @for (o of q().options; track $index) {
-        <button type="button" class="opt" (click)="answer(o)">{{ o }}</button>
-      }
-    </div>
-  `,
+  templateUrl: './what-next.html',
 })
 export class WhatNext implements OnInit {
   readonly done = output<MindResult>();

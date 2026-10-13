@@ -6,15 +6,7 @@ import { MindResult, shuffled, useTimers } from './mind-util';
   selector: 'app-grid-recall',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>Level {{ level() }}</span><span class="lives" aria-label="Lives left">{{ '♥'.repeat(lives()) }}</span></div>
-    <p class="say">{{ phase() === 'show' ? 'Remember…' : phase() === 'input' ? 'Tap the tiles that lit up (' + found().size + '/' + target().size + ')' : '' }}</p>
-    <div class="tiles" [style.grid-template-columns]="'repeat(' + size() + ', 1fr)'">
-      @for (c of cells(); track c) {
-        <button type="button" class="tile" [class.on]="phase() === 'show' && target().has(c)" [class.good]="found().has(c)" [class.bad]="wrong() === c" [disabled]="phase() !== 'input'" (click)="tap(c)" [attr.aria-label]="'Tile ' + (c + 1)"></button>
-      }
-    </div>
-  `,
+  templateUrl: './grid-recall.html',
 })
 export class GridRecall implements OnInit {
   readonly done = output<MindResult>();

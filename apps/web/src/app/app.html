@@ -1,0 +1,57 @@
+<div class="progress" [class.on]="navigating()" aria-hidden="true"><span></span></div>
+
+<header [class.hide-on-phone]="immersive()">
+  <a class="brand" routerLink="/" aria-label="Zenigma home">
+    <app-loader [size]="26" [animate]="false" />
+    <span>Zenigma</span>
+  </a>
+
+  <nav aria-label="Main">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5" /><path d="M6 10v9.5h12V10" /></svg>
+      <span>Home</span>
+    </a>
+    <a routerLink="/daily" routerLinkActive="active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M8 3v4M16 3v4M3.5 10h17" /><path d="M9 15l2 2 4-4" /></svg>
+      <span>Daily</span>
+    </a>
+    <a routerLink="/practice" routerLinkActive="active">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></svg>
+      <span>Practice</span>
+    </a>
+    <a routerLink="/ranks" routerLinkActive="active">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20v-8M12 20V4M17 20v-5" /></svg>
+      <span>Ranks</span>
+    </a>
+    <a routerLink="/settings" routerLinkActive="active">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2.25" /><circle cx="9" cy="17" r="2.25" /></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="status" aria-live="polite">
+    @if (sync.syncing()) {
+      <app-loader [size]="14" />
+      <span>Syncing</span>
+    } @else if (!sync.online()) {
+      <i class="dot bad"></i>
+      <span>Offline</span>
+    } @else if (sync.pendingCount() > 0) {
+      <i class="dot warn"></i>
+      <span>{{ sync.pendingCount() }} to sync</span>
+    } @else {
+      <i class="dot good"></i>
+      <span class="quiet">{{ auth.signedIn() ? 'Synced' : 'Guest' }}</span>
+    }
+  </div>
+</header>
+
+<main [class.immersive]="immersive()">
+  <router-outlet />
+</main>
+
+<app-update-sheet />
+<app-whats-new />
+@if (back.toast(); as text) {
+  <div class="exit-toast" role="status">{{ text }}</div>
+}

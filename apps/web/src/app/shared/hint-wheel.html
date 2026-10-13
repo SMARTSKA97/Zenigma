@@ -1,0 +1,25 @@
+<app-sheet label="Daily spin" (closed)="closed.emit()">
+  <div class="wrap">
+    <h2>Daily spin</h2>
+    <p class="muted">One spin a day. Hints guide you towards the next step, they never give the answer away.</p>
+    <div class="stage">
+      <div class="pointer" aria-hidden="true"></div>
+      <svg class="wheel" viewBox="-100 -100 200 200" [style.transform]="'rotate(' + angle() + 'deg)'" aria-hidden="true">
+        @for (s of slices; track $index) {
+          <path [attr.d]="slicePath($index)" [attr.fill]="colour($index)" />
+          <text [attr.transform]="'rotate(' + ($index * 45 + 22.5) + ') translate(0 -66)'" text-anchor="middle" dominant-baseline="central">{{ s }}</text>
+        }
+        <circle r="14" class="hub" />
+      </svg>
+    </div>
+    @if (prize(); as p) {
+      <p class="won" role="status">+{{ p }} hint{{ p > 1 ? 's' : '' }} <span aria-hidden="true">💡</span></p>
+      <button type="button" (click)="closed.emit()">Great</button>
+    } @else if (hints.canSpin()) {
+      <button type="button" [disabled]="spinning()" (click)="spin()">{{ spinning() ? 'Spinning…' : 'Spin' }}</button>
+    } @else {
+      <p class="muted">Come back tomorrow for another spin. You can also earn a hint by clearing every tenth level.</p>
+      <button type="button" class="secondary" (click)="closed.emit()">Close</button>
+    }
+  </div>
+</app-sheet>

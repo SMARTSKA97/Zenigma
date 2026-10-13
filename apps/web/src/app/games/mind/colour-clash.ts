@@ -13,17 +13,7 @@ const COLOURS = [
   selector: 'app-colour-clash',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ score() }} correct</span><span>{{ seconds() }}s</span></div>
-    <div class="time"><i [style.width.%]="(clock.left() / 45000) * 100"></i></div>
-    <div class="prompt" [class.flash-bad]="bad()" [style.color]="round().ink.css">{{ round().word.name }}</div>
-    <p class="say">Tap the colour of the ink</p>
-    <div class="options">
-      @for (c of colours; track c.name) {
-        <button type="button" class="opt" (click)="answer(c.name)">{{ c.name }}</button>
-      }
-    </div>
-  `,
+  templateUrl: './colour-clash.html',
 })
 export class ColourClash implements OnInit {
   readonly done = output<MindResult>();

@@ -1,0 +1,11 @@
+:host .big {
+  width: min(100%, 18rem);
+  aspect-ratio: 1;
+  border-radius: 32px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: none;
+  font-size: 7rem;
+  line-height: 1;
+  touch-action: manipulation;
+}

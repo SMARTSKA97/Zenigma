@@ -1,0 +1,10 @@
+@if (shown().length) {
+  <section class="insights" aria-label="Insights">
+    @for (i of shown(); track i.title) {
+      <article>
+        <span class="icon" aria-hidden="true">{{ i.icon }}</span>
+        <span class="body"><b>{{ i.title }}</b><span class="muted">{{ i.text }}</span></span>
+      </article>
+    }
+  </section>
+}

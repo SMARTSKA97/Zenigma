@@ -6,26 +6,8 @@ import { MindResult, pick, shuffled, useClock } from './mind-util';
 @Component({
   selector: 'app-anagram-rush',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ score() }} words</span><span>{{ seconds() }}s</span></div>
-    <div class="time"><i [style.width.%]="(clock.left() / 60000) * 100"></i></div>
-    <div class="prompt" [class.flash-bad]="bad()">{{ built().join('') || '·····' }}</div>
-    <div class="options letters">
-      @for (l of letters(); track $index) {
-        <button type="button" class="opt" [disabled]="used().includes($index)" (click)="add($index)">{{ l.toUpperCase() }}</button>
-      }
-    </div>
-    <div class="options">
-      <button type="button" class="opt" (click)="clear()">Clear</button>
-      <button type="button" class="opt" (click)="skip()">Skip (−5s)</button>
-    </div>
-  `,
-  styles: `
-    .letters {
-      grid-template-columns: repeat(5, 1fr);
-    }
-  `,
+  templateUrl: './anagram-rush.html',
+  styleUrls: ['./mind.scss', './anagram-rush.scss'],
 })
 export class AnagramRush implements OnInit {
   readonly done = output<MindResult>();

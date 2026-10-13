@@ -1,0 +1,4 @@
+<button type="button" class="sw" role="switch" [attr.aria-checked]="checked()" [disabled]="disabled()" (click)="checkedChange.emit(!checked())">
+  <span class="text"><ng-content /></span>
+  <span class="track" aria-hidden="true"><span class="knob"></span></span>
+</button>

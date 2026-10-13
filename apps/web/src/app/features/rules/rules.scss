@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 1rem 7rem;
+}
+.back {
+  display: inline-block;
+  margin: 0.6rem 0;
+  color: var(--muted);
+  text-decoration: none;
+}
+h1 {
+  margin: 0;
+}
+.lede {
+  margin: 0.3rem 0 1rem;
+}
+.grid {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+.game {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+.art {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 14px;
+  background: oklch(0.92 0.06 calc(var(--h) * 1deg));
+}
+.art :is(svg) {
+  width: 70%;
+  height: 70%;
+}
+.txt {
+  display: grid;
+  flex: 1;
+  gap: 0.1rem;
+}
+.txt span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.go {
+  font-size: 1.4rem;
+  color: var(--muted);
+}
+.card {
+  margin-bottom: 1rem;
+}
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.4rem;
+  line-height: 1.5;
+}

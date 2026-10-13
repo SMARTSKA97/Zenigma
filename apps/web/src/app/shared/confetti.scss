@@ -1,0 +1,31 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  overflow: hidden;
+  pointer-events: none;
+}
+i {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  width: calc(var(--s) * 1px);
+  height: calc(var(--s) * 0.5px);
+  border-radius: 2px;
+  opacity: 0;
+  animation: burst 1.7s cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
+  animation-delay: var(--d);
+}
+@keyframes burst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--x) * 1vw), calc(var(--w) * 1vh)) rotate(calc(var(--r) * 1deg));
+  }
+}

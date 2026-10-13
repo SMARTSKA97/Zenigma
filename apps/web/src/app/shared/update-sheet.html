@@ -1,0 +1,61 @@
+@if (visible()) {
+  <app-sheet label="App update" [dismissible]="!busy()" (closed)="close()">
+    @switch (updater.state()) {
+      @case ('downloading') {
+        <div class="center">
+          <h2>Downloading update</h2>
+          <p class="percent">{{ updater.progress() * 100 | number: '1.0-0' }}<small>%</small></p>
+          <div class="wave" role="progressbar" aria-label="Download progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="updater.progress() * 100 | number: '1.0-0'" [style.--p]="updater.progress()">
+            <span class="done"></span>
+            <span class="rest"></span>
+          </div>
+          <p class="muted size">{{ mb(updater.received()) }} of {{ mb(updater.total()) }} MB</p>
+        </div>
+      }
+      @case ('installing') {
+        <div class="center">
+          <app-loader [size]="44" />
+          <h2>Getting ready to install</h2>
+          <p class="muted">Android will ask you to confirm in a moment.</p>
+        </div>
+      }
+      @case ('needsPermission') {
+        <h2>Allow installs from Zenigma</h2>
+        <p class="muted">Android needs your permission before Zenigma can install its own updates. You only do this once.</p>
+        <div class="actions">
+          <button type="button" class="secondary" (click)="close()">Not now</button>
+          <button type="button" (click)="updater.allowInstalls()">Open settings</button>
+        </div>
+      }
+      @case ('error') {
+        <h2>Update did not finish</h2>
+        <p class="error">{{ updater.message() }}</p>
+        <div class="actions">
+          <button type="button" class="secondary" (click)="close()">Close</button>
+          <button type="button" (click)="updater.install()">Try again</button>
+        </div>
+      }
+      @default {
+        <div class="head">
+          <span class="badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" /></svg>
+          </span>
+          <div>
+            <h2>Update available</h2>
+            <p class="muted">Version {{ updater.currentVersion() }} to {{ updater.update()?.version }}</p>
+          </div>
+        </div>
+        @if (updater.update()?.notes; as notes) {
+          <div class="whats">
+            <h3>What's new</h3>
+            <app-notes [text]="notes" />
+          </div>
+        }
+        <div class="actions">
+          <button type="button" class="secondary" (click)="close()">Later</button>
+          <button type="button" (click)="updater.install()">Update</button>
+        </div>
+      }
+    }
+  </app-sheet>
+}

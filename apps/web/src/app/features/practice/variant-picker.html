@@ -1,0 +1,29 @@
+<a class="back" routerLink="/practice" aria-label="Back to practice">‹ Practice</a>
+<h1>{{ info()?.name }}</h1>
+<p class="muted">Choose a kind. Each has its own levels and progress.</p>
+<div class="list">
+  @for (v of playable(); track v.id) {
+    <a class="card" [routerLink]="link(v.id, v.tiered)" [style.--h]="info()?.hue">
+      <span class="art"><app-glyph [game]="game()" /></span>
+      <span class="text">
+        <strong>{{ v.name }}</strong>
+        <span class="muted">{{ v.blurb }}</span>
+        <span class="tag">{{ progress(v.id, v.tiered) }}</span>
+      </span>
+      <span class="go" aria-hidden="true">›</span>
+    </a>
+  }
+</div>
+
+@if (soon().length) {
+  <h2 class="soon-title">Coming soon</h2>
+  <p class="muted">More kinds, as played at Sudoku championships.</p>
+  <div class="soon">
+    @for (v of soon(); track v.id) {
+      <div class="chip">
+        <strong>{{ v.name }}</strong>
+        <span class="muted">{{ v.blurb }}</span>
+      </div>
+    }
+  </div>
+}

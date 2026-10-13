@@ -1,0 +1,62 @@
+<header class="top">
+  <a class="round" href="/practice" aria-label="Back" (click)="nav.up($event)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  </a>
+  <div class="title">
+    <h1>{{ info()?.name }}</h1>
+    <p class="muted">{{ skill()?.emoji }} {{ skill()?.name }}</p>
+  </div>
+</header>
+
+@if (meta(); as m) {
+  @switch (stage()) {
+    @case ('intro') {
+      <section class="card intro" [style.--h]="info()?.hue">
+        <span class="art"><app-glyph [game]="id()" /></span>
+        <p>{{ m.how }}</p>
+        <dl>
+          <div><dt>Best</dt><dd>{{ best() }}</dd></div>
+          <div><dt>Plays</dt><dd>{{ store.record(id()).plays }}</dd></div>
+        </dl>
+        <button type="button" (click)="start()">Start</button>
+      </section>
+    }
+    @case ('play') {
+      <section class="stage">
+        @switch (id()) {
+          @case ('quick-sums') { <app-quick-sums (done)="finish($event)" /> }
+          @case ('colour-clash') { <app-colour-clash (done)="finish($event)" /> }
+          @case ('echo-sequence') { <app-echo-sequence (done)="finish($event)" /> }
+          @case ('grid-recall') { <app-grid-recall (done)="finish($event)" /> }
+          @case ('number-recall') { <app-number-recall (done)="finish($event)" /> }
+          @case ('quick-reflex') { <app-quick-reflex (done)="finish($event)" /> }
+          @case ('odd-one-out') { <app-odd-one-out (done)="finish($event)" /> }
+          @case ('spot-change') { <app-spot-change (done)="finish($event)" /> }
+          @case ('target-tap') { <app-target-tap (done)="finish($event)" /> }
+          @case ('back-track') { <app-back-track (done)="finish($event)" /> }
+          @case ('pair-match') { <app-pair-match (done)="finish($event)" /> }
+          @case ('anagram-rush') { <app-anagram-rush (done)="finish($event)" /> }
+          @case ('missing-letters') { <app-missing-letters (done)="finish($event)" /> }
+          @case ('what-next') { <app-what-next (done)="finish($event)" /> }
+          @case ('target-number') { <app-target-number (done)="finish($event)" /> }
+        }
+      </section>
+    }
+    @case ('result') {
+      <section class="card result" [style.--h]="info()?.hue">
+        @if (record()) {
+          <p class="new">New best!</p>
+        }
+        <p class="big">{{ label(result()?.score ?? 0) }}</p>
+        @if (result()?.detail; as d) {
+          <p class="muted">{{ d }}</p>
+        }
+        <p class="muted">Best: {{ best() }}</p>
+        <div class="row">
+          <button type="button" (click)="start()">Play again</button>
+          <a class="button secondary" routerLink="/practice">Practice</a>
+        </div>
+      </section>
+    }
+  }
+}

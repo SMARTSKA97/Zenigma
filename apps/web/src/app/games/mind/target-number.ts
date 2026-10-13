@@ -12,38 +12,8 @@ type Op = '+' | '−' | '×';
 @Component({
   selector: 'app-target-number',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ score() }} solved</span><span>{{ seconds() }}s</span></div>
-    <div class="time"><i [style.width.%]="(clock.left() / 90000) * 100"></i></div>
-    <div class="prompt" [class.flash-bad]="bad()">Make {{ puzzle().target }}</div>
-    <div class="options nums">
-      @for (n of current(); track $index) {
-        <button type="button" class="opt" [class.pick]="first() === $index" (click)="choose($index)">{{ n }}</button>
-      }
-    </div>
-    <div class="options ops">
-      @for (o of ops; track o) {
-        <button type="button" class="opt" [class.pick]="op() === o" (click)="op.set(o)">{{ o }}</button>
-      }
-    </div>
-    <div class="options">
-      <button type="button" class="opt" (click)="reset()">Reset</button>
-      <button type="button" class="opt" (click)="skip()">Skip (−5s)</button>
-    </div>
-  `,
-  styles: `
-    .nums {
-      grid-template-columns: repeat(4, 1fr);
-    }
-    .ops {
-      grid-template-columns: repeat(3, 1fr);
-    }
-    :host .opt.pick {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-    }
-  `,
+  templateUrl: './target-number.html',
+  styleUrls: ['./mind.scss', './target-number.scss'],
 })
 export class TargetNumber implements OnInit {
   readonly done = output<MindResult>();

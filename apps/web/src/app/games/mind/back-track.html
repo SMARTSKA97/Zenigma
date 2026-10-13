@@ -1,0 +1,4 @@
+<div class="hud"><span>{{ score() }} points</span><span>{{ index() }} / {{ total }}</span></div>
+<div class="prompt" aria-live="polite">{{ letter() }}</div>
+<p class="say">Same as two letters ago?</p>
+<button type="button" class="opt wide" [class.flash-bad]="miss()" (pointerdown)="match()">Match</button>

@@ -1,0 +1,46 @@
+@if (atRisk(); as risk) {
+  <a class="card rescue" routerLink="/daily">
+    <span class="emoji" aria-hidden="true">🔥</span>
+    <span class="t">
+      <b>Your {{ risk.name }} streak ({{ risk.days }} days) ends at midnight</b>
+      <small>Play today's {{ risk.name }} daily to keep it going</small>
+    </span>
+    <span class="go" aria-hidden="true">›</span>
+  </a>
+}
+@if (resume(); as r) {
+  <a class="card resume" [routerLink]="r.link">
+    <span class="emoji" aria-hidden="true">▶</span>
+    <span class="t">
+      <b>Continue {{ r.name }}</b>
+      <small>Level {{ r.level }} is waiting where you left it</small>
+    </span>
+    <span class="go" aria-hidden="true">›</span>
+  </a>
+}
+@if (challenges.toCollect() > 0) {
+  <app-challenge-strip />
+}
+@if (played().length) {
+  <a class="card friends" routerLink="/ranks/circles" aria-label="Friends who played today">
+    <p class="eyebrow">Friends today</p>
+    <div class="faces">
+      @for (f of played(); track f.name) {
+        <span class="face"><b>{{ f.name.charAt(0).toUpperCase() }}</b><span>{{ f.name }} · {{ f.solved }} {{ f.solved === 1 ? 'daily' : 'dailies' }}</span></span>
+      }
+    </div>
+  </a>
+}
+@if (auth.signedIn()) {
+  <app-circle-seasons mode="podium" />
+}
+@if (recap(); as w) {
+  <section class="card recap" aria-label="Last week">
+    <button type="button" class="x" (click)="dismiss()" aria-label="Hide">×</button>
+    <p class="eyebrow">Your last week</p>
+    <h2>You solved {{ w.solved }} {{ w.solved === 1 ? 'puzzle' : 'puzzles' }}</h2>
+    <p class="muted">
+      On {{ w.days }} {{ w.days === 1 ? 'day' : 'days' }}{{ w.favourite ? ', mostly ' + w.favourite : '' }}. New week, new streak chances.
+    </p>
+  </section>
+}

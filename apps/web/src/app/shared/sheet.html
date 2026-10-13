@@ -1,0 +1,5 @@
+<div class="scrim" (click)="dismissible() && closed.emit()"></div>
+<section class="sheet" role="dialog" aria-modal="true" [attr.aria-label]="label()">
+  <div class="handle" aria-hidden="true"></div>
+  <ng-content />
+</section>

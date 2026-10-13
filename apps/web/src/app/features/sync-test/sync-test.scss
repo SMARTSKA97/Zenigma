@@ -1,0 +1,26 @@
+.events {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+form input {
+  flex: 1;
+}
+.badge {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--good);
+  color: var(--good);
+}
+.badge.pending {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+code {
+  display: block;
+  margin-top: 0.5rem;
+  word-break: break-word;
+}

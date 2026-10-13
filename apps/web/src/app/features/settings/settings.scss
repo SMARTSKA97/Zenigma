@@ -1,0 +1,152 @@
+:host {
+  display: block;
+  max-width: 36rem;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: var(--radius, 16px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+}
+.pt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pt small {
+  overflow-wrap: anywhere;
+}
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.group {
+  margin: 1.5rem 0.5rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.list {
+  border-radius: var(--radius, 16px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin: 0;
+}
+.item + .item {
+  border-top: 1px solid var(--border);
+}
+.item.stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+.item app-switch {
+  flex: 1;
+}
+.lead {
+  flex: 1;
+  font-weight: 500;
+}
+.link {
+  color: var(--text);
+  text-decoration: none;
+}
+:host button.item {
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ico {
+  width: 1.6rem;
+  text-align: center;
+}
+.chev {
+  color: var(--muted);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+:host .sw-btn {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  min-height: 0;
+  width: 4.2rem;
+  padding: 0.45rem 0.2rem;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+}
+:host .sw-btn[aria-checked='true'] {
+  border-color: var(--c);
+}
+:host .sw-btn:disabled {
+  opacity: 0.5;
+}
+.sw-btn i {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+.time input {
+  width: auto;
+}
+small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+}
+.status.ok {
+  color: var(--good);
+}
+.stack p {
+  margin: 0;
+}

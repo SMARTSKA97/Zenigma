@@ -1,0 +1,28 @@
+<div
+  class="grid"
+  role="application"
+  [attr.aria-label]="description()"
+  tabindex="0"
+  [style.--n]="puzzle().size"
+  [class.win]="solved()"
+  (pointerdown)="down($event)"
+  (pointermove)="move($event)"
+  (pointerup)="up($event)"
+  (pointercancel)="up($event)"
+  (contextmenu)="$event.preventDefault()"
+  (keydown)="key($event)"
+>
+  @for (cell of cells(); track cell.i) {
+    <div class="cell" [attr.data-i]="cell.i" [class.on]="cell.on" [class.head]="cell.head">
+      @if (cell.number) {
+        <b class="num" [class.reached]="cell.on">{{ cell.number }}</b>
+      }
+    </div>
+  }
+  <svg class="trail" [attr.viewBox]="'0 0 ' + puzzle().size + ' ' + puzzle().size" aria-hidden="true">
+    <polyline [attr.points]="points()" />
+    @if (head(); as h) {
+      <circle [attr.cx]="h.x" [attr.cy]="h.y" r="0.2" />
+    }
+  </svg>
+</div>

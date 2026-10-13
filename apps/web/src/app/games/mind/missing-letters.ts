@@ -15,16 +15,7 @@ const PAIRS = ['ar', 'er', 'or', 'ea', 'ou', 'ai', 'st', 'ch', 'th', 'in', 'an',
   selector: 'app-missing-letters',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './mind.scss',
-  template: `
-    <div class="hud"><span>{{ score() }} words</span><span>{{ seconds() }}s</span></div>
-    <div class="time"><i [style.width.%]="(clock.left() / 60000) * 100"></i></div>
-    <div class="prompt" [class.flash-bad]="bad()">{{ q().shown }}</div>
-    <div class="options">
-      @for (o of q().options; track o) {
-        <button type="button" class="opt" (click)="answer(o)">{{ o.toUpperCase() }}</button>
-      }
-    </div>
-  `,
+  templateUrl: './missing-letters.html',
 })
 export class MissingLetters implements OnInit {
   readonly done = output<MindResult>();

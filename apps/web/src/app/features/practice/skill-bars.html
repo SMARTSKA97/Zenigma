@@ -1,0 +1,10 @@
+<section class="skills" aria-label="Your skills">
+  @for (s of rows(); track s.id) {
+    <div class="row">
+      <span class="name">{{ s.emoji }} {{ s.name }}</span>
+      <span class="bar" role="progressbar" [attr.aria-valuenow]="s.mark" aria-valuemin="0" aria-valuemax="100"><i [style.width.%]="s.mark"></i></span>
+      <span class="num">{{ s.mark }}</span>
+    </div>
+  }
+  <p class="muted note">Each mark is the average of your best scores in that skill's games. {{ store.totalPlays() }} {{ store.totalPlays() === 1 ? 'game' : 'games' }} played.</p>
+</section>

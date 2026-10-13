@@ -9,76 +9,8 @@ import { Circle, CirclesService, inviteLink } from '../../core/circles.service';
   selector: 'app-circles',
   imports: [RouterLink, CircleSeasons],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <a class="back" routerLink="/ranks">← Leaderboards</a>
-    <h1>Circles</h1>
-    <p class="muted">Private groups of friends. Share a code and compete on your own leaderboard.</p>
-
-    @if (!auth.signedIn()) {
-      <section class="card">
-        <p class="muted">Sign in to create or join a circle.</p>
-        <a class="button" routerLink="/account">Sign in</a>
-      </section>
-    } @else {
-      <div class="forms">
-        <form class="card" (submit)="create($event, newName)">
-          <h2>Start a circle</h2>
-          <input #newName type="text" maxlength="40" placeholder="Name, e.g. Office crew" aria-label="Circle name" autocomplete="off" />
-          <button type="submit" [disabled]="busy()">Create</button>
-        </form>
-        <form class="card" (submit)="join($event, code)">
-          <h2>Join with a code</h2>
-          <input #code type="text" maxlength="6" placeholder="6-character code" aria-label="Circle code" autocapitalize="characters" autocomplete="off" [value]="prefill()" />
-          <button type="submit" [disabled]="busy()">Join</button>
-        </form>
-      </div>
-      @if (message(); as m) {
-        <p class="note" role="status">{{ m }}</p>
-      }
-
-      <app-circle-seasons />
-
-      @if (loading()) {
-        <div class="skeleton line"></div>
-      } @else if (circles().length === 0) {
-        <section class="card empty"><p class="muted">You are not in a circle yet.</p></section>
-      } @else {
-        <ul class="list">
-          @for (c of circles(); track c.id) {
-            <li class="card item">
-              <div class="head">
-                <div>
-                  <strong>{{ c.name }}</strong>
-                  <span class="muted">{{ c.members }} {{ c.members === 1 ? 'member' : 'members' }}{{ c.isOwner ? ' · yours' : '' }}</span>
-                </div>
-                <code class="code" aria-label="Circle code">{{ c.code }}</code>
-              </div>
-              <div class="actions">
-                <a class="button" [routerLink]="['/ranks']" [queryParams]="{ circle: c.id }">Leaderboard</a>
-                <button type="button" (click)="share(c)">Invite</button>
-                <button type="button" class="quiet" (click)="leave(c)">Leave</button>
-              </div>
-            </li>
-          }
-        </ul>
-      }
-    }
-  `,
-  styles: `
-    :host { display: block; max-width: 40rem; margin: 0 auto; }
-    .back { display: inline-block; margin-bottom: 0.5rem; font-size: 0.9rem; }
-    .forms { display: grid; gap: 0.75rem; margin: 1rem 0; }
-    form { display: grid; gap: 0.6rem; }
-    h2 { font-size: 1rem; margin: 0; }
-    .note { margin: 0 0 1rem; padding: 0.6rem 0.9rem; border-radius: 12px; background: var(--accent-soft); }
-    .list { display: grid; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
-    .item { display: grid; gap: 0.75rem; }
-    .head { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
-    .head div { display: grid; }
-    .code { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.15em; padding: 0.3rem 0.7rem; border-radius: 10px; background: var(--surface-2); }
-    .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .empty { text-align: center; }
-  `,
+  templateUrl: './circles.html',
+  styleUrl: './circles.scss',
 })
 export class Circles {
   protected readonly auth = inject(AuthService);

@@ -10,43 +10,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     role: 'img',
     '[attr.aria-label]': 'animate() ? "Loading" : "Zenigma"',
   },
-  template: `
-    @for (i of cells; track i) {
-      <i [style.--n]="$index" [style.grid-area]="area(i)"></i>
-    }
-  `,
-  styles: `
-    :host {
-      --gap: calc(var(--s) * 0.12);
-      display: inline-grid;
-      grid-template: repeat(3, 1fr) / repeat(3, 1fr);
-      gap: var(--gap);
-      width: var(--s);
-      height: var(--s);
-      color: inherit;
-      flex: none;
-    }
-    i {
-      border-radius: 28%;
-      background: currentColor;
-    }
-    :host(.spin) i {
-      animation: wave 1.1s var(--ease) infinite;
-      animation-delay: calc(var(--n) * 0.09s);
-    }
-    @keyframes wave {
-      0%,
-      60%,
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      30% {
-        transform: scale(0.45);
-        opacity: 0.35;
-      }
-    }
-  `,
+  templateUrl: './loader.html',
+  styleUrl: './loader.scss',
 })
 export class Loader {
   readonly size = input(28);

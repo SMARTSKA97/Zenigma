@@ -1,0 +1,4 @@
+<div class="hud"><span>Round {{ round() }} of 5</span><span>{{ times().length ? 'Last ' + times()[times().length - 1] + ' ms' : '' }}</span></div>
+<button type="button" class="zone" [class.go]="state() === 'go'" [class.early]="state() === 'early'" (pointerdown)="tap()" aria-live="polite">
+  {{ state() === 'idle' ? 'Tap to begin' : state() === 'wait' ? 'Wait for green…' : state() === 'go' ? 'TAP!' : state() === 'early' ? 'Too soon. Tap to try again' : times()[times().length - 1] + ' ms. Tap to continue' }}
+</button>
