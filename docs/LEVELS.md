@@ -16,6 +16,19 @@ Every practice track (a game, or a kind of a game) has levels that are generated
 
 Difficulty: most tracks reach their hardest setting around level 500 and then repeat the hardest zone-of-ten ramp (easy to hard inside each zone of ten). The Sudoku tiers (Easy to Insane) ramp inside their own clue range.
 
+## Growth and cost
+
+Each pack is about 115 KB and every pack exists twice (web and API), so a weekly run adds roughly 14 MB to the repository (about 60 tracks). That is fine for months, not years. The plan, to start when the repo passes about 300 MB or a clone takes too long:
+
+1. Keep the newest packs of each track in git. Publish older packs as GitHub release assets (or object storage) named `<track>-<n>.json`, and delete them from git history going forward.
+2. The app already fetches a pack only when a player reaches it, so it would fetch old packs from the asset URL instead (the base URL goes in `environment.ts`; the service worker and the Android cache keep working the same way).
+3. The API only needs a pack when someone submits a level in it, so it can fetch and memoise it the same way.
+4. `--verify` keeps working from the assets in CI.
+
+The Docker build context is `apps/api`, so the two copies cannot be shared as a single folder without changing the build.
+
+The weekly job itself is a scheduled task, not a workflow, so it has no hard time limit in the repository. Generation takes about 10 minutes for the Sudoku kinds and the hardest Zip tiers; if a run nears the task's limit, split it by passing track names (`node grow-levels.mjs sudoku`, then `zip`, then the rest) in separate runs.
+
 ## Tracks
 
 `<queens|tango|zip|patches>-classic-<easy|medium|hard|challenging|insane>`, `sudoku-<classic|mini>-<easy|medium|hard|challenging|insane>`, `sudoku-diagonal`, `sudoku-knight`, `sudoku-windoku`, `sudoku-disjoint`, and the rule kinds `sudoku-<killer|thermo|jigsaw|arrow|sandwich|consecutive|even-odd>`.

@@ -200,6 +200,12 @@
 
 <h2 class="group">Your data</h2>
 <section class="list">
+  <div class="item">
+    <app-switch [checked]="prefs.crashReports()" (checkedChange)="prefs.setCrashReports($event)">
+      Send crash reports
+      <small>When the app breaks, send the error message and screen name to Zenigma. No account, no device id, no third party.</small>
+    </app-switch>
+  </div>
   <button type="button" class="item link" (click)="exportData()">
     <span class="ico">📦</span>
     <span class="lead">Export my data<small>Download your progress, scores and settings from this device as a JSON file.</small></span>

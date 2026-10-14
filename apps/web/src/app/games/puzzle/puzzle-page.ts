@@ -274,6 +274,9 @@ export class PuzzlePage {
     this.helpOpen.set(true);
   }
 
+  /** The rules of this game, shown beside the board on a very wide screen. */
+  protected readonly gameRules = computed(() => RULES_BY_ID.get(this.game()) ?? null);
+
   protected async openLevel(level: number, saved?: { state: unknown; elapsedMs: number }): Promise<void> {
     const game = this.game();
     if (!this.practiceStore.isUnlocked(this.track(), level) && this.challenge()?.level !== level && this.featuredLevel !== level) return;

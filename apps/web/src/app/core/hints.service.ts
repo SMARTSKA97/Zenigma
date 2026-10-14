@@ -104,17 +104,18 @@ export class HintsService {
     this.persist(); // not a change the server needs to hear about
   }
 
-  private queue(delta: number, reason: string): void {
-    this.saved.outbox = [...this.saved.outbox, { id: crypto.randomUUID(), delta, reason }].slice(-300);
+  /** `id` is fixed for things that may happen only once (a day's spin), so a second device cannot be paid twice: the server counts each id once. */
+  private queue(delta: number, reason: string, id: string = crypto.randomUUID()): void {
+    this.saved.outbox = [...this.saved.outbox, { id, delta, reason }].slice(-300);
   }
 
   /** Gives hints from a free source (capped). Returns how many were actually added. */
-  grant(count: number, reason = 'earn'): number {
+  grant(count: number, reason = 'earn', id?: string): number {
     const room = Math.max(0, FREE_CAP - this.balance());
     const added = Math.min(count, room);
     if (added > 0) {
       this.balance.update((b) => b + added);
-      this.queue(added, reason);
+      this.queue(added, reason, id);
       this.save();
     }
     return added;
@@ -131,7 +132,7 @@ export class HintsService {
     const hints: 1 | 2 | 3 = random < 0.6 ? 1 : random < 0.9 ? 2 : 3;
     this.saved.spun = indiaDate();
     this.spunToday.set(true);
-    this.grant(hints, 'wheel');
+    this.grant(hints, 'wheel', `wheel:${indiaDate()}`);
     this.save();
     return { hints };
   }

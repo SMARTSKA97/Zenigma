@@ -1,6 +1,6 @@
 # Ideas and roadmap
 
-✅ = built and shipped (or in the next release). ⬜ = still to do. 🆕 = newly added idea.
+✅ = built and shipped (or in the next release). ❌ = decided against, with the reason. 📝 = plan written, not needed yet. ⬜ = still to do. 🆕 = newly added idea.
 The standing rule: **hints and anything that could be bought never touch a ranking** (dailies and leaderboards stay hint-free).
 
 ## Status at a glance
@@ -57,7 +57,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Sudoku kind **Renban** (0.20.0).
 - ⬜ 🆕 Sudoku kinds: **Little Killer**, **Kropki**.
 - ✅ Patches variant with hidden numbers (shape only). ⬜ Numbers-only, blocked cells.
-- ⬜ Daily "Perfect" badge: every daily in a day, no mistakes, no hints.
+- ✅ **Perfect day** badge: every daily game solved in one day (0.20.0). Dailies have no hints, and mistakes are not recorded, so "perfect" means complete.
 - ⬜ 🆕 **Tutorials**: a 20-second interactive first level per game.
 - ⬜ 🆕 **Level editor / community levels** (long term).
 
@@ -69,7 +69,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ⬜ 🆕 **Google sign-in on Android** needs a native plugin (the WebView cannot run Google Identity Services). The button is hidden there until then.
 - ⬜ 🆕 Link or unlink Google from an existing email account in Profile.
 - ✅ Export my data (JSON), in Settings (0.20.0).
-- ⬜ Offline daily: download tomorrow's puzzle ahead of time.
+- ❌ Offline daily: decided against. Dailies are timed and checked by the server so times are fair; handing out tomorrow's puzzle early, or accepting an offline time, would break that. Practice, Mind and Word Guess practice already work offline.
 
 ## UX
 
@@ -77,7 +77,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Practice reorganised: filter by kind, Mind has its own page (0.19.0).
 - ✅ Update sheet and Version history in sections: New, Improved, Fixed, Coming up (0.19.0).
 - ⬜ Home-screen widget with streak and today's dailies.
-- ⬜ Wide-screen layout (board centre, rules and leaderboard beside it).
+- ✅ Wide-screen layout: board plus a side panel from 900px, and the rules beside it from 1250px (0.20.0).
 - ✅ **Reminders** at a time you choose (local notifications, no server needed).
 - ✅ **Quiet mode**: Hide the timer (0.20.0). ✅ Hide streaks too (0.20.0).
 - ⬜ 🆕 **Language packs** for Word Guess beyond English.
@@ -85,8 +85,8 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 ## Engineering and growth
 
 - ✅ CI: web, API with Flyway and xUnit, puzzle generators with verification and vectors, Android build.
-- ⬜ 🆕 **Repo growth**: weekly packs add about 1000 levels per track each week. Plan: keep recent packs in git, move old ones to release assets or object storage, and have the app fetch them by version.
-- ⬜ 🆕 The weekly generation job now covers many more tracks; watch its run time and split it per game if it nears the limit.
-- ⬜ 🆕 The "spun today" marker for the wheel is local only; move it to the server balance so a second device cannot spin again.
-- ⬜ 🆕 Old queens/tango/zip/patches progress restarts under the new tiers; consider migrating it by mapping old level numbers to tiers.
-- ⬜ 🆕 Observability: a small error report endpoint, no third-party tracking.
+- 📝 **Repo growth** (plan written in docs/LEVELS.md, start at about 300 MB): weekly packs add about 1000 levels per track each week. Plan: keep recent packs in git, move old ones to release assets or object storage, and have the app fetch them by version.
+- 📝 The weekly generation job: split instructions are in docs/LEVELS.md; a full run is about 10 minutes.
+- ✅ The wheel's prize is queued under a per-day id (`wheel:<date>`), and the server counts each id once, so a second device cannot be paid twice (0.20.0). The device that loses sees its balance correct on the next sync.
+- ❌ Old queens/tango/zip/patches progress migration: decided against. Old level numbers were a single difficulty ramp with no stable mapping to the five tiers, so a guess would either skip levels or repeat them. Progress under the tiers starts fresh; badges and totals already count what was cleared.
+- ✅ Observability: `POST /telemetry/error` writes a short client crash report to the API log (rate limited, no account or device id, nothing stored). A Settings switch turns it off (0.20.0).

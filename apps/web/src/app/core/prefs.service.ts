@@ -16,6 +16,7 @@ interface Prefs {
   blind: boolean;
   hideTimer: boolean;
   hideStreaks: boolean;
+  crashReports: boolean;
   accent: string;
   tapHaptics: HapticStrength;
   alertHaptics: HapticStrength;
@@ -37,6 +38,8 @@ export class PrefsService {
   readonly hideTimer = signal(false);
   /** Quiet mode, part two: streak counts and "your streak ends tonight" warnings are not shown. */
   readonly hideStreaks = signal(false);
+  /** Send a tiny anonymous crash report to our own API when the app breaks. On unless turned off. */
+  readonly crashReports = signal(true);
   /** The colour theme (see ACCENTS in the settings page). 'default' is the original blue. */
   readonly accent = signal('default');
   /** How strong the little taps are (a cell chosen, a number placed). */
@@ -56,6 +59,7 @@ export class PrefsService {
       this.blind.set(saved.blind === true);
       this.hideTimer.set(saved.hideTimer === true);
       this.hideStreaks.set(saved.hideStreaks === true);
+      this.crashReports.set(saved.crashReports !== false);
       this.accent.set(typeof saved.accent === 'string' ? saved.accent : 'default');
       this.tapHaptics.set(strength(saved.tapHaptics, 'light'));
       this.alertHaptics.set(strength(saved.alertHaptics, 'strong'));
@@ -108,6 +112,11 @@ export class PrefsService {
     this.save();
   }
 
+  setCrashReports(value: boolean): void {
+    this.crashReports.set(value);
+    this.save();
+  }
+
   setStrikes(value: boolean): void {
     this.strikes.set(value);
     this.save();
@@ -142,7 +151,7 @@ export class PrefsService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), hideStreaks: this.hideStreaks(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), hideStreaks: this.hideStreaks(), crashReports: this.crashReports(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

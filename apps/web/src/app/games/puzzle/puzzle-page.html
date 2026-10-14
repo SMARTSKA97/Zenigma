@@ -162,6 +162,17 @@
         </button>
       </div>
       }
+      @if (gameRules(); as r) {
+        <aside class="rules-side" aria-label="Rules">
+          <h2>{{ r.name }}</h2>
+          <p class="goal">{{ r.goal }}</p>
+          <ul>
+            @for (line of r.rules; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        </aside>
+      }
     </div>
   }
 </ng-template>

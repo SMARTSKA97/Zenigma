@@ -96,6 +96,10 @@ export class Badges implements OnInit {
     const fullWeekends = [...weekendDays.values()].filter((v) => v.size === 2).length;
     const collected = this.challenges.collected();
     const cleanAll = activity.filter((a) => a.kind === 'practice' && a.clean === true).length;
+    // A day on which every daily game was solved.
+    const dayCounts = new Map<string, number>();
+    for (const g of stats?.games ?? []) for (const d of g.recent) dayCounts.set(d, (dayCounts.get(d) ?? 0) + 1);
+    const perfectDays = [...dayCounts.values()].filter((n) => n >= DAILY_GAMES.length).length;
     return [
       { id: 'first', icon: '🌱', name: 'First steps', text: 'Solve your first puzzle', have: levels + dailySolved, need: 1 },
       { id: 'lv10', icon: '🔟', name: 'Ten levels', text: 'Clear 10 practice levels', have: levels, need: 10 },
@@ -110,6 +114,7 @@ export class Badges implements OnInit {
       { id: 'streak30', icon: '🌋', name: 'Habit', text: 'A 30-day streak in any game', have: bestStreak, need: 30 },
       { id: 'streak100', icon: '☄️', name: 'Unstoppable', text: 'A 100-day streak in any game', have: bestStreak, need: 100 },
       { id: 'allDaily', icon: '📅', name: 'Daily sampler', text: 'Solve a daily in every game', have: dailiesPlayed, need: DAILY_GAMES.length },
+      { id: 'perfect', icon: '🌟', name: 'Perfect day', text: 'Solve every daily game in one day', have: perfectDays, need: 1 },
       { id: 'daily50', icon: '🏅', name: 'Regular', text: 'Solve 50 dailies in total', have: dailySolved, need: 50 },
       { id: 'daily200', icon: '🏆', name: 'Daily legend', text: 'Solve 200 dailies in total', have: dailySolved, need: 200 },
       { id: 'lv250', icon: '🥉', name: 'Quarter thousand', text: 'Clear 250 practice levels', have: levels, need: 250 },
@@ -149,7 +154,7 @@ export class Badges implements OnInit {
     ['Getting started', ['first', 'lv10', 'lv100', 'lv250', 'lv500', 'lv1000', 'lv2500', 'boss']],
     ['Games', ['all', 'queens50', 'tango50', 'zip50', 'patches50', 'words10', 'speed']],
     ['Sudoku', ['sudoku100', 'hard25', 'insane1', 'kinds4', 'kinds6']],
-    ['Streaks and dailies', ['streak7', 'streak30', 'streak100', 'allDaily', 'daily50', 'daily200']],
+    ['Streaks and dailies', ['streak7', 'streak30', 'streak100', 'allDaily', 'perfect', 'daily50', 'daily200']],
     ['Habits', ['clean', 'clean100', 'early', 'owl', 'weekend3', 'bigday', 'days30']],
     ['Mind training', ['mind3', 'mind10', 'mind50', 'allskills', 'brain100', 'mindall', 'mindstreak3', 'mindstreak7', 'sharp', 'sharp5']],
     ['Challenges', ['chal1', 'chal10', 'chal50']],

@@ -439,3 +439,43 @@ a.tool {
   color: var(--bad);
   letter-spacing: 0.12em;
 }
+
+/* Rules beside the board, only when there is room for a third column. */
+.rules-side {
+  display: none;
+}
+@media (min-width: 1250px) {
+  .page,
+  .page[data-game='sudoku'] {
+    max-width: 84rem;
+  }
+  .layout,
+  .page[data-game='sudoku'] .layout {
+    grid-template-columns: minmax(0, 1fr) 15rem 19rem;
+    grid-template-areas: 'stage status rules' 'stage tools rules';
+  }
+  .rules-side {
+    grid-area: rules;
+    display: block;
+    padding: 1.1rem;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 0.88rem;
+    h2 {
+      margin: 0 0 0.4rem;
+      font-size: 1.05rem;
+    }
+    .goal {
+      margin: 0 0 0.6rem;
+      font-weight: 600;
+    }
+    ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      display: grid;
+      gap: 0.45rem;
+      color: var(--muted);
+    }
+  }
+}
