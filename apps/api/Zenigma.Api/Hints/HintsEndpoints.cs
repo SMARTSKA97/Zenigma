@@ -9,7 +9,7 @@ namespace Zenigma.Api.Hints;
 
 public record HintEntryDto(Guid? Id, int Delta, string? Reason);
 public record HintSyncRequest(List<HintEntryDto>? Entries, int? LocalBalance);
-public record HintBalanceDto(int? Balance);
+public record HintBalanceDto(int? Balance, int? Short = null);
 
 /// <summary>
 /// The hint balance for signed-in players. The app keeps playing from its own copy and sends what was earned or spent as ledger
@@ -57,6 +57,8 @@ public static partial class HintsEndpoints
                 [new NpgsqlParameter("u", userId), new NpgsqlParameter("b", start)],
                 ct);
 
+            // Spends the balance could not cover (another device used the last hint first): the balance never goes below zero.
+            var shortBy = 0;
             foreach (var e in entries)
             {
                 if (Validate(e) is not null) continue;
@@ -67,6 +69,11 @@ public static partial class HintsEndpoints
                 // The row just made already includes this device's own entries, so only an existing balance is moved by them.
                 if (inserted == 1 && created == 0)
                 {
+                    if (e.Delta < 0)
+                    {
+                        var current = await db.HintBalances.AsNoTracking().Where(x => x.UserId == userId).Select(x => x.Balance).FirstAsync(ct);
+                        if (current <= 0) shortBy++;
+                    }
                     await db.Database.ExecuteSqlRawAsync(
                         "UPDATE hint_balances SET balance = LEAST(@cap, GREATEST(0, balance + @d)), updated_at = now() WHERE user_id = @u",
                         [new NpgsqlParameter("cap", FreeCap), new NpgsqlParameter("d", e.Delta), new NpgsqlParameter("u", userId)],
@@ -75,7 +82,7 @@ public static partial class HintsEndpoints
             }
 
             var row = await db.HintBalances.AsNoTracking().FirstAsync(x => x.UserId == userId, ct);
-            return Results.Ok(new HintBalanceDto(row.Balance));
+            return Results.Ok(new HintBalanceDto(row.Balance, shortBy));
         });
     }
 }

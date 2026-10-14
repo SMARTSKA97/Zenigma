@@ -35,9 +35,11 @@ export class HintsSyncService {
     try {
       const entries = this.hints.pending();
       const response = await firstValueFrom(
-        this.http.post<{ balance: number }>(`${environment.apiBaseUrl}/hints/sync`, { entries, localBalance: this.hints.balance() }),
+        this.http.post<{ balance: number; short?: number }>(`${environment.apiBaseUrl}/hints/sync`, { entries, localBalance: this.hints.balance() }),
       );
       this.hints.applyServer(entries.map((e) => e.id), response.balance);
+      // Two devices spent the last hint at once: the server could only pay for one of them.
+      if (response.short) this.hints.gift.set('A hint you used on another device had already been spent, so your balance is lower now.');
     } catch {
       /* offline or asleep: the entries stay queued and go next time */
     } finally {

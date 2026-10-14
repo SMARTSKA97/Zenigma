@@ -45,6 +45,23 @@ public class ProfileTests : IClassFixture<ApiFactory>
     });
 
     [DbFact]
+    public async Task Hints_two_devices_spending_the_last_hint_report_the_shortfall()
+    {
+        var client = await SignUpAsync();
+        await client.PostAsJsonAsync("/hints/sync", new { entries = Array.Empty<object>(), localBalance = 1 });
+
+        var first = new { id = Guid.NewGuid(), delta = -1, reason = "hint" };
+        var second = new { id = Guid.NewGuid(), delta = -1, reason = "hint" }; // the other device spent the same hint
+        var a = await (await client.PostAsJsonAsync("/hints/sync", new { entries = new[] { first }, localBalance = 1 })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(0, a.GetProperty("balance").GetInt32());
+        Assert.Equal(0, a.GetProperty("short").GetInt32());
+
+        var b = await (await client.PostAsJsonAsync("/hints/sync", new { entries = new[] { second }, localBalance = 1 })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(0, b.GetProperty("balance").GetInt32()); // never below zero
+        Assert.Equal(1, b.GetProperty("short").GetInt32());
+    }
+
+    [DbFact]
     public async Task Hints_first_sync_adopts_the_device_balance_and_entries_apply_once()
     {
         var client = await SignUpAsync();

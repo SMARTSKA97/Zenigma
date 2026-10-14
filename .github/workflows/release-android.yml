@@ -66,6 +66,18 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon -PzenVersionName=${{ steps.v.outputs.version }} -PzenVersionCode=${{ steps.v.outputs.code }}
 
+      # The same signed build as an Android App Bundle, for Google Play. It never blocks the APK release: if it fails, the APK still ships.
+      - name: Assemble signed release bundle (AAB for Google Play)
+        id: aab
+        continue-on-error: true
+        working-directory: apps/web/android
+        env:
+          ZENIGMA_KEYSTORE_PATH: ${{ runner.temp }}/zenigma.keystore
+          ZENIGMA_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ZENIGMA_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ZENIGMA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon -PzenVersionName=${{ steps.v.outputs.version }} -PzenVersionCode=${{ steps.v.outputs.code }}
+
       - name: Verify release APK signature
         run: |
           set -euo pipefail
@@ -81,6 +93,12 @@ jobs:
         run: |
           APK="Zenigma-${{ steps.v.outputs.version }}.apk"
           cp apps/web/android/app/build/outputs/apk/release/*.apk "$APK"
-          gh release create "$GITHUB_REF_NAME" "$APK" \
+          ASSETS=("$APK")
+          AAB=$(ls apps/web/android/app/build/outputs/bundle/release/*.aab 2>/dev/null | head -1 || true)
+          if [ -n "$AAB" ]; then
+            cp "$AAB" "Zenigma-${{ steps.v.outputs.version }}.aab"
+            ASSETS+=("Zenigma-${{ steps.v.outputs.version }}.aab")
+          fi
+          gh release create "$GITHUB_REF_NAME" "${ASSETS[@]}" \
             --title "Zenigma ${{ steps.v.outputs.version }}" \
             --notes-file "mobile/release-notes/${{ steps.v.outputs.version }}.md"

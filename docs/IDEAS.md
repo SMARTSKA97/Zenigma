@@ -21,7 +21,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ One shared balance of Hints, a local copy so it works offline, start with 3, free sources capped at 10.
 - ✅ Hint behaviour per game (Queens, Tango, Sudoku, Zip, Word Guess), with a short "why".
 - ✅ **Server-side balance** (0.19.0): a ledger on the server, idempotent by entry id, the first sync adopts the device balance. Prerequisite for purchases.
-- ⬜ Reconcile edge cases: two devices spending at once (today the server never goes below zero, the loser sees a small correction).
+- ✅ Two devices spending at once: the server never goes below zero and now tells the device how many spends it could not cover, so the app says why the balance dropped (0.20.0).
 
 ### Free ways to earn
 - ✅ Daily wheel, every 10th level, streak and comeback gifts.
@@ -31,7 +31,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 
 ### Later (needs real players first)
 - ⬜ Rewarded ads, hint packs, "Zenigma Plus". Ads are out of scope for now.
-- ⬜ Google Play: AAB, data-safety form (privacy policy and account deletion already exist).
+- ✅ Google Play prep: signed AAB attached to every release, data-safety answers and the Console checklist are in docs/PLAY_STORE.md. ⬜ Left for you: the Play Console steps, and hiding the APK updater in a Play build.
 
 ## Challenges and Mind
 
