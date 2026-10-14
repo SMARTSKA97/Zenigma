@@ -47,5 +47,6 @@
  "patches-classic-insane": 1000,
  "zip-walls": 1000,
  "zip-holes": 1000,
- "patches-shapes": 1000
+ "patches-shapes": 1000,
+ "patches-numbers": 1000
 }

@@ -44,7 +44,7 @@ This is the menu of difficulty ideas for every game. ✅ means it is in the app,
 - ✅ Styled like LinkedIn Patches: coloured clue tiles, shapes, solid patches.
 - ✅ **Shapes only**: many numbers are hidden, so a clue shows just the shape (kind `patches-shapes`).
 - ⬜ **Blocked cells** that no patch may cover.
-- ⬜ **Numbers only** with no shape hints on the hardest tier.
+- ✅ **Numbers only**: no shape hints at all (kind `patches-numbers`).
 - ⬜ **Colour-matched clues**: two clues of the same colour must end up in patches of equal size.
 - ⬜ **Bigger grids** 9×9 and 10×10.
 

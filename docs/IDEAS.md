@@ -56,9 +56,9 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Sudoku kinds **Anti-King** and **Non-consecutive** (0.20.0).
 - ✅ Sudoku kind **Renban** (0.20.0).
 - ✅ Sudoku kinds **Little Killer** and **Kropki** (0.20.0).
-- ✅ Patches variant with hidden numbers (shape only). ⬜ Numbers-only, blocked cells.
+- ✅ Patches variants: shapes only, and numbers only (0.20.0). ⬜ Blocked cells.
 - ✅ **Perfect day** badge: every daily game solved in one day (0.20.0). Dailies have no hints, and mistakes are not recorded, so "perfect" means complete.
-- ⬜ 🆕 **Tutorials**: a 20-second interactive first level per game.
+- ✅ **Tutorials**: the first time you open level 1 of a game, every move is followed by a free coach card with the next step (nothing is spent, the level still counts as clean). Skip it any time (0.20.0).
 - ⬜ 🆕 **Level editor / community levels** (long term).
 
 ## Accounts, connection and sync

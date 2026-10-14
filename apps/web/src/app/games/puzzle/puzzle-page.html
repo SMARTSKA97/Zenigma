@@ -125,10 +125,15 @@
             <b>{{ c.title }}</b>
             <p>{{ c.text }}</p>
           </div>
-          <button type="button" class="secondary" (click)="dismissCoach()">Got it</button>
+          @if (tutorial()) {
+            <button type="button" class="secondary" (click)="endTutorial()">Skip tutorial</button>
+          } @else {
+            <button type="button" class="secondary" (click)="dismissCoach()">Got it</button>
+          }
         </div>
-      } @else {
-      <div class="tools" role="toolbar" aria-label="Tools">
+      }
+      @if (!coach() || tutorial()) {
+      <div class="tools" [class.after-coach]="!!coach()" role="toolbar" aria-label="Tools">
         <button type="button" class="tool" [disabled]="!history().length || locked()" (click)="undo()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" /></svg>
           <span>Undo</span>

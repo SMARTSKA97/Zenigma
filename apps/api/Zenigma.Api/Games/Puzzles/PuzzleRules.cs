@@ -25,7 +25,7 @@ public static class PuzzleRules
         "sudoku-diagonal", "sudoku-knight", "sudoku-king", "sudoku-nonconsec", "sudoku-windoku", "sudoku-disjoint",
         .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich", "renban", "kropki", "little" }.Select(kind => $"sudoku-{kind}"),
         .. new[] { Zip, Patches }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
-        "zip-walls", "zip-holes", "patches-shapes",
+        "zip-walls", "zip-holes", "patches-shapes", "patches-numbers",
     ];
 
     public static string TrackOf(string game, string? variant) => string.IsNullOrEmpty(variant) ? game : $"{game}-{variant}";

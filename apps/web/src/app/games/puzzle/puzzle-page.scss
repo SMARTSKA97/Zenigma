@@ -440,42 +440,76 @@ a.tool {
   letter-spacing: 0.12em;
 }
 
-/* Rules beside the board, only when there is room for a third column. */
+/* Rules beside the board, only when there is room for a third column (Sudoku has its own number pad, so it needs more room). */
 .rules-side {
   display: none;
 }
-@media (min-width: 1250px) {
-  .page,
-  .page[data-game='sudoku'] {
-    max-width: 84rem;
+@mixin rules-column($min, $max) {
+  @media (min-width: $min) {
+    .page:not([data-game='sudoku']) {
+      max-width: $max;
+    }
+    .page:not([data-game='sudoku']) .layout {
+      grid-template-columns: minmax(0, 1fr) 15rem 19rem;
+      grid-template-areas: 'stage status rules' 'stage tools rules';
+    }
+    .page:not([data-game='sudoku']) .rules-side {
+      display: block;
+    }
   }
-  .layout,
+}
+@include rules-column(1250px, 84rem);
+@media (min-width: 1700px) {
+  .page[data-game='sudoku'] {
+    max-width: 96rem;
+  }
   .page[data-game='sudoku'] .layout {
     grid-template-columns: minmax(0, 1fr) 15rem 19rem;
     grid-template-areas: 'stage status rules' 'stage tools rules';
   }
-  .rules-side {
-    grid-area: rules;
+  .page[data-game='sudoku'] .rules-side {
     display: block;
-    padding: 1.1rem;
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    font-size: 0.88rem;
-    h2 {
-      margin: 0 0 0.4rem;
-      font-size: 1.05rem;
-    }
-    .goal {
-      margin: 0 0 0.6rem;
-      font-weight: 600;
-    }
-    ul {
-      margin: 0;
-      padding-left: 1.1rem;
-      display: grid;
-      gap: 0.45rem;
-      color: var(--muted);
-    }
+  }
+}
+.rules-side {
+  grid-area: rules;
+  padding: 1.1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.88rem;
+  h2 {
+    margin: 0 0 0.4rem;
+    font-size: 1.05rem;
+  }
+  .goal {
+    margin: 0 0 0.6rem;
+    font-weight: 600;
+  }
+  ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.45rem;
+    color: var(--muted);
+  }
+}
+
+/* In the tutorial the coach card and the tools are both shown: the tools drop below the card. */
+.tools.after-coach {
+  grid-area: auto;
+}
+@media (min-width: 900px) {
+  .tools.after-coach {
+    grid-column: 2;
+  }
+  .layout:has(.after-coach) {
+    grid-template-rows: auto auto 1fr;
+  }
+  .layout:has(.after-coach) .stage {
+    grid-row: 1 / 4;
+  }
+  .layout:has(.after-coach) .coach {
+    align-self: start;
   }
 }

@@ -180,6 +180,7 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
   ],
   patches: [
     { id: 'classic', name: 'Classic', blurb: 'Cut the grid into rectangles that match their numbers.', tiered: true },
+    { id: 'numbers', name: 'Numbers only', blurb: 'No shape hints at all. The numbers alone tell you how big each patch is, and you work out its shape.' },
     { id: 'shapes', name: 'Shapes only', blurb: 'Many numbers are hidden. A clue shows only the shape of its patch, and you work out the size.' },
   ],
 };

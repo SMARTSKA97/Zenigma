@@ -117,6 +117,8 @@ export class PuzzlePage {
   protected readonly leaving = signal<((ok: boolean) => void) | null>(null);
   protected readonly shareOpen = signal<{ card: CardInput; text: string } | null>(null);
   protected readonly coach = signal<Hint | null>(null);
+  /** The first level of a game, the first time: every move is followed by a free hint for the next step. */
+  protected readonly tutorial = signal(false);
   /** Hints spent on the level in play (a level solved with help earns at most two stars). */
   private readonly hintsUsed = signal(0);
   private glowTimer?: ReturnType<typeof setTimeout>;
@@ -305,7 +307,49 @@ export class PuzzlePage {
     this.baseMs = keep ? saved.elapsedMs : 0;
     this.stretchStart = Date.now();
     this.phase.set('practice');
+    this.startTutorial(level);
     await this.persist();
+  }
+
+  private tutorialKey(): string {
+    return `zenigma.tutorial.done.${this.game()}`;
+  }
+
+  /** Tutorial mode: level 1 of a game that has not been learnt yet, outside challenges and dailies. */
+  private startTutorial(level: number): void {
+    this.tutorial.set(false);
+    if (this.daily() || level !== 1 || this.challenge() || this.featuredLevel === level) return;
+    try {
+      if (localStorage.getItem(this.tutorialKey())) return;
+    } catch {
+      return;
+    }
+    this.tutorial.set(true);
+    setTimeout(() => this.tutorialStep(), 700);
+  }
+
+  /** Shows the next step as a free coach card (no hint is spent and the level still counts as clean). */
+  private tutorialStep(): void {
+    const p = this.puzzle();
+    const s = this.state();
+    if (!this.tutorial() || !p || !s || this.solved()) return;
+    const hint = hintFor(this.game(), p, s);
+    if (hint.kind === 'done' || hint.kind === 'none') {
+      this.dismissCoach();
+      return;
+    }
+    this.coach.set(hint);
+    this.glow(hint);
+  }
+
+  protected endTutorial(): void {
+    this.tutorial.set(false);
+    this.dismissCoach();
+    try {
+      localStorage.setItem(this.tutorialKey(), '1');
+    } catch {
+      /* ignore */
+    }
   }
 
   /** Offered after three quick, clean wins in a row. */
@@ -382,6 +426,7 @@ export class PuzzlePage {
     this.state.set(next);
     this.scheduleSave();
     this.strike();
+    this.tutorialStep();
     void this.checkSolved();
   }
 
@@ -527,6 +572,7 @@ export class PuzzlePage {
     this.solved.set(true);
     this.haptics.success();
     const level = this.level();
+    if (this.tutorial()) this.endTutorial();
     await this.practiceStore.markSolved(this.track(), level, elapsedMs, this.hintsUsed() > 0);
     await this.practiceStore.noteWin(this.track(), this.stars(), this.hintsUsed() > 0);
     this.dismissCoach();

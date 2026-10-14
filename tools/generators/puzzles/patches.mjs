@@ -125,6 +125,26 @@ export function generatePatches(size, rng, extra = 0) {
 }
 
 /**
+ * A Patches puzzle with numbers only: no clue shows a shape, so the player works out wide, tall or square from the numbers alone.
+ * Many random cuts are tried until one has a single answer without any shape hints.
+ */
+export function generatePatchesNumbers(size, rng) {
+  const cap = Math.max(3, Math.ceil(size / 2) + 1);
+  for (let attempt = 0; attempt < 20000; attempt++) {
+    const rects = randomCut(size, rng, cap, size + 1);
+    if (rects.length < size - 1 || rects.length > size * 2) continue;
+    const clues = rects.map(([r0, c0, r1, c1]) => {
+      const r = r0 + rng.int(r1 - r0 + 1);
+      const c = c0 + rng.int(c1 - c0 + 1);
+      return [r * size + c, (r1 - r0 + 1) * (c1 - c0 + 1), SHAPE_ANY];
+    });
+    const puzzle = { size, clues };
+    if (solvePatches(puzzle, 2).count === 1) return { size, clues: clues.sort((a, b) => a[0] - b[0]) };
+  }
+  throw new Error(`Could not generate a ${size}x${size} numbers-only Patches puzzle`);
+}
+
+/**
  * A Patches puzzle where some numbers are hidden: those clues show only their shape (wide, tall or square), and the player works
  * out how big each patch is. `share` (0 to 1) is how many of the numbers to hide, as long as the answer stays unique.
  */
