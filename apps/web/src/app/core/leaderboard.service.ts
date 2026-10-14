@@ -47,6 +47,11 @@ export class LeaderboardService {
     return firstValueFrom(this.http.get<Leaderboard>(`${environment.apiBaseUrl}/leaderboards/${game}`, { params }));
   }
 
+  /** The daily mind-training set, ranked by points (value) over the days finished (secondary). */
+  mindBoard(period: 'today' | 'week'): Promise<Leaderboard> {
+    return firstValueFrom(this.http.get<Leaderboard>(`${environment.apiBaseUrl}/leaderboards/mind-daily`, { params: { period } }));
+  }
+
   dailyHub(): Promise<DailyHub> {
     return firstValueFrom(this.http.get<DailyHub>(`${environment.apiBaseUrl}/daily`));
   }

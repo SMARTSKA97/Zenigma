@@ -117,6 +117,31 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [DbFact]
+    public async Task Mind_daily_board_ranks_finished_sets_by_points()
+    {
+        var (client, _, device) = await SignUpAsync();
+        var today = Zenigma.Api.Infrastructure.IstClock.Today(DateTimeOffset.UtcNow).ToString("yyyy-MM-dd");
+        var done = new { id = Guid.NewGuid(), kind = "mind.daily.completed", payload = new { date = today, games = new[] { "a", "b", "c" }, points = 250 }, clientCreatedAt = DateTimeOffset.UtcNow };
+        var push = await client.PostAsJsonAsync("/sync/push", new { deviceId = device, platform = "web", events = new[] { done } });
+        Assert.Equal(HttpStatusCode.OK, push.StatusCode);
+
+        var board = await client.GetFromJsonAsync<JsonElement>("/leaderboards/mind-daily?period=today", Json);
+        var me = board.GetProperty("me");
+        Assert.Equal(250, me.GetProperty("value").GetInt64());
+        Assert.True(me.GetProperty("isMe").GetBoolean());
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/leaderboards/mind-daily?period=all")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await _factory.CreateClient().GetAsync("/leaderboards/mind-daily")).StatusCode);
+    }
+
+    [DbFact]
+    public async Task Client_error_reports_are_accepted_without_a_login()
+    {
+        var response = await _factory.CreateClient().PostAsJsonAsync("/telemetry/error", new { message = "boom", stack = "at x", route = "/practice", platform = "web" });
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [DbFact]
     public async Task Sync_requires_a_token()
     {
         var client = _factory.CreateClient();

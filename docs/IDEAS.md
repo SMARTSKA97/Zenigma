@@ -39,9 +39,9 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ 15 mind games across six skills, each with its own best, and a daily mind set (3 games, 3 skills, same for everyone, India date).
 - ✅ Mind dashboard: brain map, radar, overall mark, per-skill detail.
 - ✅ Compare by age group and gender, opt-in, a group needs 5 players before any average shows.
-- ⬜ 🆕 **Mind leaderboard** for the daily set, ranked by total points.
+- ✅ **Mind leaderboard** for the daily set, today and this week, in the Mind tab (0.20.0). Points are reported by the app, so it is labelled as for fun.
 - ✅ **Mind badges** (0.20.0): All-rounder, Whole gym, mind streaks. ✅ Brain 100 (0.20.0).
-- ⬜ 🆕 **Skill trend**: a small line of each mark over the last 30 days.
+- ✅ **Skill trend**: a small line of each skill over the last 30 days with a play (0.20.0).
 - ✅ **Weakest-skill nudge** on the Mind page (0.20.0).
 - ✅ **Mind age** (0.20.0): a playful single number from the marks, clearly labelled as entertainment.
 - ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.20.0).
@@ -67,7 +67,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Google sign-in on the web (set `Google__ClientId` on Render).
 - ✅ Offline mode switch and warm-up loader; daily challenges pause offline, everything else works.
 - ⬜ 🆕 **Google sign-in on Android** needs a native plugin (the WebView cannot run Google Identity Services). The button is hidden there until then.
-- ⬜ 🆕 Link or unlink Google from an existing email account in Profile.
+- ✅ Link or unlink Google from an existing email account in Profile.
 - ✅ Export my data (JSON), in Settings (0.20.0).
 - ❌ Offline daily: decided against. Dailies are timed and checked by the server so times are fair; handing out tomorrow's puzzle early, or accepting an offline time, would break that. Practice, Mind and Word Guess practice already work offline.
 

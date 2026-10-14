@@ -21,6 +21,12 @@
       <p class="muted">{{ d.played }} of {{ d.total }} games played.
         @if (d.cmp?.average != null) { Average player: {{ d.cmp!.average }}. {{ beat(d.cmp!.percentile) }}. }
       </p>
+      @if (d.line) {
+        <div class="trend">
+          <svg viewBox="0 0 100 28" preserveAspectRatio="none" role="img" [attr.aria-label]="d.skill.name + ' over the last ' + d.days + ' days'"><polyline [attr.points]="d.line" /></svg>
+          <small class="muted">Last {{ d.days }} days with a play: {{ d.change > 0 ? 'up ' + d.change : d.change < 0 ? 'down ' + -d.change : 'steady' }}</small>
+        </div>
+      }
       <div class="chips">
         @for (g of d.games; track g) {
           <a class="chip" [routerLink]="['/mind', g]">{{ g.replace('-', ' ') }}</a>

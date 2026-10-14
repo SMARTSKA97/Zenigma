@@ -73,7 +73,11 @@ export class MindHome implements OnInit {
     const info = this.store.skills().find((s) => s.skill === skill);
     const cmp = this.active()?.skills.find((x) => x.skill === skill);
     const games = MIND_LIVE.filter((g) => MIND_META[g]?.skill === skill);
-    return { skill: SKILLS.find((s) => s.id === skill)!, mark: info?.mark ?? 0, played: info?.played ?? 0, total: info?.total ?? games.length, cmp, games };
+    // The mark at the end of each of the last 30 days that had a play, as an SVG polyline in a 100 x 28 box.
+    const points = Object.entries(this.store.trend()).slice(-30).map(([day, m]) => ({ day, mark: m[skill] ?? 0 }));
+    const line = points.length >= 2 ? points.map((p, i) => `${((i / (points.length - 1)) * 100).toFixed(1)},${(26 - (p.mark / 100) * 24).toFixed(1)}`).join(' ') : '';
+    const change = points.length >= 2 ? points[points.length - 1].mark - points[0].mark : 0;
+    return { skill: SKILLS.find((s) => s.id === skill)!, mark: info?.mark ?? 0, played: info?.played ?? 0, total: info?.total ?? games.length, cmp, games, line, change, days: points.length };
   });
 
   protected readonly list = computed(() =>

@@ -102,3 +102,65 @@ li.done {
   font-weight: 650;
   color: var(--good, #2e9e5b);
 }
+
+.board {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tabs {
+    display: inline-flex;
+    gap: 0.25rem;
+    button {
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      &.on {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: transparent;
+      }
+    }
+  }
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.2rem;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr auto;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.6rem;
+    font-size: 0.9rem;
+    &.me {
+      background: var(--accent-soft);
+      font-weight: 700;
+    }
+  }
+  .rk {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .pt {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+  .mine,
+  .fine {
+    margin: 0;
+    font-size: 0.78rem;
+  }
+}

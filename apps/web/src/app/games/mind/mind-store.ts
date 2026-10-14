@@ -12,11 +12,16 @@ export interface MindRecord {
 }
 
 const KEY = (id: string) => `zenigma.mind.${id}`;
+const TREND_KEY = 'zenigma.mind.trend';
+
+/** The skill marks at the end of a day (India date), kept for 60 days so a skill can show its trend. */
+export type TrendDays = Record<string, Record<string, number>>;
 
 /** Best scores and play counts for the mind-training games. Kept on this device. */
 @Injectable({ providedIn: 'root' })
 export class MindStore {
   private readonly all = signal<Record<string, MindRecord>>(this.read());
+  readonly trend = signal<TrendDays>(this.readTrend());
 
   record(id: string): MindRecord {
     return this.all()[id] ?? { best: 0, plays: 0, recent: [] };
@@ -32,7 +37,34 @@ export class MindStore {
     } catch {
       /* ignore */
     }
+    this.snapshot();
     return score > cur.best;
+  }
+
+  /** Saves today's skill marks (the last play of the day wins). */
+  private snapshot(): void {
+    const marks: Record<string, number> = {};
+    for (const s of this.skills()) marks[s.skill] = s.mark;
+    const today = new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 10);
+    const days = { ...this.trend(), [today]: marks };
+    const keep = Object.keys(days).sort().slice(-60);
+    const next: TrendDays = {};
+    for (const k of keep) next[k] = days[k];
+    this.trend.set(next);
+    try {
+      localStorage.setItem(TREND_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private readTrend(): TrendDays {
+    try {
+      const raw = JSON.parse(localStorage.getItem(TREND_KEY) ?? '{}') as TrendDays;
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch {
+      return {};
+    }
   }
 
   /** Every play with its time, newest last. */

@@ -1,5 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
+import { ConnectionService } from '../../core/connection.service';
+import { Leaderboard, LeaderboardService } from '../../core/leaderboard.service';
 import { gameInfo, SKILLS } from '../../games/catalog';
 import { MindDailyService } from '../../games/mind/mind-daily';
 import { MIND_META } from '../../games/mind/mind-meta';
@@ -15,6 +18,22 @@ import { Glyph } from '../../shared/glyph';
 })
 export class MindDailyPanel implements OnInit {
   protected readonly daily = inject(MindDailyService);
+  private readonly api = inject(LeaderboardService);
+  protected readonly auth = inject(AuthService);
+  private readonly conn = inject(ConnectionService);
+  protected readonly period = signal<'today' | 'week'>('today');
+  protected readonly board = signal<Leaderboard | null>(null);
+  protected readonly boardFailed = signal(false);
+
+  constructor() {
+    // Reload the board when the period changes, and again when today's set is finished (so the player's own points show).
+    effect(() => {
+      const period = this.period();
+      this.daily.points();
+      if (!this.auth.signedIn() || !this.conn.serverReady()) return;
+      this.api.mindBoard(period).then((b) => (this.board.set(b), this.boardFailed.set(false))).catch(() => this.boardFailed.set(true));
+    });
+  }
 
   ngOnInit(): void {
     this.daily.refresh();

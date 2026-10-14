@@ -26,6 +26,34 @@
       </li>
     }
   </ul>
+  @if (auth.signedIn()) {
+    <div class="board">
+      <div class="head">
+        <b>Leaderboard</b>
+        <span class="tabs" role="tablist">
+          <button type="button" role="tab" [attr.aria-selected]="period() === 'today'" [class.on]="period() === 'today'" (click)="period.set('today')">Today</button>
+          <button type="button" role="tab" [attr.aria-selected]="period() === 'week'" [class.on]="period() === 'week'" (click)="period.set('week')">This week</button>
+        </span>
+      </div>
+      @if (board(); as b) {
+        @if (b.entries.length) {
+          <ol>
+            @for (e of b.entries.slice(0, 10); track e.rank) {
+              <li [class.me]="e.isMe"><span class="rk">{{ e.rank }}</span><span class="nm">{{ e.name }}</span><span class="pt">{{ e.value }}</span></li>
+            }
+          </ol>
+          @if (b.me && b.me.rank > 10) {
+            <p class="mine">You are #{{ b.me.rank }} with {{ b.me.value }} points.</p>
+          }
+        } @else {
+          <p class="muted">Nobody has finished the set {{ period() === 'today' ? 'yet today' : 'this week' }}. Be the first.</p>
+        }
+        <p class="muted fine">Points are reported by the app, so this board is for fun.</p>
+      } @else if (boardFailed()) {
+        <p class="muted">The leaderboard could not load right now.</p>
+      }
+    </div>
+  }
   @if (firstOpen(); as next) {
     <a class="button wide" [routerLink]="['/mind', next]">{{ daily.doneCount() ? 'Next game' : 'Start today’s set' }}</a>
   } @else {

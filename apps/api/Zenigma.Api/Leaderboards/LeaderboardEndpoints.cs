@@ -139,6 +139,41 @@ public static class LeaderboardEndpoints
 
             return Results.Ok(new LeaderboardDto(game, kind, period, kind == "daily" && period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
         });
+
+        // The daily mind-training set, ranked by points (out of 300 a day). The points are reported by the app, so this board is for fun:
+        // each day is capped at 300 and only a finished set counts.
+        app.MapGet("/leaderboards/mind-daily", async (string? period, ClaimsPrincipal principal, AppDbContext db, TimeProvider clock, CancellationToken ct) =>
+        {
+            period ??= "today";
+            if (period is not ("today" or "week")) return Results.BadRequest(new { error = "Invalid period for this board." });
+            var today = IstClock.Today(clock.GetUtcNow());
+            var weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+            var start = period == "today" ? today : weekStart;
+            var me = UserIds.Get(principal);
+            var sql = $"""
+                WITH days AS (
+                    SELECT e.user_id, e.payload->>'date' AS day,
+                           MAX(LEAST(300, GREATEST(0, COALESCE((e.payload->>'points')::int, 0)))) AS pts
+                    FROM sync_events e
+                    WHERE e.kind = 'mind.daily.completed' AND e.payload->>'date' BETWEEN @start AND @finish
+                    GROUP BY e.user_id, e.payload->>'date'
+                ), ranked AS (
+                    SELECT d.user_id AS "UserId", {NameSql} AS "Name", SUM(d.pts)::bigint AS "Value", COUNT(*)::bigint AS "Secondary",
+                           ROW_NUMBER() OVER (ORDER BY SUM(d.pts) DESC, COUNT(*) DESC, d.user_id) AS "Rank"
+                    FROM days d JOIN "AspNetUsers" u ON u."Id" = d.user_id
+                    GROUP BY d.user_id, u."Id", u."DisplayName", u."HideName"
+                )
+                SELECT * FROM ranked WHERE "Rank" <= {PageSize} OR "UserId" = @me ORDER BY "Rank"
+                """;
+            var rows = await db.Database.SqlQueryRaw<LeaderRow>(sql,
+                new NpgsqlParameter("start", start.ToString("yyyy-MM-dd")),
+                new NpgsqlParameter("finish", today.ToString("yyyy-MM-dd")),
+                new NpgsqlParameter("me", me)).ToListAsync(ct);
+            var entries = rows.Where(r => r.Rank <= PageSize).Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
+            var mine = rows.FirstOrDefault(r => r.UserId == me);
+            var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
+            return Results.Ok(new LeaderboardDto("mind", "daily", period, period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
+        }).RequireAuthorization();
     }
 
     private static (string sql, NpgsqlParameter[] parameters) DailySql(string game, string period, DateOnly today, DateOnly weekStart, Guid? circle)
