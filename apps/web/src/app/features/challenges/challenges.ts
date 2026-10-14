@@ -1,3 +1,6 @@
+import { AuthService } from '../../core/auth.service';
+import { ConnectionService } from '../../core/connection.service';
+import { Leaderboard, LeaderboardService } from '../../core/leaderboard.service';
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HintsService } from '../../core/hints.service';
@@ -46,7 +49,17 @@ export class ChallengeStrip implements OnInit {
 })
 export class FeaturedLevel implements OnInit {
   private readonly practice = inject(PracticeStore);
+  private readonly api = inject(LeaderboardService);
+  protected readonly auth = inject(AuthService);
+  private readonly conn = inject(ConnectionService);
   protected readonly f = featuredFor(new Date());
+  protected readonly board = signal<Leaderboard | null>(null);
+
+  /** Loads the weekly board when the list is opened. */
+  protected toggleBoard(event: Event): void {
+    const open = (event.target as HTMLDetailsElement).open;
+    if (open && this.conn.serverReady() && this.auth.signedIn()) void this.api.featuredBoard(this.f.week).then((b) => this.board.set(b)).catch(() => undefined);
+  }
   protected readonly hue = () => gameInfo(this.f.game)?.hue ?? 200;
   private readonly loaded = signal(0);
   protected readonly done = computed(() => {

@@ -23,7 +23,7 @@ public static class PuzzleRules
         .. new[] { Queens, Tango }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
         .. new[] { "classic", "mini" }.SelectMany(kind => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"sudoku-{kind}-{tier}")),
         "sudoku-diagonal", "sudoku-knight", "sudoku-king", "sudoku-nonconsec", "sudoku-windoku", "sudoku-disjoint",
-        .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich", "renban" }.Select(kind => $"sudoku-{kind}"),
+        .. new[] { "even-odd", "consecutive", "thermo", "killer", "jigsaw", "arrow", "sandwich", "renban", "kropki", "little" }.Select(kind => $"sudoku-{kind}"),
         .. new[] { Zip, Patches }.SelectMany(game => new[] { "easy", "medium", "hard", "challenging", "insane" }.Select(tier => $"{game}-classic-{tier}")),
         "zip-walls", "zip-holes", "patches-shapes",
     ];
@@ -316,7 +316,7 @@ public static class PuzzleRules
                         if (!spot.Add(cells[(b / 3 * 3 + g / 3) * n + b % 3 * 3 + g % 3])) return false;
                 }
             }
-            else if (rule is "even-odd" or "consecutive" or "thermo" or "killer" or "jigsaw" or "arrow" or "sandwich" or "renban")
+            else if (rule is "even-odd" or "consecutive" or "thermo" or "killer" or "jigsaw" or "arrow" or "sandwich" or "renban" or "kropki" or "little")
             {
                 return VerifySudokuKind(rule, puzzle, cells);
             }
@@ -370,6 +370,36 @@ public static class PuzzleRules
                     for (var p = 1; p < cs.Length; p++) if (v[cs[p]] <= v[cs[p - 1]]) return false;
                 }
                 return true;
+            case "little":
+                foreach (var item in puzzle.GetProperty("littles").EnumerateArray())
+                {
+                    var l = Ints(item);
+                    int r = l[1] / 9, c = l[1] % 9, total = 0;
+                    while (r >= 0 && r < 9 && c >= 0 && c < 9)
+                    {
+                        total += v[r * 9 + c];
+                        r += l[2];
+                        c += l[3];
+                    }
+                    if (total != l[0]) return false;
+                }
+                return true;
+            case "kropki":
+            {
+                var dots = new Dictionary<(int, int), int>();
+                foreach (var d in puzzle.GetProperty("dots").EnumerateArray())
+                {
+                    var p = Ints(d);
+                    dots[(Math.Min(p[0], p[1]), Math.Max(p[0], p[1]))] = p[2];
+                }
+                static int DotOf(int x, int y) => x == 2 * y || y == 2 * x ? 2 : Math.Abs(x - y) == 1 ? 1 : 0;
+                for (var i = 0; i < 81; i++)
+                {
+                    if (i % 9 < 8 && DotOf(v[i], v[i + 1]) != dots.GetValueOrDefault((i, i + 1))) return false;
+                    if (i / 9 < 8 && DotOf(v[i], v[i + 9]) != dots.GetValueOrDefault((i, i + 9))) return false;
+                }
+                return true;
+            }
             case "renban":
                 foreach (var line in puzzle.GetProperty("lines").EnumerateArray())
                 {

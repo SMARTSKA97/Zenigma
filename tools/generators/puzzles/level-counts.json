@@ -19,6 +19,8 @@
  "sudoku-consecutive": 1000,
  "sudoku-thermo": 1000,
  "sudoku-renban": 1000,
+ "sudoku-kropki": 1000,
+ "sudoku-little": 1000,
  "sudoku-killer": 1000,
  "sudoku-jigsaw": 1000,
  "sudoku-arrow": 1000,

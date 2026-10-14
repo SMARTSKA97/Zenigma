@@ -174,6 +174,35 @@ public static class LeaderboardEndpoints
             var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
             return Results.Ok(new LeaderboardDto("mind", "daily", period, period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
         }).RequireAuthorization();
+
+        // The featured level of a week (`week` is its Monday). Fewest mistakes wins, then the fastest time; a solve that used hints is not ranked.
+        // The mistakes are reported by the app, so like the mind board this one is for fun.
+        app.MapGet("/leaderboards/featured", async (string? week, ClaimsPrincipal principal, AppDbContext db, CancellationToken ct) =>
+        {
+            if (week is null || !DateOnly.TryParseExact(week, "yyyy-MM-dd", out _)) return Results.BadRequest(new { error = "week must be a date like 2026-10-12." });
+            var me = UserIds.Get(principal);
+            var sql = $"""
+                WITH best AS (
+                    SELECT DISTINCT ON (e.user_id) e.user_id,
+                           COALESCE((e.payload->>'mistakes')::int, 0) AS mistakes,
+                           COALESCE((e.payload->>'elapsedMs')::bigint, 0) AS ms
+                    FROM sync_events e
+                    WHERE e.kind = 'puzzle.practice.solved' AND e.payload->>'featured' = @week
+                      AND COALESCE((e.payload->>'hinted')::boolean, false) = false
+                    ORDER BY e.user_id, COALESCE((e.payload->>'mistakes')::int, 0), COALESCE((e.payload->>'elapsedMs')::bigint, 0)
+                ), ranked AS (
+                    SELECT b.user_id AS "UserId", {NameSql} AS "Name", b.mistakes::bigint AS "Value", b.ms AS "Secondary",
+                           ROW_NUMBER() OVER (ORDER BY b.mistakes, b.ms, b.user_id) AS "Rank"
+                    FROM best b JOIN "AspNetUsers" u ON u."Id" = b.user_id
+                )
+                SELECT * FROM ranked WHERE "Rank" <= {PageSize} OR "UserId" = @me ORDER BY "Rank"
+                """;
+            var rows = await db.Database.SqlQueryRaw<LeaderRow>(sql, new NpgsqlParameter("week", week), new NpgsqlParameter("me", me)).ToListAsync(ct);
+            var entries = rows.Where(r => r.Rank <= PageSize).Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
+            var mine = rows.FirstOrDefault(r => r.UserId == me);
+            var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
+            return Results.Ok(new LeaderboardDto("featured", "practice", "week", week, entries, meDto));
+        }).RequireAuthorization();
     }
 
     private static (string sql, NpgsqlParameter[] parameters) DailySql(string game, string period, DateOnly today, DateOnly weekStart, Guid? circle)

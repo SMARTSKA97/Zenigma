@@ -1,6 +1,8 @@
 // Sudoku kinds that carry extra data besides the givens. All are on the classic 9x9 grid.
 //   even-odd     { givens, rule, parity }   parity: 81 chars, 'e' (even digit), 'o' (odd digit) or '.' (free)
 //   consecutive  { givens, rule, bars }     bars: [a, b] pairs of side-by-side cells whose digits differ by 1; no other side-by-side pair does
+//   kropki       { givens, rule, dots }     dots: [a, b, t] for side-by-side cells; t = 1 white (digits differ by 1) or 2 black (one is double the other, which wins for 1 and 2); no dot means neither
+//   little       { givens, rule, littles }  littles: [sum, start, dr, dc]; the digits on the diagonal from the edge cell `start` going (dr, dc) add up to sum (repeats are fine)
 //   thermo       { givens, rule, thermos }  thermos: lists of cells, bulb first; digits strictly increase along each
 //   renban       { givens, rule, lines }    lines: lists of cells; each line holds different digits that form a run of consecutive numbers, in any order
 //   killer       { givens, rule, cages }    cages: [sum, cell, cell, ...]; digits in a cage differ and add up to the sum
@@ -9,10 +11,24 @@
 //   sandwich     { givens, rule, rows, cols }  rows/cols: nine sums; the digits between the 1 and the 9 of that line add up to it
 // Every row and column holds 1 to 9 once, and so does every box (every region, for jigsaw).
 
-export const KIND_RULES = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich', 'renban'];
+export const KIND_RULES = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich', 'renban', 'kropki', 'little'];
 export const isKindRule = (rule) => KIND_RULES.includes(rule);
 
 const N = 9;
+/** The cells of a Little Killer diagonal: from the edge cell `start` in direction (dr, dc) until the edge. */
+export function rayCells(start, dr, dc) {
+  const out = [];
+  let r = rowOf(start);
+  let c = colOf(start);
+  while (r >= 0 && r < N && c >= 0 && c < N) {
+    out.push(r * N + c);
+    r += dr;
+    c += dc;
+  }
+  return out;
+}
+/** The Kropki dot two digits would need: 2 black (one is double the other), 1 white (they differ by 1), 0 none. */
+export const dotOf = (x, y) => (x === 2 * y || y === 2 * x ? 2 : Math.abs(x - y) === 1 ? 1 : 0);
 const ALL = 0x3fe; // bits 1..9
 /** The digits lo to hi as a bit mask. */
 const range = (lo, hi) => (hi < lo ? 0 : ((1 << (hi + 1)) - 1) & ~((1 << lo) - 1));
@@ -90,6 +106,27 @@ export function modelOf(puzzle) {
       const near = orth(i).map((j) => [j, bar.has(`${Math.min(i, j)}:${Math.max(i, j)}`)]);
       checks[i].push((cells) => {
         for (const [j, isBar] of near) if (cells[j]) if ((Math.abs(cells[i] - cells[j]) === 1) !== isBar) return false;
+        return true;
+      });
+    }
+  } else if (rule === 'little') {
+    for (const [sum, start, dr, dc] of puzzle.littles) {
+      const line = rayCells(start, dr, dc);
+      for (const a of line) {
+        checks[a].push((cells) => {
+          let s = 0;
+          let open = 0;
+          for (const c of line) (cells[c] ? (s += cells[c]) : open++);
+          return open === 0 ? s === sum : s + open <= sum && s + 9 * open >= sum;
+        });
+      }
+    }
+  } else if (rule === 'kropki') {
+    const dot = new Map(puzzle.dots.map(([a, b, t]) => [`${Math.min(a, b)}:${Math.max(a, b)}`, t]));
+    for (let i = 0; i < 81; i++) {
+      const near = orth(i).map((j) => [j, dot.get(`${Math.min(i, j)}:${Math.max(i, j)}`) ?? 0]);
+      checks[i].push((cells) => {
+        for (const [j, t] of near) if (cells[j]) if (dotOf(cells[i], cells[j]) !== t) return false;
         return true;
       });
     }
@@ -405,6 +442,8 @@ const CLUES = {
   arrow: [22, 8],
   sandwich: [26, 14],
   renban: [24, 10],
+  kropki: [18, 4],
+  little: [24, 8],
 };
 
 /** A puzzle of a kind: build the extras from a finished grid, then take numbers away while the solution stays unique. */
@@ -431,6 +470,32 @@ export function generateKind(rng, rule, h) {
           if (rowOf(i) < N - 1 && Math.abs(sol[i] - sol[i + N]) === 1) bars.push([i, i + N]);
         }
         extras = { bars };
+        break;
+      }
+      case 'little': {
+        // Every diagonal that starts on the edge and has at least two cells; keep a random handful.
+        const rays = [];
+        for (let i = 0; i < 81; i++) {
+          for (const [dr, dc] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+            const r0 = rowOf(i) - dr;
+            const c0 = colOf(i) - dc;
+            if (r0 >= 0 && r0 < N && c0 >= 0 && c0 < N) continue; // not the edge end of its diagonal
+            const line = rayCells(i, dr, dc);
+            if (line.length >= 2) rays.push([line.reduce((s, c) => s + sol[c], 0), i, dr, dc]);
+          }
+        }
+        extras = { littles: rng.shuffle(rays).slice(0, 14 + rng.int(4)) };
+        break;
+      }
+      case 'kropki': {
+        const dots = [];
+        for (let i = 0; i < 81; i++) {
+          for (const j of [colOf(i) < N - 1 ? i + 1 : -1, rowOf(i) < N - 1 ? i + N : -1]) {
+            const t = j >= 0 ? dotOf(sol[i], sol[j]) : 0;
+            if (t) dots.push([i, j, t]);
+          }
+        }
+        extras = { dots };
         break;
       }
       case 'thermo':
@@ -492,6 +557,13 @@ export function verifyKind(puzzle, solution) {
     case 'consecutive': {
       const bar = new Set(puzzle.bars.map(([a, b]) => `${Math.min(a, b)}:${Math.max(a, b)}`));
       for (let i = 0; i < 81; i++) for (const j of [colOf(i) < 8 ? i + 1 : -1, rowOf(i) < 8 ? i + 9 : -1]) if (j >= 0 && (Math.abs(cells[i] - cells[j]) === 1) !== bar.has(`${i}:${j}`)) return false;
+      return true;
+    }
+    case 'little':
+      return puzzle.littles.every(([sum, start, dr, dc]) => rayCells(start, dr, dc).reduce((s, c) => s + cells[c], 0) === sum);
+    case 'kropki': {
+      const dot = new Map(puzzle.dots.map(([a, b, t]) => [`${Math.min(a, b)}:${Math.max(a, b)}`, t]));
+      for (let i = 0; i < 81; i++) for (const j of [colOf(i) < 8 ? i + 1 : -1, rowOf(i) < 8 ? i + 9 : -1]) if (j >= 0 && dotOf(cells[i], cells[j]) !== (dot.get(`${i}:${j}`) ?? 0)) return false;
       return true;
     }
     case 'thermo':

@@ -135,6 +135,20 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [DbFact]
+    public async Task Featured_board_ranks_unhinted_solves_by_mistakes()
+    {
+        var (client, _, device) = await SignUpAsync();
+        var week = "2026-01-05";
+        object Solve(bool hinted, int mistakes) => new { id = Guid.NewGuid(), kind = "puzzle.practice.solved", payload = new { game = "queens", level = 700, hinted, elapsedMs = 90000, featured = week, mistakes }, clientCreatedAt = DateTimeOffset.UtcNow };
+        var push = await client.PostAsJsonAsync("/sync/push", new { deviceId = device, platform = "web", events = new[] { Solve(false, 3), Solve(false, 1), Solve(true, 0) } });
+        Assert.Equal(HttpStatusCode.OK, push.StatusCode);
+
+        var board = await client.GetFromJsonAsync<JsonElement>($"/leaderboards/featured?week={week}", Json);
+        Assert.Equal(1, board.GetProperty("me").GetProperty("value").GetInt64()); // the best unhinted solve, not the hinted one
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/leaderboards/featured?week=soon")).StatusCode);
+    }
+
+    [DbFact]
     public async Task Client_error_reports_are_accepted_without_a_login()
     {
         var response = await _factory.CreateClient().PostAsJsonAsync("/telemetry/error", new { message = "boom", stack = "at x", route = "/practice", platform = "web" });

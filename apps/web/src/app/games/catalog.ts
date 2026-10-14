@@ -165,6 +165,8 @@ export const VARIANTS: Partial<Record<PuzzleGameId, Variant[]>> = {
     { id: 'arrow', name: 'Arrow', blurb: 'The digits along an arrow add up to the number in its circle.' },
     { id: 'sandwich', name: 'Sandwich', blurb: 'Clues give the sum of the digits caught between the 1 and the 9 in a row or column.' },
     { id: 'renban', name: 'Renban', blurb: 'Purple lines hold a run of consecutive digits, in any order.' },
+    { id: 'kropki', name: 'Kropki', blurb: 'White dots join digits one apart, black dots a digit and its double. No dot means neither.' },
+    { id: 'little', name: 'Little Killer', blurb: 'A clue outside the grid gives the sum along the diagonal it points down.' },
     { id: 'consecutive', name: 'Consecutive', blurb: 'A bar between two cells means their digits differ by exactly 1.' },
     { id: 'even-odd', name: 'Even-Odd', blurb: 'Shaded cells hold only even digits (circles) or only odd digits (squares).' },
   ],
@@ -252,7 +254,6 @@ export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
     { name: 'Themed Words', blurb: 'Animals, food, places: every word in a theme.' },
   ],
   sudoku: [
-    { name: 'Little Killer', blurb: 'Arrows outside the grid give the sum along a diagonal.' },
   ],
   queens: [
     { name: 'Mini Queens', blurb: 'Small boards for a quick break.' },

@@ -358,3 +358,36 @@
     transform: scale(0.95);
   }
 }
+
+.art .dot {
+  fill: #fff;
+  stroke: #1f2433;
+  stroke-width: 0.04;
+}
+.art .dot.black {
+  fill: #1f2433;
+  stroke: #c9cfe0;
+}
+
+.frame.lk {
+  box-sizing: border-box;
+  padding: 1.9rem;
+  position: relative;
+}
+.frame .outer {
+  position: absolute;
+  inset: 1.9rem;
+  width: calc(100% - 3.8rem);
+  height: calc(100% - 3.8rem);
+  pointer-events: none;
+  overflow: visible;
+}
+.outer .lk-sum {
+  font-weight: 700;
+  fill: var(--muted);
+}
+.art .lk-tick {
+  stroke: var(--muted);
+  stroke-width: 0.04;
+  stroke-linecap: round;
+}

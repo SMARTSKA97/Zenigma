@@ -46,7 +46,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ **Mind age** (0.20.0): a playful single number from the marks, clearly labelled as entertainment.
 - ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.20.0).
 - ⬜ More mind games: Comet Slice and others (see Coming soon in Practice).
-- ⬜ Ranked puzzle of the week for the featured level, by fewest mistakes.
+- ✅ Ranked puzzle of the week: the featured level has a weekly board (fewest mistakes, then fastest, no hints), under it on the Challenges page (0.20.0). Mistakes are reported by the app, so it is for fun.
 
 ## Games
 
@@ -55,7 +55,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Speed round, featured level of the week, 1000 new levels per track every week.
 - ✅ Sudoku kinds **Anti-King** and **Non-consecutive** (0.20.0).
 - ✅ Sudoku kind **Renban** (0.20.0).
-- ⬜ 🆕 Sudoku kinds: **Little Killer**, **Kropki**.
+- ✅ Sudoku kinds **Little Killer** and **Kropki** (0.20.0).
 - ✅ Patches variant with hidden numbers (shape only). ⬜ Numbers-only, blocked cells.
 - ✅ **Perfect day** badge: every daily game solved in one day (0.20.0). Dailies have no hints, and mistakes are not recorded, so "perfect" means complete.
 - ⬜ 🆕 **Tutorials**: a 20-second interactive first level per game.

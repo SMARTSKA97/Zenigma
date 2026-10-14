@@ -39,3 +39,42 @@ small {
 .go.ok {
   background: var(--good, #2e9e5b);
 }
+
+:host {
+  display: grid;
+  gap: 0.5rem;
+}
+.wk {
+  font-size: 0.88rem;
+  summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 0.2rem 0.4rem;
+  }
+  ol {
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.2rem;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr auto;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.6rem;
+    &.me {
+      background: var(--accent-soft);
+      font-weight: 700;
+    }
+  }
+  .rk {
+    color: var(--muted);
+  }
+  .fine {
+    margin: 0.4rem 0 0;
+    font-size: 0.8rem;
+  }
+}

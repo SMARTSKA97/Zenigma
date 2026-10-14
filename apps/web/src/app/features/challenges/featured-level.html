@@ -7,3 +7,24 @@
   </span>
   <span class="go" [class.ok]="done()">{{ done() ? '✓' : 'Play' }}</span>
 </a>
+@if (auth.signedIn()) {
+  <details class="wk" (toggle)="toggleBoard($event)">
+    <summary>This week's ranking</summary>
+    @if (board(); as b) {
+      @if (b.entries.length) {
+        <ol>
+          @for (e of b.entries.slice(0, 10); track e.rank) {
+            <li [class.me]="e.isMe"><span class="rk">{{ e.rank }}</span><span class="nm">{{ e.name }}</span><span class="pt">{{ e.value }} {{ e.value === 1 ? 'mistake' : 'mistakes' }}</span></li>
+          }
+        </ol>
+        @if (b.me && b.me.rank > 10) {
+          <p class="muted fine">You are #{{ b.me.rank }}.</p>
+        }
+      } @else {
+        <p class="muted fine">Nobody has solved it without hints yet.</p>
+      }
+    } @else {
+      <p class="muted fine">Fewest mistakes wins, then the fastest time. Solve it without hints to be ranked.</p>
+    }
+  </details>
+}

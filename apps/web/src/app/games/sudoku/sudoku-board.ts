@@ -84,6 +84,8 @@ export class SudokuBoard {
     const xy = (i: number) => ({ x: (i % 9) + 0.5, y: Math.floor(i / 9) + 0.5 });
     const shapes: { x: number; y: number; circle: boolean }[] = [];
     const lines: string[] = [];
+    const littles: { x: number; y: number; sum: number; arrow: string; x2: number; y2: number }[] = [];
+    const dots: { x: number; y: number; black: boolean }[] = [];
     const thermos: { points: string; bx: number; by: number }[] = [];
     const arrows: { cx: number; cy: number; points: string; head: string }[] = [];
     const cageLines: number[][] = [];
@@ -95,6 +97,11 @@ export class SudokuBoard {
     for (const t of p.thermos ?? []) {
       const b = xy(t[0]);
       thermos.push({ points: t.map((c) => `${xy(c).x},${xy(c).y}`).join(' '), bx: b.x, by: b.y });
+    }
+    for (const [a, b, t] of p.dots ?? []) dots.push({ x: (xy(a).x + xy(b).x) / 2, y: (xy(a).y + xy(b).y) / 2, black: t === 2 });
+    for (const [sum, start, dr, dc] of p.littles ?? []) {
+      const s = xy(start);
+      littles.push({ x: s.x - dc * 0.8, y: s.y - dr * 0.8, sum, arrow: dr > 0 ? (dc > 0 ? '↘' : '↙') : dc > 0 ? '↗' : '↖', x2: s.x - dc * 0.35, y2: s.y - dr * 0.35 });
     }
     for (const l of p.lines ?? []) lines.push(l.map((c) => `${xy(c).x},${xy(c).y}`).join(' '));
     for (const [circle, ...path] of p.arrows ?? []) {
@@ -129,7 +136,7 @@ export class SudokuBoard {
       if (hi - lo === 1) bars.push({ x: (hi % 9) - 0.07, y: Math.floor(hi / 9) + 0.32, w: 0.14, h: 0.36 });
       else bars.push({ x: (hi % 9) + 0.32, y: Math.floor(hi / 9) - 0.07, w: 0.36, h: 0.14 });
     }
-    return { shapes, lines, thermos, arrows, cageLines, bars, sums };
+    return { shapes, lines, dots, littles, thermos, arrows, cageLines, bars, sums };
   });
 
   protected readonly cells = computed(() => {

@@ -3,8 +3,8 @@
  * documents the formats; this is the player's side: who sees whom, what each cell may hold, and the checks.
  */
 
-export type KindRule = 'even-odd' | 'consecutive' | 'thermo' | 'killer' | 'jigsaw' | 'arrow' | 'sandwich' | 'renban';
-export const KIND_RULES: KindRule[] = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich', 'renban'];
+export type KindRule = 'even-odd' | 'consecutive' | 'thermo' | 'killer' | 'jigsaw' | 'arrow' | 'sandwich' | 'renban' | 'kropki' | 'little';
+export const KIND_RULES: KindRule[] = ['even-odd', 'consecutive', 'thermo', 'killer', 'jigsaw', 'arrow', 'sandwich', 'renban', 'kropki', 'little'];
 export const isKindRule = (rule: string | undefined): rule is KindRule => !!rule && (KIND_RULES as string[]).includes(rule);
 
 /** The extra data of a kind (what comes with the givens). */
@@ -14,6 +14,8 @@ export interface KindData {
   bars?: [number, number][];
   thermos?: number[][];
   lines?: number[][];
+  dots?: number[][];
+  littles?: number[][];
   cages?: number[][];
   regions?: string;
   arrows?: number[][];
@@ -22,6 +24,20 @@ export interface KindData {
 }
 
 const N = 9;
+/** The cells of a Little Killer diagonal: from the edge cell `start` in direction (dr, dc) until the edge. */
+export function rayCells(start: number, dr: number, dc: number): number[] {
+  const out: number[] = [];
+  let r = Math.floor(start / N);
+  let c = start % N;
+  while (r >= 0 && r < N && c >= 0 && c < N) {
+    out.push(r * N + c);
+    r += dr;
+    c += dc;
+  }
+  return out;
+}
+/** The Kropki dot two digits would need: 2 black (one is double the other), 1 white (they differ by 1), 0 none. */
+export const dotOf = (x: number, y: number): number => (x === 2 * y || y === 2 * x ? 2 : Math.abs(x - y) === 1 ? 1 : 0);
 const ALL = 0x3fe;
 const range = (lo: number, hi: number): number => (hi < lo ? 0 : ((1 << (hi + 1)) - 1) & ~((1 << lo) - 1));
 const rowOf = (i: number) => Math.floor(i / N);
@@ -88,6 +104,27 @@ export function modelOf(puzzle: KindData): KindModel {
       const near = orth(i).map((j) => [j, bar.has(`${Math.min(i, j)}:${Math.max(i, j)}`)] as const);
       checks[i].push((cells) => {
         for (const [j, isBar] of near) if (cells[j] && (Math.abs(cells[i] - cells[j]) === 1) !== isBar) return false;
+        return true;
+      });
+    }
+  } else if (rule === 'little') {
+    for (const [sum, start, dr, dc] of puzzle.littles!) {
+      const line = rayCells(start, dr, dc);
+      for (const a of line) {
+        checks[a].push((cells) => {
+          let s = 0;
+          let open = 0;
+          for (const c of line) (cells[c] ? (s += cells[c]) : open++);
+          return open === 0 ? s === sum : s + open <= sum && s + 9 * open >= sum;
+        });
+      }
+    }
+  } else if (rule === 'kropki') {
+    const dot = new Map(puzzle.dots!.map(([a, b, t]) => [`${Math.min(a, b)}:${Math.max(a, b)}`, t] as const));
+    for (let i = 0; i < 81; i++) {
+      const near = orth(i).map((j) => [j, dot.get(`${Math.min(i, j)}:${Math.max(i, j)}`) ?? 0] as const);
+      checks[i].push((cells) => {
+        for (const [j, t] of near) if (cells[j] && dotOf(cells[i], cells[j]) !== t) return false;
         return true;
       });
     }

@@ -52,6 +52,11 @@ export class LeaderboardService {
     return firstValueFrom(this.http.get<Leaderboard>(`${environment.apiBaseUrl}/leaderboards/mind-daily`, { params: { period } }));
   }
 
+  /** The featured level of a week (its Monday as yyyy-mm-dd): fewest mistakes first, then fastest. Players who used hints are not ranked. */
+  featuredBoard(week: string): Promise<Leaderboard> {
+    return firstValueFrom(this.http.get<Leaderboard>(`${environment.apiBaseUrl}/leaderboards/featured`, { params: { week } }));
+  }
+
   dailyHub(): Promise<DailyHub> {
     return firstValueFrom(this.http.get<DailyHub>(`${environment.apiBaseUrl}/daily`));
   }

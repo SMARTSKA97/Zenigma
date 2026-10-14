@@ -1,4 +1,4 @@
-<div class="frame" [class.sand]="sandwich()">
+<div class="frame" [class.sand]="sandwich()" [class.lk]="art()?.littles?.length">
   @if (sandwich(); as sw) {
     <div class="clues top" aria-hidden="true">
       @for (v of sw.cols; track $index) {
@@ -68,6 +68,9 @@
       @for (l of a.cageLines; track $index) {
         <line class="cage" [attr.x1]="l[0]" [attr.y1]="l[1]" [attr.x2]="l[2]" [attr.y2]="l[3]" />
       }
+      @for (d of a.dots; track $index) {
+        <circle class="dot" [class.black]="d.black" [attr.cx]="d.x" [attr.cy]="d.y" r="0.13" />
+      }
       @for (b of a.bars; track $index) {
         <rect class="bar" [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.w" [attr.height]="b.h" rx="0.04" />
       }
@@ -77,6 +80,15 @@
     </svg>
   }
 </div>
+  @if (art(); as a) {
+    @if (a.littles.length) {
+      <svg class="outer" viewBox="0 0 9 9" preserveAspectRatio="none" aria-hidden="true">
+        @for (l of a.littles; track $index) {
+          <text class="lk-sum" font-size="0.42" [attr.x]="l.x" [attr.y]="l.y" text-anchor="middle" dominant-baseline="central">{{ l.sum }}{{ l.arrow }}</text>
+        }
+      </svg>
+    }
+  }
 </div>
 
 <div class="controls">

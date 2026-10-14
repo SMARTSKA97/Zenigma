@@ -1,3 +1,4 @@
+import { featuredFor } from '../../features/challenges/featured';
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, HostListener, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -110,6 +111,8 @@ export class PuzzlePage {
   protected readonly strikesLeft = signal(3);
   protected readonly strict = computed(() => this.prefs.strikes() && !this.daily());
   private wasWrong = false;
+  /** Moves that made the board impossible to finish, this level (counted for the featured level's weekly board). */
+  private mistakes = 0;
   /** Set while "Leave this game?" is open; calling it with the answer lets the navigation go or stops it. */
   protected readonly leaving = signal<((ok: boolean) => void) | null>(null);
   protected readonly shareOpen = signal<{ card: CardInput; text: string } | null>(null);
@@ -298,6 +301,7 @@ export class PuzzlePage {
     this.future.set([]);
     this.strikesLeft.set(3);
     this.wasWrong = false;
+    this.mistakes = 0;
     this.baseMs = keep ? saved.elapsedMs : 0;
     this.stretchStart = Date.now();
     this.phase.set('practice');
@@ -384,8 +388,14 @@ export class PuzzlePage {
   /** In strict practice, a move that makes the board impossible to finish costs a strike; the third resets the board. */
   private strike(): void {
     const p = this.puzzle();
-    if (!this.strict() || !p) return;
+    const featured = this.featuredLevel > 0 && this.featuredLevel === this.level();
+    if (!p || (!this.strict() && !featured)) return;
     const wrong = hasMistake(this.game(), p, this.state());
+    if (wrong && !this.wasWrong) this.mistakes++;
+    if (!this.strict()) {
+      this.wasWrong = wrong;
+      return;
+    }
     if (wrong && !this.wasWrong) {
       this.strikesLeft.update((n) => n - 1);
       this.haptics.error();
@@ -522,7 +532,15 @@ export class PuzzlePage {
     this.dismissCoach();
     this.reward(level);
     await this.practiceStore.clearBoard(this.track());
-    await this.sync.record('puzzle.practice.solved', { game, variant: this.variant() ?? undefined, level, solution, elapsedMs, hinted: this.hintsUsed() > 0 });
+    await this.sync.record('puzzle.practice.solved', {
+      game,
+      variant: this.variant() ?? undefined,
+      level,
+      solution,
+      elapsedMs,
+      hinted: this.hintsUsed() > 0,
+      ...(this.featuredLevel === level ? { featured: featuredFor(new Date()).week, mistakes: this.mistakes } : {}),
+    });
     setTimeout(() => this.resultOpen.set(true), 900);
   }
 
