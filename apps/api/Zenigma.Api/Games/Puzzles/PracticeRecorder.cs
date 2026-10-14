@@ -17,33 +17,47 @@ public sealed class PracticeRecorder(WordList words, PracticeLevels levels)
 
     public static bool IsPracticeKind(string kind) => kind is WordGuessKind or PuzzleKind;
 
-    /// <summary>Returns true when a new solve was recorded. Anything that does not check out is quietly ignored.</summary>
-    public async Task<bool> RecordAsync(AppDbContext db, string userId, string kind, JsonElement payload, DateTimeOffset at, CancellationToken ct)
+    /// <summary>
+    /// Checks a batch of finished practice events and records the real solves in one statement, instead of one round trip each.
+    /// Anything that does not check out is quietly ignored.
+    /// </summary>
+    public async Task RecordManyAsync(AppDbContext db, string userId, IReadOnlyList<(string Kind, JsonElement Payload, DateTimeOffset At)> events, CancellationToken ct)
     {
-        (string game, string key, int? elapsed)? solve = kind switch
+        var games = new List<string>();
+        var keys = new List<string>();
+        var times = new List<DateTime>();
+        var elapsed = new List<int?>();
+        foreach (var (kind, payload, at) in events)
         {
-            WordGuessKind => ReadWordGuess(payload),
-            PuzzleKind => ReadPuzzle(payload),
-            _ => null,
-        };
-        if (solve is null) return false;
+            (string game, string key, int? elapsed)? solve = kind switch
+            {
+                WordGuessKind => ReadWordGuess(payload),
+                PuzzleKind => ReadPuzzle(payload),
+                _ => null,
+            };
+            if (solve is null) continue;
+            games.Add(solve.Value.game);
+            keys.Add(solve.Value.key);
+            times.Add(at.UtcDateTime);
+            elapsed.Add(solve.Value.elapsed);
+        }
 
-        var (game, key, elapsedMs) = solve.Value;
-        var inserted = await db.Database.ExecuteSqlRawAsync(
+        if (games.Count == 0) return;
+        await db.Database.ExecuteSqlRawAsync(
             """
             INSERT INTO practice_solves (user_id, game, level_key, solved_at, elapsed_ms)
-            VALUES (@user, @game, @key, @at, @elapsed)
+            SELECT @user, t.game, t.key, t.at, t.elapsed
+            FROM unnest(@games, @keys, @times, @elapsed) AS t(game, key, at, elapsed)
             ON CONFLICT (user_id, game, level_key) DO NOTHING
             """,
             [
                 new NpgsqlParameter("user", userId),
-                new NpgsqlParameter("game", game),
-                new NpgsqlParameter("key", key),
-                new NpgsqlParameter("at", at.ToUniversalTime()),
-                new NpgsqlParameter("elapsed", (object?)elapsedMs ?? DBNull.Value),
+                new NpgsqlParameter("games", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Text) { Value = games.ToArray() },
+                new NpgsqlParameter("keys", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Text) { Value = keys.ToArray() },
+                new NpgsqlParameter("times", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = times.ToArray() },
+                new NpgsqlParameter("elapsed", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Integer) { Value = elapsed.ToArray() },
             ],
             ct);
-        return inserted == 1;
     }
 
     private (string, string, int?)? ReadWordGuess(JsonElement p)

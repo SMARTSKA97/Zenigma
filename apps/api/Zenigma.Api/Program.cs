@@ -36,7 +36,19 @@ if (jwt.Key.Length < 32) throw new InvalidOperationException("Jwt:Key must be at
 var connection = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("ConnectionStrings:Default is not set (set ConnectionStrings__Default).");
 
-builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(ConnectionStrings.Normalize(connection)));
+var tunedConnection = ConnectionStrings.Tune(ConnectionStrings.Normalize(connection));
+// A pool of ready DbContexts: a request borrows one instead of building a new one (less memory churn under load).
+builder.Services.AddDbContextPool<AppDbContext>(o => o.UseNpgsql(tunedConnection), poolSize: 64);
+builder.Services.AddSingleton<BoardCache>();
+
+// Request limits: a small body cap (the biggest legitimate request is a 200-event sync push) and a ceiling on open connections.
+builder.WebHost.ConfigureKestrel(k =>
+{
+    k.Limits.MaxRequestBodySize = 8 * 1024 * 1024;
+    k.Limits.MaxConcurrentConnections = 400;
+    k.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(60);
+    k.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
+});
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services
@@ -81,11 +93,48 @@ builder.Services.AddAuthorization();
 
 var defaultOrigins = new[] { "https://localhost", "capacitor://localhost", "http://localhost", "http://localhost:4200" };
 var origins = defaultOrigins.Concat(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? []).ToArray();
-builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod()));
+// Browsers may remember the CORS preflight for an hour, which removes most OPTIONS requests.
+builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().SetPreflightMaxAge(TimeSpan.FromHours(1))));
 
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.OnRejected = (ctx, _) =>
+    {
+        // Tell well-behaved clients when to try again.
+        ctx.HttpContext.Response.Headers.RetryAfter = "3";
+        return ValueTask.CompletedTask;
+    };
+
+    // Protection for the whole server, applied to every request except the liveness check:
+    //  1. At most 48 requests are worked on at once; up to 200 more wait their turn, the rest are told to retry shortly.
+    //     A small instance that tries to do everything at once slows down for everybody; queueing keeps it steady.
+    //  2. Signing in or registering hashes a password, which is heavy on a small CPU, so only 3 run at a time.
+    //  3. Each signed-in user (or each address, when anonymous) gets a generous per-minute allowance.
+    o.GlobalLimiter = PartitionedRateLimiter.CreateChained(
+        PartitionedRateLimiter.Create<HttpContext, string>(ctx => ctx.Request.Path.StartsWithSegments("/health")
+            ? RateLimitPartition.GetNoLimiter("health")
+            : RateLimitPartition.GetConcurrencyLimiter("all", _ => new ConcurrencyLimiterOptions
+            {
+                PermitLimit = 48,
+                QueueLimit = 200,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            })),
+        PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        {
+            var path = ctx.Request.Path;
+            return path.StartsWithSegments("/auth/login") || path.StartsWithSegments("/auth/register") || path.StartsWithSegments("/auth/delete-account")
+                ? RateLimitPartition.GetConcurrencyLimiter("hashing", _ => new ConcurrencyLimiterOptions { PermitLimit = 3, QueueLimit = 60, QueueProcessingOrder = QueueProcessingOrder.OldestFirst })
+                : RateLimitPartition.GetNoLimiter("other");
+        }),
+        PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        {
+            if (ctx.Request.Path.StartsWithSegments("/health")) return RateLimitPartition.GetNoLimiter("health");
+            var sub = ctx.User.FindFirst("sub")?.Value;
+            return sub is not null
+                ? RateLimitPartition.GetSlidingWindowLimiter("u:" + sub, _ => new SlidingWindowRateLimiterOptions { PermitLimit = 400, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6 })
+                : RateLimitPartition.GetSlidingWindowLimiter("ip:" + (ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown"), _ => new SlidingWindowRateLimiterOptions { PermitLimit = 600, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6 });
+        }));
     o.AddPolicy("auth", ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1) }));
@@ -117,12 +166,30 @@ app.UseForwardedHeaders(forwarded);
 app.UseExceptionHandler();
 app.UseResponseCompression();
 app.UseCors();
-app.UseRateLimiter();
+// Authentication comes first so the limiter can count requests per user.
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 // Liveness only. Nothing in the apps calls this on a timer, so the sleeping free-tier services stay asleep.
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
+// Readiness check for you, not for the apps: it touches the database (and so wakes Neon), so nothing should poll it on a timer.
+app.MapGet("/health/db", async (AppDbContext db, CancellationToken ct) =>
+{
+    using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+    timeout.CancelAfter(TimeSpan.FromSeconds(10));
+    try
+    {
+        var started = TimeProvider.System.GetTimestamp();
+        await db.Database.ExecuteSqlRawAsync("SELECT 1", timeout.Token);
+        return Results.Ok(new { status = "ok", dbMs = (int)TimeProvider.System.GetElapsedTime(started).TotalMilliseconds });
+    }
+    catch (Exception e) when (e is not OperationCanceledException || !ct.IsCancellationRequested)
+    {
+        return Results.Json(new { status = "database unreachable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
 
 // The server's clock decides which daily puzzle is current; clients never trust their own.
 app.MapGet("/time", (TimeProvider clock) =>

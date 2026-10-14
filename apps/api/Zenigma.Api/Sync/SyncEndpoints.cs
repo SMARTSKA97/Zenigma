@@ -37,6 +37,32 @@ public static partial class SyncEndpoints
         return null;
     }
 
+    /// <summary>Inserts the events in one statement and returns the ids that were new (the rest were already stored).</summary>
+    private static async Task<HashSet<Guid>> InsertEventsAsync(AppDbContext db, string userId, Guid deviceId, List<PushEventDto> events, CancellationToken ct)
+    {
+        await db.Database.OpenConnectionAsync(ct);
+        var connection = (NpgsqlConnection)db.Database.GetDbConnection();
+        await using var cmd = new NpgsqlCommand(
+            """
+            INSERT INTO sync_events (id, user_id, device_id, kind, payload, client_created_at)
+            SELECT t.id, @user, @device, t.kind, t.payload, t.created
+            FROM unnest(@ids, @kinds, @payloads, @created) AS t(id, kind, payload, created)
+            ON CONFLICT (user_id, id) DO NOTHING
+            RETURNING id
+            """, connection);
+        cmd.Parameters.AddWithValue("user", userId);
+        cmd.Parameters.AddWithValue("device", deviceId);
+        cmd.Parameters.Add(new NpgsqlParameter("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid) { Value = events.Select(e => e.Id!.Value).ToArray() });
+        cmd.Parameters.Add(new NpgsqlParameter("kinds", NpgsqlDbType.Array | NpgsqlDbType.Text) { Value = events.Select(e => e.Kind!).ToArray() });
+        cmd.Parameters.Add(new NpgsqlParameter("payloads", NpgsqlDbType.Array | NpgsqlDbType.Jsonb) { Value = events.Select(e => e.Payload.GetRawText()).ToArray() });
+        cmd.Parameters.Add(new NpgsqlParameter("created", NpgsqlDbType.Array | NpgsqlDbType.TimestampTz) { Value = events.Select(e => e.ClientCreatedAt!.Value.UtcDateTime).ToArray() });
+
+        var stored = new HashSet<Guid>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct)) stored.Add(reader.GetGuid(0));
+        return stored;
+    }
+
     public static void MapSync(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/sync").RequireAuthorization();
@@ -59,40 +85,36 @@ public static partial class SyncEndpoints
             var duplicates = new List<Guid>();
             var rejected = new List<RejectedDto>();
 
+            // Check every event, then store all the good ones in a single statement (the database is a network hop away,
+            // so one round trip for 200 events instead of 200).
+            var valid = new List<PushEventDto>();
+            var seen = new HashSet<Guid>();
             foreach (var e in request.Events)
             {
                 var problem = Validate(e);
-                if (problem is not null)
+                if (problem is not null) rejected.Add(new RejectedDto(e.Id ?? Guid.Empty, problem));
+                else if (seen.Add(e.Id!.Value)) valid.Add(e);
+                else duplicates.Add(e.Id.Value);
+            }
+
+            if (valid.Count > 0)
+            {
+                var stored = await InsertEventsAsync(db, userId, request.DeviceId.Value, valid, ct);
+                var now = clock.GetUtcNow();
+                var practiceEvents = new List<(string, JsonElement, DateTimeOffset)>();
+                foreach (var e in valid)
                 {
-                    rejected.Add(new RejectedDto(e.Id ?? Guid.Empty, problem));
-                    continue;
+                    if (!stored.Contains(e.Id!.Value)) { duplicates.Add(e.Id.Value); continue; }
+                    accepted.Add(e.Id.Value);
+                    if (PracticeRecorder.IsPracticeKind(e.Kind!))
+                    {
+                        // A solve counts for the leaderboards only once the server has checked it; a bad one is just kept in the log.
+                        var at = e.ClientCreatedAt!.Value > now ? now : e.ClientCreatedAt.Value;
+                        practiceEvents.Add((e.Kind!, e.Payload, at));
+                    }
                 }
 
-                var payload = new NpgsqlParameter("payload", NpgsqlDbType.Jsonb) { Value = e.Payload.GetRawText() };
-                var inserted = await db.Database.ExecuteSqlRawAsync(
-                    """
-                    INSERT INTO sync_events (id, user_id, device_id, kind, payload, client_created_at)
-                    VALUES (@id, @user, @device, @kind, @payload, @created)
-                    ON CONFLICT (user_id, id) DO NOTHING
-                    """,
-                    [
-                        new NpgsqlParameter("id", e.Id!.Value),
-                        new NpgsqlParameter("user", userId),
-                        new NpgsqlParameter("device", request.DeviceId.Value),
-                        new NpgsqlParameter("kind", e.Kind!),
-                        payload,
-                        new NpgsqlParameter("created", e.ClientCreatedAt!.Value.ToUniversalTime()),
-                    ],
-                    ct);
-
-                if (inserted == 1 && PracticeRecorder.IsPracticeKind(e.Kind!))
-                {
-                    // A solve counts for the leaderboards only once the server has checked it; a bad one is just kept in the log.
-                    var at = e.ClientCreatedAt!.Value > clock.GetUtcNow() ? clock.GetUtcNow() : e.ClientCreatedAt.Value;
-                    await practice.RecordAsync(db, userId, e.Kind!, e.Payload, at, ct);
-                }
-
-                (inserted == 1 ? accepted : duplicates).Add(e.Id.Value);
+                if (practiceEvents.Count > 0) await practice.RecordManyAsync(db, userId, practiceEvents, ct);
             }
 
             return Results.Ok(new PushResponse(accepted, duplicates, rejected));

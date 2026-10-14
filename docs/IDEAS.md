@@ -30,6 +30,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Streak milestone hints at 7 and 30 days.
 
 ### Later (needs real players first)
+- ✅ Built for many players at once (0.20.0): batched sync, cached shared leaderboards, indexes, request ceilings, connection tuning. See docs/SCALING.md for what to set on Render and Neon.
 - ⬜ Rewarded ads, hint packs, "Zenigma Plus". Ads are out of scope for now.
 - ✅ Google Play prep: signed AAB attached to every release, data-safety answers and the Console checklist are in docs/PLAY_STORE.md. ✅ The in-app APK updater hides itself when the app was installed from Play. ⬜ Left for you: the Play Console steps.
 

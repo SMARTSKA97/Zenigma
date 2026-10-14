@@ -26,6 +26,82 @@ public class ConnectionStringTests
     }
 }
 
+public class ConnectionTuningTests
+{
+    [Fact]
+    public void Defaults_fill_the_gaps()
+    {
+        var result = ConnectionStrings.Tune("Host=db.example.com;Database=z;Username=u");
+        Assert.Contains("Maximum Pool Size=20", result);
+        Assert.Contains("Timeout=20", result);
+        Assert.Contains("Command Timeout=20", result);
+        Assert.DoesNotContain("No Reset On Close", result);
+    }
+
+    [Fact]
+    public void Settings_already_present_are_kept()
+    {
+        var result = ConnectionStrings.Tune("Host=db.example.com;Database=z;Username=u;MaxPoolSize=5;Command Timeout=3");
+        Assert.Contains("Maximum Pool Size=5", result);
+        Assert.Contains("Command Timeout=3", result);
+    }
+
+    [Fact]
+    public void The_neon_pooler_skips_the_session_reset()
+    {
+        var result = ConnectionStrings.Tune("Host=ep-cool-pooler.neon.tech;Database=z;Username=u");
+        Assert.Contains("No Reset On Close", result);
+    }
+}
+
+public class BoardCacheTests
+{
+    private static BoardCache Make(int seconds) => new(
+        new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Cache:BoardSeconds"] = seconds.ToString() }).Build(),
+        TimeProvider.System);
+
+    [Fact]
+    public async Task Concurrent_requests_share_one_computation()
+    {
+        var cache = Make(30);
+        var calls = 0;
+        async Task<List<int>> Compute()
+        {
+            Interlocked.Increment(ref calls);
+            await Task.Delay(50);
+            return [1, 2, 3];
+        }
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 20).Select(_ => cache.GetAsync("board", Compute)));
+        Assert.Equal(1, calls);
+        Assert.All(results, r => Assert.Equal(3, r.Count));
+        await cache.GetAsync("board", Compute);
+        Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public async Task A_lifetime_of_zero_turns_the_cache_off()
+    {
+        var cache = Make(0);
+        var calls = 0;
+        Task<string> Compute() { calls++; return Task.FromResult("x"); }
+        await cache.GetAsync("k", Compute);
+        await cache.GetAsync("k", Compute);
+        Assert.Equal(2, calls);
+    }
+
+    [Fact]
+    public async Task A_failure_is_not_cached()
+    {
+        var cache = Make(30);
+        var calls = 0;
+        Task<string> Compute() { calls++; return calls == 1 ? throw new InvalidOperationException("boom") : Task.FromResult("ok"); }
+        await Assert.ThrowsAsync<InvalidOperationException>(() => cache.GetAsync("k", Compute));
+        Assert.Equal("ok", await cache.GetAsync("k", Compute));
+    }
+}
+
 public class IstClockTests
 {
     [Fact]

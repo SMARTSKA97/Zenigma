@@ -21,6 +21,7 @@ public class ApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Default", Environment.GetEnvironmentVariable("ZENIGMA_TEST_DB") ?? "Host=unused");
+        builder.UseSetting("Cache:BoardSeconds", "0");
         builder.UseSetting("Jwt:Key", Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)));
     }
 }

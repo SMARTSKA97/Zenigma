@@ -99,6 +99,7 @@ public static class LeaderboardEndpoints
             Guid? circle,
             ClaimsPrincipal principal,
             AppDbContext db,
+            BoardCache cache,
             TimeProvider clock,
             CancellationToken ct) =>
         {
@@ -128,9 +129,9 @@ public static class LeaderboardEndpoints
                 ? PracticeSql(game, period, weekStartUtc, circle)
                 : DailySql(game, period, today, weekStart, circle);
 
-            // The ranked board, trimmed to the top of the table plus this player's own row.
-            var full = $"""WITH ranked AS ({sql}) SELECT * FROM ranked WHERE "Rank" <= {PageSize} OR "UserId" = @me ORDER BY "Rank" """;
-            var rows = await db.Database.SqlQueryRaw<LeaderRow>(full, [.. parameters, new NpgsqlParameter("me", me)]).ToListAsync(ct);
+            // The ranked board (cached for a few seconds and shared by everyone who asks), plus this player's own row.
+            var cacheKey = $"lb|{game}|{kind}|{period}|{circle}|{today:yyyyMMdd}";
+            var rows = await RowsAsync(db, cache, cacheKey, $"WITH ranked AS ({sql})", parameters, me, ct);
 
             var entries = rows.Where(r => r.Rank <= PageSize)
                 .Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
@@ -142,7 +143,7 @@ public static class LeaderboardEndpoints
 
         // The daily mind-training set, ranked by points (out of 300 a day). The points are reported by the app, so this board is for fun:
         // each day is capped at 300 and only a finished set counts.
-        app.MapGet("/leaderboards/mind-daily", async (string? period, ClaimsPrincipal principal, AppDbContext db, TimeProvider clock, CancellationToken ct) =>
+        app.MapGet("/leaderboards/mind-daily", async (string? period, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, TimeProvider clock, CancellationToken ct) =>
         {
             period ??= "today";
             if (period is not ("today" or "week")) return Results.BadRequest(new { error = "Invalid period for this board." });
@@ -163,12 +164,9 @@ public static class LeaderboardEndpoints
                     FROM days d JOIN "AspNetUsers" u ON u."Id" = d.user_id
                     GROUP BY d.user_id, u."Id", u."DisplayName", u."HideName"
                 )
-                SELECT * FROM ranked WHERE "Rank" <= {PageSize} OR "UserId" = @me ORDER BY "Rank"
                 """;
-            var rows = await db.Database.SqlQueryRaw<LeaderRow>(sql,
-                new NpgsqlParameter("start", start.ToString("yyyy-MM-dd")),
-                new NpgsqlParameter("finish", today.ToString("yyyy-MM-dd")),
-                new NpgsqlParameter("me", me)).ToListAsync(ct);
+            var rows = await RowsAsync(db, cache, $"mind|{period}|{today:yyyyMMdd}", sql,
+                [new NpgsqlParameter("start", start.ToString("yyyy-MM-dd")), new NpgsqlParameter("finish", today.ToString("yyyy-MM-dd"))], me, ct);
             var entries = rows.Where(r => r.Rank <= PageSize).Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
             var mine = rows.FirstOrDefault(r => r.UserId == me);
             var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
@@ -177,7 +175,7 @@ public static class LeaderboardEndpoints
 
         // The featured level of a week (`week` is its Monday). Fewest mistakes wins, then the fastest time; a solve that used hints is not ranked.
         // The mistakes are reported by the app, so like the mind board this one is for fun.
-        app.MapGet("/leaderboards/featured", async (string? week, ClaimsPrincipal principal, AppDbContext db, CancellationToken ct) =>
+        app.MapGet("/leaderboards/featured", async (string? week, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, CancellationToken ct) =>
         {
             if (week is null || !DateOnly.TryParseExact(week, "yyyy-MM-dd", out _)) return Results.BadRequest(new { error = "week must be a date like 2026-10-12." });
             var me = UserIds.Get(principal);
@@ -195,14 +193,38 @@ public static class LeaderboardEndpoints
                            ROW_NUMBER() OVER (ORDER BY b.mistakes, b.ms, b.user_id) AS "Rank"
                     FROM best b JOIN "AspNetUsers" u ON u."Id" = b.user_id
                 )
-                SELECT * FROM ranked WHERE "Rank" <= {PageSize} OR "UserId" = @me ORDER BY "Rank"
                 """;
-            var rows = await db.Database.SqlQueryRaw<LeaderRow>(sql, new NpgsqlParameter("week", week), new NpgsqlParameter("me", me)).ToListAsync(ct);
+            var rows = await RowsAsync(db, cache, $"featured|{week}", sql, [new NpgsqlParameter("week", week)], me, ct);
             var entries = rows.Where(r => r.Rank <= PageSize).Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
             var mine = rows.FirstOrDefault(r => r.UserId == me);
             var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
             return Results.Ok(new LeaderboardDto("featured", "practice", "week", week, entries, meDto));
         }).RequireAuthorization();
+    }
+
+    /// <summary>How many ranked rows a cached board keeps. Anyone ranked deeper than this gets their own row looked up on demand.</summary>
+    private const int CacheDepth = 1000;
+
+    /// <summary>
+    /// The top of a ranked board, shared through <see cref="BoardCache"/>, and this player's row added when they are ranked below it.
+    /// `withClause` is a complete WITH ... ranked AS (...) that exposes UserId, Name, Value, Secondary and Rank.
+    /// </summary>
+    private static async Task<List<LeaderRow>> RowsAsync(
+        AppDbContext db, BoardCache cache, string key, string withClause, NpgsqlParameter[] parameters, string me, CancellationToken ct)
+    {
+        // Parameters belong to one command, so every query gets its own copies.
+        NpgsqlParameter[] Copy() => parameters.Select(p => p.Clone()).ToArray();
+
+        var top = await cache.GetAsync(key, () => db.Database
+            .SqlQueryRaw<LeaderRow>($"""{withClause} SELECT * FROM ranked WHERE "Rank" <= {CacheDepth} ORDER BY "Rank" """, Copy())
+            .ToListAsync(CancellationToken.None));
+
+        if (top.Count < CacheDepth || top.Any(r => r.UserId == me)) return top;
+
+        var mine = await db.Database
+            .SqlQueryRaw<LeaderRow>($"""{withClause} SELECT * FROM ranked WHERE "UserId" = @me""", [.. Copy(), new NpgsqlParameter("me", me)])
+            .ToListAsync(ct);
+        return [.. top, .. mine];
     }
 
     private static (string sql, NpgsqlParameter[] parameters) DailySql(string game, string period, DateOnly today, DateOnly weekStart, Guid? circle)

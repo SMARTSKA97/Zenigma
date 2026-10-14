@@ -16,6 +16,38 @@ public static class ConnectionStrings
             return value;
         }
 
+        return FromUri(value);
+    }
+
+    /// <summary>
+    /// Pool and timeout settings for a small server in front of a serverless database. Anything already written in the
+    /// connection string wins; these only fill the gaps.
+    /// </summary>
+    public static string Tune(string connectionString)
+    {
+        var raw = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = connectionString };
+        var given = raw.Keys.Cast<string>().Select(k => k.Replace(" ", "").Replace("_", "").ToLowerInvariant()).ToHashSet();
+        bool Has(params string[] names) => names.Any(n => given.Contains(n));
+        var b = new NpgsqlConnectionStringBuilder(connectionString);
+
+        // Keep the pool small: a free database allows few connections, and requests wait briefly for one instead of failing.
+        if (!Has("maxpoolsize", "maximumpoolsize")) b.MaxPoolSize = 20;
+        // Neon suspends an idle database; waking it can take a few seconds, so allow that long to connect.
+        if (!Has("timeout")) b.Timeout = 20;
+        // A runaway query is cancelled rather than holding a connection (and a request) forever.
+        if (!Has("commandtimeout")) b.CommandTimeout = 20;
+        if (!Has("connectionidlelifetime", "idlelifetime")) b.ConnectionIdleLifetime = 30;
+        // Recycle connections now and then so one that Neon has dropped is never reused.
+        if (!Has("connectionlifetime", "loadbalancetimeout")) b.ConnectionLifetime = 300;
+        if (!Has("keepalive")) b.KeepAlive = 30;
+        // Neon's pooler (PgBouncer, transaction mode) resets sessions itself, so skip the extra reset round trip on every release.
+        if (b.Host?.Contains("-pooler", StringComparison.OrdinalIgnoreCase) == true && !Has("noresetonclose")) b.NoResetOnClose = true;
+        return b.ConnectionString;
+    }
+
+    private static string FromUri(string value)
+    {
+
         var uri = new Uri(value);
         var userInfo = uri.UserInfo.Split(':', 2);
         var builder = new NpgsqlConnectionStringBuilder
@@ -26,9 +58,6 @@ public static class ConnectionStrings
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : null,
             SslMode = SslMode.Require,
-            // A small, free database: few connections, and idle ones are closed so the database can go to sleep.
-            MaxPoolSize = 12,
-            ConnectionIdleLifetime = 30,
         };
 
         foreach (var pair in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
