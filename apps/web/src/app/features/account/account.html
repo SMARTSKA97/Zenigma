@@ -82,7 +82,6 @@
             <b>Google</b>
             <span class="muted">
               @if (profileApi.google()) { Connected. Sign in with one tap. }
-              @else if (googleNative) { Available on the web app for now. }
               @else if (googleOffered() === false) { Not set up on this server yet. }
               @else { Connect it to sign in with one tap. }
             </span>
@@ -91,8 +90,12 @@
             <button type="button" class="small" [disabled]="saving()" (click)="disconnectGoogle()">Disconnect</button>
           }
         </div>
-        @if (!profileApi.google() && !googleNative && googleOffered() !== false) {
-          <div class="gslot" #googleLink></div>
+        @if (!profileApi.google() && googleOffered() !== false) {
+          @if (googleNative) {
+            <button type="button" class="gbtn" (click)="nativeGoogle(true)"><span class="badge g" aria-hidden="true">G</span> Connect Google</button>
+          } @else {
+            <div class="gslot" #googleLink></div>
+          }
         }
       </div>
 
@@ -182,8 +185,12 @@
     }
 
     <div class="card form" [class.busy]="busy()">
-      @if (googleOffered() !== false && !googleNative) {
-        <div class="gslot" #googleSignIn></div>
+      @if (googleOffered() !== false) {
+        @if (googleNative) {
+          <button type="button" class="gbtn" (click)="nativeGoogle(false)"><span class="badge g" aria-hidden="true">G</span> Continue with Google</button>
+        } @else {
+          <div class="gslot" #googleSignIn></div>
+        }
         <p class="or"><span>or use your email</span></p>
       }
       <app-segmented label="Sign in or create account" [options]="modes" [value]="mode()" (valueChange)="mode.set($event)" />

@@ -384,3 +384,24 @@ small {
   margin: 0 0 0.6rem;
   max-width: none;
 }
+
+/* Android: our own button, since Google's web button cannot run in the app. */
+.gbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: none;
+}
+.gbtn .badge {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.8rem;
+}

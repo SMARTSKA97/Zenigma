@@ -67,7 +67,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ Profile page with permissions (what is shared and why), display name, age group, gender, hide-name option.
 - ✅ Google sign-in on the web (set `Google__ClientId` on Render).
 - ✅ Offline mode switch and warm-up loader; daily challenges pause offline, everything else works.
-- ⬜ 🆕 **Google sign-in on Android** needs a native plugin (the WebView cannot run Google Identity Services). The button is hidden there until then.
+- ✅ 🆕 **Google sign-in on Android** (0.21.0): native account picker via Credential Manager. ⬜ Needs the Android OAuth client with the signing SHA-1 (see docs/DEPLOYMENT.md).
 - ✅ Link or unlink Google from an existing email account in Profile.
 - ✅ Export my data (JSON), in Settings (0.20.0).
 - ❌ Offline daily: decided against. Dailies are timed and checked by the server so times are fair; handing out tomorrow's puzzle early, or accepting an offline time, would break that. Practice, Mind and Word Guess practice already work offline.

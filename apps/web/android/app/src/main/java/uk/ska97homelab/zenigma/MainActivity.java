@@ -11,6 +11,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ApkInstallerPlugin.class);
         registerPlugin(ScreenGuardPlugin.class);
         registerPlugin(ShareCardPlugin.class);
+        registerPlugin(GoogleSignInPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

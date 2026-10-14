@@ -106,6 +106,18 @@ export class Account implements OnInit {
     void this.profileApi.load().then(() => this.nameDraft.set(this.profile()?.displayName ?? ''));
   }
 
+  /** Android: the phone's own Google account picker instead of Google's web button. */
+  protected async nativeGoogle(linking: boolean): Promise<void> {
+    this.error.set(null);
+    this.notice.set(null);
+    try {
+      const token = await this.google.signInNative();
+      if (token) await this.onGoogle(token, linking);
+    } catch (error) {
+      (linking ? this.notice : this.error).set(error instanceof Error ? error.message : this.message(error));
+    }
+  }
+
   private async onGoogle(token: string, linking: boolean): Promise<void> {
     this.error.set(null);
     this.notice.set(null);

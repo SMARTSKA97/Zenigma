@@ -137,7 +137,16 @@ mode works fully offline.
 
 Set `Google__ClientId` on Render to the OAuth web client id (and use the same id in the web app's config). The API verifies the
 ID token with Google's tokeninfo endpoint. Without it, `/auth/config` reports Google as unavailable and the button is hidden.
-The Android WebView cannot run Google Identity Services, so the button is hidden there until a native plugin is added.
+The Android WebView cannot run Google Identity Services, so the app (0.21.0 and later) uses Android's own account picker through
+`GoogleSignInPlugin`. It needs a second OAuth client in the same Google Cloud project:
+
+1. Credentials → Create credentials → OAuth client ID → **Android**.
+2. Package name `uk.ska97homelab.zenigma`.
+3. SHA-1 of the key that signs the APK you install. Release APK: `keytool -list -v -keystore zenigma.keystore -alias zenigma` and copy
+   the `SHA1:` line. If Play App Signing is on, also add the **App signing key** SHA-1 from Play Console → Setup → App signing.
+   A debug build from CI has a different key, so it will not sign in unless you add that SHA-1 too.
+4. Nothing to paste anywhere: the web client id (`Google__ClientId`) is still the only value the server and app use. The Android client just
+   tells Google that this package + key may ask for tokens for it. It can take a few minutes to take effect.
 Migration `V8` adds profiles, the server hint balance and mind scores; Flyway applies it on deploy.
 
 ## Observability and safety
