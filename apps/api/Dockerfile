@@ -4,7 +4,7 @@ WORKDIR /src
 COPY global.json Directory.Build.props ./
 COPY Zenigma.Api/Zenigma.Api.csproj Zenigma.Api/
 # ReadyToRun (precompiled code) makes a cold start after Render's idle sleep noticeably faster and uses less CPU while warming up.
-RUN dotnet restore Zenigma.Api/Zenigma.Api.csproj -r linux-x64
+RUN dotnet restore Zenigma.Api/Zenigma.Api.csproj -r linux-x64 -p:PublishReadyToRun=true
 COPY Zenigma.Api/ Zenigma.Api/
 RUN dotnet publish Zenigma.Api/Zenigma.Api.csproj -c Release -o /app --no-restore -r linux-x64 --self-contained false -p:PublishReadyToRun=true
 
