@@ -149,7 +149,7 @@
   </section>
 }
 
-@if (updater.supported) {
+@if (updater.supported && !updater.fromPlay()) {
   <h2 class="group">App updates</h2>
   <section class="list">
     <div class="item stack">

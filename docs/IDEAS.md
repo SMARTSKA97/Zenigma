@@ -31,7 +31,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 
 ### Later (needs real players first)
 - ⬜ Rewarded ads, hint packs, "Zenigma Plus". Ads are out of scope for now.
-- ✅ Google Play prep: signed AAB attached to every release, data-safety answers and the Console checklist are in docs/PLAY_STORE.md. ⬜ Left for you: the Play Console steps, and hiding the APK updater in a Play build.
+- ✅ Google Play prep: signed AAB attached to every release, data-safety answers and the Console checklist are in docs/PLAY_STORE.md. ✅ The in-app APK updater hides itself when the app was installed from Play. ⬜ Left for you: the Play Console steps.
 
 ## Challenges and Mind
 

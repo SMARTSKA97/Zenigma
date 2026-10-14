@@ -2,6 +2,7 @@ package uk.ska97homelab.zenigma;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
@@ -41,6 +42,26 @@ public class ApkInstallerPlugin extends Plugin {
     private static final String UPDATE_FILE = "zenigma-update.apk";
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    /** Which app store installed this app (empty when it was sideloaded), so a Play build can hide the in-app APK updater. */
+    @PluginMethod
+    public void installSource(PluginCall call) {
+        String installer = null;
+        try {
+            PackageManager pm = getContext().getPackageManager();
+            String pkg = getContext().getPackageName();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                installer = pm.getInstallSourceInfo(pkg).getInstallingPackageName();
+            } else {
+                installer = pm.getInstallerPackageName(pkg);
+            }
+        } catch (Exception ignored) {
+            // Unknown: treated as sideloaded.
+        }
+        JSObject result = new JSObject();
+        result.put("installer", installer == null ? "" : installer);
+        call.resolve(result);
+    }
 
     @PluginMethod
     public void canInstall(PluginCall call) {

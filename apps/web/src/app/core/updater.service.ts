@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 interface ApkInstallerPlugin {
+  installSource(): Promise<{ installer: string }>;
   canInstall(): Promise<{ allowed: boolean }>;
   openInstallSettings(): Promise<void>;
   downloadAndInstall(options: { url: string; sha256?: string }): Promise<void>;
@@ -69,6 +70,16 @@ export class UpdaterService {
   private readonly http = inject(HttpClient);
 
   readonly supported = Capacitor.getPlatform() === 'android';
+  /** True when Google Play installed the app: Play updates it, so the in-app APK updater stays out of the way (Play's policy). */
+  readonly fromPlay = signal(false);
+
+  constructor() {
+    if (this.supported) {
+      void ApkInstaller.installSource()
+        .then((r) => this.fromPlay.set(r.installer === 'com.android.vending'))
+        .catch(() => undefined);
+    }
+  }
   readonly state = signal<UpdateState>('idle');
   readonly currentVersion = signal<string | null>(null);
   readonly update = signal<AvailableUpdate | null>(null);
@@ -91,7 +102,7 @@ export class UpdaterService {
 
   /** Checks on open and on return to the app. Quiet: no spinner state, and failures say nothing. */
   startAutoCheck(): void {
-    if (!this.supported || this.autoStarted) return;
+    if (!this.supported || this.fromPlay() || this.autoStarted) return;
     this.autoStarted = true;
     // A moment after launch, so it never competes with the first screen (or the "What's new" sheet).
     setTimeout(() => void this.autoCheck(), 2500);
@@ -104,6 +115,7 @@ export class UpdaterService {
   private lastAuto = 0;
 
   private async autoCheck(): Promise<void> {
+    if (this.fromPlay()) return;
     const busy: UpdateState[] = ['checking', 'downloading', 'installing', 'needsPermission'];
     if (busy.includes(this.state()) || this.sheetOpen()) return;
     const sixHours = 6 * 60 * 60 * 1000;

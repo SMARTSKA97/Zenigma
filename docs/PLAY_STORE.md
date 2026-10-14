@@ -12,7 +12,7 @@ Zenigma is built to ship as an APK from GitHub Releases today. This is what is r
 ## Before the first upload (Play Console)
 
 1. **App signing**: use Play App Signing. Upload the first `.aab` (signed with the upload key you already have). Keep the keystore and its passwords backed up with `PUZZLE_SEED`.
-2. **Disable the in-app APK updater in the Play build.** Play forbids an app updating itself outside Play. The updater is in `core/updater.service.ts`; hide the Settings update row when the app was installed from Play (the installer package is `com.android.vending`).
+2. **The in-app APK updater switches itself off in a Play install (done).** Play forbids an app updating itself outside Play. The updater is in `core/updater.service.ts`; hide the Settings update row when the app was installed from Play (the installer package is `com.android.vending`).
 3. **Content rating**: answer the questionnaire as a puzzle game with no violence, no user-generated chat and no gambling. Expect "Everyone".
 4. **Target audience**: 13+ (the profile asks for an age group from 18 up; it is optional).
 5. **Ads**: declare "No ads" (the app has none).
