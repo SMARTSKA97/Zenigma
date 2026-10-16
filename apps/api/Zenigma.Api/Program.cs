@@ -68,7 +68,10 @@ builder.Services
     })
     .AddEntityFrameworkStores<AppDbContext>();
 
+// OWASP's current guidance for PBKDF2-HMAC-SHA512. Existing hashes stay valid and are upgraded the next time someone signs in.
+builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 210_000);
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddHostedService<RefreshTokenCleanup>();
 builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.Section));
 builder.Services.AddHttpClient<IGoogleTokenVerifier, GoogleTokenVerifier>(c => c.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddSingleton<WordList>();
@@ -84,6 +87,12 @@ builder.Services
         {
             ValidIssuer = jwt.Issuer,
             ValidAudience = jwt.Audience,
+            // Only the algorithm we sign with is accepted (no "alg: none", no algorithm swapping).
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            RequireSignedTokens = true,
+            RequireExpirationTime = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
             ClockSkew = TimeSpan.FromSeconds(30),
             NameClaimType = "sub",
@@ -91,7 +100,10 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
-var defaultOrigins = new[] { "https://localhost", "capacitor://localhost", "http://localhost", "http://localhost:4200" };
+// The Android app's WebView origin is https://localhost. Plain-http localhost origins are for development only.
+var defaultOrigins = builder.Environment.IsDevelopment()
+    ? new[] { "https://localhost", "capacitor://localhost", "http://localhost", "http://localhost:4200" }
+    : new[] { "https://localhost", "capacitor://localhost" };
 var origins = defaultOrigins.Concat(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? []).ToArray();
 // Browsers may remember the CORS preflight for an hour, which removes most OPTIONS requests.
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().SetPreflightMaxAge(TimeSpan.FromHours(1))));
@@ -101,8 +113,10 @@ builder.Services.AddRateLimiter(o =>
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     o.OnRejected = (ctx, _) =>
     {
-        // Tell well-behaved clients when to try again.
+        // Tell well-behaved clients when to try again, and keep a trace of who is being turned away.
         ctx.HttpContext.Response.Headers.RetryAfter = "3";
+        ctx.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Security")
+            .LogWarning("Security: request limited {Method} {Path} from {Ip}", ctx.HttpContext.Request.Method, ctx.HttpContext.Request.Path, ctx.HttpContext.Connection.RemoteIpAddress);
         return ValueTask.CompletedTask;
     };
 
@@ -138,6 +152,10 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy("auth", ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1) }));
+    // Circle codes are 6 characters, so guessing them is slowed right down.
+    o.AddPolicy("join", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
     o.AddPolicy("report", ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) }));
@@ -145,6 +163,9 @@ builder.Services.AddRateLimiter(o =>
 
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
 builder.Services.AddProblemDetails();
+
+// A request that takes longer than this is cancelled, so a stuck one cannot hold a slot (and a database connection) forever.
+builder.Services.AddRequestTimeouts(o => o.DefaultPolicy = new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy { Timeout = TimeSpan.FromSeconds(30) });
 
 // JSON compresses to a fraction of its size; bandwidth and the time on slow phone connections both drop.
 builder.Services.AddResponseCompression(o =>
@@ -164,11 +185,33 @@ forwarded.KnownProxies.Clear();
 app.UseForwardedHeaders(forwarded);
 
 app.UseExceptionHandler();
+
+// Security headers on every response. The API only returns JSON, so the content policy forbids everything else.
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.OnStarting(() =>
+    {
+        var h = ctx.Response.Headers;
+        h.XContentTypeOptions = "nosniff";
+        h["Referrer-Policy"] = "no-referrer";
+        h.XFrameOptions = "DENY";
+        h.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
+        h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()";
+        h["Cross-Origin-Resource-Policy"] = "cross-origin";
+        if (!app.Environment.IsDevelopment()) h.StrictTransportSecurity = "max-age=31536000; includeSubDomains";
+        // Answers are per person, so nothing but the public community counts may be kept by a cache.
+        if (!h.ContainsKey("Cache-Control")) h.CacheControl = "no-store";
+        return Task.CompletedTask;
+    });
+    await next();
+});
+
 app.UseResponseCompression();
 app.UseCors();
 // Authentication comes first so the limiter can count requests per user.
 app.UseAuthentication();
 app.UseRateLimiter();
+app.UseRequestTimeouts();
 app.UseAuthorization();
 
 // Liveness only. Nothing in the apps calls this on a timer, so the sleeping free-tier services stay asleep.

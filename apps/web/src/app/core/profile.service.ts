@@ -64,7 +64,7 @@ export class ProfileService {
   }
 
   async setPassword(currentPassword: string | null, newPassword: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/profile/password`, { currentPassword, newPassword }));
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/profile/password`, { currentPassword, newPassword, refreshToken: this.auth.session()?.refreshToken }));
     await this.load();
   }
 

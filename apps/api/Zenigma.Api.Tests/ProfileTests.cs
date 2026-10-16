@@ -137,6 +137,43 @@ public class ProfileTests : IClassFixture<ApiFactory>
     }
 
     [DbFact]
+    public async Task Google_claiming_an_unverified_password_account_removes_the_old_password()
+    {
+        var factory = WithGoogle();
+        var client = factory.CreateClient();
+        var email = $"{Guid.NewGuid():N}@example.com";
+
+        // Someone signs up with an address (and a password) before the address's owner does.
+        var signup = await client.PostAsJsonAsync("/auth/register", new { email, password = ValidPassword, deviceId = Guid.NewGuid() });
+        Assert.Equal(HttpStatusCode.OK, signup.StatusCode);
+        var attacker = (await signup.Content.ReadFromJsonAsync<Session>(Json))!;
+
+        // The owner then signs in with Google for the same address.
+        var google = await client.PostAsJsonAsync("/auth/google", new { idToken = $"ok:{Guid.NewGuid():N}:{email}:Owner", deviceId = Guid.NewGuid() });
+        Assert.Equal(HttpStatusCode.OK, google.StatusCode);
+
+        // The first person's password and session no longer work.
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/login", new { email, password = ValidPassword })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/refresh", new { refreshToken = attacker.RefreshToken })).StatusCode);
+    }
+
+    [DbFact]
+    public async Task Changing_the_password_ends_the_other_sessions_but_not_this_one()
+    {
+        var client = _factory.CreateClient();
+        var email = $"{Guid.NewGuid():N}@example.com";
+        var first = (await (await client.PostAsJsonAsync("/auth/register", new { email, password = ValidPassword, deviceId = Guid.NewGuid() })).Content.ReadFromJsonAsync<Session>(Json))!;
+        var second = (await (await client.PostAsJsonAsync("/auth/login", new { email, password = ValidPassword, deviceId = Guid.NewGuid() })).Content.ReadFromJsonAsync<Session>(Json))!;
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", first.AccessToken);
+        var changed = await client.PostAsJsonAsync("/profile/password", new { currentPassword = ValidPassword, newPassword = ValidPassword + "x", refreshToken = first.RefreshToken });
+        Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/refresh", new { refreshToken = second.RefreshToken })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/refresh", new { refreshToken = first.RefreshToken })).StatusCode);
+    }
+
+    [DbFact]
     public async Task Mind_comparison_needs_enough_sharing_players()
     {
         var me = await SignUpAsync();

@@ -15,6 +15,12 @@ public record GoogleLoginRequest(string? IdToken, Guid? DeviceId, string? Displa
 
 public static class AuthEndpoints
 {
+    private static string? _dummyHash;
+
+    /// <summary>A throwaway password hash, built once, used to keep sign-in timing the same for unknown emails.</summary>
+    private static string DummyHash(UserManager<ApplicationUser> users) =>
+        _dummyHash ??= users.PasswordHasher.HashPassword(null!, Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(18)));
+
     public static void MapAuth(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/auth").RequireRateLimiting("auth");
@@ -23,8 +29,10 @@ public static class AuthEndpoints
             RegisterRequest request,
             UserManager<ApplicationUser> users,
             TokenService tokens,
+            ILoggerFactory loggers,
             CancellationToken ct) =>
         {
+            var log = loggers.CreateLogger("Security");
             var email = request.Email?.Trim() ?? "";
             if (email.Length is 0 or > 256 || !new EmailAddressAttribute().IsValid(email))
                 return Results.ValidationProblem(new Dictionary<string, string[]> { ["email"] = ["Enter a valid email address."] });
@@ -44,6 +52,7 @@ public static class AuthEndpoints
                 return Results.ValidationProblem(errors);
             }
 
+            log.LogInformation("Security: account created {UserId} (email)", user.Id);
             return Results.Ok(await tokens.IssueAsync(user, request.DeviceId, ct));
         });
 
@@ -51,18 +60,31 @@ public static class AuthEndpoints
             LoginRequest request,
             UserManager<ApplicationUser> users,
             TokenService tokens,
+            ILoggerFactory loggers,
+            HttpContext http,
             CancellationToken ct) =>
         {
+            var log = loggers.CreateLogger("Security");
             var invalid = Results.Problem(statusCode: StatusCodes.Status401Unauthorized, title: "Wrong email or password.");
 
             var user = string.IsNullOrWhiteSpace(request.Email) ? null : await users.FindByEmailAsync(request.Email.Trim());
-            if (user is null || string.IsNullOrEmpty(request.Password)) return invalid;
+            if (user is null || string.IsNullOrEmpty(request.Password))
+            {
+                // Hash anyway, so an unknown email takes as long as a wrong password and cannot be told apart by timing.
+                if (!string.IsNullOrEmpty(request.Password)) users.PasswordHasher.VerifyHashedPassword(null!, DummyHash(users), request.Password);
+                log.LogInformation("Security: failed sign-in (unknown account) from {Ip}", http.Connection.RemoteIpAddress);
+                return invalid;
+            }
             if (await users.IsLockedOutAsync(user))
+            {
+                log.LogWarning("Security: sign-in refused, account {UserId} is locked out (from {Ip})", user.Id, http.Connection.RemoteIpAddress);
                 return Results.Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "Too many attempts. Try again later.");
+            }
 
             if (!await users.CheckPasswordAsync(user, request.Password))
             {
                 await users.AccessFailedAsync(user);
+                log.LogWarning("Security: failed sign-in for account {UserId} from {Ip}", user.Id, http.Connection.RemoteIpAddress);
                 return invalid;
             }
 
@@ -82,8 +104,10 @@ public static class AuthEndpoints
             IGoogleTokenVerifier google,
             Microsoft.Extensions.Options.IOptions<GoogleOptions> options,
             TokenService tokens,
+            ILoggerFactory loggers,
             CancellationToken ct) =>
         {
+            var log = loggers.CreateLogger("Security");
             if (options.Value.ClientId.Length == 0)
                 return Results.Problem(statusCode: StatusCodes.Status501NotImplemented, title: "Google sign-in is not set up on this server.");
             var identity = await google.VerifyAsync(request.IdToken ?? "", ct);
@@ -94,6 +118,17 @@ public static class AuthEndpoints
             if (user is null)
             {
                 user = await users.FindByEmailAsync(identity.Email);
+                if (user is not null && !user.EmailConfirmed)
+                {
+                    // Someone may have signed up with this address before its owner did (the address was never confirmed), and
+                    // would still know that password. Google has just proven the address is this person's, so the old password
+                    // and every old session are removed before the account is handed over.
+                    if (await users.HasPasswordAsync(user)) await users.RemovePasswordAsync(user);
+                    user.EmailConfirmed = true;
+                    await users.UpdateAsync(user);
+                    await tokens.RevokeAllAsync(user.Id, ct);
+                    log.LogWarning("Security: unverified account {UserId} was claimed through Google; its password and sessions were removed", user.Id);
+                }
                 if (user is null)
                 {
                     var name = string.IsNullOrWhiteSpace(request.DisplayName) ? identity.Name : request.DisplayName.Trim();

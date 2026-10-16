@@ -159,7 +159,7 @@ public static class CircleEndpoints
                     [new NpgsqlParameter("c", id), new NpgsqlParameter("u", me)], ct);
             }
             return Results.Ok((await ListAsync(db, me, id, ct)).Single());
-        });
+        }).RequireRateLimiting("join");
 
         group.MapDelete("{id:guid}", async (Guid id, ClaimsPrincipal principal, AppDbContext db, CancellationToken ct) =>
         {

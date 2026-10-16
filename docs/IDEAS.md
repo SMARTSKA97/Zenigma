@@ -91,3 +91,6 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ The wheel's prize is queued under a per-day id (`wheel:<date>`), and the server counts each id once, so a second device cannot be paid twice (0.20.0). The device that loses sees its balance correct on the next sync.
 - ❌ Old queens/tango/zip/patches progress migration: decided against. Old level numbers were a single difficulty ramp with no stable mapping to the five tiers, so a guess would either skip levels or repeat them. Progress under the tiers starts fresh; badges and totals already count what was cleared.
 - ✅ Observability: `POST /telemetry/error` writes a short client crash report to the API log (rate limited, no account or device id, nothing stored). A Settings switch turns it off (0.20.0).
+
+## Done: security hardening (phase 41)
+OWASP Top 10 pass: headers/CSP, token reuse detection, Google pre-hijack fix, logging, CodeQL, Dependabot, pinned actions. See docs/SECURITY.md. Next: email verification + forgot password, MFA.

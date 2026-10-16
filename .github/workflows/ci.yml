@@ -32,8 +32,8 @@ jobs:
     env:
       ZENIGMA_TEST_DB: Host=localhost;Port=5432;Database=zenigma;Username=postgres
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           global-json-file: apps/api/global.json
       - name: Apply migrations with Flyway
@@ -41,14 +41,19 @@ jobs:
           docker run --rm --network host -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
           flyway/flyway:11 -url=jdbc:postgresql://localhost:5432/zenigma -user=postgres migrate
       - run: .github/scripts/run-annotated.sh dotnet build apps/api/Zenigma.slnx -c Release
+      # Fails the build when a NuGet package (direct or indirect) has a known vulnerability.
+      - name: Check NuGet packages for known vulnerabilities
+        run: |
+          dotnet list apps/api/Zenigma.slnx package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
+          if grep -q "has the following vulnerable packages" vulnerable.txt; then echo "Vulnerable NuGet packages found"; exit 1; fi
       - run: .github/scripts/run-annotated.sh dotnet test apps/api/Zenigma.slnx -c Release --no-build
 
   puzzles:
     name: Puzzle generators (levels and vectors are up to date)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
       # The levels shipped in the app and the API, and the shared test vectors, are generated. Levels grow every week, so
@@ -67,13 +72,15 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
+      # Fails the build on a known high or critical vulnerability in what ships to players.
+      - run: npm audit --omit=dev --audit-level=high
       - run: npx ng test --watch=false
       - run: npm run build
 
@@ -81,13 +88,13 @@ jobs:
     name: Android (debug build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: 21
@@ -106,7 +113,7 @@ jobs:
         run: |
           chmod +x gradlew
           ../../../.github/scripts/run-annotated.sh ./gradlew assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: zenigma-debug-apk
           path: apps/web/android/app/build/outputs/apk/debug/*.apk

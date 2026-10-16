@@ -17,7 +17,7 @@ public record ProfileDto(
     bool ShareCohort,
     bool HideName);
 public record UpdateProfileRequest(string? DisplayName, string? AgeGroup, string? Gender, bool? ShareCohort, bool? HideName, bool? ClearAgeGroup, bool? ClearGender);
-public record SetPasswordRequest(string? CurrentPassword, string? NewPassword);
+public record SetPasswordRequest(string? CurrentPassword, string? NewPassword, string? RefreshToken = null);
 public record GoogleTokenRequest(string? IdToken);
 
 public static class ProfileEndpoints
@@ -73,7 +73,7 @@ public static class ProfileEndpoints
         });
 
         // Adds a password (accounts that signed up with a social login) or changes it (the current one confirms).
-        group.MapPost("/password", async (SetPasswordRequest request, ClaimsPrincipal principal, UserManager<ApplicationUser> users) =>
+        group.MapPost("/password", async (SetPasswordRequest request, ClaimsPrincipal principal, UserManager<ApplicationUser> users, TokenService tokens, ILoggerFactory loggers, CancellationToken ct) =>
         {
             var user = await users.FindByIdAsync(UserIds.Get(principal));
             if (user is null) return Results.Unauthorized();
@@ -90,9 +90,13 @@ public static class ProfileEndpoints
             {
                 result = await users.AddPasswordAsync(user, request.NewPassword);
             }
-            return result.Succeeded
-                ? Results.NoContent()
-                : Results.ValidationProblem(new Dictionary<string, string[]> { ["password"] = result.Errors.Select(e => e.Description).ToArray() });
+            if (!result.Succeeded)
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["password"] = result.Errors.Select(e => e.Description).ToArray() });
+
+            // A new password signs every other device out (the one that sent its refresh token stays signed in).
+            await tokens.RevokeAllAsync(user.Id, ct, request.RefreshToken);
+            loggers.CreateLogger("Security").LogInformation("Security: password changed for {UserId}; other sessions ended", user.Id);
+            return Results.NoContent();
         });
 
         // Connects a Google account to this account, so either way of signing in reaches the same data.
