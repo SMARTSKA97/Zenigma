@@ -8,7 +8,7 @@
       <button type="button" class="link" (click)="leave()">Go back to practice</button>
     </div>
   </div>
-} @else @if (conn.notice() === 'warming' && conn.waited() >= 2) {
+} @else if (conn.notice() === 'warming' && conn.waited() >= 2) {
   <div class="notice" role="status">
     <app-loader [size]="22" />
     <div class="text">
