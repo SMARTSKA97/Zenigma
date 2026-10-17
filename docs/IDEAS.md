@@ -106,3 +106,6 @@ One local notification 3 hours before the daily rollover when a streak is at ris
 
 ## Done: streak widget (phase 45)
 Android home-screen widget (StreakWidgetProvider/Plugin); numbers pushed from the Daily tab and after a daily is solved.
+
+## Done: widget sizes, wake cover, auto-start dailies, notification prompt (phase 46)
+Hint fairness penalty removed for now (hints recorded only); puzzle daily hints are offline.

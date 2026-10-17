@@ -15,7 +15,7 @@ public class StreakWidgetPlugin extends Plugin {
     @PluginMethod
     public void update(PluginCall call) {
         Context context = getContext();
-        SharedPreferences.Editor edit = context.getSharedPreferences(StreakWidgetProvider.PREFS, Context.MODE_PRIVATE).edit();
+        SharedPreferences.Editor edit = context.getSharedPreferences(StreakWidgetBase.PREFS, Context.MODE_PRIVATE).edit();
         edit.putInt("streak", Math.max(0, call.getInt("streak", 0)));
         edit.putInt("done", Math.max(0, call.getInt("done", 0)));
         edit.putInt("total", Math.max(0, call.getInt("total", 0)));
@@ -23,7 +23,7 @@ public class StreakWidgetPlugin extends Plugin {
         edit.putLong("rollover", rollover == null ? 0L : rollover.longValue());
         edit.putBoolean("known", true);
         edit.apply();
-        StreakWidgetProvider.refresh(context);
+        StreakWidgetBase.refresh(context);
         call.resolve();
     }
 }

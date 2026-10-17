@@ -15,7 +15,7 @@ export interface PuzzleAttempt {
   puzzle: unknown | null;
   /** How many players have solved today's puzzle (for "faster than 70%"). */
   finishers?: number | null;
-  /** Hints used in this attempt (the server counts them; each adds 30 seconds to the ranked time). */
+  /** Hints used in this attempt (recorded with the result). */
   hints?: number;
 }
 
@@ -54,25 +54,15 @@ export class PuzzleDailyService {
     }
   }
 
-  /** Tells the server a hint was used, and gets the new count. Null when it could not be reached (then no hint is given). */
-  async hint(game: string): Promise<number | null> {
-    const deviceId = await this.device.deviceId();
-    try {
-      return (await firstValueFrom(this.http.post<{ hints: number }>(this.url(game, '/hint'), { deviceId }))).hints;
-    } catch {
-      return null;
-    }
-  }
-
   async heartbeat(game: string): Promise<void> {
     const deviceId = await this.device.deviceId();
     await firstValueFrom(this.http.post(this.url(game, '/heartbeat'), { deviceId })).catch(() => undefined);
   }
 
-  async submit(game: string, solution: unknown): Promise<SubmitResult> {
+  async submit(game: string, solution: unknown, hints = 0): Promise<SubmitResult> {
     const deviceId = await this.device.deviceId();
     try {
-      const state = await firstValueFrom(this.http.post<PuzzleDailyState>(this.url(game, '/submit'), { deviceId, solution }));
+      const state = await firstValueFrom(this.http.post<PuzzleDailyState>(this.url(game, '/submit'), { deviceId, solution, hints }));
       return { ok: true, state };
     } catch (error) {
       if (error instanceof HttpErrorResponse) {

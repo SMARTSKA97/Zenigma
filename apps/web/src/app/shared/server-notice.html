@@ -1,4 +1,14 @@
-@if (conn.notice() === 'warming' && conn.waited() >= 2) {
+@if (blocking()) {
+  <div class="cover" role="alertdialog" aria-live="assertive" aria-label="Waking the server">
+    <div class="card">
+      <app-loader [size]="64" />
+      <h2>Waking the server</h2>
+      <p>Hold on, this takes up to a minute after a quiet spell. Please do not close the app or tap around: this screen opens by itself the moment the server is ready.</p>
+      <p class="secs">{{ conn.waited() }}s</p>
+      <button type="button" class="link" (click)="leave()">Go back to practice</button>
+    </div>
+  </div>
+} @else @if (conn.notice() === 'warming' && conn.waited() >= 2) {
   <div class="notice" role="status">
     <app-loader [size]="22" />
     <div class="text">

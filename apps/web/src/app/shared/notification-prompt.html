@@ -1,0 +1,15 @@
+@if (visible()) {
+  <app-sheet label="Notifications" (closed)="later()">
+    <div class="box">
+      <span class="bell" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M6 17h12l-1.5-2.2V10a4.5 4.5 0 0 0-9 0v4.8zM10 20a2 2 0 0 0 4 0" /></svg>
+      </span>
+      <h2>Keep your streak alive</h2>
+      <p>Allow notifications for a gentle daily reminder, and a warning a few hours before a streak would end. They are scheduled on your phone, nothing is sent from a server, and you can change or stop them in Settings.</p>
+      <div class="actions">
+        <button type="button" (click)="allow()">Allow notifications</button>
+        <button type="button" class="secondary" (click)="later()">Not now</button>
+      </div>
+    </div>
+  </app-sheet>
+}

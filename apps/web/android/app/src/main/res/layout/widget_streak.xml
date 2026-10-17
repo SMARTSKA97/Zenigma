@@ -50,4 +50,10 @@
         android:text="Open Zenigma to start"
         android:textColor="#44514D"
         android:textSize="12sp" />
+    <ProgressBar
+        android:id="@+id/widget_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
 </LinearLayout>

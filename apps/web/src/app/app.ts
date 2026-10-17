@@ -19,6 +19,7 @@ import { MindSyncService } from './core/mind-sync.service';
 import { SyncService } from './core/sync.service';
 import { ConnectionService } from './core/connection.service';
 import { ServerNotice } from './shared/server-notice';
+import { NotificationPrompt } from './shared/notification-prompt';
 import { ReminderService } from './core/reminder.service';
 import { UpdaterService } from './core/updater.service';
 import { Loader } from './shared/loader';
@@ -27,7 +28,7 @@ import { WhatsNew } from './shared/whats-new';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, ServerNotice],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, ServerNotice, NotificationPrompt],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

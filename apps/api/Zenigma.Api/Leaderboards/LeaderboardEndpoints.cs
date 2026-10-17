@@ -245,7 +245,7 @@ public static class LeaderboardEndpoints
             ? $"""
               SELECT a.user_id, a.puzzle_date,
                      GREATEST(0, (EXTRACT(EPOCH FROM (a.finished_at - COALESCE(a.first_guess_at, a.started_at))) * 1000)::bigint) AS ms,
-                     (cardinality(a.guesses) + a.hints)::bigint AS guesses, a.finished_at
+                     cardinality(a.guesses)::bigint AS guesses, a.finished_at
               FROM daily_attempts a
               WHERE a.game = @game AND a.status = 'won' AND a.puzzle_date BETWEEN @start AND @finish{scope}
               """

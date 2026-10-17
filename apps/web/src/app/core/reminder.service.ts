@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 const KEY = 'zenigma.reminder';
+const ASKED_KEY = 'zenigma.notificationsAsked';
 /** One notification per weekday, ids 41 to 47, so the text can follow the week's difficulty. */
 const IDS = [41, 42, 43, 44, 45, 46, 47];
 /** The one-off "your streak is about to end" notification. */
@@ -51,6 +52,30 @@ export class ReminderService {
       this.streakAlert.set(saved.streakAlert !== false);
     } catch {
       /* defaults */
+    }
+  }
+
+  /**
+   * True once, for an Android player who was never asked about notifications (new and existing players alike): the app then
+   * explains what they are for before the system's own question. Never again after an answer, allow or not now.
+   */
+  async shouldAsk(): Promise<boolean> {
+    if (!this.supported) return false;
+    try {
+      if (localStorage.getItem(ASKED_KEY) === '1') return false;
+      const status = (await LocalNotifications.checkPermissions()).display;
+      return status === 'prompt' || status === 'prompt-with-rationale';
+    } catch {
+      return false;
+    }
+  }
+
+  /** Remembers that the question was put, whatever the answer. */
+  markAsked(): void {
+    try {
+      localStorage.setItem(ASKED_KEY, '1');
+    } catch {
+      /* it may be asked again next time */
     }
   }
 

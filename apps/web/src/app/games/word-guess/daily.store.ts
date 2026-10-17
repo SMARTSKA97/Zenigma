@@ -216,7 +216,7 @@ export class DailyStore implements BoardController {
 
   /** Shows a hint the caller has already paid for. */
   showHint(text: string): void {
-    this.flash(`${text} (counts as one extra guess)`, 8000);
+    this.flash(text, 8000);
   }
 
   share(): string {

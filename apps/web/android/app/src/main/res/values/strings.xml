@@ -5,4 +5,7 @@
     <string name="package_name">uk.ska97homelab.zenigma</string>
     <string name="custom_url_scheme">uk.ska97homelab.zenigma</string>
     <string name="widget_description">Your daily streak and how many of today\'s puzzles are done.</string>
+    <string name="widget_name_small">Zenigma streak (small)</string>
+    <string name="widget_name_medium">Zenigma streak</string>
+    <string name="widget_name_wide">Zenigma streak (wide)</string>
 </resources>

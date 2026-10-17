@@ -43,8 +43,6 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
 const WARN_DELAY_MS = 1600;
 /** Queens and Tango flag a break more slowly: a player who is still mid-thought usually fixes it before the warning lands. */
 const SLOW_WARN_DELAY_MS = 3000;
-/** What each hint adds to a daily time (the server adds the same when it records the result). */
-const DAILY_HINT_MS = 30_000;
 
 @Component({
   selector: 'app-puzzle-page',
@@ -156,7 +154,7 @@ export class PuzzlePage {
   protected readonly locked = computed(() => this.solved() || this.checking());
   protected readonly elapsed = computed(() => {
     const now = this.now();
-    if (this.daily()) return Math.max(0, now - this.serverStart) + this.hintsUsed() * DAILY_HINT_MS;
+    if (this.daily()) return Math.max(0, now - this.serverStart);
     return this.paused() ? this.baseMs : this.baseMs + (now - this.stretchStart);
   });
   protected readonly time = computed(() => (this.solved() ? this.fmt(this.finalMs()) : this.fmt(this.elapsed())));
@@ -385,6 +383,8 @@ export class PuzzlePage {
     this.phase.set('loading');
     try {
       this.applyDaily(await this.dailyApi.state(this.game()));
+      // No "start" button: today's puzzle opens as soon as the screen does.
+      if (this.phase() === 'ready') void this.startDaily();
     } catch (error) {
       this.phase.set((error as { status?: number }).status === 404 ? 'unavailable' : 'offline');
     }
@@ -414,7 +414,8 @@ export class PuzzlePage {
     this.puzzle.set(attempt.puzzle);
     this.history.set([]);
     this.future.set([]);
-    void this.store.getMeta<{ state: unknown }>(this.dailyKey()).then((saved) => {
+    void this.store.getMeta<{ state: unknown; hints?: number }>(this.dailyKey()).then((saved) => {
+      this.hintsUsed.set(Math.max(attempt.hints ?? 0, saved?.hints ?? 0));
       this.state.set(saved?.state ?? ADAPTERS[this.game()].blank(attempt.puzzle));
       this.phase.set('playing');
     });
@@ -521,7 +522,7 @@ export class PuzzlePage {
     const state = this.state();
     if (!state || this.solved()) return;
     if (this.daily()) {
-      if (this.phase() === 'playing') await this.store.setMeta(this.dailyKey(), { state });
+      if (this.phase() === 'playing') await this.store.setMeta(this.dailyKey(), { state, hints: this.hintsUsed() });
     } else if (this.phase() === 'practice') {
       const elapsedMs = this.paused() ? this.baseMs : this.baseMs + (Date.now() - this.stretchStart);
       await this.practiceStore.saveBoard(this.track(), { level: this.level(), state, elapsedMs, hints: this.hintsUsed() });
@@ -549,7 +550,7 @@ export class PuzzlePage {
 
     if (this.daily()) {
       this.checking.set(true);
-      const result = await this.dailyApi.submit(game, solution);
+      const result = await this.dailyApi.submit(game, solution, this.hintsUsed());
       this.checking.set(false);
       if (result.ok) {
         clearInterval(this.heartbeat);
@@ -653,18 +654,7 @@ export class PuzzlePage {
       this.flash(hint.text);
       return;
     }
-    if (this.daily()) {
-      // The server keeps the count (so a reload cannot hide it) and adds the time penalty when the puzzle is solved.
-      const count = await this.dailyApi.hint(this.game());
-      if (count === null) {
-        this.flash('A hint in the daily needs a connection.');
-        return;
-      }
-      this.hintsUsed.set(count);
-      this.flash(`Hint used: +${DAILY_HINT_MS / 1000}s on your time`);
-    } else {
-      this.hintsUsed.update((n) => n + 1);
-    }
+    this.hintsUsed.update((n) => n + 1);
     this.hints.spend();
     this.coach.set(hint);
     this.glow(hint);

@@ -99,7 +99,12 @@ export class WordGuess implements OnInit, OnDestroy {
 
   private setMode(mode: 'daily' | 'practice'): void {
     this.mode.set(mode);
-    if (mode === 'daily') void this.daily.load();
+    if (mode === 'daily') {
+      // No "start" button: today's puzzle opens as soon as the screen does (the timer still starts with the first guess).
+      void this.daily.load().then(() => {
+        if (this.daily.phase() === 'ready') void this.daily.start();
+      });
+    }
     else void this.practice.start();
   }
 

@@ -131,7 +131,7 @@ public static class DailyEndpoints
         });
 
         // A hint for the open attempt. The server holds the answer, so it works the hint out and keeps the count: on the
-        // leaderboard each hint counts as one extra guess.
+        // leaderboard hints are only recorded for now.
         group.MapPost("/hint", async (
             WordHintRequest request,
             ClaimsPrincipal principal,
