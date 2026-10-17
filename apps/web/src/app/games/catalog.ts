@@ -34,7 +34,8 @@ export type MindGameId =
   | 'number-sort'
   | 'dot-count'
   | 'opposites'
-  | 'word-recall';
+  | 'word-recall'
+  | 'chain-link';
 
 /** Where a game sits in the apps: logic puzzles, Sudoku, words or mind training. */
 export type Category = 'logic' | 'sudoku' | 'word' | 'mind';
@@ -101,11 +102,12 @@ export const GAMES: GameInfo[] = [
   { id: 'number-sort', name: 'Number Sort', blurb: 'Tap nine numbers from smallest to largest, as fast as you can.', hue: 50, live: true, daily: false, category: 'mind', skill: 'speed' },
   { id: 'dot-count', name: 'Dot Count', blurb: 'Dots flash for a second. How many were there?', hue: 95, live: true, daily: false, category: 'mind', skill: 'attention' },
   { id: 'opposites', name: 'Opposites', blurb: 'Pick the word that means the opposite.', hue: 200, live: true, daily: false, category: 'mind', skill: 'language' },
+  { id: 'chain-link', name: 'Chain Link', blurb: 'Link words into a chain: each joins the one before it, like man and made.', hue: 130, live: true, daily: false, category: 'mind', skill: 'language' },
   { id: 'word-recall', name: 'Word Recall', blurb: 'Remember a few words, then pick them out of a list.', hue: 150, live: true, daily: false, category: 'mind', skill: 'memory' },
 ];
 
 /** Mind-training games that can be played now (the rest of them are still coming soon). */
-export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall'];
+export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall', 'chain-link'];
 
 export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => g.id === id);
 

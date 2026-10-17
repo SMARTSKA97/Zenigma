@@ -120,7 +120,11 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - Stats read only needed columns; V12 indexes; mind-daily events older than 180 days removed by `SyncEventRetention` (`Retention__MindDays`).
 - `loadtest/k6.js` and `docs/OPERATIONS.md` (Brevo steps, Render and Neon usage, `pg_stat_statements`). `Email__DailyBudget` lets Zenigma share Brevo's 300 a day.
 
+## Done: Chain Link (phase 50)
+- Mind game (Language): compound-word chains from a built-in pair list (`games/mind/chain-link-data.ts`), 2 to 6 hidden words, any valid word that joins both neighbours is accepted. Add pairs to the list to grow it.
+
 ## Next
+- Remaining Coming soon games, in order: Pinpoint, Crossclimb, Wend, Comet Slice.
 - "Offline ready" badge; pre-cache level packs on Wi-Fi when idle; compress share images.
 - Alerts on 5xx and slow responses; run the k6 test and tune from real numbers; small VPS once past ~500 daily users.
 - Cache-Control for the daily puzzle data once it is served without a login.

@@ -33,6 +33,7 @@ export const MIND_META: Partial<Record<MindGameId, MindMeta>> = {
   'number-sort': { skill: 'speed', how: 'Nine numbers on the board. Tap them from the smallest to the largest. Five boards. A wrong tap adds 2 seconds.', scale: 90, unit: 'points' },
   'dot-count': { skill: 'attention', how: 'Dots flash for a second, then vanish. Pick how many there were. 45 seconds. A wrong answer costs 3 seconds.', scale: 15, unit: 'counted' },
   opposites: { skill: 'language', how: 'A word appears. Pick its opposite from four words. 60 seconds. A wrong answer costs 3 seconds.', scale: 20, unit: 'correct' },
+  'chain-link': { skill: 'language', how: 'The first word is given. Fill in each next word so that it joins the one before into a compound word, like MAN and MADE (man-made). It starts with the letter shown and has one line per letter. Chains grow from 2 to 6 words. A wrong word or a skip costs a life. Three lives.', scale: 20, unit: 'links' },
   'word-recall': { skill: 'memory', how: 'A few words appear for a moment. Then pick them out of a longer list. One more word each round. Three lives.', scale: 7, unit: 'rounds' },
 };
 
