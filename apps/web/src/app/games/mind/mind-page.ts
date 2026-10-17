@@ -34,6 +34,7 @@ import { ChainLink } from './chain-link';
 import { Pinpoint } from './pinpoint';
 import { Crossclimb } from './crossclimb';
 import { Wend } from './wend';
+import { CometSlice } from './comet-slice';
 import { MindGameId } from '../catalog';
 import { CanLeave } from '../../core/leave';
 import { LeaveSheet } from '../../shared/leave-sheet';
@@ -41,7 +42,7 @@ import { LeaveSheet } from '../../shared/leave-sheet';
 /** One screen for every mind-training game: how to play, the game, then your score against your best. */
 @Component({
   selector: 'app-mind-page',
-  imports: [RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend],
+  imports: [RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend, CometSlice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-page.html',
   styleUrl: './mind-page.scss',

@@ -1,0 +1,19 @@
+.field-wrap {
+  margin: 0.75rem auto 0;
+  width: min(100%, 22rem);
+}
+.field {
+  display: block;
+  width: 100%;
+  aspect-ratio: 320 / 480;
+  max-height: 60vh;
+  margin: 0 auto;
+  border-radius: 1rem;
+  background: radial-gradient(120% 90% at 50% 0%, #2b3a67, #0e1330);
+  touch-action: none;
+  user-select: none;
+}
+.tip {
+  text-align: center;
+  margin-top: 0.75rem;
+}

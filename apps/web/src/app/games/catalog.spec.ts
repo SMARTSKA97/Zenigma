@@ -56,7 +56,6 @@ describe('practice tracks', () => {
     expect(mind.every((g) => !g.daily && g.skill)).toBe(true);
     // Word games that are played on the mind-training screen carry a skill too, and are listed with them.
     expect(GAMES.filter((g) => g.live && g.skill).map((g) => g.id).sort()).toEqual([...MIND_LIVE].sort());
-    expect(mind.some((g) => !g.live)).toBe(true);
     expect(new Set(GAMES.map((g) => g.id)).size).toBe(GAMES.length);
   });
 

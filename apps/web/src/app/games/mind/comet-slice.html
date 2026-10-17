@@ -1,0 +1,15 @@
+<div class="hud"><span>{{ score() }} sliced</span><span>{{ '♥'.repeat(lives()) }}{{ '♡'.repeat(3 - lives()) }}</span></div>
+<div class="field-wrap">
+  <canvas
+    #field
+    class="field"
+    width="320"
+    height="480"
+    aria-label="Swipe through the comets. Avoid the bombs."
+    (pointerdown)="down($event)"
+    (pointermove)="move($event)"
+    (pointerup)="up()"
+    (pointercancel)="up()"
+  ></canvas>
+</div>
+<p class="muted tip">Swipe through comets. A missed comet or a bomb costs a life.</p>
