@@ -12,6 +12,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ScreenGuardPlugin.class);
         registerPlugin(ShareCardPlugin.class);
         registerPlugin(GoogleSignInPlugin.class);
+        registerPlugin(StreakWidgetPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, Eleme
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PrefsService } from '../../core/prefs.service';
+import { WidgetService } from '../../core/widget.service';
 import { HapticsService } from '../../core/haptics.service';
 import { BackService } from '../../core/back.service';
 import { AuthService } from '../../core/auth.service';
@@ -55,6 +56,7 @@ const DAILY_HINT_MS = 30_000;
 export class PuzzlePage {
   private readonly route = inject(ActivatedRoute);
   protected readonly nav = inject(BackService);
+  private readonly widgetSvc = inject(WidgetService);
   private readonly haptics = inject(HapticsService);
   protected readonly prefs = inject(PrefsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -556,6 +558,7 @@ export class PuzzlePage {
         this.solved.set(true);
         this.haptics.success();
         void this.store.deleteMeta(this.dailyKey());
+        setTimeout(() => void this.widgetSvc.refresh(), 1500);
         setTimeout(() => this.resultOpen.set(true), 900);
       } else {
         this.flash(

@@ -1,3 +1,4 @@
+import { WidgetService } from '../../core/widget.service';
 import { ReminderService } from '../../core/reminder.service';
 import { PrefsService } from '../../core/prefs.service';
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
@@ -27,6 +28,7 @@ export class DailyHub implements OnInit, OnDestroy {
   private readonly api = inject(LeaderboardService);
   private readonly statsApi = inject(StatsService);
   private readonly reminder = inject(ReminderService);
+  private readonly widget = inject(WidgetService);
   protected readonly stats = signal<Stats | null>(null);
   protected readonly freezesOpen = signal(false);
 
@@ -132,5 +134,6 @@ export class DailyHub implements OnInit, OnDestroy {
     const done = new Set(hub.games.filter((g) => ['solved', 'won', 'lost'].includes(g.status)).map((g) => g.game));
     const atRisk = Math.max(0, ...stats.games.filter((g) => g.current > 0 && !done.has(g.game)).map((g) => g.current));
     void this.reminder.syncStreakAlert(atRisk, hub.nextRolloverUtc);
+    void this.widget.push(Math.max(0, ...stats.games.map((g) => g.current)), done.size, hub.games.length, hub.nextRolloverUtc);
   }
 }

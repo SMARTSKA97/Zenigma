@@ -4,4 +4,5 @@
     <string name="title_activity_main">Zenigma</string>
     <string name="package_name">uk.ska97homelab.zenigma</string>
     <string name="custom_url_scheme">uk.ska97homelab.zenigma</string>
+    <string name="widget_description">Your daily streak and how many of today's puzzles are done.</string>
 </resources>

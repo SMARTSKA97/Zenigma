@@ -103,3 +103,6 @@ Server-counted daily hints (V11), Word Guess haptics/animation fixes (native ign
 
 ## Done: streak alert (phase 44)
 One local notification 3 hours before the daily rollover when a streak is at risk (set from the Daily tab). Next ideas: friend challenges, weekly recap card, invite links.
+
+## Done: streak widget (phase 45)
+Android home-screen widget (StreakWidgetProvider/Plugin); numbers pushed from the Daily tab and after a daily is solved.
