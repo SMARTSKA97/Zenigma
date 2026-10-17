@@ -1,0 +1,35 @@
+<div class="hud"><span>{{ score() }} points</span><span>Category {{ round() + 1 }} of 5</span></div>
+<ol class="clues" [class.flash-bad]="bad()">
+  @for (n of slots; track n) {
+    <li class="clue" [class.open]="clue(n) !== null" [class.last]="n === shown() && outcome() === 'playing'">
+      <span class="num">{{ n }}</span>
+      <span class="word">{{ clue(n) ?? '?' }}</span>
+    </li>
+  }
+</ol>
+@if (outcome() === 'playing') {
+  <form class="entry" (submit)="$event.preventDefault(); submit()">
+    <input
+      type="text"
+      [value]="guess()"
+      (input)="guess.set($any($event.target).value)"
+      maxlength="40"
+      autocomplete="off"
+      autocapitalize="off"
+      autocorrect="off"
+      spellcheck="false"
+      enterkeyhint="go"
+      aria-label="What do these have in common?"
+      placeholder="What links them?"
+    />
+    <button type="submit" [disabled]="!guess().trim()">Guess</button>
+    @if (shown() < 5) {
+      <button type="button" class="secondary" (click)="more()">Next clue</button>
+    }
+  </form>
+  <p class="muted tip">Worth {{ 6 - shown() }} {{ shown() === 5 ? 'point' : 'points' }} now. A wrong guess shows the next clue.</p>
+} @else {
+  <p class="verdict" [class.ok]="outcome() === 'right'">
+    {{ outcome() === 'right' ? '+' + gained() + ' · ' : 'It was ' }}<b>{{ category().name }}</b>
+  </p>
+}

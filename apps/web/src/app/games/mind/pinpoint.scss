@@ -1,0 +1,60 @@
+.clues {
+  list-style: none;
+  margin: 1rem auto 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  max-width: 24rem;
+}
+.clue {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 0.9rem;
+  border: 2px dashed color-mix(in oklch, currentColor 25%, transparent);
+  opacity: 0.6;
+  &.open {
+    border-style: solid;
+    opacity: 1;
+    background: color-mix(in oklch, currentColor 7%, transparent);
+  }
+  &.last {
+    border-color: color-mix(in oklch, currentColor 60%, transparent);
+  }
+  .num {
+    font-size: 0.8rem;
+    opacity: 0.6;
+    width: 1rem;
+  }
+  .word {
+    font-weight: 800;
+    font-size: 1.15rem;
+  }
+}
+.entry {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1rem auto 0;
+  flex-wrap: wrap;
+  input {
+    flex: 1 1 12rem;
+    min-width: 0;
+    max-width: 20rem;
+    font-size: 1rem;
+    text-align: center;
+  }
+}
+.tip {
+  text-align: center;
+  margin-top: 0.75rem;
+}
+.verdict {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 1.2rem;
+  &.ok {
+    color: var(--ok, #2a8);
+  }
+}

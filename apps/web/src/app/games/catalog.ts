@@ -7,7 +7,6 @@ export type GameId =
   | 'sudoku'
   | 'zip'
   | 'patches'
-  | 'pinpoint'
   | 'crossclimb'
   | 'wend'
   | 'comet-slice'
@@ -35,7 +34,8 @@ export type MindGameId =
   | 'dot-count'
   | 'opposites'
   | 'word-recall'
-  | 'chain-link';
+  | 'chain-link'
+  | 'pinpoint';
 
 /** Where a game sits in the apps: logic puzzles, Sudoku, words or mind training. */
 export type Category = 'logic' | 'sudoku' | 'word' | 'mind';
@@ -79,7 +79,7 @@ export const GAMES: GameInfo[] = [
   { id: 'sudoku', name: 'Sudoku', blurb: 'The classic: 1 to 9, once per row, column and box.', hue: 250, live: true, daily: true, category: 'sudoku' },
   { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25, live: true, daily: true, category: 'logic' },
   { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: true, daily: true, category: 'logic' },
-  { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: false, daily: false, category: 'word' },
+  { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: false, daily: false, category: 'word' },
   { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: false, daily: false, category: 'word' },
   { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice comets, dodge bombs, keep your lives.', hue: 15, live: false, daily: false, category: 'mind', skill: 'speed' },
@@ -107,7 +107,7 @@ export const GAMES: GameInfo[] = [
 ];
 
 /** Mind-training games that can be played now (the rest of them are still coming soon). */
-export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall', 'chain-link'];
+export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall', 'chain-link', 'pinpoint'];
 
 export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => g.id === id);
 
@@ -210,7 +210,8 @@ export const playLink = (game: string, variant?: string | null): string[] => ['/
 
 /** Where a practice tile leads: the level map, the variant chooser (Sudoku), or the game itself. */
 export const practiceEntry = (id: string): string[] => {
-  if (!isPuzzleGame(id)) return GAMES.find((g) => g.id === id)?.category === 'mind' ? ['/mind', id] : ['/games', id];
+  // Mind games, and the word games that are played on the same screen, open at /mind/<id>.
+  if (!isPuzzleGame(id)) return (MIND_LIVE as readonly string[]).includes(id) ? ['/mind', id] : ['/games', id];
   const variants = VARIANTS[id];
   if (!variants) return mapLink(id);
   // A game with one tiered kind has nothing to choose but the difficulty.

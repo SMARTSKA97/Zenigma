@@ -34,6 +34,7 @@ export const MIND_META: Partial<Record<MindGameId, MindMeta>> = {
   'dot-count': { skill: 'attention', how: 'Dots flash for a second, then vanish. Pick how many there were. 45 seconds. A wrong answer costs 3 seconds.', scale: 15, unit: 'counted' },
   opposites: { skill: 'language', how: 'A word appears. Pick its opposite from four words. 60 seconds. A wrong answer costs 3 seconds.', scale: 20, unit: 'correct' },
   'chain-link': { skill: 'language', how: 'The first word is given. Fill in each next word so that it joins the one before into a compound word, like MAN and MADE (man-made). It starts with the letter shown and has one line per letter. Chains grow from 2 to 6 words. A wrong word or a skip costs a life. Three lives.', scale: 20, unit: 'links' },
+  pinpoint: { skill: 'language', how: 'Five words share something in common, shown one at a time, vaguest first. Name what they have in common. A wrong guess shows the next clue. Solve it on the first clue for 5 points, down to 1 on the last. Five categories a game.', scale: 20, unit: 'points' },
   'word-recall': { skill: 'memory', how: 'A few words appear for a moment. Then pick them out of a longer list. One more word each round. Three lives.', scale: 7, unit: 'rounds' },
 };
 
