@@ -5,6 +5,10 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 const KEY = 'zenigma.reminder';
 /** One notification per weekday, ids 41 to 47, so the text can follow the week's difficulty. */
 const IDS = [41, 42, 43, 44, 45, 46, 47];
+/** The one-off "your streak is about to end" notification. */
+const STREAK_ID = 48;
+/** How long before the next daily set it fires. */
+const NUDGE_LEAD_MS = 3 * 60 * 60 * 1000;
 
 const MESSAGES = [
   'Sunday is the hardest daily of the week. Ready for it?',
@@ -20,6 +24,7 @@ interface Saved {
   enabled: boolean;
   hour: number;
   minute: number;
+  streakAlert?: boolean;
 }
 
 /**
@@ -34,6 +39,8 @@ export class ReminderService {
   readonly minute = signal(0);
   /** Set when the system refused notifications, so Settings can say where to allow them. */
   readonly denied = signal(false);
+  /** Also warn a few hours before a streak would end (on by default once reminders are on). */
+  readonly streakAlert = signal(true);
 
   constructor() {
     try {
@@ -41,6 +48,7 @@ export class ReminderService {
       this.enabled.set(saved.enabled === true);
       this.hour.set(saved.hour ?? 19);
       this.minute.set(saved.minute ?? 0);
+      this.streakAlert.set(saved.streakAlert !== false);
     } catch {
       /* defaults */
     }
@@ -77,12 +85,45 @@ export class ReminderService {
         await this.schedule();
       } else {
         this.enabled.set(false);
-        await LocalNotifications.cancel({ notifications: IDS.map((id) => ({ id })) });
+        await LocalNotifications.cancel({ notifications: [...IDS, STREAK_ID].map((id) => ({ id })) });
       }
     } catch {
       this.enabled.set(false);
     }
     this.save();
+  }
+
+  async setStreakAlert(on: boolean): Promise<void> {
+    this.streakAlert.set(on);
+    this.save();
+    if (!on && this.supported) await LocalNotifications.cancel({ notifications: [{ id: STREAK_ID }] }).catch(() => undefined);
+  }
+
+  /**
+   * Called when the Daily tab knows the player's streaks and what is done today. If a streak is still alive but today's puzzle for
+   * that game is not done, one notification is set for three hours before the next set arrives; otherwise any earlier one is removed.
+   */
+  async syncStreakAlert(atRiskStreak: number, rolloverUtc: string | undefined): Promise<void> {
+    if (!this.supported) return;
+    try {
+      await LocalNotifications.cancel({ notifications: [{ id: STREAK_ID }] });
+      if (!this.enabled() || !this.streakAlert() || atRiskStreak <= 0 || !rolloverUtc) return;
+      const at = Date.parse(rolloverUtc) - NUDGE_LEAD_MS;
+      if (!Number.isFinite(at) || at <= Date.now() + 60_000) return;
+      if ((await LocalNotifications.checkPermissions()).display !== 'granted') return;
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: STREAK_ID,
+            title: 'Your streak is about to end',
+            body: `Your ${atRiskStreak}-day streak ends in 3 hours. One quick puzzle keeps it alive.`,
+            schedule: { at: new Date(at), allowWhileIdle: true },
+          },
+        ],
+      });
+    } catch {
+      /* the reminder is a nicety */
+    }
   }
 
   async setTime(value: string): Promise<void> {
@@ -109,7 +150,7 @@ export class ReminderService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ enabled: this.enabled(), hour: this.hour(), minute: this.minute() } satisfies Saved));
+      localStorage.setItem(KEY, JSON.stringify({ enabled: this.enabled(), hour: this.hour(), minute: this.minute(), streakAlert: this.streakAlert() } satisfies Saved));
     } catch {
       /* lasts for this session */
     }

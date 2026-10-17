@@ -1,3 +1,4 @@
+import { ReminderService } from '../../core/reminder.service';
 import { PrefsService } from '../../core/prefs.service';
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -25,6 +26,7 @@ export class DailyHub implements OnInit, OnDestroy {
   protected readonly conn = inject(ConnectionService);
   private readonly api = inject(LeaderboardService);
   private readonly statsApi = inject(StatsService);
+  private readonly reminder = inject(ReminderService);
   protected readonly stats = signal<Stats | null>(null);
   protected readonly freezesOpen = signal(false);
 
@@ -111,13 +113,24 @@ export class DailyHub implements OnInit, OnDestroy {
       this.failed.set(true);
       return;
     }
-    if (this.auth.signedIn()) void this.statsApi.load().then((s) => this.stats.set(s)).catch(() => undefined);
+    const statsLoaded = this.auth.signedIn() ? this.statsApi.load().then((s) => this.stats.set(s)).catch(() => undefined) : Promise.resolve();
     try {
       this.hub.set(await this.api.dailyHub());
+      void statsLoaded.then(() => this.armStreakAlert());
     } catch {
       this.failed.set(true);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** The longest streak whose game is still not done today, for the "streak is about to end" notification. */
+  private armStreakAlert(): void {
+    const hub = this.hub();
+    const stats = this.stats();
+    if (!hub || !stats) return;
+    const done = new Set(hub.games.filter((g) => ['solved', 'won', 'lost'].includes(g.status)).map((g) => g.game));
+    const atRisk = Math.max(0, ...stats.games.filter((g) => g.current > 0 && !done.has(g.game)).map((g) => g.current));
+    void this.reminder.syncStreakAlert(atRisk, hub.nextRolloverUtc);
   }
 }

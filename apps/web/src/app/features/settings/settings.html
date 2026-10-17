@@ -138,6 +138,12 @@
       </app-switch>
     </div>
     @if (reminder.enabled()) {
+      <div class="item">
+        <app-switch [checked]="reminder.streakAlert()" (checkedChange)="reminder.setStreakAlert($event)">
+          Streak alert
+          <small>If a streak is still alive, a warning 3 hours before the next puzzles arrive.</small>
+        </app-switch>
+      </div>
       <label class="item time">
         <span class="lead">Time</span>
         <input type="time" [value]="reminder.timeValue()" (change)="reminder.setTime($any($event.target).value)" />

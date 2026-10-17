@@ -100,3 +100,6 @@ Forgot password and email confirmation via Brevo (docs/DEPLOYMENT.md), fixed mes
 
 ## Done: daily hints, Word Guess feel, Patches gutter (phase 43)
 Server-counted daily hints (V11), Word Guess haptics/animation fixes (native ignores the OS reduced-motion flag), Patches spacing.
+
+## Done: streak alert (phase 44)
+One local notification 3 hours before the daily rollover when a streak is at risk (set from the Daily tab). Next ideas: friend challenges, weekly recap card, invite links.
