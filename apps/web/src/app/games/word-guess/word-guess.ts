@@ -137,14 +137,23 @@ export class WordGuess implements OnInit, OnDestroy {
     return `${Math.max(8, (count / max) * 100)}%`;
   }
 
-  /** Practice only. Each hint on a word tells a little more, and costs one from the pool shared with every game. */
-  protected useHint(): void {
-    const state = this.practice.state();
-    if (!state || this.board().finished() || this.board().revealing()) return;
+  /** Each hint on a word tells a little more, and costs one from the pool shared with every game. */
+  protected async useHint(): Promise<void> {
+    if (this.board().finished() || this.board().revealing()) return;
     if (!this.hints.balance()) {
       this.wheelOpen.set(true);
       return;
     }
+    if (this.mode() === 'daily') {
+      // The daily answer lives on the server, so the server works out the hint and counts it.
+      const text = await this.daily.hint();
+      if (!text) return void (this.daily.message() ?? this.daily.showHint('No more hints for today. You have got this!'));
+      this.hints.spend();
+      this.daily.showHint(text);
+      return;
+    }
+    const state = this.practice.state();
+    if (!state) return;
     const text = wordHint(state, this.practice.hintsUsed());
     if (!text) {
       this.practice.message.set('No more hints for this word. You have got this!');

@@ -9,7 +9,7 @@ import { PrefsService } from '../../core/prefs.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController, BoardRow, BoardStats } from './board';
 import { Guess, keyboardMarks, marksFromString, MAX_GUESSES, Mark, shareText, Status, WORD_LENGTH } from './engine';
-import { REVEAL_MS } from './word-guess.store';
+import { REVEAL_MS, revealTaps } from './word-guess.store';
 import { WordListService } from './word-list.service';
 
 interface GuessDto {
@@ -23,6 +23,7 @@ interface AttemptDto {
   startedAt: string;
   answer: string | null;
   activeOnThisDevice: boolean;
+  hints?: number;
 }
 interface DailyState {
   date: string;
@@ -76,6 +77,8 @@ export class DailyStore implements BoardController {
   readonly revealed = signal(0);
   readonly revealing = signal(false);
   readonly busy = signal(false);
+  /** Hints used in today's attempt (the server counts them: each is one extra guess on the leaderboard). */
+  readonly hintCount = signal(0);
 
   readonly rows = computed<BoardRow[]>(() => {
     const submitted = this.guesses();
@@ -139,13 +142,13 @@ export class DailyStore implements BoardController {
 
   type(letter: string): void {
     if (!this.canInput() || this.current().length >= WORD_LENGTH) return;
-    this.haptics.tick();
+    this.haptics.tap();
     this.current.update((c) => c + letter.toLowerCase());
   }
 
   erase(): void {
     if (!this.canInput()) return;
-    this.haptics.tick();
+    this.haptics.tap();
     this.current.update((c) => c.slice(0, -1));
   }
 
@@ -171,7 +174,8 @@ export class DailyStore implements BoardController {
       this.revealing.set(true);
       this.haptics.place();
 
-      const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduce = this.prefs.motionReduced();
+      if (!reduce) revealTaps(this.haptics);
       setTimeout(() => {
         this.revealed.set(this.guesses().length);
         this.revealing.set(false);
@@ -191,6 +195,25 @@ export class DailyStore implements BoardController {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** Asks the server for the next hint (it holds the answer). Null when there is none or it could not be reached. */
+  async hint(): Promise<string | null> {
+    if (!this.canInput() || this.busy()) return null;
+    try {
+      const deviceId = await this.device.deviceId();
+      const response = await firstValueFrom(this.http.post<{ text: string | null; hints: number }>(`${this.url}/hint`, { deviceId }));
+      this.hintCount.set(response.hints);
+      return response.text;
+    } catch {
+      this.flash('Could not get a hint. Check your connection and try again.');
+      return null;
+    }
+  }
+
+  /** Shows a hint the caller has already paid for. */
+  showHint(text: string): void {
+    this.flash(`${text} (counts as one extra guess)`, 8000);
   }
 
   share(): string {
@@ -223,6 +246,7 @@ export class DailyStore implements BoardController {
     this.guesses.set(guesses);
     this.revealed.set(guesses.length);
     this.hard.set(attempt.hard);
+    this.hintCount.set(attempt.hints ?? 0);
     this.status.set(attempt.status);
     this.answer.set(attempt.answer);
     this.current.set('');

@@ -102,6 +102,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.Hard).HasColumnName("hard");
             e.Property(x => x.Status).HasColumnName("status").HasMaxLength(16);
             e.Property(x => x.Guesses).HasColumnName("guesses").HasColumnType("text[]");
+            e.Property(x => x.Hints).HasColumnName("hints");
             e.Property(x => x.StartedAt).HasColumnName("started_at");
             e.Property(x => x.FirstGuessAt).HasColumnName("first_guess_at");
             e.Property(x => x.LastActiveAt).HasColumnName("last_active_at");
@@ -122,6 +123,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.LastActiveAt).HasColumnName("last_active_at");
             e.Property(x => x.FinishedAt).HasColumnName("finished_at");
             e.Property(x => x.ElapsedMs).HasColumnName("elapsed_ms");
+            e.Property(x => x.Hints).HasColumnName("hints");
         });
 
         b.Entity<StreakFreeze>(e =>

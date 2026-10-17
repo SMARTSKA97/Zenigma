@@ -97,3 +97,6 @@ OWASP Top 10 pass: headers/CSP, token reuse detection, Google pre-hijack fix, lo
 
 ## Done: email, calmer errors, lazy sync (phase 42)
 Forgot password and email confirmation via Brevo (docs/DEPLOYMENT.md), fixed message strip under the board, slower mistake flag for Queens/Tango, sync no longer wakes a sleeping server on every start or result.
+
+## Done: daily hints, Word Guess feel, Patches gutter (phase 43)
+Server-counted daily hints (V11), Word Guess haptics/animation fixes (native ignores the OS reduced-motion flag), Patches spacing.

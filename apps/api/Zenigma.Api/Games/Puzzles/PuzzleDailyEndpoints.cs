@@ -12,6 +12,7 @@ namespace Zenigma.Api.Games.Puzzles;
 
 public record PuzzleStartRequest(Guid? DeviceId, string? Platform);
 public record PuzzleSubmitRequest(Guid? DeviceId, JsonElement Solution);
+public record HintRequest(Guid? DeviceId);
 
 public record PuzzleAttemptDto(
     string Status,
@@ -21,7 +22,8 @@ public record PuzzleAttemptDto(
     int? Rank,
     bool ActiveOnThisDevice,
     JsonElement? Puzzle,
-    int? Finishers = null);
+    int? Finishers = null,
+    int Hints = 0);
 
 public record PuzzleDailyStateDto(string Date, DateTimeOffset NextRolloverUtc, PuzzleAttemptDto? Attempt);
 
@@ -33,6 +35,10 @@ public record PuzzleDailyStateDto(string Date, DateTimeOffset NextRolloverUtc, P
 public static class PuzzleDailyEndpoints
 {
     public const string EventKind = "puzzle.daily";
+
+    /// <summary>Each hint used adds this much to the ranked time.</summary>
+    public const int HintPenaltyMs = 30_000;
+    public const int MaxHints = 20;
 
     public static void MapPuzzleDaily(this IEndpointRouteBuilder app)
     {
@@ -135,6 +141,31 @@ public static class PuzzleDailyEndpoints
             return touched == 1 ? Results.NoContent() : Results.Conflict(new { error = "not-active-device" });
         });
 
+        // Counts a hint on the open attempt. The player still works out the hint on the device (it has the puzzle); the
+        // server keeps the count, so a reload cannot hide it, and adds the penalty to the time when the puzzle is solved.
+        group.MapPost("/hint", async (string game, HintRequest request, ClaimsPrincipal principal, AppDbContext db, TimeProvider clock, CancellationToken ct) =>
+        {
+            if (!PuzzleRules.IsPuzzleGame(game)) return Results.NotFound();
+            if (request.DeviceId is null || request.DeviceId == Guid.Empty)
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["deviceId"] = ["deviceId is required."] });
+            var now = clock.GetUtcNow();
+            var date = IstClock.Today(now);
+            var userId = UserIds.Get(principal);
+
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+            var attempt = await LockAttemptAsync(db, userId, game, date, ct);
+            if (attempt is null) return Results.Json(new { error = "no-attempt" }, statusCode: StatusCodes.Status404NotFound);
+            if (attempt.Status != "playing" || attempt.DeviceId != request.DeviceId)
+                return Results.Json(new { error = "not-active-device" }, statusCode: StatusCodes.Status409Conflict);
+            if (attempt.Hints >= MaxHints) return Results.Json(new { error = "no-more-hints", hints = attempt.Hints }, statusCode: StatusCodes.Status422UnprocessableEntity);
+
+            attempt.Hints++;
+            attempt.LastActiveAt = now;
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            return Results.Ok(new { hints = attempt.Hints });
+        });
+
         group.MapPost("/submit", async (
             string game,
             PuzzleSubmitRequest request,
@@ -170,7 +201,7 @@ public static class PuzzleDailyEndpoints
 
             attempt.Status = "solved";
             attempt.FinishedAt = now;
-            attempt.ElapsedMs = elapsed;
+            attempt.ElapsedMs = (int)Math.Min((long)elapsed + (long)attempt.Hints * HintPenaltyMs, int.MaxValue);
             attempt.LastActiveAt = now;
             await db.SaveChangesAsync(ct);
             await RecordResultAsync(db, attempt, now, ct);
@@ -200,6 +231,7 @@ public static class PuzzleDailyEndpoints
             date = attempt.PuzzleDate.ToString("yyyy-MM-dd"),
             status = attempt.Status,
             elapsedMs = attempt.ElapsedMs,
+            hints = attempt.Hints,
         });
 
         await db.Database.ExecuteSqlRawAsync(
@@ -245,7 +277,8 @@ public static class PuzzleDailyEndpoints
                 rank,
                 active,
                 attempt.Status == "playing" && active ? puzzle.RootElement.Clone() : null,
-                finishers);
+                finishers,
+                attempt.Hints);
         }
 
         return new PuzzleDailyStateDto(date.ToString("yyyy-MM-dd"), IstClock.NextRollover(now).ToUniversalTime(), dto);

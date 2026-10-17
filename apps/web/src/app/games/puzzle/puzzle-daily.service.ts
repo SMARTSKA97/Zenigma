@@ -15,6 +15,8 @@ export interface PuzzleAttempt {
   puzzle: unknown | null;
   /** How many players have solved today's puzzle (for "faster than 70%"). */
   finishers?: number | null;
+  /** Hints used in this attempt (the server counts them; each adds 30 seconds to the ranked time). */
+  hints?: number;
 }
 
 export interface PuzzleDailyState {
@@ -49,6 +51,16 @@ export class PuzzleDailyService {
       // "already played" and "playing elsewhere" come back with the current state.
       if (error instanceof HttpErrorResponse && error.status === 409 && error.error?.state) return error.error.state as PuzzleDailyState;
       throw error;
+    }
+  }
+
+  /** Tells the server a hint was used, and gets the new count. Null when it could not be reached (then no hint is given). */
+  async hint(game: string): Promise<number | null> {
+    const deviceId = await this.device.deviceId();
+    try {
+      return (await firstValueFrom(this.http.post<{ hints: number }>(this.url(game, '/hint'), { deviceId }))).hints;
+    } catch {
+      return null;
     }
   }
 

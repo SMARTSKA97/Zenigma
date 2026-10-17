@@ -88,4 +88,44 @@ public static class WordGuessEngine
 
         return null;
     }
+
+    private static readonly HashSet<char> Vowels = ['a', 'e', 'i', 'o', 'u'];
+
+    /// <summary>
+    /// A hint that nudges instead of telling, identical to the web app's wordHint. Step 0: whether the first unsolved place holds a
+    /// vowel. Step 1: a letter the word contains that no guess has found yet. Step 2: which half of the alphabet the last unsolved
+    /// letter is from. Null when there is nothing more to say.
+    /// </summary>
+    public static string? Hint(IReadOnlyList<string> guesses, string answer, int step)
+    {
+        var solved = new HashSet<int>();
+        var seen = new HashSet<char>();
+        foreach (var g in guesses)
+        {
+            var marks = Evaluate(g, answer);
+            for (var i = 0; i < WordLength; i++)
+            {
+                if (marks[i] == Mark.Correct) solved.Add(i);
+                if (marks[i] != Mark.Absent) seen.Add(g[i]);
+            }
+        }
+        var open = Enumerable.Range(0, WordLength).Where(i => !solved.Contains(i)).ToList();
+        if (open.Count == 0) return null;
+        string Half(int i) => answer[i] <= 'm' ? "first" : "second";
+        switch (step)
+        {
+            case 0:
+                return $"Letter {open[0] + 1} is {(Vowels.Contains(answer[open[0]]) ? "a vowel" : "a consonant")}.";
+            case 1:
+                var unseen = open.Select(i => answer[i]).Distinct().Where(l => !seen.Contains(l)).ToList();
+                if (unseen.Count > 0) return $"The word contains the letter {char.ToUpperInvariant(unseen[0])}.";
+                var last = open[^1];
+                return $"Letter {last + 1} is in the {Half(last)} half of the alphabet (A–M or N–Z).";
+            case 2:
+                var final = open[^1];
+                return $"Letter {final + 1} is in the {Half(final)} half of the alphabet (A–M or N–Z).";
+            default:
+                return null;
+        }
+    }
 }

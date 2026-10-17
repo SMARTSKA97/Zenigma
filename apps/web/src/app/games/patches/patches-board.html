@@ -31,6 +31,6 @@
     </div>
   }
   @for (r of shown(); track r.key) {
-    <div class="patch" [class.bad]="r.bad" [class.draft]="r.draft" [class.blocked]="r.draft && blocked()" [style.--hue]="r.hue" [style.top.%]="r.top" [style.left.%]="r.left" [style.width.%]="r.width" [style.height.%]="r.height"></div>
+    <div class="patch" [class.bad]="r.bad" [class.draft]="r.draft" [class.blocked]="r.draft && blocked()" [style.--hue]="r.hue" [style.--t]="r.top" [style.--l]="r.left" [style.--w]="r.width" [style.--h]="r.height"></div>
   }
 </div>

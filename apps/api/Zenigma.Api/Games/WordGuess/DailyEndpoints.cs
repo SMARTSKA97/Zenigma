@@ -12,6 +12,7 @@ namespace Zenigma.Api.Games.WordGuess;
 
 public record StartRequest(Guid? DeviceId, bool? Hard, string? Platform);
 public record GuessRequest(Guid? DeviceId, string? Word);
+public record WordHintRequest(Guid? DeviceId);
 
 public record GuessDto(string Word, string Marks);
 
@@ -23,7 +24,8 @@ public record AttemptDto(
     DateTimeOffset? FirstGuessAt,
     DateTimeOffset? FinishedAt,
     string? Answer,
-    bool ActiveOnThisDevice);
+    bool ActiveOnThisDevice,
+    int Hints = 0);
 
 public record DailyStateDto(string Date, DateTimeOffset NextRolloverUtc, AttemptDto? Attempt);
 
@@ -128,6 +130,41 @@ public static class DailyEndpoints
             return Results.Ok(State(date, now, attempt, answer, deviceId));
         });
 
+        // A hint for the open attempt. The server holds the answer, so it works the hint out and keeps the count: on the
+        // leaderboard each hint counts as one extra guess.
+        group.MapPost("/hint", async (
+            WordHintRequest request,
+            ClaimsPrincipal principal,
+            AppDbContext db,
+            TimeProvider clock,
+            CancellationToken ct) =>
+        {
+            if (request.DeviceId is null || request.DeviceId == Guid.Empty)
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["deviceId"] = ["deviceId is required."] });
+            var now = clock.GetUtcNow();
+            var date = IstClock.Today(now);
+            var userId = UserIds.Get(principal);
+
+            var puzzle = await db.DailyPuzzles.AsNoTracking().FirstOrDefaultAsync(p => p.Game == Game && p.PuzzleDate == date, ct);
+            if (puzzle is null) return NoPuzzle();
+            var answer = AnswerOf(puzzle);
+
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+            var attempt = await LockAttemptAsync(db, userId, date, ct);
+            if (attempt is null) return Results.Json(new { error = "no-attempt" }, statusCode: StatusCodes.Status404NotFound);
+            if (attempt.Status != "playing" || attempt.DeviceId != request.DeviceId)
+                return Refused("not-active-device", State(date, now, attempt, answer, request.DeviceId));
+
+            var text = WordGuessEngine.Hint(attempt.Guesses, answer, attempt.Hints);
+            if (text is null) return Results.Ok(new { text = (string?)null, hints = attempt.Hints });
+
+            attempt.Hints++;
+            attempt.LastActiveAt = now;
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            return Results.Ok(new { text, hints = attempt.Hints });
+        });
+
         group.MapPost("/guess", async (
             GuessRequest request,
             ClaimsPrincipal principal,
@@ -208,6 +245,7 @@ public static class DailyEndpoints
             status = attempt.Status,
             guesses = attempt.Guesses,
             hard = attempt.Hard,
+            hints = attempt.Hints,
             durationMs = attempt.FirstGuessAt is { } first ? (long)(now - first).TotalMilliseconds : 0L,
         });
 
@@ -242,7 +280,8 @@ public static class DailyEndpoints
                 attempt.FirstGuessAt,
                 attempt.FinishedAt,
                 finished ? answer : null,
-                deviceId is not null && attempt.DeviceId == deviceId);
+                deviceId is not null && attempt.DeviceId == deviceId,
+                attempt.Hints);
         }
 
         return new DailyStateDto(date.ToString("yyyy-MM-dd"), IstClock.NextRollover(now).ToUniversalTime(), dto);

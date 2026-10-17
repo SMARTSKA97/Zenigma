@@ -10,7 +10,7 @@
         <app-soon-pill game="word-guess" />
       }
     </div>
-    @if (mode() === 'practice' && !board().finished()) {
+    @if (!board().finished() && (mode() === 'practice' || daily.phase() === 'playing')) {
       <button type="button" class="hint-btn" (click)="useHint()" aria-label="Use a hint">💡 <b>{{ hints.balance() }}</b></button>
     }
     <app-switch [checked]="hardChecked()" [disabled]="hardDisabled()" (checkedChange)="prefs.setHardMode($event)">Hard</app-switch>

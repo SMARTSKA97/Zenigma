@@ -58,4 +58,14 @@ public class WordGuessEngineTests
         Assert.True(words.IsValid("crane"));
         Assert.False(words.IsValid("zzzzz"));
     }
+
+    [Fact]
+    public void Hints_nudge_without_telling_and_stop_when_the_word_is_found()
+    {
+        Assert.Equal("Letter 1 is a consonant.", WordGuessEngine.Hint([], "crane", 0));
+        Assert.Equal("The word contains the letter C.", WordGuessEngine.Hint([], "crane", 1));
+        Assert.Equal("Letter 5 is in the first half of the alphabet (A–M or N–Z).", WordGuessEngine.Hint([], "crane", 2));
+        Assert.Null(WordGuessEngine.Hint([], "crane", 3));
+        Assert.Null(WordGuessEngine.Hint(["crane"], "crane", 0));
+    }
 }

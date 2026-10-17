@@ -18,6 +18,11 @@ import {
 } from './engine';
 
 const SAVE_KEY = 'wg:practice';
+/** A light tap as each tile turns over, so a reveal can be felt as well as seen. */
+export function revealTaps(haptics: HapticsService): void {
+  for (let i = 0; i < 5; i++) setTimeout(() => haptics.tap(), 250 + i * 300);
+}
+
 export const REVEAL_MS = 1800;
 
 interface SavedGame {
@@ -119,13 +124,13 @@ export class WordGuessStore implements BoardController {
 
   type(letter: string): void {
     if (!this.canInput() || this.current().length >= WORD_LENGTH) return;
-    this.haptics.tick();
+    this.haptics.tap();
     this.current.update((c) => c + letter.toLowerCase());
   }
 
   erase(): void {
     if (!this.canInput()) return;
-    this.haptics.tick();
+    this.haptics.tap();
     this.current.update((c) => c.slice(0, -1));
   }
 
@@ -153,6 +158,7 @@ export class WordGuessStore implements BoardController {
     this.current.set('');
     this.revealing.set(true);
     this.haptics.place();
+    if (!this.reducedMotion()) revealTaps(this.haptics);
     const delay = this.reducedMotion() ? 0 : REVEAL_MS;
     setTimeout(() => {
       this.revealed.set(result.state.guesses.length);
@@ -210,7 +216,7 @@ export class WordGuessStore implements BoardController {
   }
 
   private reducedMotion(): boolean {
-    return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return this.prefs.motionReduced();
   }
 
   private loadWords() {

@@ -76,7 +76,12 @@
   position: absolute;
   z-index: 2;
   box-sizing: border-box;
-  margin: 3px;
+  /* Each patch sits inside its cells with an even gutter all round, so neighbouring patches never touch or overlap. */
+  top: calc(var(--t) * 1% + 4px);
+  left: calc(var(--l) * 1% + 4px);
+  width: calc(var(--w) * 1% - 8px);
+  height: calc(var(--h) * 1% - 8px);
+  margin: 0;
   border: 0;
   border-radius: 14px;
   background: oklch(0.84 0.1 calc(var(--hue) * 1deg));

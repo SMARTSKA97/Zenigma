@@ -42,6 +42,8 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
 const WARN_DELAY_MS = 1600;
 /** Queens and Tango flag a break more slowly: a player who is still mid-thought usually fixes it before the warning lands. */
 const SLOW_WARN_DELAY_MS = 3000;
+/** What each hint adds to a daily time (the server adds the same when it records the result). */
+const DAILY_HINT_MS = 30_000;
 
 @Component({
   selector: 'app-puzzle-page',
@@ -152,7 +154,7 @@ export class PuzzlePage {
   protected readonly locked = computed(() => this.solved() || this.checking());
   protected readonly elapsed = computed(() => {
     const now = this.now();
-    if (this.daily()) return Math.max(0, now - this.serverStart);
+    if (this.daily()) return Math.max(0, now - this.serverStart) + this.hintsUsed() * DAILY_HINT_MS;
     return this.paused() ? this.baseMs : this.baseMs + (now - this.stretchStart);
   });
   protected readonly time = computed(() => (this.solved() ? this.fmt(this.finalMs()) : this.fmt(this.elapsed())));
@@ -406,6 +408,7 @@ export class PuzzlePage {
     if (attempt.status === 'solved') return void this.phase.set('finished');
     if (!attempt.activeOnThisDevice || !attempt.puzzle) return void this.phase.set('blocked');
     this.serverStart = Date.parse(attempt.startedAt);
+    this.hintsUsed.set(attempt.hints ?? 0);
     this.puzzle.set(attempt.puzzle);
     this.history.set([]);
     this.future.set([]);
@@ -634,10 +637,10 @@ export class PuzzlePage {
   // ---------------------------------------------------------------------------------------------- hints
 
   /** Spends a hint and coaches: points at a mistake, or at where to look next. Never fills a cell. */
-  protected useHint(): void {
+  protected async useHint(): Promise<void> {
     const p = this.puzzle();
     const s = this.state();
-    if (this.locked() || this.daily() || !p || !s) return;
+    if (this.locked() || !p || !s) return;
     if (!this.hints.balance()) {
       this.wheelOpen.set(true);
       return;
@@ -647,8 +650,19 @@ export class PuzzlePage {
       this.flash(hint.text);
       return;
     }
+    if (this.daily()) {
+      // The server keeps the count (so a reload cannot hide it) and adds the time penalty when the puzzle is solved.
+      const count = await this.dailyApi.hint(this.game());
+      if (count === null) {
+        this.flash('A hint in the daily needs a connection.');
+        return;
+      }
+      this.hintsUsed.set(count);
+      this.flash(`Hint used: +${DAILY_HINT_MS / 1000}s on your time`);
+    } else {
+      this.hintsUsed.update((n) => n + 1);
+    }
     this.hints.spend();
-    this.hintsUsed.update((n) => n + 1);
     this.coach.set(hint);
     this.glow(hint);
     this.haptics.tap();

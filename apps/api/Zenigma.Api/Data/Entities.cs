@@ -77,6 +77,7 @@ public class DailyAttempt
     public DateTimeOffset? FirstGuessAt { get; set; }
     public DateTimeOffset LastActiveAt { get; set; }
     public DateTimeOffset? FinishedAt { get; set; }
+    public int Hints { get; set; }
 }
 
 public class PuzzleAttempt
@@ -91,6 +92,7 @@ public class PuzzleAttempt
     public DateTimeOffset LastActiveAt { get; set; }
     public DateTimeOffset? FinishedAt { get; set; }
     public int? ElapsedMs { get; set; }
+    public int Hints { get; set; }
 }
 
 public class StreakFreeze

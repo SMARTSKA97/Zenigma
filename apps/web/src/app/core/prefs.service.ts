@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { Injectable, signal } from '@angular/core';
 
 const KEY = 'zenigma.prefs';
@@ -72,7 +73,11 @@ export class PrefsService {
     if (typeof document === 'undefined') return;
     if (this.highContrast()) document.documentElement.setAttribute('data-contrast', 'high');
     else document.documentElement.removeAttribute('data-contrast');
+    // The phone's own "remove animations" setting often switches animations off by accident (power saving, or a developer option), and
+    // then Word Guess tiles and every other animation seem to be missing. In the Android app only the switch in Settings decides.
+    const native = Capacitor.isNativePlatform();
     if (this.reduceMotion()) document.documentElement.setAttribute('data-motion', 'reduced');
+    else if (native) document.documentElement.setAttribute('data-motion', 'full');
     else document.documentElement.removeAttribute('data-motion');
     if (this.largeNumbers()) document.documentElement.setAttribute('data-large', 'true');
     else document.documentElement.removeAttribute('data-large');
@@ -89,6 +94,13 @@ export class PrefsService {
     this.highContrast.set(value);
     this.save();
     this.apply();
+  }
+
+  /** True when animations should be skipped: the Settings switch, or (on the web only) the device's reduced-motion setting. */
+  motionReduced(): boolean {
+    if (this.reduceMotion()) return true;
+    if (Capacitor.isNativePlatform()) return false;
+    return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   setReduceMotion(value: boolean): void {

@@ -187,6 +187,30 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
     }
 
     [DbFact]
+    public async Task Each_hint_adds_thirty_seconds_to_the_ranked_time_and_survives_a_reload()
+    {
+        var (puzzle, solution) = ValidVector("queens");
+        await SeedTodayAsync("queens", puzzle);
+        var (client, device) = await SignUpAsync("Hinter");
+        await client.PostAsJsonAsync("/daily/queens/start", new { deviceId = device });
+
+        var first = await (await client.PostAsJsonAsync("/daily/queens/hint", new { deviceId = device })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(1, first.GetProperty("hints").GetInt32());
+        await client.PostAsJsonAsync("/daily/queens/hint", new { deviceId = device });
+
+        // Opening the puzzle again (a reload) still shows both hints.
+        var again = await client.GetFromJsonAsync<JsonElement>($"/daily/queens?deviceId={device}", Json);
+        Assert.Equal(2, again.GetProperty("attempt").GetProperty("hints").GetInt32());
+
+        // Another device cannot add hints to this attempt.
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/daily/queens/hint", new { deviceId = Guid.NewGuid() })).StatusCode);
+
+        var done = await client.PostAsJsonAsync("/daily/queens/submit", new { deviceId = device, solution });
+        var result = (await done.Content.ReadFromJsonAsync<JsonElement>(Json)).GetProperty("attempt");
+        Assert.True(result.GetProperty("elapsedMs").GetInt32() >= 60_000);
+    }
+
+    [DbFact]
     public async Task Faster_solves_rank_higher()
     {
         var (puzzle, solution) = ValidVector("sudoku");
