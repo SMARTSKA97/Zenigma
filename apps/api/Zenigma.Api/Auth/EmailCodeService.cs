@@ -10,13 +10,16 @@ namespace Zenigma.Api.Auth;
 /// Six-digit codes that prove a person can read an email address. A code is stored only as a keyed hash, works once, lasts
 /// 15 minutes and locks after 5 wrong tries; new codes are limited to one a minute and five an hour per person and purpose.
 /// </summary>
-public class EmailCodeService(AppDbContext db, IOptions<JwtOptions> jwt, TimeProvider clock)
+public class EmailCodeService(AppDbContext db, IOptions<JwtOptions> jwt, TimeProvider clock, IConfiguration config)
 {
     public const string Verify = "verify";
     public const string Reset = "reset";
     private const int MaxAttempts = 5;
-    /// <summary>Codes sent in a day across everyone. Brevo's free plan allows 300 emails a day, so this keeps abuse from using them all.</summary>
-    private const int DailyBudget = 250;
+    /// <summary>
+    /// Codes sent in a day across everyone (<c>Email:DailyBudget</c>, default 250). Brevo's free plan allows 300 emails a day,
+    /// shared by every app using the account, so lower it if other apps send too.
+    /// </summary>
+    private int DailyBudget => config.GetValue("Email:DailyBudget", 250);
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(15);
 
     /// <summary>Makes a fresh code for the person (replacing any earlier one). Null when they asked too often.</summary>

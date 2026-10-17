@@ -186,3 +186,16 @@ public class DotEnvTests
         Assert.Null(Zenigma.Api.Infrastructure.DotEnv.Parse(line));
     }
 }
+
+public class ConditionalGetTests
+{
+    [Fact]
+    public void An_etag_in_the_request_matches_strong_weak_and_wildcard_forms()
+    {
+        Assert.True(ConditionalGetMiddleware.Matches("\"abc\"", "\"abc\""));
+        Assert.True(ConditionalGetMiddleware.Matches("\"x\", W/\"abc\"", "\"abc\""));
+        Assert.True(ConditionalGetMiddleware.Matches("*", "\"abc\""));
+        Assert.False(ConditionalGetMiddleware.Matches("\"other\"", "\"abc\""));
+        Assert.False(ConditionalGetMiddleware.Matches(Microsoft.Extensions.Primitives.StringValues.Empty, "\"abc\""));
+    }
+}

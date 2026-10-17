@@ -75,6 +75,7 @@ builder.Services.AddScoped<EmailCodeService>();
 builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection(BrevoOptions.Section));
 builder.Services.AddHttpClient<IEmailSender, BrevoEmailSender>(c => c.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddHostedService<RefreshTokenCleanup>();
+builder.Services.AddHostedService<Zenigma.Api.Infrastructure.SyncEventRetention>();
 builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.Section));
 builder.Services.AddHttpClient<IGoogleTokenVerifier, GoogleTokenVerifier>(c => c.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddSingleton<WordList>();
@@ -220,6 +221,7 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseRequestTimeouts();
 app.UseAuthorization();
+app.UseMiddleware<Zenigma.Api.Infrastructure.ConditionalGetMiddleware>();
 
 // Liveness only. Nothing in the apps calls this on a timer, so the sleeping free-tier services stay asleep.
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));

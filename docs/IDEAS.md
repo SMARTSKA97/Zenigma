@@ -113,9 +113,14 @@ Hint fairness penalty removed for now (hints recorded only); puzzle daily hints 
 ## Done: cached boards (phase 48)
 Ranks show the last board at once and refresh quietly; boards are reused for 60 s on the device and cleared when a daily result changes them.
 
-## Next: lighter load and smoother feel
-- Cache-Control on public data (daily puzzles, boards) so Cloudflare serves it; ETag on level packs.
-- Retention job for `sync_events`; `pg_stat_statements` and fix the slowest queries; Neon pooled connection string.
-- Home shows streak and today's progress from local data with no request; "offline ready" badge.
-- Pre-cache level packs on Wi-Fi when idle; compress share images.
-- Alerts on 5xx and slow responses; weekly k6 load test on a copy; small VPS once past ~500 daily users.
+## Done: lighter load (phase 49)
+- Offline results sync on their own: 90 s after the last result (one wake per play session), when the app is left or reopened, retry with growing delays; stale limit 6 h.
+- ETag + `Cache-Control: private` on boards, stats and the daily hub (bodyless 304 when unchanged).
+- Home and Badges draw from saved stats and community numbers and never wake the server; they refresh when it is awake.
+- Stats read only needed columns; V12 indexes; mind-daily events older than 180 days removed by `SyncEventRetention` (`Retention__MindDays`).
+- `loadtest/k6.js` and `docs/OPERATIONS.md` (Brevo steps, Render and Neon usage, `pg_stat_statements`). `Email__DailyBudget` lets Zenigma share Brevo's 300 a day.
+
+## Next
+- "Offline ready" badge; pre-cache level packs on Wi-Fi when idle; compress share images.
+- Alerts on 5xx and slow responses; run the k6 test and tune from real numbers; small VPS once past ~500 daily users.
+- Cache-Control for the daily puzzle data once it is served without a login.

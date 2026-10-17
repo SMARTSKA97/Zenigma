@@ -6,7 +6,7 @@ import { AuthService } from './auth.service';
 import { ConnectionService } from './connection.service';
 import { LocalStore } from './local-store';
 import { MemoryStore } from './memory-store';
-import { SyncService } from './sync.service';
+import { IDLE_FLUSH_MS, SyncService } from './sync.service';
 import { nextRequest, sessionFor } from './testing/helpers';
 
 describe('SyncService', () => {
@@ -46,6 +46,21 @@ describe('SyncService', () => {
     await sync.record('note.created', { text: 'a' });
     http.expectNone(() => true);
     expect(sync.pendingCount()).toBe(1);
+  });
+
+  it('sends waiting results once the player pauses, waking the server once', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    awake.set(false);
+    auth.session.set(sessionFor());
+    await sync.record('note.created', { text: 'a' });
+    await sync.record('note.created', { text: 'b' });
+    http.expectNone(() => true);
+    await vi.advanceTimersByTimeAsync(IDLE_FLUSH_MS + 10);
+    vi.useRealTimers();
+    const push = await nextRequest(http, '/sync/push');
+    expect(push.request.body.events.length).toBe(2);
+    push.flush({ accepted: push.request.body.events.map((e: { id: string }) => e.id), duplicates: [], rejected: [] });
+    (await nextRequest(http, '/sync/pull')).flush({ events: [], nextCursor: 0, hasMore: false });
   });
 
   it('pushes pending events once signed in, then pulls', async () => {

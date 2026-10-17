@@ -28,6 +28,9 @@ public record StatsDto(string Date, RewardsDto Rewards, List<GameStatsDto> Games
 
 public static class StatsEndpoints
 {
+    private sealed record WonWord(DateOnly PuzzleDate, int Guesses);
+    private sealed record SolvedPuzzle(string Game, DateOnly PuzzleDate, int? ElapsedMs);
+
     private const int RecentDays = 35;
     private static readonly string[] AllGames = ["word-guess", .. PuzzleRules.Games];
 
@@ -42,8 +45,11 @@ public static class StatsEndpoints
             // Three queries for every game together, instead of two per game: the database is a network hop away.
             var freezes = (await db.StreakFreezes.AsNoTracking().Where(f => f.UserId == userId).Select(f => new { f.Game, f.CoveredDate }).ToListAsync(ct))
                 .ToLookup(f => f.Game, f => f.CoveredDate);
-            var wonWords = await db.DailyAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Game == "word-guess" && a.Status == "won").ToListAsync(ct);
-            var solvedPuzzles = (await db.PuzzleAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Status == "solved").ToListAsync(ct))
+            // Only the columns the numbers need: a player's history grows every day and the guess lists are not needed whole.
+            var wonWords = await db.DailyAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Game == "word-guess" && a.Status == "won")
+                .Select(a => new WonWord(a.PuzzleDate, a.Guesses.Count)).ToListAsync(ct);
+            var solvedPuzzles = (await db.PuzzleAttempts.AsNoTracking().Where(a => a.UserId == userId && a.Status == "solved")
+                    .Select(a => new SolvedPuzzle(a.Game, a.PuzzleDate, a.ElapsedMs)).ToListAsync(ct))
                 .ToLookup(a => a.Game);
 
             var freezeRows = (await db.GameFreezes.Where(r => r.UserId == userId).ToListAsync(ct)).ToDictionary(r => r.Game);
@@ -63,8 +69,8 @@ public static class StatsEndpoints
                     solvedDates = won.Select(a => a.PuzzleDate).ToList();
                     if (won.Count > 0)
                     {
-                        avgGuesses = Math.Round(won.Average(a => a.Guesses.Count), 1);
-                        bestGuesses = won.Min(a => a.Guesses.Count);
+                        avgGuesses = Math.Round(won.Average(a => a.Guesses), 1);
+                        bestGuesses = won.Min(a => a.Guesses);
                     }
                 }
                 else

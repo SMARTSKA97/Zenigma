@@ -14,7 +14,11 @@ const PULL_BATCH = 200;
 /** Played-offline results wait on the device until this many pile up (then they wake the server), or something else wakes it. */
 const WAKE_AT_PENDING = 20;
 /** At app start, a signed-in player's waiting results are sent after this long without a sync, even if few. */
-const STALE_MS = 24 * 60 * 60 * 1000;
+const STALE_MS = 6 * 60 * 60 * 1000;
+/** After the last result of a play session, waiting results go out once the player has been idle this long (one wake per session). */
+export const IDLE_FLUSH_MS = 90_000;
+/** Retry delays after a failed sync, then every last delay: the app stays quiet when the server is really down. */
+export const RETRY_MS = [30_000, 120_000, 600_000, 1_800_000];
 const LAST_KEY = 'zenigma.lastSync';
 
 /**
@@ -22,7 +26,8 @@ const LAST_KEY = 'zenigma.lastSync';
  * events are pulled. It runs after local changes, when the connection returns, after sign-in and on start.
  * It never polls: an idle app makes no requests, so the sleeping API and database stay asleep. Results played offline do
  * not wake a sleeping server one by one: they wait in the outbox and go out together when the server is awake anyway
- * (leaderboards, daily, sign-in), when enough pile up, or at app start if they have waited a day.
+ * (leaderboards, daily, sign-in), when enough pile up, after the player pauses for a moment (one wake per play session),
+ * when the app is left or reopened, or at app start if they have waited six hours. Failures retry with growing delays.
  */
 @Injectable({ providedIn: 'root' })
 export class SyncService {
@@ -41,6 +46,9 @@ export class SyncService {
 
   private running?: Promise<void>;
   private rerun = false;
+  private idleTimer?: ReturnType<typeof setTimeout>;
+  private retryTimer?: ReturnType<typeof setTimeout>;
+  private failures = 0;
 
   async init(): Promise<void> {
     if (typeof window !== 'undefined') {
@@ -49,6 +57,13 @@ export class SyncService {
         void this.sync(); // waits for the server to answer first
       });
       window.addEventListener('offline', () => this.online.set(false));
+    }
+    if (typeof document !== 'undefined') {
+      // Leaving the app or coming back are the natural moments to hand over what was played.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') this.flushNow();
+        else void this.dueAtStart().then((due) => due && void this.sync());
+      });
     }
     // Whatever wakes the server (leaderboard, daily, sign-in) also carries the waiting results with it.
     this.connection.onWake(() => void this.sync());
@@ -69,9 +84,28 @@ export class SyncService {
     }
   }
 
-  /** After a local change: sync now if the server is already awake or enough results are waiting; otherwise leave them queued. */
+  /** After a local change: sync now if the server is already awake or enough results are waiting; otherwise flush once the player pauses. */
   private syncSoon(): void {
-    if (this.connection.serverReady() || this.pendingCount() >= WAKE_AT_PENDING) void this.sync();
+    if (this.connection.serverReady() || this.pendingCount() >= WAKE_AT_PENDING) {
+      void this.sync();
+      return;
+    }
+    clearTimeout(this.idleTimer);
+    this.idleTimer = setTimeout(() => this.flushNow(), IDLE_FLUSH_MS);
+  }
+
+  /** Sends waiting results now (waking the server if needed) when there is a signed-in player with something to send. */
+  private flushNow(): void {
+    clearTimeout(this.idleTimer);
+    if (this.pendingCount() > 0 && this.auth.signedIn() && !this.connection.offlineMode()) void this.sync();
+  }
+
+  private scheduleRetry(): void {
+    clearTimeout(this.retryTimer);
+    const delay = RETRY_MS[Math.min(this.failures - 1, RETRY_MS.length - 1)];
+    this.retryTimer = setTimeout(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') this.flushNow();
+    }, delay);
   }
 
   /** Saves an event on this device and queues it for the server. Works with no connection and no account. */
@@ -123,6 +157,8 @@ export class SyncService {
     try {
       await this.pushAll();
       await this.pullAll();
+      this.failures = 0;
+      clearTimeout(this.retryTimer);
       this.lastError.set(null);
       this.lastSyncedAt.set(new Date().toISOString());
       try {
@@ -132,6 +168,8 @@ export class SyncService {
       }
     } catch (error) {
       this.lastError.set(this.describe(error));
+      this.failures += 1;
+      this.scheduleRetry();
     } finally {
       this.syncing.set(false);
       await this.refreshLocal();

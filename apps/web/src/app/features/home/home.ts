@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ApkPromoService } from '../../core/apk-promo.service';
 import { AuthService } from '../../core/auth.service';
 import { CommunityService } from '../../core/community.service';
+import { ConnectionService } from '../../core/connection.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { UpdaterService } from '../../core/updater.service';
 import { GAMES, gameInfo, practiceEntry } from '../../games/catalog';
@@ -27,6 +28,7 @@ export class Home implements OnInit {
   protected readonly hints = inject(HintsService);
   protected readonly prefs = inject(PrefsService);
   private readonly statsApi = inject(StatsService);
+  private readonly connection = inject(ConnectionService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly liveGames = GAMES.filter((g) => g.live && g.category !== 'mind');
@@ -41,9 +43,8 @@ export class Home implements OnInit {
   }
 
   ngOnInit(): void {
-    void this.community.load();
     void this.promo.load();
-    // Keep the counts fresh while this screen is open and visible.
+    // Keep the counts fresh while this screen is open and visible, but only while the server is awake anyway.
     const timer = setInterval(() => {
       if (!document.hidden) void this.community.load();
     }, 30_000);
@@ -51,19 +52,28 @@ export class Home implements OnInit {
   }
 
   constructor() {
-    // The session can be restored after this screen opens, so load the summary whenever someone is (or becomes) signed in.
+    // Home draws at once from what this device saw last and never wakes the server itself: it refreshes only when the
+    // server is awake for some other reason (and again the moment it wakes).
     effect(() => {
-      if (this.auth.signedIn()) void this.statsApi
-          .load()
-          .then((s) => {
-            this.stats.set(s);
-            this.hints.claimStreaks(
-              s.games.map((g) => ({ game: g.game, name: gameInfo(g.game)?.name ?? g.game, current: g.current })),
-              s.date,
-            );
-          })
-          .catch(() => this.stats.set(null));
-      else this.stats.set(null);
+      const signedIn = this.auth.signedIn();
+      const awake = this.connection.serverReady();
+      if (!signedIn) {
+        this.stats.set(null);
+        return;
+      }
+      this.stats.update((current) => current ?? this.statsApi.peek());
+      if (!awake) return;
+      void this.community.load();
+      void this.statsApi
+        .load()
+        .then((s) => {
+          this.stats.set(s);
+          this.hints.claimStreaks(
+            s.games.map((g) => ({ game: g.game, name: gameInfo(g.game)?.name ?? g.game, current: g.current })),
+            s.date,
+          );
+        })
+        .catch(() => undefined);
     });
   }
 

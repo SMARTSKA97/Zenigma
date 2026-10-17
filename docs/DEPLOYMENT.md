@@ -180,3 +180,5 @@ The API sends one-time six-digit codes through Brevo's HTTP API. Set these on Re
 - `Brevo__SenderName`: optional, defaults to `Zenigma`.
 
 Limits built in: a code lasts 15 minutes, works once, locks after 5 wrong tries; one new code a minute and 5 an hour per person; 5 email requests a minute per IP; 250 codes a day across everyone (Brevo's free plan sends 300 a day). Migration `V10__email_codes.sql` adds the table.
+
+Step by step (reusing an existing Brevo account), usage checks for Render and Neon, and slow-query tooling are in `OPERATIONS.md`.

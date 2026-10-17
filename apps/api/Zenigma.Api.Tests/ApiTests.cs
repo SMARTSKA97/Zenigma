@@ -66,6 +66,22 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [DbFact]
+    public async Task Stats_answer_carries_an_etag_and_an_unchanged_repeat_is_a_bodyless_304()
+    {
+        var (client, _, _) = await SignUpAsync();
+        var first = await client.GetAsync("/stats");
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var etag = first.Headers.ETag;
+        Assert.NotNull(etag);
+
+        using var again = new HttpRequestMessage(HttpMethod.Get, "/stats");
+        again.Headers.IfNoneMatch.Add(etag);
+        var second = await client.SendAsync(again);
+        Assert.Equal(HttpStatusCode.NotModified, second.StatusCode);
+        Assert.Equal(0, (await second.Content.ReadAsByteArrayAsync()).Length);
+    }
+
+    [DbFact]
     public async Task Register_rejects_weak_password_and_duplicate_email()
     {
         var client = _factory.CreateClient();

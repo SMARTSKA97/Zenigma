@@ -173,7 +173,11 @@ export class Badges implements OnInit {
   ngOnInit(): void {
     void this.challenges.load();
     for (const t of PRACTICE_TRACKS) void this.practice.load(t.track).then(() => this.loaded.update((n) => n + 1));
-    if (this.auth.signedIn()) void this.statsApi.load().then((s) => this.stats.set(s)).catch(() => undefined);
+    if (this.auth.signedIn()) {
+      // Saved stats first; refreshed only if the server is awake anyway, so opening Badges never wakes it.
+      this.stats.set(this.statsApi.peek());
+      void this.statsApi.refreshIfAwake().then((s) => s && this.stats.set(s)).catch(() => undefined);
+    }
   }
 
   protected min(b: Badge): number {
