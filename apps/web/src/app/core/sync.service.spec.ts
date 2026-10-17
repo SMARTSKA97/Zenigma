@@ -14,13 +14,15 @@ describe('SyncService', () => {
   let http: HttpTestingController;
   let store: MemoryStore;
   let auth: AuthService;
+  const awake = signal(true);
 
   beforeEach(() => {
+    awake.set(true);
     store = new MemoryStore();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting(), { provide: LocalStore, useValue: store },
         // The server is taken to be awake, so the sync itself is what is under test.
-        { provide: ConnectionService, useValue: { offlineMode: signal(false), wake: () => Promise.resolve(true) } },
+        { provide: ConnectionService, useValue: { offlineMode: signal(false), serverReady: awake, onWake: () => {}, wake: () => Promise.resolve(true) } },
       ],
     });
     sync = TestBed.inject(SyncService);
@@ -36,6 +38,14 @@ describe('SyncService', () => {
     http.expectNone(() => true);
     expect(sync.pendingCount()).toBe(1);
     expect(sync.events()[0].pending).toBe(1);
+  });
+
+  it('does not wake a sleeping server for a few results; they wait in the outbox', async () => {
+    awake.set(false);
+    auth.session.set(sessionFor());
+    await sync.record('note.created', { text: 'a' });
+    http.expectNone(() => true);
+    expect(sync.pendingCount()).toBe(1);
   });
 
   it('pushes pending events once signed in, then pulls', async () => {

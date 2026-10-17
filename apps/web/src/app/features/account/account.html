@@ -65,6 +65,26 @@
           </div>
           <button type="button" class="small" (click)="passwordOpen.set(!passwordOpen())">{{ profile()!.hasPassword ? 'Change' : 'Add' }}</button>
         </div>
+        @if (emailOffered()) {
+          <div class="method">
+            <span class="badge" aria-hidden="true">@if (user.emailVerified) {✓} @else {!}</span>
+            <div class="grow">
+              <b>{{ user.emailVerified ? 'Email confirmed' : 'Confirm your email' }}</b>
+              <span class="muted">{{ user.emailVerified ? 'You can reset a forgotten password with it.' : 'Confirming keeps your account safe and lets you reset a forgotten password.' }}</span>
+            </div>
+            @if (!user.emailVerified && verifying() === 'off') {
+              <button type="button" class="small" [disabled]="saving()" (click)="sendVerification()">Send code</button>
+            }
+          </div>
+          @if (!user.emailVerified && verifying() === 'sent') {
+            <form class="pw" (submit)="confirmEmail($event)">
+              <label>6-digit code sent to {{ user.email }}<input name="verify" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required [value]="verifyCode()" (input)="verifyCode.set($any($event.target).value)" /></label>
+              <button type="submit" [disabled]="saving() || verifyCode().trim().length !== 6">Confirm email</button>
+              <button type="button" class="small" [disabled]="saving()" (click)="sendVerification()">Send a new code</button>
+            </form>
+          }
+          @if (verifyError(); as e) { <p class="alert" role="alert">{{ e }}</p> }
+        }
         @if (passwordOpen()) {
           <form class="pw" (submit)="savePassword($event)">
             @if (profile()!.hasPassword) {
@@ -193,6 +213,34 @@
         }
         <p class="or"><span>or use your email</span></p>
       }
+      @if (forgot() !== 'off') {
+        <form class="fields" (submit)="forgot() === 'ask' ? sendResetCode($event) : submitReset($event)">
+          <h2 class="forgot-title">Reset your password</h2>
+          <label>
+            Email
+            <input name="email" type="email" inputmode="email" autocomplete="email" required [readOnly]="forgot() === 'code'" [value]="email()" (input)="email.set($any($event.target).value)" />
+          </label>
+          @if (forgot() === 'code') {
+            <p class="muted">If that address has an account, a 6-digit code is on its way. It works for 15 minutes.</p>
+            <label>
+              Code
+              <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required [value]="code()" (input)="code.set($any($event.target).value)" />
+            </label>
+            <label>
+              New password (8 or more characters)
+              <input name="newPassword" type="password" autocomplete="new-password" minlength="8" required [value]="resetPassword()" (input)="resetPassword.set($any($event.target).value)" />
+            </label>
+          }
+          @if (error(); as message) {
+            <p class="alert" role="alert">{{ message }}</p>
+          }
+          <button type="submit" class="submit" [disabled]="busy() || conn.offlineMode() || (forgot() === 'code' && (code().trim().length !== 6 || resetPassword().length < 8))">
+            @if (busy()) { <app-loader [size]="18" /> }
+            {{ forgot() === 'ask' ? 'Send code' : 'Set new password' }}
+          </button>
+          <button type="button" class="link" (click)="leaveForgot()">Back to sign in</button>
+        </form>
+      } @else {
       <app-segmented label="Sign in or create account" [options]="modes" [value]="mode()" (valueChange)="mode.set($event)" />
       <form class="fields" (submit)="submit($event)">
         @if (mode() === 'register') {
@@ -212,6 +260,9 @@
             <button type="button" class="reveal" (click)="reveal.set(!reveal())" [attr.aria-pressed]="reveal()">{{ reveal() ? 'Hide' : 'Show' }}</button>
           </span>
         </label>
+        @if (mode() === 'signin' && emailOffered()) {
+          <button type="button" class="link" (click)="startForgot()">Forgot password?</button>
+        }
 
         @if (error(); as message) {
           <p class="alert" role="alert">{{ message }}</p>
@@ -226,6 +277,7 @@
           }
         </button>
       </form>
+      }
     </div>
     <p class="muted foot">An account needs an email address or a Google account, so you can always get back in.</p>
   </section>

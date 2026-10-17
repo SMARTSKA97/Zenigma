@@ -71,6 +71,9 @@ builder.Services
 // OWASP's current guidance for PBKDF2-HMAC-SHA512. Existing hashes stay valid and are upgraded the next time someone signs in.
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 210_000);
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<EmailCodeService>();
+builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection(BrevoOptions.Section));
+builder.Services.AddHttpClient<IEmailSender, BrevoEmailSender>(c => c.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddHostedService<RefreshTokenCleanup>();
 builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.Section));
 builder.Services.AddHttpClient<IGoogleTokenVerifier, GoogleTokenVerifier>(c => c.Timeout = TimeSpan.FromSeconds(8));
@@ -152,6 +155,10 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy("auth", ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1) }));
+    // Anything that sends an email: few a minute, so one address cannot be flooded.
+    o.AddPolicy("mail", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1) }));
     // Circle codes are 6 characters, so guessing them is slowed right down.
     o.AddPolicy("join", ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",

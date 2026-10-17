@@ -47,6 +47,35 @@ export class AuthService {
     await this.adopt(response);
   }
 
+  /** Emails a reset code. The server answers the same for any address, so this never says whether an account exists. */
+  async forgotPassword(email: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/forgot`, { email }));
+  }
+
+  /** Sets a new password with the emailed code and signs in. Every other session of the account ends. */
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    const deviceId = await this.device.deviceId();
+    const response = await firstValueFrom(
+      this.http.post<AuthSession>(`${environment.apiBaseUrl}/auth/reset`, { email, code, newPassword, deviceId }),
+    );
+    await this.adopt(response);
+  }
+
+  /** Emails a code that confirms the signed-in account's address. */
+  async sendVerification(): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/verify/send`, {}));
+  }
+
+  /** Checks the emailed code; on success the stored session shows the address as verified. */
+  async verifyEmail(code: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/verify`, { code }));
+    const current = this.session();
+    if (!current) return;
+    const next = { ...current, user: { ...current.user, emailVerified: true } };
+    await this.store.setMeta(SESSION_KEY, next);
+    this.session.set(next);
+  }
+
   /** Signs in (or creates the account) with a Google ID token from Google Identity Services. */
   async loginWithGoogle(idToken: string): Promise<void> {
     const deviceId = await this.device.deviceId();

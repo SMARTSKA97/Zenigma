@@ -50,8 +50,10 @@ export const appConfig: ApplicationConfig = {
       prefs.apply();
       await auth.restore();
       await sync.init();
-      // Wake the server in the background (a sleeping free host takes up to a minute); sync starts when it answers.
-      void connection.wake().then((up) => { if (up) void sync.sync(); });
+      // The app no longer wakes the server on every start: a sleeping free host then stays asleep for players who only
+      // play. Leaderboards, the daily and sign-in wake it when opened; waiting results go out with that, or here when
+      // a signed-in player has results that have waited a day or have piled up.
+      if (await sync.dueAtStart()) void connection.wake();
     }),
   ],
 };

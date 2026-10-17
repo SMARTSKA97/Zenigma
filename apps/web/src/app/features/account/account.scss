@@ -405,3 +405,20 @@ small {
   height: 1.5rem;
   font-size: 0.8rem;
 }
+
+.link {
+  align-self: flex-start;
+  min-height: 0;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.forgot-title {
+  margin: 0;
+  font-size: 1.1rem;
+}

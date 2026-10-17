@@ -27,6 +27,8 @@ public sealed class RefreshTokenCleanup(IServiceScopeFactory scopes, TimeProvide
                         .Where(t => t.ExpiresAt < cutoff || (t.RevokedAt != null && t.RevokedAt < cutoff))
                         .ExecuteDeleteAsync(stoppingToken);
                     if (removed > 0) log.LogInformation("Removed {Count} old refresh tokens", removed);
+                    var mailCutoff = clock.GetUtcNow().AddDays(-1);
+                    await db.EmailCodes.Where(x => x.CreatedAt < mailCutoff).ExecuteDeleteAsync(stoppingToken);
                 }
                 catch (Exception e) when (e is not OperationCanceledException)
                 {

@@ -94,3 +94,6 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 
 ## Done: security hardening (phase 41)
 OWASP Top 10 pass: headers/CSP, token reuse detection, Google pre-hijack fix, logging, CodeQL, Dependabot, pinned actions. See docs/SECURITY.md. Next: email verification + forgot password, MFA.
+
+## Done: email, calmer errors, lazy sync (phase 42)
+Forgot password and email confirmation via Brevo (docs/DEPLOYMENT.md), fixed message strip under the board, slower mistake flag for Queens/Tango, sync no longer wakes a sleeping server on every start or result.

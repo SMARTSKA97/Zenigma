@@ -35,6 +35,7 @@ export class ConnectionService {
   private waking?: Promise<boolean>;
   private failedAt = 0;
   private onReady: (() => void)[] = [];
+  private listeners: (() => void)[] = [];
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -55,6 +56,11 @@ export class ConnectionService {
     }
     if (value) this.server.set('idle');
     else void this.wake();
+  }
+
+  /** Runs a function every time the server comes up, whatever woke it (a leaderboard, the daily, a sign-in). */
+  onWake(fn: () => void): void {
+    this.listeners.push(fn);
   }
 
   /** Runs a function once the server answers (now, if it already has). */
@@ -94,6 +100,7 @@ export class ConnectionService {
           const waiting = this.onReady;
           this.onReady = [];
           waiting.forEach((fn) => fn());
+          this.listeners.forEach((fn) => fn());
           return true;
         }
         await new Promise((r) => setTimeout(r, PAUSE_MS));

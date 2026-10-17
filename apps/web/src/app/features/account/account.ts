@@ -45,6 +45,18 @@ export class Account implements OnInit {
   private readonly signInSlot = viewChild<ElementRef<HTMLElement>>('googleSignIn');
   private readonly linkSlot = viewChild<ElementRef<HTMLElement>>('googleLink');
   protected readonly googleOffered = signal<boolean | null>(null);
+  /** Whether the server can send email; null until it answers. */
+  protected readonly emailOffered = signal<boolean | null>(null);
+
+  // Forgot password: ask for a code, then enter it with a new password.
+  protected readonly forgot = signal<'off' | 'ask' | 'code'>('off');
+  protected readonly code = signal('');
+  protected readonly resetPassword = signal('');
+
+  // Confirming the address of a signed-in account.
+  protected readonly verifying = signal<'off' | 'sent'>('off');
+  protected readonly verifyCode = signal('');
+  protected readonly verifyError = signal<string | null>(null);
   protected readonly googleNative = this.google.native;
 
   // Profile editing.
@@ -71,7 +83,10 @@ export class Account implements OnInit {
         .renderButton(slot.nativeElement, (token) => void this.onGoogle(token, linking), linking ? 'continue_with' : this.mode() === 'register' ? 'signup_with' : 'signin_with')
         .then((shown) => this.googleOffered.set(shown));
     });
-    afterNextRender(() => void this.google.available().then((id) => this.googleOffered.set(id !== null)));
+    afterNextRender(() => {
+      void this.google.available().then((id) => this.googleOffered.set(id !== null));
+      void this.google.emailAvailable().then((on) => this.emailOffered.set(on));
+    });
   }
 
   ngOnInit(): void {
@@ -98,6 +113,78 @@ export class Account implements OnInit {
       this.error.set(this.message(error));
     } finally {
       this.busy.set(false);
+    }
+  }
+
+  protected startForgot(): void {
+    this.error.set(null);
+    this.code.set('');
+    this.resetPassword.set('');
+    this.forgot.set('ask');
+  }
+
+  protected leaveForgot(): void {
+    this.error.set(null);
+    this.forgot.set('off');
+  }
+
+  protected async sendResetCode(event: Event): Promise<void> {
+    event.preventDefault();
+    this.busy.set(true);
+    this.error.set(null);
+    try {
+      await this.auth.forgotPassword(this.email().trim());
+      this.forgot.set('code');
+    } catch (error) {
+      this.error.set(this.message(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async submitReset(event: Event): Promise<void> {
+    event.preventDefault();
+    this.busy.set(true);
+    this.error.set(null);
+    try {
+      await this.auth.resetPassword(this.email().trim(), this.code().trim(), this.resetPassword());
+      this.code.set('');
+      this.resetPassword.set('');
+      this.forgot.set('off');
+      this.afterSignIn();
+    } catch (error) {
+      this.error.set(this.message(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async sendVerification(): Promise<void> {
+    this.verifyError.set(null);
+    this.saving.set(true);
+    try {
+      await this.auth.sendVerification();
+      this.verifying.set('sent');
+    } catch (error) {
+      this.verifyError.set(this.message(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async confirmEmail(event: Event): Promise<void> {
+    event.preventDefault();
+    this.verifyError.set(null);
+    this.saving.set(true);
+    try {
+      await this.auth.verifyEmail(this.verifyCode().trim());
+      this.verifyCode.set('');
+      this.verifying.set('off');
+      this.notice.set('Email confirmed.');
+    } catch (error) {
+      this.verifyError.set(this.message(error));
+    } finally {
+      this.saving.set(false);
     }
   }
 

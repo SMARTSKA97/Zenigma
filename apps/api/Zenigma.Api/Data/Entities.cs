@@ -44,6 +44,18 @@ public class RefreshToken
     public Guid? ReplacedBy { get; set; }
 }
 
+public class EmailCode
+{
+    public Guid Id { get; set; }
+    public string UserId { get; set; } = "";
+    public string Purpose { get; set; } = "";
+    public string CodeHash { get; set; } = "";
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+    public int Attempts { get; set; }
+    public DateTimeOffset? UsedAt { get; set; }
+}
+
 public class DailyPuzzle
 {
     public string Game { get; set; } = "";

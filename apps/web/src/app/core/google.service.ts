@@ -24,21 +24,32 @@ const SCRIPT = 'https://accounts.google.com/gsi/client';
 @Injectable({ providedIn: 'root' })
 export class GoogleService {
   private readonly http = inject(HttpClient);
-  private clientId?: Promise<string | null>;
   private script?: Promise<GoogleId | null>;
 
   /** True in the Android app, where sign-in goes through the phone's own account picker. */
   readonly native = Capacitor.isNativePlatform();
 
-  /** The public client id, or null when Google sign-in is not set up on the server. */
-  available(): Promise<string | null> {
-    this.clientId ??= firstValueFrom(this.http.get<{ googleClientId: string | null }>(`${environment.apiBaseUrl}/auth/config`))
-      .then((c) => c.googleClientId)
+  private config?: Promise<{ googleClientId: string | null; email: boolean } | null>;
+
+  private loadConfig(): Promise<{ googleClientId: string | null; email: boolean } | null> {
+    this.config ??= firstValueFrom(this.http.get<{ googleClientId: string | null; email?: boolean }>(`${environment.apiBaseUrl}/auth/config`))
+      .then((c) => ({ googleClientId: c.googleClientId, email: c.email === true }))
       .catch(() => {
-        this.clientId = undefined; // asleep or offline: ask again next time
+        this.config = undefined; // asleep or offline: ask again next time
         return null;
       });
-    return this.clientId;
+    return this.config;
+  }
+
+  /** The public client id, or null when Google sign-in is not set up on the server. */
+  async available(): Promise<string | null> {
+    return (await this.loadConfig())?.googleClientId ?? null;
+  }
+
+  /** Whether the server can send email (forgot password, confirming an address). Null when the server could not be reached. */
+  async emailAvailable(): Promise<boolean | null> {
+    const c = await this.loadConfig();
+    return c ? c.email : null;
   }
 
   /**

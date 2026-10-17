@@ -11,11 +11,18 @@ import { PullResponse, PushResponse, StoredEvent } from './types';
 const CURSOR_KEY = 'syncCursor';
 const PUSH_BATCH = 100;
 const PULL_BATCH = 200;
+/** Played-offline results wait on the device until this many pile up (then they wake the server), or something else wakes it. */
+const WAKE_AT_PENDING = 20;
+/** At app start, a signed-in player's waiting results are sent after this long without a sync, even if few. */
+const STALE_MS = 24 * 60 * 60 * 1000;
+const LAST_KEY = 'zenigma.lastSync';
 
 /**
  * Offline-first sync. Writes go to the local store first (`record`), then the outbox is pushed and new server
  * events are pulled. It runs after local changes, when the connection returns, after sign-in and on start.
- * It never polls: an idle app makes no requests, so the sleeping API and database stay asleep.
+ * It never polls: an idle app makes no requests, so the sleeping API and database stay asleep. Results played offline do
+ * not wake a sleeping server one by one: they wait in the outbox and go out together when the server is awake anyway
+ * (leaderboards, daily, sign-in), when enough pile up, or at app start if they have waited a day.
  */
 @Injectable({ providedIn: 'root' })
 export class SyncService {
@@ -43,7 +50,28 @@ export class SyncService {
       });
       window.addEventListener('offline', () => this.online.set(false));
     }
+    // Whatever wakes the server (leaderboard, daily, sign-in) also carries the waiting results with it.
+    this.connection.onWake(() => void this.sync());
     await this.refreshLocal();
+  }
+
+  /** Whether the app should wake the server on its own at start: a signed-in player whose results have waited too long. */
+  async dueAtStart(): Promise<boolean> {
+    if (!this.auth.signedIn() || this.connection.offlineMode()) return false;
+    const pending = await this.store.pendingCount();
+    if (pending === 0) return false;
+    if (pending >= WAKE_AT_PENDING) return true;
+    try {
+      const last = Number(localStorage.getItem(LAST_KEY) ?? 0);
+      return Date.now() - last > STALE_MS;
+    } catch {
+      return true;
+    }
+  }
+
+  /** After a local change: sync now if the server is already awake or enough results are waiting; otherwise leave them queued. */
+  private syncSoon(): void {
+    if (this.connection.serverReady() || this.pendingCount() >= WAKE_AT_PENDING) void this.sync();
   }
 
   /** Saves an event on this device and queues it for the server. Works with no connection and no account. */
@@ -58,7 +86,7 @@ export class SyncService {
     };
     await this.store.putEvents([event]);
     await this.refreshLocal();
-    void this.sync();
+    this.syncSoon();
     return event;
   }
 
@@ -97,6 +125,11 @@ export class SyncService {
       await this.pullAll();
       this.lastError.set(null);
       this.lastSyncedAt.set(new Date().toISOString());
+      try {
+        localStorage.setItem(LAST_KEY, String(Date.now()));
+      } catch {
+        /* the next start just syncs a little sooner */
+      }
     } catch (error) {
       this.lastError.set(this.describe(error));
     } finally {

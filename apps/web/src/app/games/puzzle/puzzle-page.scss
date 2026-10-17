@@ -103,8 +103,16 @@
   font-size: 0.8rem;
   font-weight: 600;
 }
+.notice {
+  /* A fixed-height strip under the board: messages appear here without moving the board. */
+  display: grid;
+  place-items: center;
+  height: 2.6rem;
+  padding-inline: 1rem;
+}
 .toast {
-  margin-left: auto;
+  max-width: 100%;
+  text-align: center;
   font-size: 0.82rem;
   font-weight: 600;
   padding: 0.4rem 0.9rem;
@@ -259,11 +267,6 @@ a.tool {
     .time {
       font-size: 2rem;
     }
-    .toast {
-      margin: 0;
-      width: 100%;
-      text-align: center;
-    }
   }
   .tools {
     grid-auto-flow: row;
@@ -389,7 +392,7 @@ a.tool {
 }
 :host .pause-cover {
   position: absolute;
-  inset: 0;
+  inset: 0 0 2.6rem;
   z-index: 8;
   display: grid;
   place-content: center;

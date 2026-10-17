@@ -40,6 +40,8 @@ type Phase = 'loading' | 'signin' | 'offline' | 'unavailable' | 'ready' | 'playi
 /** One screen for every grid puzzle, in practice (endless levels, offline) or daily (one attempt, timed by the server) mode. */
 /** How long the board sits still before a mistake is pointed out. */
 const WARN_DELAY_MS = 1600;
+/** Queens and Tango flag a break more slowly: a player who is still mid-thought usually fixes it before the warning lands. */
+const SLOW_WARN_DELAY_MS = 3000;
 
 @Component({
   selector: 'app-puzzle-page',
@@ -212,7 +214,7 @@ export class PuzzlePage {
           this.showTimer = setTimeout(() => {
             this.conflicts.set(found);
             this.haptics.warning();
-          }, WARN_DELAY_MS);
+          }, this.warnDelay());
         }
       });
     });
@@ -535,7 +537,7 @@ export class PuzzlePage {
         this.wrongTimer = setTimeout(() => {
           this.flash('Not quite. Check the highlighted cells.');
           if (!found.size) this.haptics.warning(); // otherwise the highlight (which has its own delay) vibrates
-        }, WARN_DELAY_MS);
+        }, this.warnDelay());
       }
       return;
     }
@@ -588,6 +590,11 @@ export class PuzzlePage {
       ...(this.featuredLevel === level ? { featured: featuredFor(new Date()).week, mistakes: this.mistakes } : {}),
     });
     setTimeout(() => this.resultOpen.set(true), 900);
+  }
+
+  private warnDelay(): number {
+    const g = this.game();
+    return g === 'queens' || g === 'tango' ? SLOW_WARN_DELAY_MS : WARN_DELAY_MS;
   }
 
   private flash(text: string): void {

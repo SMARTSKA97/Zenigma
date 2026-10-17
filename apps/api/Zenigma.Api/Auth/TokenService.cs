@@ -10,7 +10,7 @@ using Zenigma.Api.Data;
 
 namespace Zenigma.Api.Auth;
 
-public record AuthUserDto(string Id, string Email, string? DisplayName);
+public record AuthUserDto(string Id, string Email, string? DisplayName, bool EmailVerified = false);
 
 public record AuthSessionDto(string AccessToken, DateTimeOffset AccessTokenExpiresAt, string RefreshToken, AuthUserDto User);
 
@@ -56,7 +56,7 @@ public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimePro
         });
         await db.SaveChangesAsync(ct);
 
-        return new AuthSessionDto(accessToken, expires, refresh, new AuthUserDto(user.Id, user.Email ?? "", user.DisplayName));
+        return new AuthSessionDto(accessToken, expires, refresh, new AuthUserDto(user.Id, user.Email ?? "", user.DisplayName, user.EmailConfirmed));
     }
 
     /// <summary>How long after a refresh token was used a second use is treated as a race (two tabs refreshing at once) and not as theft.</summary>

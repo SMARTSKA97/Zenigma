@@ -86,9 +86,6 @@
           <span class="pill vs">Beat {{ fmt(c.ms) }}</span>
         }
         <span class="pill">{{ daily() ? 'Daily' + (difficulty() ? ' · ' + difficulty()!.label : '') : 'Level ' + level() }}</span>
-        @if (message()) {
-          <span class="toast">{{ message() }}</span>
-        }
       </div>
 
       <div class="stage">
@@ -116,6 +113,11 @@
             <app-sudoku-board [puzzle]="$any(p)" [board]="$any(state())" [bad]="conflicts()" [blind]="prefs.blind()" [locked]="locked()" [solved]="solved()" (boardChange)="change($event)" />
           }
         }
+        <div class="notice" role="status" aria-live="polite">
+          @if (message()) {
+            <span class="toast">{{ message() }}</span>
+          }
+        </div>
       </div>
 
       @if (coach(); as c) {

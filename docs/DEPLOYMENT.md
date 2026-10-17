@@ -169,3 +169,14 @@ Migration `V8` adds profiles, the server hint balance and mind scores; Flyway ap
   conflict could force a rename later).
 - Privacy policy and account deletion route (required by Google Play, also good practice for the APK).
 - Decide the update channel for Play Store later; the in-app APK updater must be disabled in a Play build.
+
+
+## Email (forgot password, confirm email)
+
+The API sends one-time six-digit codes through Brevo's HTTP API. Set these on Render (the API treats email as off until both exist, and the app then hides "Forgot password?"):
+
+- `Brevo__ApiKey`: a Brevo API key (SMTP & API, API keys, "v3" key).
+- `Brevo__SenderEmail`: a sender address that is verified in Brevo (Senders, domains and dedicated IPs). Better still, authenticate your domain (SPF and DKIM) so codes do not land in spam.
+- `Brevo__SenderName`: optional, defaults to `Zenigma`.
+
+Limits built in: a code lasts 15 minutes, works once, locks after 5 wrong tries; one new code a minute and 5 an hour per person; 5 email requests a minute per IP; 250 codes a day across everyone (Brevo's free plan sends 300 a day). Migration `V10__email_codes.sql` adds the table.

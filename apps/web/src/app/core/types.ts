@@ -17,6 +17,8 @@ export interface AuthUser {
   id: string;
   email: string;
   displayName: string | null;
+  /** True once the address was confirmed with an emailed code (older stored sessions do not have it yet). */
+  emailVerified?: boolean;
 }
 
 export interface AuthSession {
