@@ -124,7 +124,7 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - Mind game (Language): compound-word chains from a built-in pair list (`games/mind/chain-link-data.ts`), 2 to 6 hidden words, any valid word that joins both neighbours is accepted. Add pairs to the list to grow it.
 
 ## Next
-- Remaining Coming soon games, in order: Crossclimb, Wend, Comet Slice.
+- Remaining Coming soon game: Comet Slice. Crossclimb and Wend are live (word ladders and four-word letter splits use the Word Guess lists).
 - Pinpoint is live (`games/mind/pinpoint-data.ts`, about 75 categories; add more there). Word games share the Mind screen (`/mind/<id>`) and skill 'language'.
 - "Offline ready" badge; pre-cache level packs on Wi-Fi when idle; compress share images.
 - Alerts on 5xx and slow responses; run the k6 test and tune from real numbers; small VPS once past ~500 daily users.

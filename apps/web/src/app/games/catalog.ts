@@ -7,8 +7,6 @@ export type GameId =
   | 'sudoku'
   | 'zip'
   | 'patches'
-  | 'crossclimb'
-  | 'wend'
   | 'comet-slice'
   | MindGameId;
 
@@ -35,7 +33,9 @@ export type MindGameId =
   | 'opposites'
   | 'word-recall'
   | 'chain-link'
-  | 'pinpoint';
+  | 'pinpoint'
+  | 'crossclimb'
+  | 'wend';
 
 /** Where a game sits in the apps: logic puzzles, Sudoku, words or mind training. */
 export type Category = 'logic' | 'sudoku' | 'word' | 'mind';
@@ -80,8 +80,8 @@ export const GAMES: GameInfo[] = [
   { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25, live: true, daily: true, category: 'logic' },
   { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: true, daily: true, category: 'logic' },
   { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: true, daily: false, category: 'word', skill: 'language' },
-  { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: false, daily: false, category: 'word' },
-  { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: false, daily: false, category: 'word' },
+  { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: true, daily: false, category: 'word', skill: 'language' },
+  { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice comets, dodge bombs, keep your lives.', hue: 15, live: false, daily: false, category: 'mind', skill: 'speed' },
   { id: 'echo-sequence', name: 'Echo Sequence', blurb: 'Watch a pattern of lights, then repeat it. It grows by one each round.', hue: 120, live: true, daily: false, category: 'mind', skill: 'memory' },
   { id: 'grid-recall', name: 'Grid Recall', blurb: 'Memorise which tiles lit up, then tap them from memory.', hue: 140, live: true, daily: false, category: 'mind', skill: 'memory' },
@@ -107,7 +107,7 @@ export const GAMES: GameInfo[] = [
 ];
 
 /** Mind-training games that can be played now (the rest of them are still coming soon). */
-export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall', 'chain-link', 'pinpoint'];
+export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall', 'chain-link', 'pinpoint', 'crossclimb', 'wend'];
 
 export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => g.id === id);
 

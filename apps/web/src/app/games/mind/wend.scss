@@ -1,0 +1,62 @@
+.spelling {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  min-height: 2.2rem;
+  margin: 0.75rem 0 0.5rem;
+}
+.wgrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  max-width: 21rem;
+  margin: 0 auto;
+}
+.wt {
+  aspect-ratio: 1;
+  font-size: 1.3rem;
+  font-weight: 800;
+  border-radius: 0.7rem;
+  padding: 0;
+  &.picked {
+    outline: 3px solid currentColor;
+    outline-offset: -3px;
+  }
+  &.locked {
+    opacity: 1;
+    color: #111;
+  }
+}
+[data-hue='0'] { background: oklch(0.85 0.1 25); }
+[data-hue='1'] { background: oklch(0.85 0.1 95); }
+[data-hue='2'] { background: oklch(0.85 0.1 160); }
+[data-hue='3'] { background: oklch(0.85 0.1 260); }
+.note {
+  text-align: center;
+  margin: 0.75rem auto 0;
+  min-height: 2.4rem;
+  max-width: 22rem;
+}
+.entry {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+.foundlist {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem auto 0;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  li {
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #111;
+  }
+}

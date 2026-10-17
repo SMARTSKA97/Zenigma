@@ -1,0 +1,40 @@
+<div class="hud"><span>{{ rowsDone() }} rungs</span><span>Ladder {{ round() }} · {{ '♥'.repeat(lives()) }}{{ '♡'.repeat(3 - lives()) }}</span></div>
+@if (ready()) {
+  <ol class="chain ladder" [class.flash-bad]="bad()">
+    @for (row of rows(); track $index; let i = $index) {
+      @if (i > 0) {
+        <li class="join" aria-hidden="true">↓ one letter</li>
+      }
+      <li class="word" [class.active]="i === at() && !busy()" [class.given]="i === 0 || i === last()">
+        @for (ch of letters(row, i); track $index) {
+          <span class="ltr" [class.fixed]="!!row">{{ ch.toUpperCase() }}</span>
+        }
+      </li>
+    }
+  </ol>
+  @if (!busy()) {
+    <form class="entry" (submit)="$event.preventDefault(); submit()">
+      <input
+        type="text"
+        [value]="typed()"
+        (input)="type($any($event.target).value)"
+        maxlength="5"
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
+        enterkeyhint="done"
+        aria-label="The next word, one letter different"
+        placeholder="Next word"
+      />
+      <button type="submit" [disabled]="typed().length !== 5">Climb</button>
+      <button type="button" class="secondary" (click)="skip()">Skip</button>
+      @if (at() > 1) {
+        <button type="button" class="secondary" (click)="undo()">Undo</button>
+      }
+    </form>
+    <p class="muted tip">Change one letter at a time to reach the last word.</p>
+  }
+} @else {
+  <p class="muted tip">Loading words…</p>
+}

@@ -35,6 +35,8 @@ export const MIND_META: Partial<Record<MindGameId, MindMeta>> = {
   opposites: { skill: 'language', how: 'A word appears. Pick its opposite from four words. 60 seconds. A wrong answer costs 3 seconds.', scale: 20, unit: 'correct' },
   'chain-link': { skill: 'language', how: 'The first word is given. Fill in each next word so that it joins the one before into a compound word, like MAN and MADE (man-made). It starts with the letter shown and has one line per letter. Chains grow from 2 to 6 words. A wrong word or a skip costs a life. Three lives.', scale: 20, unit: 'links' },
   pinpoint: { skill: 'language', how: 'Five words share something in common, shown one at a time, vaguest first. Name what they have in common. A wrong guess shows the next clue. Solve it on the first clue for 5 points, down to 1 on the last. Five categories a game.', scale: 20, unit: 'points' },
+  crossclimb: { skill: 'language', how: 'A word ladder. The first and last words are given. Fill the rows between, changing exactly one letter from each row to the next, to reach the last word. Any real word that keeps the way open counts. Ladders grow from 2 rows to 5. A wrong word or a skip costs a life. Three lives.', scale: 20, unit: 'rungs' },
+  wend: { skill: 'language', how: 'Twenty letters hide four five-letter words, and every letter is used exactly once. Tap letters to spell a word. A real word locks in if the letters left can still make words. A word that is not real costs a life. Undo takes the last word back for free. Three lives.', scale: 24, unit: 'words' },
   'word-recall': { skill: 'memory', how: 'A few words appear for a moment. Then pick them out of a longer list. One more word each round. Three lives.', scale: 7, unit: 'rounds' },
 };
 

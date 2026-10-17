@@ -1,0 +1,29 @@
+<div class="hud"><span>{{ wordsFound() }} words</span><span>Puzzle {{ round() }} · {{ '♥'.repeat(lives()) }}{{ '♡'.repeat(3 - lives()) }}</span></div>
+@if (ready()) {
+  <p class="spelling" [class.flash-bad]="bad()" aria-live="polite">{{ spelling().toUpperCase() || ' ' }}</p>
+  <div class="wgrid" role="group" aria-label="Letters">
+    @for (ch of letters(); track $index; let i = $index) {
+      <button
+        type="button"
+        class="wt"
+        [class.picked]="picked().includes(i)"
+        [class.locked]="locked()[i] !== undefined"
+        [attr.data-hue]="locked()[i]"
+        [disabled]="locked()[i] !== undefined || busy()"
+        (click)="tap(i)"
+      >{{ ch.toUpperCase() }}</button>
+    }
+  </div>
+  <p class="note muted" aria-live="polite">{{ note() || 'Spell four five-letter words. Every letter is used once.' }}</p>
+  <div class="entry">
+    <button type="button" class="secondary" (click)="shuffle()" [disabled]="busy()">Shuffle</button>
+    <button type="button" class="secondary" (click)="undo()" [disabled]="busy() || (picked().length === 0 && found().length === 0)">Undo</button>
+  </div>
+  <ul class="foundlist">
+    @for (f of found(); track f.word) {
+      <li [attr.data-hue]="f.hue">{{ f.word.toUpperCase() }}</li>
+    }
+  </ul>
+} @else {
+  <p class="muted tip">Loading words…</p>
+}
