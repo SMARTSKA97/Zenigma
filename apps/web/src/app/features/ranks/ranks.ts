@@ -109,13 +109,16 @@ export class Ranks {
 
   protected async load(): Promise<void> {
     const id = ++this.requestId;
-    this.loading.set(true);
+    // Show the last board seen at once (if any) and refresh it quietly, instead of a loader.
+    const earlier = this.api.peekBoard(this.game(), this.kind(), this.period(), this.circle());
+    if (earlier) this.board.set(earlier);
+    this.loading.set(!earlier);
     this.failed.set(false);
     try {
       const board = await this.api.board(this.game(), this.kind(), this.period(), this.circle());
       if (id === this.requestId) this.board.set(board);
     } catch {
-      if (id === this.requestId) this.failed.set(true);
+      if (id === this.requestId && !earlier) this.failed.set(true);
     } finally {
       if (id === this.requestId) this.loading.set(false);
     }

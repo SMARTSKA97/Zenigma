@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth.service';
 import { DeviceService } from '../../core/device.service';
 import { HapticsService } from '../../core/haptics.service';
 import { PrefsService } from '../../core/prefs.service';
+import { LeaderboardService } from '../../core/leaderboard.service';
 import { WidgetService } from '../../core/widget.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController, BoardRow, BoardStats } from './board';
@@ -62,6 +63,7 @@ export class DailyStore implements BoardController {
   private readonly haptics = inject(HapticsService);
   private readonly wordList = inject(WordListService);
   private readonly widget = inject(WidgetService);
+  private readonly boards = inject(LeaderboardService);
 
   private readonly url = `${environment.apiBaseUrl}/daily/word-guess`;
 
@@ -190,6 +192,7 @@ export class DailyStore implements BoardController {
         if (response.status !== 'playing') {
           this.phase.set('finished');
           void this.sync.sync(); // the server logged the result; pull it into this device's history
+          this.boards.clearBoards(); // the boards just changed
           setTimeout(() => void this.widget.refresh(), 1500);
         }
       }, reduce ? 0 : REVEAL_MS);

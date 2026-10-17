@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, Eleme
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PrefsService } from '../../core/prefs.service';
+import { LeaderboardService } from '../../core/leaderboard.service';
 import { HintsSyncService } from '../../core/hints-sync.service';
 import { WidgetService } from '../../core/widget.service';
 import { HapticsService } from '../../core/haptics.service';
@@ -57,6 +58,7 @@ export class PuzzlePage {
   protected readonly nav = inject(BackService);
   private readonly widgetSvc = inject(WidgetService);
   private readonly hintsSync = inject(HintsSyncService);
+  private readonly boards = inject(LeaderboardService);
   private readonly haptics = inject(HapticsService);
   protected readonly prefs = inject(PrefsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -563,6 +565,7 @@ export class PuzzlePage {
         this.solved.set(true);
         this.haptics.success();
         void this.store.deleteMeta(this.dailyKey());
+        this.boards.clearBoards(); // the boards just changed
         setTimeout(() => void this.widgetSvc.refresh(), 1500);
         setTimeout(() => this.resultOpen.set(true), 900);
       } else {

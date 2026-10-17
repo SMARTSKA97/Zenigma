@@ -109,3 +109,13 @@ Android home-screen widget (StreakWidgetProvider/Plugin); numbers pushed from th
 
 ## Done: widget sizes, wake cover, auto-start dailies, notification prompt (phase 46)
 Hint fairness penalty removed for now (hints recorded only); puzzle daily hints are offline.
+
+## Done: cached boards (phase 48)
+Ranks show the last board at once and refresh quietly; boards are reused for 60 s on the device and cleared when a daily result changes them.
+
+## Next: lighter load and smoother feel
+- Cache-Control on public data (daily puzzles, boards) so Cloudflare serves it; ETag on level packs.
+- Retention job for `sync_events`; `pg_stat_statements` and fix the slowest queries; Neon pooled connection string.
+- Home shows streak and today's progress from local data with no request; "offline ready" badge.
+- Pre-cache level packs on Wi-Fi when idle; compress share images.
+- Alerts on 5xx and slow responses; weekly k6 load test on a copy; small VPS once past ~500 daily users.
