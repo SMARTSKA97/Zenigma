@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, Eleme
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PrefsService } from '../../core/prefs.service';
+import { HintsSyncService } from '../../core/hints-sync.service';
 import { WidgetService } from '../../core/widget.service';
 import { HapticsService } from '../../core/haptics.service';
 import { BackService } from '../../core/back.service';
@@ -55,6 +56,7 @@ export class PuzzlePage {
   private readonly route = inject(ActivatedRoute);
   protected readonly nav = inject(BackService);
   private readonly widgetSvc = inject(WidgetService);
+  private readonly hintsSync = inject(HintsSyncService);
   private readonly haptics = inject(HapticsService);
   protected readonly prefs = inject(PrefsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -550,6 +552,8 @@ export class PuzzlePage {
 
     if (this.daily()) {
       this.checking.set(true);
+      // Hint spends reach the server first, so the pool is debited together with the result; hints used offline are reported now.
+      await this.hintsSync.sync();
       const result = await this.dailyApi.submit(game, solution, this.hintsUsed());
       this.checking.set(false);
       if (result.ok) {
