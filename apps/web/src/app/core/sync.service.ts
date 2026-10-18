@@ -219,9 +219,11 @@ export class SyncService {
           pending: 0 as const,
         })),
       );
-      cursor = response.nextCursor;
+      const advanced = response.nextCursor > cursor;
+      cursor = Math.max(cursor, response.nextCursor);
       await this.store.setMeta(CURSOR_KEY, cursor);
-      if (!response.hasMore) return;
+      // A server that says "more" without moving the cursor would keep us here for ever: stop and try again at the next sync.
+      if (!response.hasMore || !advanced) return;
     }
   }
 

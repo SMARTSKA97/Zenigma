@@ -129,7 +129,8 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 
 ## Audit follow-ups (from an outside review, October 2026)
 - Done: README, SECURITY and roadmap counts agree (6 main games, 25 mind games, email flows need Brevo env vars).
-- Open, worth doing: end-to-end test of offline play, reconnect and sync (Playwright in CI); sync edge-case tests (stale cursor, duplicate events, two devices); alerts on 5xx/slow/storage; restore drill for Neon backups and a keystore backup; split `puzzle-page.ts` only where responsibilities are tangled; accessibility pass (keyboard, screen reader, reduced motion); a simple D1/D7 and per-game completion view.
+- Done: sync edge-case tests on the API (second device, cursor from the future, parallel retry of one batch, repeated event in a batch, refused token) and the web client (failed page keeps the last cursor, a stuck or smaller cursor never loops or moves back, own events returning on pull); the pull loop now stops when the cursor does not advance.
+- Open, worth doing: end-to-end test of offline play, reconnect and sync (Playwright in CI); alerts on 5xx/slow/storage; restore drill for Neon backups and a keystore backup; split `puzzle-page.ts` only where responsibilities are tangled; accessibility pass (keyboard, screen reader, reduced motion); a simple D1/D7 and per-game completion view.
 - Not now: more mini-games, community editors, monetisation.
 
 ## Next

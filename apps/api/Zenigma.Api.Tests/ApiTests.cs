@@ -246,4 +246,75 @@ public class ApiTests : IClassFixture<ApiFactory>
         var stolen = await bob.PostAsJsonAsync("/sync/push", new { deviceId = aliceDevice, platform = "web", events = new[] { Event() } });
         Assert.Equal(HttpStatusCode.Forbidden, stolen.StatusCode);
     }
+
+    [DbFact]
+    public async Task A_second_device_pulls_what_the_first_pushed_and_a_stale_cursor_is_harmless()
+    {
+        var (client, _, first) = await SignUpAsync();
+        var ids = Enumerable.Range(0, 3).Select(_ => Guid.NewGuid()).ToArray();
+        await client.PostAsJsonAsync("/sync/push", new { deviceId = first, platform = "android", events = ids.Select(i => Event(i)).ToArray() });
+
+        // Another device of the same account starts from nothing and gets everything, each event marked with the device that made it.
+        var second = Guid.NewGuid();
+        var pulled = await client.GetFromJsonAsync<JsonElement>("/sync/pull?after=0", Json);
+        var events = pulled.GetProperty("events").EnumerateArray().ToList();
+        Assert.Equal(ids.OrderBy(i => i), events.Select(e => e.GetProperty("id").GetGuid()).OrderBy(i => i));
+        Assert.All(events, e => Assert.Equal(first, e.GetProperty("deviceId").GetGuid()));
+
+        // The second device pushes too; the first one pulls from its saved cursor and sees only the new event.
+        var cursor = pulled.GetProperty("nextCursor").GetInt64();
+        await client.PostAsJsonAsync("/sync/push", new { deviceId = second, platform = "web", events = new[] { Event() } });
+        var news = await client.GetFromJsonAsync<JsonElement>($"/sync/pull?after={cursor}", Json);
+        Assert.Equal(1, news.GetProperty("events").GetArrayLength());
+        Assert.Equal(second, news.GetProperty("events")[0].GetProperty("deviceId").GetGuid());
+
+        // A cursor from the future (a restored database, say) returns nothing and gives the same cursor back, so the client does not loop.
+        var future = await client.GetFromJsonAsync<JsonElement>($"/sync/pull?after={cursor + 100000}", Json);
+        Assert.Equal(0, future.GetProperty("events").GetArrayLength());
+        Assert.Equal(cursor + 100000, future.GetProperty("nextCursor").GetInt64());
+        Assert.False(future.GetProperty("hasMore").GetBoolean());
+    }
+
+    [DbFact]
+    public async Task Retrying_a_push_whose_answer_was_lost_stores_every_event_once_even_in_parallel()
+    {
+        var (client, _, device) = await SignUpAsync();
+        var batch = Enumerable.Range(0, 5).Select(_ => Event()).ToArray();
+        var body = new { deviceId = device, platform = "web", events = batch };
+
+        // The same batch sent three times at once, as a client might after a dropped connection.
+        var answers = await Task.WhenAll(Enumerable.Range(0, 3).Select(async _ =>
+            (await client.PostAsJsonAsync("/sync/push", body)).Content.ReadFromJsonAsync<JsonElement>(Json)));
+        var accepted = answers.Sum(a => a.GetProperty("accepted").GetArrayLength());
+        var duplicates = answers.Sum(a => a.GetProperty("duplicates").GetArrayLength());
+        Assert.Equal(5, accepted);
+        Assert.Equal(10, duplicates);
+
+        var pulled = await client.GetFromJsonAsync<JsonElement>("/sync/pull?after=0", Json);
+        Assert.Equal(5, pulled.GetProperty("events").GetArrayLength());
+    }
+
+    [DbFact]
+    public async Task One_event_repeated_in_a_batch_counts_once_and_an_oversized_batch_is_refused()
+    {
+        var (client, _, device) = await SignUpAsync();
+        var id = Guid.NewGuid();
+        var push = await (await client.PostAsJsonAsync("/sync/push", new { deviceId = device, platform = "web", events = new[] { Event(id), Event(id) } }))
+            .Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(1, push.GetProperty("accepted").GetArrayLength());
+        Assert.Equal(1, push.GetProperty("duplicates").GetArrayLength());
+
+        var tooMany = Enumerable.Range(0, Zenigma.Api.Sync.SyncEndpoints.MaxBatch + 1).Select(_ => Event()).ToArray();
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/sync/push", new { deviceId = device, platform = "web", events = tooMany })).StatusCode);
+    }
+
+    [DbFact]
+    public async Task An_expired_or_missing_token_is_refused_so_the_client_can_refresh_and_retry()
+    {
+        var anonymous = _factory.CreateClient();
+        var push = await anonymous.PostAsJsonAsync("/sync/push", new { deviceId = Guid.NewGuid(), platform = "web", events = new[] { Event() } });
+        Assert.Equal(HttpStatusCode.Unauthorized, push.StatusCode);
+        anonymous.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "not-a-token");
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/sync/pull")).StatusCode);
+    }
 }

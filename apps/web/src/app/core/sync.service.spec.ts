@@ -161,4 +161,55 @@ describe('SyncService', () => {
     (await nextRequest(http, '/sync/pull')).flush({ events: [], nextCursor: 0, hasMore: false });
     await first;
   });
+
+  it('keeps the cursor of the last good page when a later page fails, and carries on from it', async () => {
+    auth.session.set(sessionFor());
+    const row = (seq: number) => ({ seq, id: `r-${seq}`, deviceId: 'd', kind: 'note.created', payload: {}, clientCreatedAt: new Date().toISOString(), receivedAt: new Date().toISOString() });
+    const done = sync.sync().catch(() => {});
+    (await nextRequest(http, '/sync/pull')).flush({ events: [row(1)], nextCursor: 1, hasMore: true });
+    (await nextRequest(http, '/sync/pull')).flush('down', { status: 503, statusText: 'Service Unavailable' });
+    await done;
+    expect(await store.getMeta('syncCursor')).toBe(1);
+    expect(sync.lastError()).not.toBeNull();
+  });
+
+  it('does not loop when the server says there is more but the cursor does not move', async () => {
+    auth.session.set(sessionFor());
+    const done = sync.sync();
+    (await nextRequest(http, '/sync/pull')).flush({ events: [], nextCursor: 0, hasMore: true });
+    await done;
+    http.expectNone((r) => r.url.includes('/sync/pull'));
+    expect(await store.getMeta('syncCursor')).toBe(0);
+  });
+
+  it('never moves the cursor back, for example after a restored server returns a smaller one', async () => {
+    auth.session.set(sessionFor());
+    await store.setMeta('syncCursor', 50);
+    const done = sync.sync();
+    (await nextRequest(http, '/sync/pull')).flush({ events: [], nextCursor: 10, hasMore: false });
+    await done;
+    expect(await store.getMeta('syncCursor')).toBe(50);
+  });
+
+  it('shows your own pushed event once when it comes back on a pull', async () => {
+    auth.session.set(sessionFor());
+    await sync.record('note.created', { text: 'mine' });
+    const id = sync.events()[0].id;
+    const done = sync.sync();
+    const push = await nextRequest(http, '/sync/push');
+    push.flush({ accepted: [id], duplicates: [], rejected: [] });
+    (await nextRequest(http, '/sync/pull')).flush({
+      events: [{ seq: 1, id, deviceId: 'me', kind: 'note.created', payload: { text: 'mine' }, clientCreatedAt: new Date().toISOString(), receivedAt: new Date().toISOString() }],
+      nextCursor: 1,
+      hasMore: false,
+    });
+    // A change made meanwhile may fold in one more run: answer it too.
+    await vi.waitFor(() => {
+      http.match((q) => q.url.includes('/sync/pull')).forEach((r) => r.flush({ events: [], nextCursor: 1, hasMore: false }));
+      expect(sync.syncing()).toBe(false);
+    });
+    await done;
+    expect(sync.events().filter((e) => e.id === id).length).toBe(1);
+    expect(sync.pendingCount()).toBe(0);
+  });
 });
