@@ -3,14 +3,14 @@
   font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: 0.2em;
-  min-height: 2.2rem;
-  margin: 0.75rem 0 0.5rem;
+  min-height: 1.6rem;
+  margin: 0.25rem 0;
 }
 .wgrid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.35rem;
-  width: min(100%, 22rem);
+  width: min(100%, 20rem);
   margin: 0 auto;
   touch-action: none;
   user-select: none;
@@ -34,6 +34,11 @@
   &.locked {
     color: #111;
   }
+  &.wall {
+    background: color-mix(in oklch, currentColor 28%, transparent);
+    border-radius: 0.5rem;
+    pointer-events: none;
+  }
 }
 @keyframes glow {
   from { box-shadow: 0 0 0 0 oklch(0.8 0.15 90 / 0.8); }
@@ -45,8 +50,8 @@
 [data-hue='3'] { background: oklch(0.85 0.1 260); }
 .note {
   text-align: center;
-  margin: 0.75rem auto 0;
-  min-height: 2.4rem;
+  margin: 0.5rem auto 0;
+  min-height: 1.4rem;
   max-width: 22rem;
 }
 .entry {
@@ -56,19 +61,38 @@
   flex-wrap: wrap;
   margin-top: 0.5rem;
 }
-.foundlist {
-  list-style: none;
-  padding: 0;
-  margin: 0.75rem auto 0;
-  display: flex;
+.slots {
+  display: grid;
   gap: 0.4rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  li {
-    padding: 0.25rem 0.6rem;
-    border-radius: 0.6rem;
+  justify-items: center;
+  margin: 0.7rem auto 0;
+}
+.slot {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  border-radius: 0.6rem;
+  padding: 0.15rem;
+  .sl {
+    width: 1.7rem;
+    height: 1.7rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.4rem;
+    border: 2px dashed color-mix(in oklch, currentColor 35%, transparent);
     font-weight: 800;
-    letter-spacing: 0.1em;
+    font-size: 0.95rem;
+  }
+  &.found .sl {
+    border: 2px solid transparent;
     color: #111;
   }
+  .tick {
+    margin-left: 0.3rem;
+    color: oklch(0.6 0.17 150);
+  }
 }
+.slot[data-hue='0'] .sl { background: oklch(0.85 0.1 25); }
+.slot[data-hue='1'] .sl { background: oklch(0.85 0.1 95); }
+.slot[data-hue='2'] .sl { background: oklch(0.85 0.1 160); }
+.slot[data-hue='3'] .sl { background: oklch(0.85 0.1 260); }

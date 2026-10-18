@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
-import { adjacent, Board, CELLS, makeBoard, solve, Trace } from './wend-engine';
+import { adjacent, Board, CELLS, LENGTHS, makeBoard } from './wend-engine';
 import { loadWendWords, WendWords } from './wend-words';
 import { MindResult, seeded, useClock, useTimers } from './mind-util';
 
@@ -8,14 +8,17 @@ interface Found {
   word: string;
   path: number[];
   hue: number;
+  /** Which of the board's four words this is (0 is the shortest). */
+  k: number;
 }
 
 const PRACTICE_MS = 4 * 60 * 1000;
 
 /**
- * Wend: a grid of letters that hides four words of 3, 4, 5 and 6 letters. Trace each one through touching letters (up, down, left or
- * right), every letter used exactly once and no word crossing another. Drag across the letters, or tap them one by one and press Check.
- * Hint shows the next letter, or takes back a word that leaves the rest with no way out.
+ * Wend, as on LinkedIn: a 5 by 5 grid with grey blocks and 18 letters that hide four words of 3, 4, 5 and 6 letters. Trace each one
+ * through touching letters (up, down, left or right), every letter used exactly once. The board has one solution, so a real word on
+ * the wrong letters is turned down. Drag across the letters, or tap them one by one and press Check.
+ * Hint shows the first letter of the shortest word still to find, and the next letter each time it is pressed again.
  * Played as a four-minute run of boards from Practice, or as the one board of the day (`seed`).
  */
 @Component({
@@ -49,7 +52,15 @@ export class Wend implements OnInit {
   protected readonly bad = signal(false);
   protected readonly note = signal('');
   protected readonly hints = signal(0);
-  protected readonly hinted = signal<number[]>([]);
+  /** The word a hint is working on and how many of its letters are shown. */
+  private readonly hintFor = signal<{ k: number; n: number } | null>(null);
+  protected readonly hinted = computed(() => {
+    const h = this.hintFor();
+    return h ? this.board.paths[h.k].slice(0, h.n) : [];
+  });
+  protected readonly walls = signal<boolean[]>([]);
+  protected readonly lengths = LENGTHS;
+  protected readonly elapsed = signal(0);
   protected readonly boards = signal(1);
   protected readonly wordsFound = signal(0);
   protected readonly daily = computed(() => this.seed() !== null);
@@ -69,15 +80,21 @@ export class Wend implements OnInit {
     this.begin();
     this.ready.set(true);
     if (!this.daily()) this.clock.start();
-    this.destroy.onDestroy(() => (this.ended = true));
+    const t0 = Date.now();
+    const tick = setInterval(() => this.elapsed.set(Math.floor((Date.now() - t0) / 1000)), 1000);
+    this.destroy.onDestroy(() => {
+      this.ended = true;
+      clearInterval(tick);
+    });
   }
 
   private begin(): void {
     this.board = makeBoard(this.words, this.random);
     this.letters.set(this.board.letters);
+    this.walls.set(this.board.walls);
     this.found.set([]);
     this.path.set([]);
-    this.hinted.set([]);
+    this.hintFor.set(null);
     this.note.set('');
   }
 
@@ -91,7 +108,7 @@ export class Wend implements OnInit {
   protected down(event: PointerEvent): void {
     if (this.ended) return;
     const cell = this.cellAt(event);
-    if (cell === null || this.lockedHue().has(cell)) return;
+    if (cell === null || this.lockedHue().has(cell) || this.walls()[cell]) return;
     (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
     this.moved = false;
     this.note.set('');
@@ -110,7 +127,7 @@ export class Wend implements OnInit {
   protected move(event: PointerEvent): void {
     if (!this.dragging || this.ended) return;
     const cell = this.cellAt(event);
-    if (cell === null || this.lockedHue().has(cell)) return;
+    if (cell === null || this.lockedHue().has(cell) || this.walls()[cell]) return;
     const path = this.path();
     const last = path[path.length - 1];
     if (cell === last) return;
@@ -145,12 +162,24 @@ export class Wend implements OnInit {
       });
       return;
     }
+    const mask = path.reduce((m, c) => m | (1 << c), 0);
+    const k = this.board.paths.findIndex((p, i) => this.board.words[i] === word && p.reduce((m, c) => m | (1 << c), 0) === mask);
+    if (k < 0 || this.found().some((f) => f.k === k)) {
+      this.haptics.error();
+      this.bad.set(true);
+      this.note.set(`${word.toUpperCase()} is a word, but these letters belong to other answers`);
+      this.timers.after(600, () => {
+        this.bad.set(false);
+        this.path.set([]);
+      });
+      return;
+    }
     this.haptics.success();
-    this.found.update((f) => [...f, { word, path, hue: f.length % 4 }]);
+    this.found.update((f) => [...f, { word, path, hue: k, k }]);
     this.path.set([]);
-    this.hinted.set([]);
+    if (this.hintFor()?.k === k) this.hintFor.set(null);
     this.wordsFound.update((n) => n + 1);
-    if (this.lockedHue().size === CELLS) this.solved();
+    if (this.found().length === LENGTHS.length) this.solved();
   }
 
   private solved(): void {
@@ -174,7 +203,6 @@ export class Wend implements OnInit {
     }
     this.found.update((f) => f.slice(0, -1));
     this.wordsFound.update((n) => Math.max(0, n - 1));
-    this.hinted.set([]);
   }
 
   /** Takes back every word on this board. */
@@ -183,33 +211,51 @@ export class Wend implements OnInit {
     this.wordsFound.update((n) => Math.max(0, n - this.found().length));
     this.found.set([]);
     this.path.set([]);
-    this.hinted.set([]);
+    this.hintFor.set(null);
   }
 
-  /** Shows the next letter of a word that fits, or, if the words found so far leave no way out, takes the last one back. */
+  /**
+   * Shows the first letter of the shortest word still to find, and the next letter each time it is pressed again. If the letters
+   * you are tracing have left the answer, they are taken back to the last correct one first.
+   */
   protected hint(): void {
     if (this.ended) return;
+    const todo = this.board.paths.map((p, k) => k).filter((k) => !this.found().some((f) => f.k === k));
+    if (todo.length === 0) return;
     this.hints.update((n) => n + 1);
-    const free = this.cellsFree();
-    const solution = solve(this.letters(), free, this.words);
-    if (!solution) {
-      this.note.set('Those words leave no way out. The last one is taken back.');
-      this.found.update((f) => f.slice(0, -1));
-      this.wordsFound.update((n) => Math.max(0, n - 1));
-      this.path.set([]);
-      return;
-    }
     const path = this.path();
-    // Carry on a word already started, otherwise show the first letter of the shortest word still to find.
-    const along = solution.find((t) => path.length > 0 && path.length < t.path.length && path.every((c, i) => t.path[i] === c));
-    const target: Trace = along ?? [...solution].sort((a, b) => a.path.length - b.path.length)[0];
-    const next = along ? target.path[path.length] : target.path[0];
-    this.hinted.set([next]);
+    // The longest start of the trace that is still on an unfound word.
+    let best = { k: -1, n: 0 };
+    for (const k of todo) {
+      let n = 0;
+      while (n < path.length && this.board.paths[k][n] === path[n]) n++;
+      if (n > best.n) best = { k, n };
+    }
+    if (path.length > 0 && best.n < path.length) this.path.set(path.slice(0, best.n));
+    const h = this.hintFor();
+    let k: number;
+    let n: number;
+    if (best.n > 0) {
+      k = best.k;
+      n = best.n + 1;
+    } else if (h && todo.includes(h.k)) {
+      k = h.k;
+      n = h.n + 1;
+    } else {
+      k = todo[0];
+      n = 1;
+    }
+    this.hintFor.set({ k, n: Math.min(n, this.board.paths[k].length) });
   }
 
-  private cellsFree(): boolean[] {
-    const locked = this.lockedHue();
-    return this.cells.map((c) => !locked.has(c));
+  /** The letters of word `k` for the slots under the grid: all once found, the hinted ones while a hint is open. */
+  protected slot(length: number): { letters: string[]; found: boolean; hue: number } {
+    const k = LENGTHS.indexOf(length);
+    const f = this.found().find((x) => x.k === k);
+    const word = this.board?.words[k] ?? '';
+    const h = this.hintFor();
+    const shown = f ? length : h?.k === k ? h.n : 0;
+    return { letters: Array.from({ length }, (_, i) => (i < shown ? word[i].toUpperCase() : '')), found: !!f, hue: k };
   }
 
   private finish(): void {

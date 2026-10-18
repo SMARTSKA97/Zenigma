@@ -1,7 +1,7 @@
 <div class="hud">
   <span>{{ wordsFound() }} of 4 words{{ daily() ? '' : ' · board ' + boards() }}</span>
   @if (daily()) {
-    <span>{{ hints() }} {{ hints() === 1 ? 'hint' : 'hints' }}</span>
+    <span>{{ elapsed() }}s · {{ hints() }} {{ hints() === 1 ? 'hint' : 'hints' }}</span>
   } @else {
     <span>{{ seconds() }}s</span>
   }
@@ -24,26 +24,33 @@
     @for (i of cells; track i) {
       <span
         class="wt"
+        [class.wall]="walls()[i]"
         [attr.data-i]="i"
         [class.picked]="path().includes(i)"
         [class.locked]="lockedHue().has(i)"
         [class.hinted]="hinted().includes(i)"
         [attr.data-hue]="lockedHue().get(i)"
-      >{{ letters()[i].toUpperCase() }}</span>
+      >{{ walls()[i] ? '' : letters()[i].toUpperCase() }}</span>
     }
   </div>
-  <p class="note muted" aria-live="polite">{{ note() || 'Find 4 words of 3, 4, 5 and 6 letters. Every letter is used once.' }}</p>
+  <div class="slots" aria-label="Words to find">
+    @for (n of lengths; track n) {
+      @let w = slot(n);
+      <div class="slot" [class.found]="w.found" [attr.data-hue]="w.found ? w.hue : null">
+        @for (l of w.letters; track $index) {
+          <span class="sl">{{ l }}</span>
+        }
+        @if (w.found) { <b class="tick" aria-label="found">✓</b> }
+      </div>
+    }
+  </div>
+  <p class="note muted" aria-live="polite">{{ note() || 'Trace each word through touching tiles. Use every letter once.' }}</p>
   <div class="entry">
     <button type="button" (click)="check()" [disabled]="path().length < 3">Check</button>
     <button type="button" class="secondary" (click)="hint()">Hint</button>
     <button type="button" class="secondary" (click)="undo()" [disabled]="found().length === 0 && path().length === 0">Undo</button>
     <button type="button" class="secondary" (click)="reset()" [disabled]="found().length === 0">Reset</button>
   </div>
-  <ul class="foundlist">
-    @for (f of found(); track f.word) {
-      <li [attr.data-hue]="f.hue">{{ f.word.toUpperCase() }}</li>
-    }
-  </ul>
 } @else {
   <p class="muted tip">Loading words…</p>
 }

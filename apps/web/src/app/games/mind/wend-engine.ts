@@ -1,7 +1,9 @@
 import { WendWords } from './wend-words';
 
-export const COLS = 6;
-export const ROWS = 3;
+export const COLS = 5;
+export const ROWS = 5;
+/** Grey blocks no word can enter. 25 cells less these leave the 18 letters of the four words. */
+export const WALLS = 7;
 export const CELLS = COLS * ROWS;
 /** The four words every board hides: 3, 4, 5 and 6 letters, which together fill all 18 cells. */
 export const LENGTHS = [3, 4, 5, 6];
@@ -57,8 +59,8 @@ function walks(start: number, length: number, used: boolean[], random: () => num
 const isStraight = (path: number[]): boolean => path.every((p, k) => k < 2 || path[k] - path[k - 1] === path[k - 1] - path[k - 2]);
 
 /** Cuts the grid into four paths (of 3, 4, 5 and 6 cells), each a chain of touching cells. Null if this try finds no way. */
-function layout(random: () => number): number[][] | null {
-  const used = new Array<boolean>(CELLS).fill(false);
+function layout(random: () => number, walls: readonly boolean[]): number[][] | null {
+  const used = [...walls];
   const paths: number[][] = [];
   const remaining = [...LENGTHS];
   const fill = (): boolean => {
@@ -82,18 +84,37 @@ function layout(random: () => number): number[][] | null {
 }
 
 export interface Board {
-  /** The letter in each of the 18 cells. */
+  /** The letter in each cell ('' for a wall). */
   letters: string[];
-  /** The words the board was made from, and the cells that spell each one (other solutions may exist). */
+  /** Which cells are grey blocks. */
+  walls: boolean[];
+  /** The four words, shortest first, and the cells that spell each one. The board has no other way to use every letter. */
   words: string[];
   paths: number[][];
 }
 
-/** A new board: four everyday words laid along four paths that fill the grid. */
+/** Whether the cells that are not walls form one connected area. */
+function connected(walls: readonly boolean[]): boolean {
+  const open = walls.map((w, i) => (w ? -1 : i)).filter((i) => i >= 0);
+  const seen = new Set<number>([open[0]]);
+  const stack = [open[0]];
+  while (stack.length) {
+    for (const n of neighboursOf(stack.pop()!)) if (!walls[n] && !seen.has(n)) (seen.add(n), stack.push(n));
+  }
+  return seen.size === open.length;
+}
+
+/**
+ * A new board: seven grey blocks, and four everyday words laid along paths that fill every other cell. The board is only kept
+ * when those four words are the one and only way to use every letter, as in LinkedIn's Wend.
+ */
 export function makeBoard(words: WendWords, random: () => number = Math.random): Board {
-  for (let attempt = 0; attempt < 500; attempt++) {
-    const paths = layout(random);
-    if (!paths || paths.filter(isStraight).length > 1) continue;
+  for (let attempt = 0; attempt < 4000; attempt++) {
+    const walls = new Array<boolean>(CELLS).fill(false);
+    for (const c of shuffle(Array.from({ length: CELLS }, (_, i) => i), random).slice(0, WALLS)) walls[c] = true;
+    if (!connected(walls)) continue;
+    const paths = layout(random, walls);
+    if (!paths) continue;
     const chosen = new Set<string>();
     const list = paths.map((p) => {
       const pool = words.common[p.length];
@@ -104,7 +125,10 @@ export function makeBoard(words: WendWords, random: () => number = Math.random):
     });
     const letters = new Array<string>(CELLS).fill('');
     paths.forEach((p, k) => p.forEach((cell, i) => (letters[cell] = list[k][i])));
-    return { letters, words: list, paths };
+    const open = walls.map((w) => !w);
+    if (countSolutions(letters, open, words, 2) !== 1) continue;
+    const order = [0, 1, 2, 3].sort((a, b) => list[a].length - list[b].length);
+    return { letters, walls, words: order.map((k) => list[k]), paths: order.map((k) => paths[k]) };
   }
   throw new Error('No Wend board could be made');
 }
@@ -123,7 +147,7 @@ export function findWords(letters: readonly string[], free: readonly boolean[], 
   const mark = new Array<boolean>(CELLS).fill(false);
   const go = (word: string): void => {
     if (word.length >= 3 && words.valid.has(word)) {
-      const key = path.join(',');
+      const key = `${path.reduce((m, c) => m | (1 << c), 0)}:${word}`;
       if (!seen.has(key)) {
         seen.add(key);
         found.push({ word, path: [...path], mask: path.reduce((m, c) => m | (1 << c), 0) });
@@ -152,24 +176,24 @@ export function findWords(letters: readonly string[], free: readonly boolean[], 
   return found;
 }
 
-/** A way to use every free cell exactly once with real words, or null if the free cells cannot be used up. */
-export function solve(letters: readonly string[], free: readonly boolean[], words: WendWords): Trace[] | null {
+/** How many different ways the free cells can be used up by real words (counting stops at `limit`). */
+export function countSolutions(letters: readonly string[], free: readonly boolean[], words: WendWords, limit = 2): number {
   const candidates = findWords(letters, free, words);
   const target = free.reduce((m, f, i) => (f ? m | (1 << i) : m), 0);
   const byCell = new Map<number, Trace[]>();
   for (const t of candidates) for (const c of t.path) (byCell.get(c) ?? byCell.set(c, []).get(c)!).push(t);
-  const dead = new Set<number>();
-  const pick = (left: number): Trace[] | null => {
-    if (left === 0) return [];
-    if (dead.has(left)) return null;
+  const count = (left: number, usedLengths: number): number => {
+    if (left === 0) return 1;
     const lowest = 31 - Math.clz32(left & -left);
+    let n = 0;
     for (const t of byCell.get(lowest) ?? []) {
       if ((t.mask & ~left) !== 0) continue;
-      const rest = pick(left & ~t.mask);
-      if (rest) return [t, ...rest];
+      const bit = 1 << (t.path.length - 3);
+      if (usedLengths & bit) continue; // one word of each length: 3, 4, 5 and 6
+      n += count(left & ~t.mask, usedLengths | bit);
+      if (n >= limit) return n;
     }
-    dead.add(left);
-    return null;
+    return n;
   };
-  return pick(target);
+  return count(target, 0);
 }

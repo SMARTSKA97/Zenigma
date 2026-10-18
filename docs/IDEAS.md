@@ -124,7 +124,7 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - Mind game (Language): compound-word chains from a built-in pair list (`games/mind/chain-link-data.ts`), 2 to 6 hidden words, any valid word that joins both neighbours is accepted. Add pairs to the list to grow it.
 
 ## Done: word dailies and Wend rebuilt (phase 54)
-- Wend follows LinkedIn: 6x3 letter grid, four words (3-6 letters) traced through neighbouring letters, every letter used once; engine in `wend-engine.ts` (path partition board maker + exact-cover solver), word lists built by `tools/generators/words/build-wend.mjs`.
+- Wend follows LinkedIn: 5x5 grid with 7 grey wall blocks, four words (3, 4, 5, 6 letters) traced through neighbouring letters, every letter used once, one solution per board (`wend-engine.ts`: path partition board maker, `countSolutions` against the full word list), a real word on the wrong tiles is rejected; word lists built by `tools/generators/words/build-wend.mjs`.
 - Dailies for Pinpoint, Chain Link, Crossclimb, Wend: client-seeded by IST date (`word-daily.ts`, route `/daily-word/:game`, panel in the Puzzles tab), event `wdaily.completed`, board `/leaderboards/word-daily` (V13 index). Not server-validated, so not part of streaks or the widget. Comet Slice is arcade and has no daily.
 
 ## Next
