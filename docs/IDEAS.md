@@ -45,8 +45,8 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 - ✅ **Skill trend**: a small line of each skill over the last 30 days with a play (0.20.0).
 - ✅ **Weakest-skill nudge** on the Mind page (0.20.0).
 - ✅ **Mind age** (0.20.0): a playful single number from the marks, clearly labelled as entertainment.
-- ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.20.0).
-- ⬜ More mind games: Comet Slice and others (see Coming soon in Practice).
+- ✅ Mind games grew to 20 (Mental Turn, Number Sort, Dot Count, Opposites, Word Recall added in 0.20.0), then to 25 (Chain Link, Pinpoint, Crossclimb, Wend, Comet Slice in 0.22.0).
+- ⬜ More mind games (see Coming soon in Practice, if any are listed).
 - ✅ Ranked puzzle of the week: the featured level has a weekly board (fewest mistakes, then fastest, no hints), under it on the Challenges page (0.20.0). Mistakes are reported by the app, so it is for fun.
 
 ## Games
@@ -126,6 +126,11 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 ## Done: word dailies and Wend rebuilt (phase 54)
 - Wend follows LinkedIn: 5x5 grid with 7 grey wall blocks, four words (3, 4, 5, 6 letters) traced through neighbouring letters, every letter used once, one solution per board (`wend-engine.ts`: path partition board maker, `countSolutions` against the full word list), a real word on the wrong tiles is rejected; word lists built by `tools/generators/words/build-wend.mjs`.
 - Dailies for Pinpoint, Chain Link, Crossclimb, Wend: client-seeded by IST date (`word-daily.ts`, route `/daily-word/:game`, panel in the Puzzles tab), event `wdaily.completed`, board `/leaderboards/word-daily` (V13 index). Not server-validated, so not part of streaks or the widget. Comet Slice is arcade and has no daily.
+
+## Audit follow-ups (from an outside review, October 2026)
+- Done: README, SECURITY and roadmap counts agree (6 main games, 25 mind games, email flows need Brevo env vars).
+- Open, worth doing: end-to-end test of offline play, reconnect and sync (Playwright in CI); sync edge-case tests (stale cursor, duplicate events, two devices); alerts on 5xx/slow/storage; restore drill for Neon backups and a keystore backup; split `puzzle-page.ts` only where responsibilities are tangled; accessibility pass (keyboard, screen reader, reduced motion); a simple D1/D7 and per-game completion view.
+- Not now: more mini-games, community editors, monetisation.
 
 ## Next
 - All the Coming soon games are live now (Pinpoint, Crossclimb, Wend, Comet Slice). Crossclimb and Wend use the Word Guess lists; Chain Link and Pinpoint have their own data files to grow.

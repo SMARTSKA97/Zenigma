@@ -26,8 +26,8 @@ Mapping to the OWASP Top 10 (2025 edition naming; controls apply equally to the 
 
 ## Accepted risks
 - Registration reveals if an email exists (rate limited).
-- No forgot-password or email verification yet (needs a mail provider).
-- Mind-daily and featured leaderboards trust client-reported scores; they are for fun.
+- Forgot password and email confirmation need Brevo set up (`docs/DEPLOYMENT.md`, `docs/OPERATIONS.md`); until its environment variables are set on the API, those emails are not sent.
+- Mind-daily, word-daily and featured leaderboards trust client-reported scores; they are for fun.
 - Someone with an unverified password account who later uses "Continue with Google" loses that password and can set one again in Profile.
 
 ## Scan yourself
