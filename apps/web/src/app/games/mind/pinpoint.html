@@ -1,4 +1,4 @@
-<div class="hud"><span>{{ score() }} points</span><span>Category {{ round() + 1 }} of 5</span></div>
+<div class="hud"><span>{{ score() }} points</span><span>Category {{ round() + 1 }} of {{ total() }}</span></div>
 <ol class="clues" [class.flash-bad]="bad()">
   @for (n of slots; track n) {
     <li class="clue" [class.open]="clue(n) !== null" [class.last]="n === shown() && outcome() === 'playing'">

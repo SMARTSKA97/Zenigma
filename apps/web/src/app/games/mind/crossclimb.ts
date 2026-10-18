@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
 import { WordListService } from '../word-guess/word-list.service';
 import { accepts, blanksForRound, buildIndex, distancesTo, Index, makeLadder, neighbours } from './crossclimb-engine';
-import { MindResult, useTimers } from './mind-util';
+import { MindResult, seeded, useTimers } from './mind-util';
 
 /**
  * A word ladder. The first and last words are given; fill the rows between so that every row differs from the one above it by
@@ -17,6 +17,9 @@ import { MindResult, useTimers } from './mind-util';
 })
 export class Crossclimb implements OnInit {
   readonly done = output<MindResult>();
+  /** Set for the daily ladder: the same one for everyone, a single ladder with four rows to find, played once. */
+  readonly seed = input<string | null>(null);
+  private random: () => number = Math.random;
   private readonly lists = inject(WordListService);
   private readonly haptics = inject(HapticsService);
   private readonly timers = useTimers();
@@ -46,6 +49,8 @@ export class Crossclimb implements OnInit {
     this.valid = words.valid;
     this.common = words.answers;
     // The index covers every real word, so the ladder may pass through the less usual ones the player might type.
+    const seed = this.seed();
+    if (seed !== null) this.random = seeded(seed);
     this.everyWord = new Set([...words.valid, ...words.answers]);
     this.index = buildIndex(this.everyWord);
     this.ready.set(true);
@@ -53,7 +58,7 @@ export class Crossclimb implements OnInit {
   }
 
   private begin(): void {
-    const ladder = makeLadder(blanksForRound(this.round()), this.common, this.index);
+    const ladder = makeLadder(this.seed() !== null ? 4 : blanksForRound(this.round()), this.common, this.index, this.random);
     if (!ladder) return this.finish();
     this.solution = ladder.words;
     this.distToEnd = distancesTo(ladder.words[ladder.words.length - 1], this.index);
@@ -120,7 +125,7 @@ export class Crossclimb implements OnInit {
     if (this.at() + 1 >= this.last()) {
       this.busy.set(true);
       this.timers.after(1100, () => {
-        if (this.lives() <= 0) return this.finish();
+        if (this.lives() <= 0 || this.seed() !== null) return this.finish();
         this.round.update((r) => r + 1);
         this.begin();
       });

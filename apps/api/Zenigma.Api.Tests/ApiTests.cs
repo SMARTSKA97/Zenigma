@@ -152,6 +152,21 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [DbFact]
+    public async Task Word_daily_board_keeps_the_best_result_of_the_day()
+    {
+        var (client, _, device) = await SignUpAsync();
+        var today = Zenigma.Api.Infrastructure.IstClock.Today(DateTimeOffset.UtcNow).ToString("yyyy-MM-dd");
+        object Done(int points, int ms) => new { id = Guid.NewGuid(), kind = "wdaily.completed", payload = new { game = "pinpoint", date = today, points, ms }, clientCreatedAt = DateTimeOffset.UtcNow };
+        var push = await client.PostAsJsonAsync("/sync/push", new { deviceId = device, platform = "web", events = new[] { Done(60, 40000), Done(900, 30000) } });
+        Assert.Equal(HttpStatusCode.OK, push.StatusCode);
+
+        var board = await client.GetFromJsonAsync<JsonElement>("/leaderboards/word-daily?game=pinpoint&period=today", Json);
+        Assert.Equal(100, board.GetProperty("me").GetProperty("value").GetInt64());
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/leaderboards/word-daily?game=nope")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await _factory.CreateClient().GetAsync("/leaderboards/word-daily?game=wend")).StatusCode);
+    }
+
+    [DbFact]
     public async Task Featured_board_ranks_unhinted_solves_by_mistakes()
     {
         var (client, _, device) = await SignUpAsync();

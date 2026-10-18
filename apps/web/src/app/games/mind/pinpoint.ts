@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
-import { MindResult, shuffled, useTimers } from './mind-util';
+import { MindResult, seeded, shuffled, useTimers } from './mind-util';
 import { PINPOINT, PinpointCategory } from './pinpoint-data';
 import { isCorrect, pointsAt } from './pinpoint-engine';
 
 const ROUNDS = 5;
+/** The daily game is three categories. */
+const DAILY_ROUNDS = 3;
 
 /**
  * Five words that all belong to one category are shown a clue at a time, vaguest first. Name the category. A wrong guess reveals the next clue.
@@ -18,6 +20,9 @@ const ROUNDS = 5;
 })
 export class Pinpoint implements OnInit {
   readonly done = output<MindResult>();
+  /** Set for the daily game: the same three categories for everyone, played once. */
+  readonly seed = input<string | null>(null);
+  private rounds = ROUNDS;
   private readonly haptics = inject(HapticsService);
   private readonly timers = useTimers();
 
@@ -31,9 +36,12 @@ export class Pinpoint implements OnInit {
   protected readonly gained = signal(0);
   protected readonly category = computed(() => this.order[this.round()]);
   protected readonly slots = [1, 2, 3, 4, 5];
+  protected readonly total = () => this.rounds;
 
   ngOnInit(): void {
-    this.order = shuffled(PINPOINT).slice(0, ROUNDS);
+    const seed = this.seed();
+    this.rounds = seed !== null ? DAILY_ROUNDS : ROUNDS;
+    this.order = shuffled(PINPOINT, seed !== null ? seeded(seed) : Math.random).slice(0, this.rounds);
     this.round.set(0);
   }
 
@@ -81,9 +89,9 @@ export class Pinpoint implements OnInit {
 
   private next(): void {
     this.timers.after(1800, () => {
-      if (this.round() + 1 >= ROUNDS) {
+      if (this.round() + 1 >= this.rounds) {
         const score = this.score();
-        this.done.emit({ score, detail: `${score} of ${ROUNDS * 5} points` });
+        this.done.emit({ score, detail: `${score} of ${this.rounds * 5} points` });
         return;
       }
       this.round.update((r) => r + 1);

@@ -1,0 +1,25 @@
+<section class="panel">
+  <header>
+    <div>
+      <p class="eyebrow">Word dailies · {{ daily.date() }}</p>
+      <h2>{{ daily.doneCount() }} of {{ daily.games.length }} done</h2>
+    </div>
+    <div class="meta">
+      <span class="pts"><b>{{ daily.points() }}</b><small>/ {{ daily.games.length * 100 }}</small></span>
+    </div>
+  </header>
+  <p class="muted lede">One word puzzle each, the same for everyone today. They work without a connection; results reach the board when you are online.</p>
+  <ul>
+    @for (g of daily.games; track g) {
+      @let r = daily.results()[g];
+      <li [style.--h]="info(g)?.hue" [class.done]="!!r">
+        <span class="art"><app-glyph [game]="g" /></span>
+        <span class="text">
+          <b>{{ info(g)?.name }}</b>
+          <span class="muted">{{ r ? r.points + ' / 100 · ' + time(r.ms) : info(g)?.blurb }}</span>
+        </span>
+        <a class="button" [class.secondary]="!!r" [routerLink]="['/daily-word', g]">{{ r ? 'Board' : 'Play' }}</a>
+      </li>
+    }
+  </ul>
+</section>

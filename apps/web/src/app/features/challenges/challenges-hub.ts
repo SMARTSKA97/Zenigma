@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DailyHub } from '../daily/daily-hub';
+import { WordDailyPanel } from '../daily/word-daily-panel';
 import { MindDailyPanel } from '../mind/mind-daily-panel';
 import { ChallengesPage } from './challenges';
 
@@ -9,7 +10,7 @@ type Tab = 'puzzles' | 'mind' | 'goals';
 /** Everything with a clock on it, in one place: today's puzzles, today's mind set, and the weekly and monthly goals. */
 @Component({
   selector: 'app-challenges-hub',
-  imports: [DailyHub, MindDailyPanel, ChallengesPage],
+  imports: [DailyHub, WordDailyPanel, MindDailyPanel, ChallengesPage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './challenges-hub.html',
   styleUrl: './challenges-hub.scss',

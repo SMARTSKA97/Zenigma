@@ -82,6 +82,11 @@ export class LeaderboardService {
     return this.cached(`featured:${week}`, `${environment.apiBaseUrl}/leaderboards/featured`, { week });
   }
 
+  /** A word daily's board (Pinpoint, Chain Link, Crossclimb, Wend): points first, then the faster time. */
+  wordDailyBoard(game: string, period: 'today' | 'week'): Promise<Leaderboard> {
+    return this.cached(`wdaily:${game}:${period}`, `${environment.apiBaseUrl}/leaderboards/word-daily`, { game, period });
+  }
+
   /** Reuses a board fetched in the last minute (no request, so a sleeping server is not woken for it); otherwise asks, once for any number of callers. */
   private cached(name: string, url: string, params: Record<string, string>): Promise<Leaderboard> {
     const key = this.key(name);

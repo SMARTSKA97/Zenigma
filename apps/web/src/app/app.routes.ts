@@ -22,6 +22,7 @@ export const routes: Routes = [
   { path: 'games/:game', loadComponent: puzzle, canDeactivate: [leaveGuard], data: { mode: 'practice' } },
   { path: 'mind', loadComponent: () => import('./features/mind/mind-home').then((m) => m.MindHome) },
   { path: 'practice', loadComponent: () => import('./features/practice/practice').then((m) => m.Practice) },
+  { path: 'daily-word/:game', loadComponent: () => import('./features/daily/word-daily-page').then((m) => m.WordDailyPage) },
   { path: 'daily/word-guess', loadComponent: wordGuess, data: { mode: 'daily' } },
   { path: 'daily/:game', loadComponent: puzzle, canDeactivate: [leaveGuard], data: { mode: 'daily' } },
   { path: 'daily', pathMatch: 'full', redirectTo: 'challenges' },

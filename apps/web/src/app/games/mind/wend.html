@@ -1,23 +1,43 @@
-<div class="hud"><span>{{ wordsFound() }} words</span><span>Puzzle {{ round() }} · {{ '♥'.repeat(lives()) }}{{ '♡'.repeat(3 - lives()) }}</span></div>
+<div class="hud">
+  <span>{{ wordsFound() }} of 4 words{{ daily() ? '' : ' · board ' + boards() }}</span>
+  @if (daily()) {
+    <span>{{ hints() }} {{ hints() === 1 ? 'hint' : 'hints' }}</span>
+  } @else {
+    <span>{{ seconds() }}s</span>
+  }
+</div>
+@if (!daily()) {
+  <div class="time"><i [style.width.%]="(clock.left() / 240000) * 100"></i></div>
+}
 @if (ready()) {
   <p class="spelling" [class.flash-bad]="bad()" aria-live="polite">{{ spelling().toUpperCase() || ' ' }}</p>
-  <div class="wgrid" role="group" aria-label="Letters">
-    @for (ch of letters(); track $index; let i = $index) {
-      <button
-        type="button"
+  <div
+    #grid
+    class="wgrid"
+    role="group"
+    aria-label="Letters. Drag across touching letters to spell a word."
+    (pointerdown)="down($event)"
+    (pointermove)="move($event)"
+    (pointerup)="up()"
+    (pointercancel)="up()"
+  >
+    @for (i of cells; track i) {
+      <span
         class="wt"
-        [class.picked]="picked().includes(i)"
-        [class.locked]="locked()[i] !== undefined"
-        [attr.data-hue]="locked()[i]"
-        [disabled]="locked()[i] !== undefined || busy()"
-        (click)="tap(i)"
-      >{{ ch.toUpperCase() }}</button>
+        [attr.data-i]="i"
+        [class.picked]="path().includes(i)"
+        [class.locked]="lockedHue().has(i)"
+        [class.hinted]="hinted().includes(i)"
+        [attr.data-hue]="lockedHue().get(i)"
+      >{{ letters()[i].toUpperCase() }}</span>
     }
   </div>
-  <p class="note muted" aria-live="polite">{{ note() || 'Spell four five-letter words. Every letter is used once.' }}</p>
+  <p class="note muted" aria-live="polite">{{ note() || 'Find 4 words of 3, 4, 5 and 6 letters. Every letter is used once.' }}</p>
   <div class="entry">
-    <button type="button" class="secondary" (click)="shuffle()" [disabled]="busy()">Shuffle</button>
-    <button type="button" class="secondary" (click)="undo()" [disabled]="busy() || (picked().length === 0 && found().length === 0)">Undo</button>
+    <button type="button" (click)="check()" [disabled]="path().length < 3">Check</button>
+    <button type="button" class="secondary" (click)="hint()">Hint</button>
+    <button type="button" class="secondary" (click)="undo()" [disabled]="found().length === 0 && path().length === 0">Undo</button>
+    <button type="button" class="secondary" (click)="reset()" [disabled]="found().length === 0">Reset</button>
   </div>
   <ul class="foundlist">
     @for (f of found(); track f.word) {

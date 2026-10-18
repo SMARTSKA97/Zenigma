@@ -34,7 +34,7 @@ public sealed class SyncEventRetention(IServiceScopeFactory scopes, IConfigurati
                         removed = await db.Database.ExecuteSqlInterpolatedAsync($"""
                             DELETE FROM sync_events WHERE seq IN (
                                 SELECT seq FROM sync_events
-                                WHERE kind = 'mind.daily.completed' AND received_at < {cutoff}
+                                WHERE kind IN ('mind.daily.completed', 'wdaily.completed') AND received_at < {cutoff}
                                 LIMIT {Batch})
                             """, stoppingToken);
                         total += removed;

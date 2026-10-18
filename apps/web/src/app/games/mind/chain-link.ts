@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
 import { accepts, linksForRound, makeChain, written } from './chain-link-engine';
-import { MindResult, useTimers } from './mind-util';
+import { MindResult, seeded, useTimers } from './mind-util';
 
 interface Row {
   /** The word the chain was built with. */
@@ -23,6 +23,9 @@ interface Row {
 })
 export class ChainLink implements OnInit {
   readonly done = output<MindResult>();
+  /** Set for the daily chain: the same one for everyone, a single chain of five words, played once. */
+  readonly seed = input<string | null>(null);
+  private random: () => number = Math.random;
   private readonly haptics = inject(HapticsService);
   private readonly timers = useTimers();
 
@@ -52,11 +55,13 @@ export class ChainLink implements OnInit {
   });
 
   ngOnInit(): void {
+    const seed = this.seed();
+    if (seed !== null) this.random = seeded(seed);
     this.begin();
   }
 
   private begin(): void {
-    const chain = makeChain(linksForRound(this.round()), Math.random, undefined, this.seen);
+    const chain = makeChain(this.seed() !== null ? 5 : linksForRound(this.round()), this.random, undefined, this.seen);
     // The word list is large enough that this does not happen; if it ever did, end kindly instead of hanging.
     if (!chain) return this.finish();
     chain.words.forEach((w) => this.seen.add(w));
@@ -112,7 +117,7 @@ export class ChainLink implements OnInit {
     if (this.at() + 1 >= this.rows().length) {
       this.busy.set(true);
       this.timers.after(1100, () => {
-        if (this.lives() <= 0) return this.finish();
+        if (this.lives() <= 0 || this.seed() !== null) return this.finish();
         this.round.update((r) => r + 1);
         this.begin();
       });

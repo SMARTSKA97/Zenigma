@@ -173,6 +173,43 @@ public static class LeaderboardEndpoints
             return Results.Ok(new LeaderboardDto("mind", "daily", period, period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
         }).RequireAuthorization();
 
+        // A word daily (Pinpoint, Chain Link, Crossclimb, Wend): the day's board ranks the best result of the day by points, then the faster time;
+        // the week adds up each day's best. Like the mind board, the numbers are reported by the app, so this is for fun (points capped at 100).
+        app.MapGet("/leaderboards/word-daily", async (string? game, string? period, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, TimeProvider clock, CancellationToken ct) =>
+        {
+            period ??= "today";
+            if (game is not ("pinpoint" or "chain-link" or "crossclimb" or "wend")) return Results.BadRequest(new { error = "Unknown word daily." });
+            if (period is not ("today" or "week")) return Results.BadRequest(new { error = "Invalid period for this board." });
+            var today = IstClock.Today(clock.GetUtcNow());
+            var weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+            var start = period == "today" ? today : weekStart;
+            var me = UserIds.Get(principal);
+            var sql = $"""
+                WITH days AS (
+                    SELECT DISTINCT ON (e.user_id, e.payload->>'date') e.user_id, e.payload->>'date' AS day,
+                           LEAST(100, GREATEST(0, COALESCE((e.payload->>'points')::int, 0))) AS pts,
+                           GREATEST(0, COALESCE((e.payload->>'ms')::bigint, 0)) AS ms
+                    FROM sync_events e
+                    WHERE e.kind = 'wdaily.completed' AND e.payload->>'game' = @game AND e.payload->>'date' BETWEEN @start AND @finish
+                    ORDER BY e.user_id, e.payload->>'date',
+                             LEAST(100, GREATEST(0, COALESCE((e.payload->>'points')::int, 0))) DESC,
+                             GREATEST(0, COALESCE((e.payload->>'ms')::bigint, 0))
+                ), ranked AS (
+                    SELECT d.user_id AS "UserId", {NameSql} AS "Name", SUM(d.pts)::bigint AS "Value",
+                           {(period == "today" ? "MIN(d.ms)::bigint" : "COUNT(*)::bigint")} AS "Secondary",
+                           ROW_NUMBER() OVER (ORDER BY SUM(d.pts) DESC, {(period == "today" ? "MIN(d.ms)" : "COUNT(*) DESC")}, d.user_id) AS "Rank"
+                    FROM days d JOIN "AspNetUsers" u ON u."Id" = d.user_id
+                    GROUP BY d.user_id, u."Id", u."DisplayName", u."HideName"
+                )
+                """;
+            var rows = await RowsAsync(db, cache, $"wdaily|{game}|{period}|{today:yyyyMMdd}", sql,
+                [new NpgsqlParameter("game", game), new NpgsqlParameter("start", start.ToString("yyyy-MM-dd")), new NpgsqlParameter("finish", today.ToString("yyyy-MM-dd"))], me, ct);
+            var entries = rows.Where(r => r.Rank <= PageSize).Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
+            var mine = rows.FirstOrDefault(r => r.UserId == me);
+            var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
+            return Results.Ok(new LeaderboardDto(game, "daily", period, period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
+        }).RequireAuthorization();
+
         // The featured level of a week (`week` is its Monday). Fewest mistakes wins, then the fastest time; a solve that used hints is not ranked.
         // The mistakes are reported by the app, so like the mind board this one is for fun.
         app.MapGet("/leaderboards/featured", async (string? week, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, CancellationToken ct) =>

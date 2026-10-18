@@ -58,10 +58,10 @@ export function useTimers() {
 
 export const pick = <T>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)];
 export const randInt = (min: number, max: number): number => min + Math.floor(Math.random() * (max - min + 1));
-export function shuffled<T>(list: readonly T[]): T[] {
+export function shuffled<T>(list: readonly T[], random: () => number = Math.random): T[] {
   const a = [...list];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -72,3 +72,21 @@ export interface MindResult {
   /** A line under the score, such as "5 flips in 40 s". */
   detail?: string;
 }
+
+/** A small seeded generator, so everyone gets the same set on the same day. */
+export function seeded(seed: string): () => number {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  let a = h >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+

@@ -1,0 +1,68 @@
+<header class="top">
+  <a class="round" href="/challenges" aria-label="Back" (click)="nav.up($event)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  </a>
+  <div class="title">
+    <h1>{{ info()?.name }}</h1>
+    <p class="muted">Daily · {{ daily.date() }}</p>
+  </div>
+</header>
+
+@if (game(); as g) {
+  @switch (stage()) {
+    @case ('intro') {
+      <section class="card intro" [style.--h]="info()?.hue">
+        <span class="art"><app-glyph [game]="g" /></span>
+        <p>{{ how() }}</p>
+        <p class="muted">Today's puzzle is the same for everyone. {{ what() }} You get one result a day.</p>
+        <button type="button" (click)="start()">Start today's puzzle</button>
+      </section>
+    }
+    @case ('play') {
+      <section class="stage">
+        @switch (g) {
+          @case ('pinpoint') { <app-pinpoint [seed]="seed()" (done)="finish($event)" /> }
+          @case ('chain-link') { <app-chain-link [seed]="seed()" (done)="finish($event)" /> }
+          @case ('crossclimb') { <app-crossclimb [seed]="seed()" (done)="finish($event)" /> }
+          @case ('wend') { <app-wend [seed]="seed()" (done)="finish($event)" /> }
+        }
+      </section>
+    }
+    @case ('result') {
+      <section class="card result" [style.--h]="info()?.hue">
+        @if (result(); as r) {
+          <p class="big">{{ r.points }} <small>/ 100</small></p>
+          <p class="muted">{{ detail() || 'Done for today' }} · {{ time(r.ms) }}</p>
+        }
+        <p class="muted">Come back tomorrow for a new one.</p>
+        @if (auth.signedIn()) {
+          <div class="board">
+            <b>Today's board</b>
+            @if (board(); as b) {
+              @if (b.entries.length) {
+                <ol>
+                  @for (e of b.entries.slice(0, 10); track e.rank) {
+                    <li [class.me]="e.isMe"><span class="rk">{{ e.rank }}</span><span class="nm">{{ e.name }}</span><span class="pt">{{ e.value }} · {{ time(e.secondary) }}</span></li>
+                  }
+                </ol>
+                @if (b.me && b.me.rank > 10) {
+                  <p class="mine">You are #{{ b.me.rank }}.</p>
+                }
+              } @else {
+                <p class="muted">Nobody else has finished yet. Your result will show here once it reaches the server.</p>
+              }
+              <p class="muted fine">Results are reported by the app, so this board is for fun.</p>
+            } @else if (boardFailed()) {
+              <p class="muted">The board could not load right now.</p>
+            }
+          </div>
+        } @else {
+          <p class="muted"><a routerLink="/account">Sign in</a> to appear on the board.</p>
+        }
+        <a class="button secondary" routerLink="/challenges">Back to challenges</a>
+      </section>
+    }
+  }
+} @else {
+  <p class="muted">That daily does not exist.</p>
+}

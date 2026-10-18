@@ -123,6 +123,10 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 ## Done: Chain Link (phase 50)
 - Mind game (Language): compound-word chains from a built-in pair list (`games/mind/chain-link-data.ts`), 2 to 6 hidden words, any valid word that joins both neighbours is accepted. Add pairs to the list to grow it.
 
+## Done: word dailies and Wend rebuilt (phase 54)
+- Wend follows LinkedIn: 6x3 letter grid, four words (3-6 letters) traced through neighbouring letters, every letter used once; engine in `wend-engine.ts` (path partition board maker + exact-cover solver), word lists built by `tools/generators/words/build-wend.mjs`.
+- Dailies for Pinpoint, Chain Link, Crossclimb, Wend: client-seeded by IST date (`word-daily.ts`, route `/daily-word/:game`, panel in the Puzzles tab), event `wdaily.completed`, board `/leaderboards/word-daily` (V13 index). Not server-validated, so not part of streaks or the widget. Comet Slice is arcade and has no daily.
+
 ## Next
 - All the Coming soon games are live now (Pinpoint, Crossclimb, Wend, Comet Slice). Crossclimb and Wend use the Word Guess lists; Chain Link and Pinpoint have their own data files to grow.
 - Pinpoint is live (`games/mind/pinpoint-data.ts`, about 75 categories; add more there). Word games share the Mind screen (`/mind/<id>`) and skill 'language'.

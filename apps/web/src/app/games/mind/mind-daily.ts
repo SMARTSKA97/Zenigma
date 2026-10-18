@@ -3,27 +3,11 @@ import { indiaDate } from '../../core/hints.service';
 import { SyncService } from '../../core/sync.service';
 import { MIND_LIVE, MindGameId, Skill, SKILLS } from '../catalog';
 import { markOf, MIND_META } from './mind-meta';
+import { seeded } from './mind-util';
 
 const STATE_KEY = 'zenigma.mind.daily';
 const DAYS_KEY = 'zenigma.mind.daily.days';
 const SET_SIZE = 3;
-
-/** A small seeded generator, so everyone gets the same set on the same day. */
-function seeded(seed: string): () => number {
-  let h = 1779033703 ^ seed.length;
-  for (let i = 0; i < seed.length; i++) {
-    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  let a = h >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 /** Today's mind-training set: three games, each for a different skill, the same for everyone on a given (India) day. */
 export function mindSetFor(date: string): MindGameId[] {
