@@ -284,7 +284,7 @@ public class ApiTests : IClassFixture<ApiFactory>
 
         // The same batch sent three times at once, as a client might after a dropped connection.
         var answers = await Task.WhenAll(Enumerable.Range(0, 3).Select(async _ =>
-            (await client.PostAsJsonAsync("/sync/push", body)).Content.ReadFromJsonAsync<JsonElement>(Json)));
+            await (await client.PostAsJsonAsync("/sync/push", body)).Content.ReadFromJsonAsync<JsonElement>(Json)));
         var accepted = answers.Sum(a => a.GetProperty("accepted").GetArrayLength());
         var duplicates = answers.Sum(a => a.GetProperty("duplicates").GetArrayLength());
         Assert.Equal(5, accepted);
