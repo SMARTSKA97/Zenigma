@@ -1,40 +1,38 @@
-<div class="hud"><span>{{ rowsDone() }} rungs</span><span>Ladder {{ round() }} · {{ '♥'.repeat(lives()) }}{{ '♡'.repeat(3 - lives()) }}</span></div>
-@if (ready()) {
-  <ol class="chain ladder" [class.flash-bad]="bad()">
-    @for (row of rows(); track $index; let i = $index) {
-      @if (i > 0) {
-        <li class="join" aria-hidden="true">↓ one letter</li>
-      }
-      <li class="word" [class.active]="i === at() && !busy()" [class.given]="i === 0 || i === last()">
-        @for (ch of letters(row, i); track $index) {
-          <span class="ltr" [class.fixed]="!!row">{{ ch.toUpperCase() }}</span>
+<app-play-screen title="Crossclimb" [subtitle]="'Ladder ' + round()">
+  <div end>
+    <span>{{ rowsDone() }} {{ rowsDone() === 1 ? 'rung' : 'rungs' }}</span>
+    <span class="hearts" [attr.aria-label]="lives() + ' lives left'">{{ '♥'.repeat(lives()) }}<span class="gone">{{ '♥'.repeat(3 - lives()) }}</span></span>
+  </div>
+  @if (ready()) {
+    <ol class="chain ladder" [class.flash-bad]="bad()">
+      @for (row of rows(); track $index; let i = $index) {
+        @if (i > 0) {
+          <li class="join" aria-hidden="true"></li>
         }
-      </li>
-    }
-  </ol>
-  @if (!busy()) {
-    <form class="entry" (submit)="$event.preventDefault(); submit()">
-      <input
-        type="text"
-        [value]="typed()"
-        (input)="type($any($event.target).value)"
-        maxlength="5"
-        autocomplete="off"
-        autocapitalize="off"
-        autocorrect="off"
-        spellcheck="false"
-        enterkeyhint="done"
-        aria-label="The next word, one letter different"
-        placeholder="Next word"
-      />
-      <button type="submit" [disabled]="typed().length !== 5">Climb</button>
-      <button type="button" class="secondary" (click)="skip()">Skip</button>
-      @if (at() > 1) {
-        <button type="button" class="secondary" (click)="undo()">Undo</button>
+        <li class="word" [class.active]="i === at() && !busy()" [class.given]="i === 0 || i === last()">
+          @for (ch of letters(row, i); track $index; let k = $index) {
+            @if (i === at() && !busy() && !row) {
+              <button type="button" class="ltr open" [class.cursor]="k === cursor()" [class.edited]="ch !== above()[k]" [attr.aria-label]="'Letter ' + (k + 1) + ': ' + ch" (click)="pick(k)">{{ ch.toUpperCase() }}</button>
+            } @else {
+              <span class="ltr" [class.fixed]="!!row">{{ ch.toUpperCase() }}</span>
+            }
+          }
+        </li>
       }
-    </form>
-    <p class="muted tip">Change one letter at a time to reach the last word.</p>
+    </ol>
+    <p class="tip">Change one letter at a time. Tap a tile, then type its new letter.</p>
+  } @else {
+    <p class="tip">Loading words…</p>
   }
-} @else {
-  <p class="muted tip">Loading words…</p>
-}
+  <div dock>
+    @if (ready() && !busy()) {
+      <div class="actions">
+        <button type="button" class="secondary" (click)="skip()">Skip (costs a life)</button>
+        @if (at() > 1) {
+          <button type="button" class="secondary" (click)="undo()">Undo</button>
+        }
+      </div>
+      <app-game-keyboard enterLabel="Climb" [canEnter]="changed() > 0" (letter)="key($event)" (backspace)="erase()" (enter)="submit()" />
+    }
+  </div>
+</app-play-screen>

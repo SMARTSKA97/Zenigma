@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
+import { PlayScreen } from '../../shared/play-screen';
 import { adjacent, Board, makeBoard, practiceSpec, specForDate } from './wend-engine';
 import { loadWendWords, WendWords } from './wend-words';
 import { MindResult, seeded, useClock, useTimers } from './mind-util';
@@ -24,6 +25,7 @@ const PRACTICE_MS = 8 * 60 * 1000;
  */
 @Component({
   selector: 'app-wend',
+  imports: [PlayScreen],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./mind.scss', './wend.scss'],
   templateUrl: './wend.html',
@@ -64,6 +66,8 @@ export class Wend implements OnInit {
   /** One slot per word, shortest first: the numbers are the words' lengths. */
   protected readonly slots = signal<number[]>([]);
   protected readonly elapsed = signal(0);
+  /** The day of the week of the daily board (Monday is small, Sunday is the biggest). */
+  protected readonly weekday = signal('');
   protected readonly boards = signal(1);
   protected readonly wordsFound = signal(0);
   protected readonly daily = computed(() => this.seed() !== null);
@@ -97,6 +101,7 @@ export class Wend implements OnInit {
     // The daily follows the day of the week (Monday small, Sunday biggest); practice grows with every board solved.
     const spec = this.daily() && date ? specForDate(date) : practiceSpec(this.boards() - 1);
     this.board = makeBoard(this.words, this.random, spec);
+    if (this.daily() && date) this.weekday.set(new Date(`${date}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' }));
     this.size.set(this.board.size);
     this.slots.set(this.board.words.map((w) => w.length));
     this.letters.set(this.board.letters);
@@ -105,6 +110,12 @@ export class Wend implements OnInit {
     this.path.set([]);
     this.hintFor.set(null);
     this.note.set('');
+  }
+
+  /** The points of a path for the line drawn over the board, in tile units (a tile is 1 by 1). */
+  protected line(cells: number[]): string {
+    const n = this.size();
+    return cells.map((i) => `${(i % n) + 0.5},${Math.floor(i / n) + 0.5}`).join(' ');
   }
 
   private cellAt(event: PointerEvent): number | null {

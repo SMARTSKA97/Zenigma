@@ -84,6 +84,8 @@ export class WordGuess implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.setMode(this.route.snapshot.data['mode'] === 'daily' ? 'daily' : 'practice');
     this.tick = setInterval(() => this.now.set(Date.now()), 30_000); // local clock only, never a request
+    // The board and keyboard fit the screen; the page behind must not scroll or bounce.
+    document.documentElement.classList.add('lock');
   }
 
   /** Screen stays on while playing; the daily also blocks screenshots on Android. */
@@ -94,6 +96,7 @@ export class WordGuess implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     clearInterval(this.tick);
+    document.documentElement.classList.remove('lock');
     this.guard.leave();
   }
 

@@ -1,3 +1,25 @@
+/* Tiles of the open row are buttons: tap one to choose the letter to change. Untouched ones are ghosts of the word above. */
+:host .ltr.open {
+  min-height: 0;
+  padding: 0;
+  color: color-mix(in srgb, var(--text) 45%, transparent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--text) 25%, transparent);
+  font: inherit;
+  font-weight: 800;
+  font-size: 1.25rem;
+  &.edited {
+    color: var(--accent-contrast);
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: none;
+  }
+  &.cursor {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
 .ladder .join {
-  font-size: 0.75rem;
+  min-height: 0.5rem;
 }

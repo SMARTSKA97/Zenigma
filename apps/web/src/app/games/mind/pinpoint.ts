@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
+import { GameKeyboard } from '../../shared/game-keyboard';
+import { PlayScreen } from '../../shared/play-screen';
 import { MindResult, seeded, shuffled, useTimers } from './mind-util';
 import { PINPOINT, PinpointCategory } from './pinpoint-data';
 import { isCorrect, pointsAt } from './pinpoint-engine';
@@ -14,6 +16,7 @@ const DAILY_ROUNDS = 3;
  */
 @Component({
   selector: 'app-pinpoint',
+  imports: [PlayScreen, GameKeyboard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./mind.scss', './pinpoint.scss'],
   templateUrl: './pinpoint.html',
@@ -47,6 +50,16 @@ export class Pinpoint implements OnInit {
 
   protected clue(n: number): string | null {
     return n <= this.shown() || this.outcome() !== 'playing' ? this.category().clues[n - 1] : null;
+  }
+
+  protected key(letter: string): void {
+    if (this.outcome() !== 'playing' || this.guess().length >= 40) return;
+    if (letter === ' ' && (this.guess() === '' || this.guess().endsWith(' '))) return;
+    this.guess.update((g) => g + letter);
+  }
+
+  protected erase(): void {
+    this.guess.update((g) => g.slice(0, -1));
   }
 
   protected submit(): void {

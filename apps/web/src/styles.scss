@@ -136,6 +136,13 @@ body {
   overscroll-behavior-x: none;
 }
 
+/* A game screen that fits the phone (PlayScreen): the page behind stays put. */
+html.lock,
+html.lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* While a game that reads swipes is open (Comet Slice), the page itself must not scroll, pull to refresh or go back. */
 html.no-pan,
 html.no-pan body {

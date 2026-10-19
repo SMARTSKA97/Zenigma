@@ -1,57 +1,67 @@
-<div class="hud">
-  <span>{{ wordsFound() }} of {{ slots().length }} words{{ daily() ? '' : ' · board ' + boards() }}</span>
-  @if (daily()) {
-    <span>{{ elapsed() }}s · {{ hints() }} {{ hints() === 1 ? 'hint' : 'hints' }}</span>
-  } @else {
-    <span>{{ seconds() }}s</span>
+<app-play-screen title="Wend" [subtitle]="daily() ? 'Daily · ' + weekday() : 'Board ' + boards()">
+  <div end>
+    <span>{{ wordsFound() }}/{{ slots().length }} words</span>
+    @if (daily()) {
+      <span class="clock">{{ elapsed() }}s</span>
+    } @else {
+      <span class="clock">{{ seconds() }}s</span>
+    }
+  </div>
+  @if (!daily()) {
+    <div class="time" aria-hidden="true"><i [style.width.%]="(clock.left() / 480000) * 100"></i></div>
   }
-</div>
-@if (!daily()) {
-  <div class="time"><i [style.width.%]="(clock.left() / 480000) * 100"></i></div>
-}
-@if (ready()) {
-  <p class="spelling" [class.flash-bad]="bad()" aria-live="polite">{{ spelling().toUpperCase() || ' ' }}</p>
-  <div
-    #grid
-    class="wgrid"
-    [style.--cols]="size()"
-    role="group"
-    aria-label="Letters. Drag across touching letters to spell a word."
-    (pointerdown)="down($event)"
-    (pointermove)="move($event)"
-    (pointerup)="up()"
-    (pointercancel)="up()"
-  >
-    @for (i of cells(); track i) {
-      <span
-        class="wt"
-        [class.wall]="walls()[i]"
-        [attr.data-i]="i"
-        [class.picked]="path().includes(i)"
-        [class.locked]="lockedHue().has(i)"
-        [class.hinted]="hinted().includes(i)"
-        [attr.data-hue]="lockedHue().get(i)"
-      >{{ walls()[i] ? '' : letters()[i].toUpperCase() }}</span>
-    }
-  </div>
-  <div class="slots" aria-label="Words to find">
-    @for (n of slots(); track $index) {
-      @let w = slot($index);
-      <div class="slot" [class.found]="w.found" [attr.data-hue]="w.found ? w.hue : null">
-        @for (l of w.letters; track $index) {
-          <span class="sl">{{ l }}</span>
+  @if (ready()) {
+    <p class="spelling" [class.flash-bad]="bad()" [class.empty]="!spelling()" aria-live="polite">{{ spelling().toUpperCase() || 'Trace a word' }}</p>
+    <div class="board" [style.--cols]="size()">
+      <div
+        #grid
+        class="wgrid"
+        role="group"
+        aria-label="Letters. Drag across touching letters to spell a word."
+        (pointerdown)="down($event)"
+        (pointermove)="move($event)"
+        (pointerup)="up()"
+        (pointercancel)="up()"
+      >
+        @for (i of cells(); track i) {
+          <span
+            class="wt"
+            [class.wall]="walls()[i]"
+            [attr.data-i]="i"
+            [class.picked]="path().includes(i)"
+            [class.locked]="lockedHue().has(i)"
+            [class.hinted]="hinted().includes(i)"
+            [attr.data-hue]="lockedHue().get(i)"
+          >{{ walls()[i] ? '' : letters()[i].toUpperCase() }}</span>
         }
-        @if (w.found) { <b class="tick" aria-label="found">✓</b> }
       </div>
-    }
-  </div>
-  <p class="note muted" aria-live="polite">{{ note() || 'Trace each word through touching tiles. Use every letter once.' }}</p>
-  <div class="entry">
-    <button type="button" (click)="check()" [disabled]="path().length < 3">Check</button>
+      <svg class="trace" [attr.viewBox]="'0 0 ' + size() + ' ' + size()" aria-hidden="true">
+        @for (f of found(); track f.k) {
+          <polyline class="done" [attr.data-hue]="f.hue" [attr.points]="line(f.path)" />
+        }
+        @if (path().length > 1) {
+          <polyline class="now" [class.bad]="bad()" [attr.points]="line(path())" />
+        }
+      </svg>
+    </div>
+    <div class="slots" aria-label="Words to find">
+      @for (n of slots(); track $index) {
+        @let w = slot($index);
+        <div class="slot" [class.found]="w.found" [attr.data-hue]="w.found ? w.hue : null" [attr.aria-label]="n + ' letters' + (w.found ? ', found' : '')">
+          @for (l of w.letters; track $index) {
+            <span class="sl">{{ l }}</span>
+          }
+        </div>
+      }
+    </div>
+    <p class="note" [class.bad]="bad()" aria-live="polite">{{ note() || 'Every letter is used once. Words never cross.' }}</p>
+  } @else {
+    <p class="note">Loading words…</p>
+  }
+  <div dock class="tools">
     <button type="button" class="secondary" (click)="hint()">Hint</button>
     <button type="button" class="secondary" (click)="undo()" [disabled]="found().length === 0 && path().length === 0">Undo</button>
     <button type="button" class="secondary" (click)="reset()" [disabled]="found().length === 0">Reset</button>
+    <button type="button" (click)="check()" [disabled]="path().length < 3">Check</button>
   </div>
-} @else {
-  <p class="muted tip">Loading words…</p>
-}
+</app-play-screen>

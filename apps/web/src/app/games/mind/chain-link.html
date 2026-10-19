@@ -1,33 +1,25 @@
-<div class="hud"><span>{{ links() }} links</span><span>Chain {{ round() }} · {{ '♥'.repeat(lives()) }}{{ '♡'.repeat(3 - lives()) }}</span></div>
-<ol class="chain" [class.flash-bad]="bad()">
-  @for (row of rows(); track $index; let i = $index) {
-    @if (i > 0) {
-      <li class="join" aria-hidden="true">{{ joined()[i - 1] || '+' }}</li>
-    }
-    <li class="word" [class.active]="i === at() && !busy()" [class.given]="i === 0">
-      @for (ch of letters(row, i); track $index; let k = $index) {
-        <span class="ltr" [class.fixed]="k === 0 || !!row.shown">{{ ch.toUpperCase() }}</span>
+<app-play-screen title="Chain Link" [subtitle]="'Chain ' + round()">
+  <div end>
+    <span>{{ links() }} {{ links() === 1 ? 'link' : 'links' }}</span>
+    <span class="hearts" [attr.aria-label]="lives() + ' lives left'">{{ '♥'.repeat(lives()) }}<span class="gone">{{ '♥'.repeat(3 - lives()) }}</span></span>
+  </div>
+  <ol class="chain" [class.flash-bad]="bad()">
+    @for (row of rows(); track $index; let i = $index) {
+      @if (i > 0) {
+        <li class="join" aria-hidden="true">{{ joined()[i - 1] || '' }}</li>
       }
-    </li>
-  }
-</ol>
-@if (current() && !busy()) {
-  <form class="entry" (submit)="$event.preventDefault(); submit()">
-    <input
-      type="text"
-      [value]="typed()"
-      (input)="type($any($event.target).value)"
-      [attr.maxlength]="blanks()"
-      autocomplete="off"
-      autocapitalize="off"
-      autocorrect="off"
-      spellcheck="false"
-      enterkeyhint="done"
-      [attr.aria-label]="'Letters after ' + current().word[0].toUpperCase()"
-      placeholder="Rest of word"
-    />
-    <button type="submit" [disabled]="typed().length !== blanks()">Link</button>
-    <button type="button" class="secondary" (click)="skip()">Skip</button>
-  </form>
-  <p class="muted tip">What joins with the word above, and with the one below?</p>
-}
+      <li class="word" [class.active]="i === at() && !busy()" [class.given]="i === 0">
+        @for (ch of letters(row, i); track $index; let k = $index) {
+          <span class="ltr" [class.fixed]="k === 0 || !!row.shown" [class.next]="i === at() && !busy() && !row.shown && k === typed().length + 1">{{ ch.toUpperCase() }}</span>
+        }
+      </li>
+    }
+  </ol>
+  <p class="tip">What joins with the word above, and with the one below?</p>
+  <div dock>
+    @if (current() && !busy()) {
+      <div class="actions"><button type="button" class="secondary" (click)="skip()">Skip (costs a life)</button></div>
+      <app-game-keyboard enterLabel="Link" [canEnter]="typed().length === blanks()" (letter)="key($event)" (backspace)="erase()" (enter)="submit()" />
+    }
+  </div>
+</app-play-screen>

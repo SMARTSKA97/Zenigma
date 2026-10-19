@@ -13,15 +13,26 @@ describe('BackService', () => {
     const b = service();
     expect(b.parentOf('/')).toBeNull();
     expect(b.parentOf('/games/queens/classic-easy?level=12')).toBe('/games/queens/classic-easy/levels');
-    expect(b.parentOf('/games/queens/classic')).toBe('/'); // the difficulty chooser
+    expect(b.parentOf('/games/queens/classic')).toBe('/practice'); // the difficulty chooser
     expect(b.parentOf('/games/sudoku/mini-easy')).toBe('/games/sudoku/mini-easy/levels');
-    expect(b.parentOf('/games/sudoku/mini')).toBe('/'); // the difficulty chooser
-    expect(b.parentOf('/games/queens/levels')).toBe('/');
-    expect(b.parentOf('/games/sudoku/mini/levels')).toBe('/');
-    expect(b.parentOf('/games/sudoku')).toBe('/');
-    expect(b.parentOf('/games/word-guess')).toBe('/');
+    expect(b.parentOf('/games/sudoku/mini')).toBe('/practice'); // the difficulty chooser
+    expect(b.parentOf('/games/queens/levels')).toBe('/practice');
+    expect(b.parentOf('/games/sudoku/mini/levels')).toBe('/practice');
+    expect(b.parentOf('/games/sudoku')).toBe('/practice');
+    expect(b.parentOf('/games/word-guess')).toBe('/practice');
     expect(b.parentOf('/daily/tango')).toBe('/challenges');
     expect(b.parentOf('/daily/word-guess')).toBe('/challenges');
+  });
+
+  it('sends every game, daily or practice, back to where it was opened from, never to Settings', () => {
+    const b = service();
+    expect(b.parentOf('/daily-word/wend')).toBe('/challenges');
+    expect(b.parentOf('/mind/quick-sums')).toBe('/mind');
+    expect(b.parentOf('/mind/quick-sums', '/challenges?tab=mind')).toBe('/challenges?tab=mind');
+    expect(b.parentOf('/daily-word/comet-slice', '/challenges')).toBe('/challenges');
+    expect(b.parentOf('/games/word-guess', '/')).toBe('/');
+    expect(b.parentOf('/speed/queens')).toBe('/practice');
+    expect(b.parentOf('/badges')).toBe('/stats');
   });
 
   it('goes up from tabs and info pages', () => {

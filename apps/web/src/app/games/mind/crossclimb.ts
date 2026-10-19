@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
+import { GameKeyboard } from '../../shared/game-keyboard';
+import { PlayScreen } from '../../shared/play-screen';
 import { WordListService } from '../word-guess/word-list.service';
 import { accepts, blanksForRound, buildIndex, distancesTo, Index, makeLadder, neighbours } from './crossclimb-engine';
 import { MindResult, seeded, useTimers } from './mind-util';
@@ -11,6 +13,7 @@ import { MindResult, seeded, useTimers } from './mind-util';
  */
 @Component({
   selector: 'app-crossclimb',
+  imports: [PlayScreen, GameKeyboard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./mind.scss', './chain-link.scss', './crossclimb.scss'],
   templateUrl: './crossclimb.html',
@@ -37,7 +40,13 @@ export class Crossclimb implements OnInit {
   protected readonly rowsDone = signal(0);
   protected readonly bad = signal(false);
   protected readonly busy = signal(false);
-  protected readonly typed = signal('');
+  /** The row being filled starts as a copy of the word above; change one letter. */
+  protected readonly draft = signal<string[]>([]);
+  /** Which tile the next key goes to. */
+  protected readonly cursor = signal(0);
+  protected readonly typed = computed(() => this.draft().join(''));
+  protected readonly changed = computed(() => this.draft().filter((l, i) => l !== this.above()[i]).length);
+  protected readonly above = computed(() => [...(this.rows()[this.at() - 1] ?? '')]);
   /** First word, the rows filled so far (null while blank), last word. */
   protected readonly rows = signal<(string | null)[]>([]);
   private solution: string[] = [];
@@ -64,22 +73,45 @@ export class Crossclimb implements OnInit {
     this.distToEnd = distancesTo(ladder.words[ladder.words.length - 1], this.index);
     this.rows.set(ladder.words.map((w, i) => (i === 0 || i === ladder.words.length - 1 ? w : null)));
     this.at.set(1);
-    this.typed.set('');
+    this.resetDraft();
     this.busy.set(false);
   }
 
-  protected type(value: string): void {
-    this.typed.set(value.toLowerCase().replace(/[^a-z]/g, '').slice(0, 5));
+  private resetDraft(): void {
+    this.draft.set(this.above());
+    this.cursor.set(0);
   }
 
+  /** Tap a tile of the open row to choose which letter to change. */
+  protected pick(index: number): void {
+    if (!this.busy()) this.cursor.set(index);
+  }
+
+  protected key(letter: string): void {
+    if (this.busy()) return;
+    const at = this.cursor();
+    this.draft.update((d) => d.map((l, i) => (i === at ? letter : l)));
+    this.cursor.set(Math.min(4, at + 1));
+  }
+
+  /** Puts the tile back to the letter above it, and steps back from an untouched one. */
+  protected erase(): void {
+    if (this.busy()) return;
+    let at = this.cursor();
+    if (this.draft()[at] === this.above()[at] && at > 0) at--;
+    this.draft.update((d) => d.map((l, i) => (i === at ? this.above()[i] : l)));
+    this.cursor.set(at);
+  }
+
+  /** What a row shows: the word if it is set, the draft in the open row, blanks below it. */
   protected letters(row: string | null, index: number): string[] {
     if (row) return [...row];
-    if (index === this.at() && !this.busy()) return Array.from({ length: 5 }, (_, i) => this.typed()[i] ?? '');
+    if (index === this.at() && !this.busy()) return this.draft();
     return ['', '', '', '', ''];
   }
 
   protected submit(): void {
-    if (this.busy() || this.typed().length !== 5) return;
+    if (this.busy() || this.typed().length !== 5 || this.changed() === 0) return;
     const rows = this.rows();
     const above = rows[this.at() - 1]!;
     const used = rows.filter((r): r is string => !!r);
@@ -92,7 +124,7 @@ export class Crossclimb implements OnInit {
       this.haptics.error();
       this.bad.set(true);
       this.timers.after(350, () => this.bad.set(false));
-      this.typed.set('');
+      this.resetDraft();
       this.lose();
     }
   }
@@ -115,13 +147,12 @@ export class Crossclimb implements OnInit {
     if (this.busy() || this.at() <= 1) return;
     this.rows.update((r) => r.map((w, i) => (i === this.at() - 1 ? null : w)));
     this.at.update((i) => i - 1);
-    this.typed.set('');
+    this.resetDraft();
   }
 
   private place(word: string, gaveUp: boolean): void {
     this.rows.update((r) => r.map((w, i) => (i === this.at() ? word : w)));
     if (!gaveUp) this.rowsDone.update((n) => n + 1);
-    this.typed.set('');
     if (this.at() + 1 >= this.last()) {
       this.busy.set(true);
       this.timers.after(1100, () => {
@@ -132,6 +163,7 @@ export class Crossclimb implements OnInit {
       return;
     }
     this.at.update((i) => i + 1);
+    this.resetDraft();
   }
 
   private lose(): void {

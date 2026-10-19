@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
+import { GameKeyboard } from '../../shared/game-keyboard';
+import { PlayScreen } from '../../shared/play-screen';
 import { accepts, linksForRound, makeChain, written } from './chain-link-engine';
 import { MindResult, seeded, useTimers } from './mind-util';
 
@@ -17,6 +19,7 @@ interface Row {
  */
 @Component({
   selector: 'app-chain-link',
+  imports: [PlayScreen, GameKeyboard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./mind.scss', './chain-link.scss'],
   templateUrl: './chain-link.html',
@@ -72,9 +75,13 @@ export class ChainLink implements OnInit {
     this.busy.set(false);
   }
 
-  protected type(value: string): void {
-    const letters = value.toLowerCase().replace(/[^a-z]/g, '').slice(0, this.blanks());
-    this.typed.set(letters);
+  protected key(letter: string): void {
+    if (this.busy() || this.typed().length >= this.blanks()) return;
+    this.typed.update((t) => t + letter);
+  }
+
+  protected erase(): void {
+    this.typed.update((t) => t.slice(0, -1));
   }
 
   protected letters(row: Row, index: number): string[] {

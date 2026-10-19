@@ -1,35 +1,30 @@
-<div class="hud"><span>{{ score() }} points</span><span>Category {{ round() + 1 }} of {{ total() }}</span></div>
-<ol class="clues" [class.flash-bad]="bad()">
-  @for (n of slots; track n) {
-    <li class="clue" [class.open]="clue(n) !== null" [class.last]="n === shown() && outcome() === 'playing'">
-      <span class="num">{{ n }}</span>
-      <span class="word">{{ clue(n) ?? '?' }}</span>
-    </li>
-  }
-</ol>
-@if (outcome() === 'playing') {
-  <form class="entry" (submit)="$event.preventDefault(); submit()">
-    <input
-      type="text"
-      [value]="guess()"
-      (input)="guess.set($any($event.target).value)"
-      maxlength="40"
-      autocomplete="off"
-      autocapitalize="off"
-      autocorrect="off"
-      spellcheck="false"
-      enterkeyhint="go"
-      aria-label="What do these have in common?"
-      placeholder="What links them?"
-    />
-    <button type="submit" [disabled]="!guess().trim()">Guess</button>
-    @if (shown() < 5) {
-      <button type="button" class="secondary" (click)="more()">Next clue</button>
+<app-play-screen title="Pinpoint" [subtitle]="'Category ' + (round() + 1) + ' of ' + total()">
+  <div end><span>{{ score() }} {{ score() === 1 ? 'point' : 'points' }}</span></div>
+  <ol class="clues" [class.flash-bad]="bad()">
+    @for (n of slots; track n) {
+      <li class="clue" [class.open]="clue(n) !== null" [class.last]="n === shown() && outcome() === 'playing'">
+        <span class="num">{{ n }}</span>
+        <span class="word">{{ clue(n) ?? '?' }}</span>
+      </li>
     }
-  </form>
-  <p class="muted tip">Worth {{ 6 - shown() }} {{ shown() === 5 ? 'point' : 'points' }} now. A wrong guess shows the next clue.</p>
-} @else {
-  <p class="verdict" [class.ok]="outcome() === 'right'">
-    {{ outcome() === 'right' ? '+' + gained() + ' · ' : 'It was ' }}<b>{{ category().name }}</b>
-  </p>
-}
+  </ol>
+  @if (outcome() === 'playing') {
+    <div class="answer" [class.empty]="!guess()" role="textbox" aria-label="Your answer">
+      <span>{{ guess() || 'What links them?' }}</span>
+      @if (guess()) { <i class="caret"></i> }
+    </div>
+    <p class="tip">Worth {{ 6 - shown() }} {{ shown() === 5 ? 'point' : 'points' }} now. A wrong guess shows the next clue.</p>
+  } @else {
+    <p class="verdict" [class.ok]="outcome() === 'right'">
+      {{ outcome() === 'right' ? '+' + gained() + ' · ' : 'It was ' }}<b>{{ category().name }}</b>
+    </p>
+  }
+  <div dock>
+    @if (outcome() === 'playing') {
+      @if (shown() < 5) {
+        <div class="actions"><button type="button" class="secondary" (click)="more()">Next clue ({{ 5 - shown() }} left)</button></div>
+      }
+      <app-game-keyboard enterLabel="Guess" [space]="true" [canEnter]="!!guess().trim()" (letter)="key($event)" (backspace)="erase()" (enter)="submit()" />
+    }
+  </div>
+</app-play-screen>
