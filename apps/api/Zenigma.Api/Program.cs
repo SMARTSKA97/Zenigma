@@ -19,6 +19,7 @@ using Zenigma.Api.Sync;
 using Zenigma.Api.Hints;
 using Zenigma.Api.Mind;
 using Zenigma.Api.Profile;
+using Zenigma.Api.Store;
 
 // Local development: read secrets from the git-ignored .env (see .env.example). Production uses real environment variables.
 if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Production", StringComparison.OrdinalIgnoreCase)
