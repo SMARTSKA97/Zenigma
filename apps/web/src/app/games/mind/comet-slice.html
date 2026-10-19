@@ -1,5 +1,5 @@
 <div class="hud">
-  <span class="hearts" [attr.aria-label]="lives() + ' hearts left'">{{ '♥'.repeat(lives()) }}<span class="gone">{{ '♥'.repeat(3 - lives()) }}</span></span>
+  <span class="hearts" [class.hit]="hit()" [attr.aria-label]="lives() + ' hearts left'">{{ '♥'.repeat(lives()) }}<span class="gone">{{ '♥'.repeat(3 - lives()) }}</span></span>
   <span>{{ timed() ? left() + 's' : elapsed() }}</span>
 </div>
 @if (timed()) {
@@ -20,4 +20,4 @@
     (lostpointercapture)="up()"
   ></canvas>
 </div>
-<p class="muted tip">Swipe through the comets. A skull or a missed comet costs a heart.</p>
+<p class="muted tip">Swipe through the comets. A comet that lands costs a heart. A skull ends the run.</p>

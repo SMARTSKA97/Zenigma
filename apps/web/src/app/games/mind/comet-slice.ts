@@ -28,9 +28,9 @@ const STARS = (() => {
 
 /**
  * Comets and skulls fall from the top of a night sky, each at its own speed, and everything gets faster the longer you last.
- * Swipe through the comets to collect them; slicing several in one swipe scores a bonus. A skull you slice, or a comet that gets
- * past, costs a heart, and three hearts is the end. Practice has no clock: keep going and beat your best. The daily (`seed`) has
- * a one-minute clock and throws the same comets and skulls at everyone.
+ * Swipe through the comets to collect them (several in one swipe is a combo). A comet that reaches the ground costs a heart, and
+ * three hearts is the end. A skull is the end at once: slice one and the run is over, with a huge jolt. Practice has no clock:
+ * keep going and beat your best. The daily (`seed`) has a one-minute clock and throws the same comets and skulls at everyone.
  */
 @Component({
   selector: 'app-comet-slice',
@@ -51,6 +51,8 @@ export class CometSlice implements OnInit, OnDestroy {
   /** Practice counts up from the start (it has no end but the hearts). */
   protected readonly elapsed = signal('0:00');
   protected readonly boom = signal(false);
+  /** True for a moment after a heart is lost, so the hearts shake and flash. */
+  protected readonly hit = signal(false);
   protected readonly timed = computed(() => this.seed() !== null);
 
   private random: () => number = Math.random;
@@ -64,6 +66,10 @@ export class CometSlice implements OnInit, OnDestroy {
   private last = 0;
   private ended = false;
   private swipeHits = 0;
+  private rings: { x: number; y: number; age: number; life: number; size: number; colour: string }[] = [];
+  private shake = 0;
+  private flash = 0;
+  private finished = false;
   private pointer: { x: number; y: number } | null = null;
 
   ngOnInit(): void {
@@ -82,13 +88,13 @@ export class CometSlice implements OnInit, OnDestroy {
     this.last = now;
     this.update(dt);
     this.draw();
-    if (!this.ended) this.frame = requestAnimationFrame((t) => this.loop(t));
+    if (!this.finished) this.frame = requestAnimationFrame((t) => this.loop(t));
   }
 
   private update(dt: number): void {
     this.seconds += dt;
-    this.untilThrow -= dt;
-    if (this.untilThrow <= 0) {
+    if (!this.ended) this.untilThrow -= dt;
+    if (!this.ended && this.untilThrow <= 0) {
       // Later throws sometimes come in pairs.
       const n = this.seconds > 20 && this.random() < 0.35 ? 2 : 1;
       for (let i = 0; i < n; i++) this.bodies.push(throwBody(this.seconds, this.random));
@@ -96,13 +102,16 @@ export class CometSlice implements OnInit, OnDestroy {
     }
     for (const b of this.bodies) {
       advance(b, dt);
-      if (b.missed && b.kind === 'comet' && !b.counted) {
+      if (b.missed && b.kind === 'comet' && !b.counted && !this.ended) {
         b.counted = true;
+        this.ring(Math.min(W - 20, Math.max(20, b.x)), H - 8, 'rgba(255,140,90,0.9)', 46, 0.5);
         this.lose('Missed');
       }
     }
     this.bodies = this.bodies.filter((b) => b.y - b.r <= H + 40 && !(b.sliced && b.age - (b.slicedAt ?? 0) > 0.7));
-    if (!this.timed()) {
+    if (this.ended) {
+      // The run is over: let the blast play out.
+    } else if (!this.timed()) {
       const t = Math.floor(this.seconds);
       this.elapsed.set(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`);
     } else {
@@ -116,29 +125,44 @@ export class CometSlice implements OnInit, OnDestroy {
       s.y += s.vy * dt;
     }
     this.bits = this.bits.filter((s) => s.age < 0.7);
+    for (const r of this.rings) r.age += dt;
+    this.rings = this.rings.filter((r) => r.age < r.life);
+    this.shake = Math.max(0, this.shake - dt * 30);
+    this.flash = Math.max(0, this.flash - dt * 2.2);
     for (const p of this.pops) p.age += dt;
     this.pops = this.pops.filter((p) => p.age < 0.8);
     for (const t of this.trail) t.age += dt;
     this.trail = this.trail.filter((t) => t.age < 0.22);
   }
 
+  private ring(x: number, y: number, colour: string, size: number, life: number): void {
+    this.rings.push({ x, y, age: 0, life, size, colour });
+  }
+
+  /** A comet got past: a heart goes, with a shake and a short buzz. */
   private lose(text: string): void {
     if (this.ended) return;
     this.lives.update((l) => l - 1);
     this.swipeHits = 0;
     this.haptics.error();
-    this.pops.push({ x: W / 2, y: H - 60, text, age: 0 });
+    this.shake = Math.max(this.shake, 6);
+    this.hit.set(true);
+    setTimeout(() => this.hit.set(false), 520);
+    this.pops.push({ x: W / 2, y: H - 70, text, age: 0 });
     if (this.lives() <= 0) this.end('Game over');
   }
 
+  /** The run is over. The last moments keep animating, then the result is handed on. */
   private end(text: string): void {
     if (this.ended) return;
     this.ended = true;
     this.pops.push({ x: W / 2, y: H / 2, text, age: 0 });
-    cancelAnimationFrame(this.frame);
-    this.draw();
     const n = this.score();
-    setTimeout(() => this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'point' : 'points'}${text === 'Time!' ? ', time up' : ''}` }), 800);
+    setTimeout(() => {
+      this.finished = true;
+      cancelAnimationFrame(this.frame);
+      this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'point' : 'points'}${text === 'Time!' ? ', time up' : text === 'Boom!' ? ', a skull ended the run' : ''}` });
+    }, text === 'Boom!' ? 1100 : 700);
   }
 
   protected down(event: PointerEvent): void {
@@ -178,15 +202,22 @@ export class CometSlice implements OnInit, OnDestroy {
         // The second comet in one swipe is worth 2, the third 3, and so on.
         this.swipeHits++;
         this.score.update((s) => s + this.swipeHits);
-        this.haptics.tick();
+        this.haptics.place();
         this.pops.push({ x: body.x, y: body.y, text: this.swipeHits > 1 ? `+${this.swipeHits} combo` : '+1', age: 0 });
         this.burst(body.x, body.y, 12);
+        this.ring(body.x, body.y, 'rgba(255,255,255,0.85)', 34, 0.35);
       } else {
-        this.burst(body.x, body.y, 16);
+        // A skull ends everything: a huge jolt, a blast and a flash.
+        this.haptics.boom();
+        this.burst(body.x, body.y, 40);
+        this.ring(body.x, body.y, 'rgba(255,200,80,0.95)', 140, 0.7);
+        this.ring(body.x, body.y, 'rgba(255,90,60,0.8)', 90, 0.5);
+        this.shake = 16;
+        this.flash = 1;
         this.boom.set(true);
-        setTimeout(() => this.boom.set(false), 450);
-        this.lose('Skull!');
-        if (this.ended) return;
+        this.lives.set(0);
+        this.end('Boom!');
+        return;
       }
     }
   }
@@ -212,6 +243,7 @@ export class CometSlice implements OnInit, OnDestroy {
     }
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
     this.drawSky(ctx);
+    if (this.shake > 0) ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
     for (const b of this.bodies) {
       if (b.kind === 'comet') {
         if (b.sliced) this.drawHalves(ctx, b);
@@ -226,6 +258,16 @@ export class CometSlice implements OnInit, OnDestroy {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+    for (const r of this.rings) {
+      const t = r.age / r.life;
+      ctx.globalAlpha = Math.max(0, 1 - t);
+      ctx.strokeStyle = r.colour;
+      ctx.lineWidth = 6 * (1 - t) + 1;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.size * (1 - (1 - t) ** 3), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
     this.drawSwipe(ctx);
     ctx.font = '800 20px system-ui, sans-serif';
     ctx.textAlign = 'center';
@@ -234,6 +276,10 @@ export class CometSlice implements OnInit, OnDestroy {
       ctx.fillText(p.text, p.x, p.y - p.age * 40);
     }
     this.drawScore(ctx);
+    if (this.flash > 0) {
+      ctx.fillStyle = `rgba(255,230,180,${this.flash * 0.7})`;
+      ctx.fillRect(-20, -20, W + 40, H + 40);
+    }
   }
 
   /** Night sky of our own: midnight blue deepening to teal, a soft green glow, a low moon, stars and dark ridges along the ground. */

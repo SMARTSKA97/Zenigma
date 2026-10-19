@@ -46,6 +46,19 @@ export class HapticsService {
     this.run('alert', () => Haptics.notification({ type: NotificationType.Error }), [30, 50, 30, 50, 30], () => Haptics.impact({ style: ImpactStyle.Light }));
   }
 
+  /** A huge jolt for a game-ending blow (a skull sliced): a long, hard vibration. Skipped only when vibration is off. */
+  boom(): void {
+    if (!this.on || this.prefs.alertHaptics() === 'off') return;
+    try {
+      if (this.native) {
+        void Haptics.vibrate({ duration: 450 }).catch(() => undefined);
+        void Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => undefined);
+      } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate([320, 50, 160, 50, 420]);
+    } catch {
+      /* no vibration motor, or blocked: play on silently */
+    }
+  }
+
   /** The puzzle is solved. */
   success(): void {
     this.run('alert', () => Haptics.notification({ type: NotificationType.Success }), [20, 60, 20, 60, 60], () => Haptics.impact({ style: ImpactStyle.Medium }));
