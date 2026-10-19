@@ -18,7 +18,8 @@ app-home-extras,
 .streaks,
 .community,
 .practice,
-app-day-streak-card {
+app-day-streak-card,
+app-quests-card {
   grid-column: 1 / -1;
 }
 /* Wide screens: the Android card sits beside the hero, so neither stretches across an empty screen. */

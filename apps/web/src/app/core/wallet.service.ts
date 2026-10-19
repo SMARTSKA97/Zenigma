@@ -10,7 +10,7 @@ import { HintsService, indiaDate } from './hints.service';
 import { SoundService } from './sound.service';
 
 /** What each way of earning pays. The server holds the same table and has the last word. */
-export const EARNS: Record<string, number> = { daily: 10, mindset: 25, perfect: 40, level: 2, quest: 15, streak: 30 };
+export const EARNS: Record<string, number> = { daily: 5, mindset: 12, perfect: 20, level: 1, boss: 5, quest: 6, streak: 25 };
 
 export interface StoreItem {
   id: string;
@@ -52,10 +52,11 @@ interface Saved {
   claimed: string[];
   quests: QuestDay;
   bestStreak: number;
+  spunOn: string;
 }
 
 const KEY = 'zenigma.wallet';
-export const PRIZE_SLICES: ('c10' | 'c20' | 'c30' | 'c50' | 'h1' | 'h2' | 'c100')[] = ['c10', 'c20', 'h1', 'c30', 'c10', 'c50', 'h2', 'c100'];
+export const PRIZE_SLICES: ('c3' | 'c5' | 'c8' | 'c15' | 'h1' | 'h2' | 'c40')[] = ['c3', 'c5', 'h1', 'c8', 'c3', 'c15', 'h2', 'c40'];
 
 /** Things that unlock for free by playing (kept on this device; they are only colours). Streak days in a row, both halves of the day done. */
 export const STREAK_UNLOCKS: { days: number; item: string }[] = [
@@ -67,6 +68,34 @@ export const STREAK_UNLOCKS: { days: number; item: string }[] = [
 
 /** Free colours everyone has. */
 export const FREE_ACCENTS = ['default', 'sunset', 'forest', 'orchid', 'gold'];
+
+export interface Cosmetic {
+  id: string;
+  name: string;
+  color: string;
+  /** Store id; absent for the free ones. */
+  item?: string;
+}
+export const ACCENTS: Cosmetic[] = [
+  { id: 'default', name: 'Ocean', color: '#2b3dae' },
+  { id: 'sunset', name: 'Sunset', color: '#c2410c' },
+  { id: 'forest', name: 'Forest', color: '#15803d' },
+  { id: 'orchid', name: 'Orchid', color: '#a21caf' },
+  { id: 'gold', name: 'Gold', color: '#a16207' },
+  ...[
+    ['rose', 'Rose', '#be185d'], ['teal', 'Teal', '#0f766e'], ['coral', 'Coral', '#d9482b'], ['mint', 'Mint', '#0d9473'],
+    ['lime', 'Lime', '#4d7c0f'], ['sky', 'Sky', '#0369a1'], ['cyan', 'Cyan', '#0e7490'], ['indigo', 'Indigo', '#4338ca'],
+    ['crimson', 'Crimson', '#b91c1c'], ['plum', 'Plum', '#7e22ce'], ['graphite', 'Graphite', '#475569'], ['bronze', 'Bronze', '#92400e'],
+  ].map(([id, name, color]) => ({ id, name, color, item: `accent:${id}` })),
+];
+export const SKINS: Cosmetic[] = [
+  { id: 'none', name: 'Classic', color: '#2b3dae' },
+  ...[
+    ['paper', 'Paper', '#f4ecd9'], ['sakura', 'Sakura', '#f8c6d4'], ['lavender', 'Lavender', '#e0d4f7'], ['mono', 'Mono', '#111111'],
+    ['midnight', 'Midnight', '#1a2268'], ['evergreen', 'Evergreen', '#123524'], ['dusk', 'Dusk', '#3b1632'], ['terminal', 'Terminal', '#0f2c17'],
+  ].map(([id, name, color]) => ({ id, name, color, item: `skin:${id}` })),
+];
+export const swatchOf = (item: string): string => [...ACCENTS, ...SKINS].find((c) => c.item === item)?.color ?? '#888888';
 
 /**
  * Coins. Earned by playing (even offline: earns wait in a queue), spent only in the store, which needs a connection so the server can
@@ -82,11 +111,15 @@ export class WalletService {
   private readonly mind = inject(MindDailyService);
   private readonly dayStreak = inject(DayStreakService);
 
-  private saved: Saved = { coins: 0, owned: [], outbox: [], claimed: [], quests: { date: '', daily: 0, levels: 0, mind: 0 }, bestStreak: 0 };
+  private saved: Saved = { coins: 0, owned: [], outbox: [], claimed: [], quests: { date: '', daily: 0, levels: 0, mind: 0 }, bestStreak: 0, spunOn: '' };
   readonly coins = signal(0);
   readonly serverOwned = signal<string[]>([]);
   readonly catalog = signal<StoreItem[]>([]);
   readonly spunToday = signal(false);
+  /** India date of the last wheel spin this device knows about. */
+  private readonly spunOn = signal('');
+  /** True while today's wheel spin has not been used: the header counter glows. */
+  readonly wheelReady = computed(() => this.spunOn() !== indiaDate());
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   /** The latest reward, for the coin animation. `n` changes every time so the same amount can play twice. */
@@ -126,6 +159,7 @@ export class WalletService {
     this.serverOwned.set(this.saved.owned);
     this.questDay.set(this.saved.quests);
     this.best.set(this.saved.bestStreak);
+    this.spunOn.set(this.saved.spunOn);
 
     // Earn queue goes out whenever the server is reachable and the player is signed in.
     effect(() => {
@@ -208,6 +242,10 @@ export class WalletService {
     this.serverOwned.set(state.owned);
     this.catalog.set(state.catalog);
     this.spunToday.set(state.spunToday);
+    if (state.spunToday) {
+      this.saved.spunOn = state.today;
+      this.spunOn.set(state.today);
+    }
     this.saved.owned = state.owned;
     this.persist();
     if (state.hints != null) this.hints.applyServer([], state.hints);

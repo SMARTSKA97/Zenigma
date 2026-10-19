@@ -29,8 +29,9 @@ export class BackService {
   constructor() {
     this.router.events.subscribe((e) => {
       if (!(e instanceof NavigationEnd)) return;
-      const first = e.urlAfterRedirects.split(/[?#]/)[0].split('/').filter(Boolean)[0] ?? '';
-      if (HUBS.includes(first)) this.origin = e.urlAfterRedirects;
+      // Only the hub pages themselves count (/mind, not /mind/quick-sums), or a game would remember itself as where it came from.
+      const parts = e.urlAfterRedirects.split(/[?#]/)[0].split('/').filter(Boolean);
+      if (parts.length === 0 || (parts.length === 1 && HUBS.includes(parts[0]))) this.origin = e.urlAfterRedirects;
     });
   }
 

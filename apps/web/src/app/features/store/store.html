@@ -27,30 +27,40 @@
   </section>
 }
 
-<section class="card wheel">
-  <h2>Daily wheel</h2>
-  <p class="muted">One spin a day. Coins, or a free hint. Never empty-handed.</p>
-  <div class="wheel-box">
-    <i class="pointer" aria-hidden="true"></i>
-    <svg viewBox="-100 -100 200 200" role="img" aria-label="Prize wheel" [style.transform]="'rotate(' + angle() + 'deg)'" class="disc" [class.spun]="spinning()">
-      @for (s of slices; track $index) {
-        <path [attr.d]="slicePath($index)" [attr.fill]="colour($index)" stroke="#0b1012" stroke-opacity=".35" />
-        <text [attr.transform]="labelPos($index)" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="15" font-weight="800">{{ label(s) }}</text>
+<nav class="dock" aria-label="Store sections">
+  @for (t of sections; track t.id) {
+    <button type="button" [attr.aria-current]="section() === t.id ? 'true' : null" (click)="section.set(t.id)">
+      <span class="ico" aria-hidden="true">{{ t.icon }}</span>
+      <span>{{ t.label }}</span>
+      @if (t.id === 'wheel' && wallet.wheelReady()) {
+        <i class="dot" aria-label="Spin ready"></i>
       }
-      <circle r="14" fill="#0b1012" />
-    </svg>
-  </div>
-  @if (prize(); as p) {
-    <p class="prize" role="status">{{ p }}</p>
+    </button>
   }
-  <button type="button" class="spin" [disabled]="!online() || wallet.spunToday() || spinning()" (click)="spin()">
-    {{ spinning() ? 'Spinning…' : wallet.spunToday() ? 'Come back tomorrow' : 'Spin' }}
-  </button>
+</nav>
+
+@switch (section()) {
+  @case ('quests') {
+    <app-quests-card />
+    <section class="card">
+      <h2>How to earn</h2>
+      <ul class="how">
+        <li><span>🧩</span> A daily puzzle <b>+5</b></li>
+        <li><span>🧠</span> The whole mind set <b>+12</b></li>
+        <li><span>🔥</span> A perfect day (puzzles and mind set) <b>+20</b></li>
+        <li><span>🎮</span> A new practice level <b>+1</b></li>
+        <li><span>👹</span> Every 10th level (the boss) <b>+5</b></li>
+      </ul>
+      <p class="muted">Coins from levels, quests and the mind set stop at 60 a day. Dailies and the wheel are on top of that.</p>
+    </section>
+<section class="card ads">
+  <h2>More coins</h2>
+  <p class="muted">Watching a short video for coins is coming soon. Until then, quests, dailies and the wheel keep your purse full.</p>
 </section>
 
-<app-quests-card />
-
-<section class="shop">
+  }
+  @case ('shop') {
+    <section class="shop">
   <h2>Shop</h2>
   <div class="tabs" role="tablist" aria-label="Shop">
     @for (s of shelves; track s.id) {
@@ -73,6 +83,9 @@
         }
         <span class="meta">
           <b>{{ item.name }}</b>
+          @if (item.kind !== 'hints') {
+            <small class="tier" [attr.data-tier]="tier(item)">{{ tier(item) }}</small>
+          }
           @if (unlockNote(item); as n) {
             <small class="muted">{{ n }}</small>
           }
@@ -87,10 +100,31 @@
   </ul>
 </section>
 
-<section class="card ads">
-  <h2>More coins</h2>
-  <p class="muted">Watching a short video for coins is coming soon. Until then, quests, dailies and the wheel keep your purse full.</p>
+  }
+  @default {
+    <section class="card wheel">
+  <h2>Daily wheel</h2>
+  <p class="muted">One spin a day. Coins, or a free hint. Never empty-handed.</p>
+  <div class="wheel-box">
+    <i class="pointer" aria-hidden="true"></i>
+    <svg viewBox="-100 -100 200 200" role="img" aria-label="Prize wheel" [style.transform]="'rotate(' + angle() + 'deg)'" class="disc" [class.spun]="spinning()">
+      @for (s of slices; track $index) {
+        <path [attr.d]="slicePath($index)" [attr.fill]="colour($index)" stroke="#0b1012" stroke-opacity=".35" />
+        <text [attr.transform]="labelPos($index)" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="15" font-weight="800">{{ label(s) }}</text>
+      }
+      <circle r="14" fill="#0b1012" />
+    </svg>
+  </div>
+  @if (prize(); as p) {
+    <p class="prize" role="status">{{ p }}</p>
+  }
+  <button type="button" class="spin" [disabled]="!online() || wallet.spunToday() || spinning()" (click)="spin()">
+    {{ spinning() ? 'Spinning…' : wallet.spunToday() ? 'Come back tomorrow' : 'Spin' }}
+  </button>
 </section>
+
+  }
+}
 
 @if (toast(); as t) {
   <p class="toast" role="status">{{ t }}</p>

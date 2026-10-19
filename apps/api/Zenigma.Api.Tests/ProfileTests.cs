@@ -214,27 +214,40 @@ public class ProfileTests : IClassFixture<ApiFactory>
         Assert.True((await client.GetFromJsonAsync<JsonElement>("/store", Json)).GetProperty("spunToday").GetBoolean());
     }
 
+    /// <summary>Puts coins straight into a test player's wallet (earning them the honest way is capped each day).</summary>
+    private async Task GiveCoinsAsync(HttpClient client, int coins)
+    {
+        var token = client.DefaultRequestHeaders.Authorization!.Parameter!;
+        var payload = token.Split('.')[1].Replace('-', '+').Replace('_', '/');
+        payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+        var sub = JsonDocument.Parse(Convert.FromBase64String(payload)).RootElement.GetProperty("sub").GetString()!;
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Zenigma.Api.Data.AppDbContext>();
+        await db.Database.ExecuteSqlRawAsync("UPDATE coin_balances SET balance = balance + @c WHERE user_id = @u",
+            new Npgsql.NpgsqlParameter("c", coins), new Npgsql.NpgsqlParameter("u", sub));
+    }
+
     [DbFact]
     public async Task Store_buying_takes_coins_once_and_refuses_when_short_or_owned()
     {
         var client = await SignUpAsync();
-        await client.GetAsync("/store"); // 25 coins
+        await client.GetAsync("/store"); // 20 coins
 
         var tooDear = await client.PostAsJsonAsync("/store/buy", new { item = "skin:midnight" });
         Assert.Equal(HttpStatusCode.PaymentRequired, tooDear.StatusCode);
 
-        // Earn enough for a colour: reported earns are paid once per ref.
-        var entries = Enumerable.Range(0, 40).Select(n => new { id = Guid.NewGuid(), reason = "level", @ref = $"level:t:{n}" }).ToArray();
-        var earned = await (await client.PostAsJsonAsync("/store/earn", new { entries })).Content.ReadFromJsonAsync<JsonElement>(Json);
-        Assert.Equal(25 + 80, earned.GetProperty("coins").GetInt32());
+        // Reported earns pay once per ref and stop at the daily cap.
+        var entries = Enumerable.Range(0, 80).Select(n => new { id = Guid.NewGuid(), reason = "level", @ref = $"level:t:{n}" }).ToArray();
+        var earned = await (await client.PostAsJsonAsync("/store/earn", new { entries = entries.Take(50) })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(20 + 50, earned.GetProperty("coins").GetInt32());
+        var more = await (await client.PostAsJsonAsync("/store/earn", new { entries = entries.Skip(30).Take(50) })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(20 + 60, more.GetProperty("coins").GetInt32()); // 60 a day, and the repeats paid nothing
 
-        var repeat = await (await client.PostAsJsonAsync("/store/earn", new { entries })).Content.ReadFromJsonAsync<JsonElement>(Json);
-        Assert.Equal(25 + 80, repeat.GetProperty("coins").GetInt32());
-
+        await GiveCoinsAsync(client, 500);
         var bought = await client.PostAsJsonAsync("/store/buy", new { item = "accent:rose" });
         Assert.Equal(HttpStatusCode.OK, bought.StatusCode);
         var state = await bought.Content.ReadFromJsonAsync<JsonElement>(Json);
-        Assert.Equal(5, state.GetProperty("coins").GetInt32());
+        Assert.Equal(80 + 500 - 200, state.GetProperty("coins").GetInt32());
         Assert.Contains("accent:rose", state.GetProperty("owned").EnumerateArray().Select(x => x.GetString()));
 
         Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/store/buy", new { item = "accent:rose" })).StatusCode);
@@ -247,8 +260,7 @@ public class ProfileTests : IClassFixture<ApiFactory>
         var client = await SignUpAsync();
         await client.PostAsJsonAsync("/hints/sync", new { entries = Array.Empty<object>(), localBalance = 10 });
         await client.GetAsync("/store");
-        var entries = Enumerable.Range(0, 20).Select(n => new { id = Guid.NewGuid(), reason = "level", @ref = $"level:h:{n}" }).ToArray();
-        await client.PostAsJsonAsync("/store/earn", new { entries }); // 25 + 40 coins
+        await GiveCoinsAsync(client, 100);
         var bought = await (await client.PostAsJsonAsync("/store/buy", new { item = "hints-3" })).Content.ReadFromJsonAsync<JsonElement>(Json);
         Assert.Equal(13, bought.GetProperty("hints").GetInt32());
         // A free earn does not lower a balance above the cap.

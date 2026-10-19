@@ -139,6 +139,27 @@ nav a.active {
   text-decoration: none;
   font-variant-numeric: tabular-nums;
 }
+.coin-chip .sep {
+  opacity: 0.4;
+}
+/* Today's wheel spin is waiting: the counter glows and gently blinks. */
+.coin-chip.glow {
+  border-color: #f0b429;
+  animation: chip-glow 1.6s ease-in-out infinite;
+}
+@keyframes chip-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(240 180 41 / 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgb(240 180 41 / 0.35), 0 0 16px 2px rgb(240 180 41 / 0.55);
+  }
+}
+:root[data-motion='reduced'] .coin-chip.glow {
+  animation: none;
+  box-shadow: 0 0 0 3px rgb(240 180 41 / 0.5);
+}
 .coin-chip.pop {
   animation: chip-pop 0.5s var(--spring);
 }

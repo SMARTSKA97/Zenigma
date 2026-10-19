@@ -43,6 +43,7 @@ export class App {
   private readonly updater = inject(UpdaterService);
   private readonly reminder = inject(ReminderService);
   protected readonly wallet = inject(WalletService);
+  protected readonly hints = inject(HintsService);
 
   constructor() {
     this.back.listen();

@@ -208,3 +208,83 @@ h2 {
   transform: translateX(-50%);
   box-shadow: var(--shadow-lift);
 }
+
+/* The sections of the store: Wheel, Quests, Shop. */
+.dock {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.14);
+}
+.dock button {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.05rem;
+  min-height: 0;
+  padding: 0.45rem 0.3rem;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+.dock .ico {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+.dock button[aria-current='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.dock .dot {
+  position: absolute;
+  top: 0.4rem;
+  right: 1.6rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #f0b429;
+  animation: chip-glow 1.6s ease-in-out infinite;
+}
+@keyframes chip-glow {
+  50% {
+    box-shadow: 0 0 0 4px rgb(240 180 41 / 0.35);
+  }
+}
+.how {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.how li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.how b {
+  margin-left: auto;
+  color: var(--accent);
+}
+.tier {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tier[data-tier='Common'] { color: var(--muted); }
+.tier[data-tier='Rare'] { color: #3b82c4; }
+.tier[data-tier='Epic'] { color: #a35bd6; }
+.tier[data-tier='Legendary'] { color: #d99a12; }

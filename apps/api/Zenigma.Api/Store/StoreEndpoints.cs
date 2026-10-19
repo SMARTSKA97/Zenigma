@@ -17,25 +17,36 @@ public record BuyRequest(string? Item);
 /// <summary>What the store sells, and what each way of earning pays. The server decides every amount; the app only says what happened.</summary>
 public static class StoreCatalog
 {
-    public const int WelcomeCoins = 25;
+    public const int WelcomeCoins = 20;
     public const int MaxHints = 99;
     /// <summary>Coins that come from things the app reports (levels, quests, the mind set) stop here each India day. Verified dailies and the wheel are outside it.</summary>
-    public const int ReportedDailyCap = 150;
+    public const int ReportedDailyCap = 60;
 
+    // Prices are set so a colour is a few days of steady play and a full theme is a couple of weeks.
     public static readonly IReadOnlyList<StoreItem> Items =
     [
-        new("hints-3", "hints", "3 hints", 30, 3),
-        new("hints-10", "hints", "10 hints", 80, 10),
-        new("accent:rose", "accent", "Rose", 100),
-        new("accent:teal", "accent", "Teal", 100),
-        new("accent:lime", "accent", "Lime", 120),
-        new("accent:sky", "accent", "Sky", 120),
-        new("accent:crimson", "accent", "Crimson", 160),
-        new("accent:graphite", "accent", "Graphite", 160),
-        new("skin:midnight", "skin", "Midnight", 400),
-        new("skin:paper", "skin", "Paper", 400),
-        new("skin:terminal", "skin", "Terminal", 500),
-        new("skin:sakura", "skin", "Sakura", 500),
+        new("hints-3", "hints", "3 hints", 40, 3),
+        new("hints-10", "hints", "10 hints", 120, 10),
+        new("accent:rose", "accent", "Rose", 200),
+        new("accent:teal", "accent", "Teal", 200),
+        new("accent:coral", "accent", "Coral", 200),
+        new("accent:mint", "accent", "Mint", 200),
+        new("accent:lime", "accent", "Lime", 260),
+        new("accent:sky", "accent", "Sky", 260),
+        new("accent:cyan", "accent", "Cyan", 260),
+        new("accent:indigo", "accent", "Indigo", 260),
+        new("accent:crimson", "accent", "Crimson", 340),
+        new("accent:plum", "accent", "Plum", 340),
+        new("accent:graphite", "accent", "Graphite", 340),
+        new("accent:bronze", "accent", "Bronze", 340),
+        new("skin:paper", "skin", "Paper", 700),
+        new("skin:sakura", "skin", "Sakura", 700),
+        new("skin:lavender", "skin", "Lavender", 800),
+        new("skin:mono", "skin", "Mono", 800),
+        new("skin:midnight", "skin", "Midnight", 900),
+        new("skin:evergreen", "skin", "Evergreen", 900),
+        new("skin:dusk", "skin", "Dusk", 1000),
+        new("skin:terminal", "skin", "Terminal", 1200),
     ];
 
     public static StoreItem? Find(string? id) => Items.FirstOrDefault(i => i.Id == id);
@@ -43,18 +54,19 @@ public static class StoreCatalog
     /// <summary>Coins per earn reason. "verified" ones are checked against the player's own results on the server.</summary>
     public static readonly IReadOnlyDictionary<string, int> Earns = new Dictionary<string, int>
     {
-        ["daily"] = 10,    // verified: a daily puzzle solved
-        ["mindset"] = 25,  // the whole daily mind set
-        ["perfect"] = 40,  // puzzles and mind set on the same day
-        ["level"] = 2,     // a practice level cleared
-        ["quest"] = 15,    // a daily quest
-        ["streak"] = 30,   // a streak milestone
+        ["daily"] = 5,     // verified: a daily puzzle solved
+        ["mindset"] = 12,  // the whole daily mind set
+        ["perfect"] = 20,  // puzzles and mind set on the same day
+        ["level"] = 1,     // a practice level cleared for the first time
+        ["boss"] = 5,      // every tenth level
+        ["quest"] = 6,     // a daily quest (the chest pays the same again)
+        ["streak"] = 25,   // a streak milestone
     };
 
     public static readonly IReadOnlyList<(int Weight, string Kind, int Amount)> Wheel =
     [
-        (35, "coins", 10), (25, "coins", 20), (15, "coins", 30), (10, "coins", 50),
-        (8, "hints", 1), (5, "hints", 2), (2, "coins", 100),
+        (40, "coins", 3), (25, "coins", 5), (13, "coins", 8), (7, "coins", 15),
+        (8, "hints", 1), (5, "hints", 2), (2, "coins", 40),
     ];
 
     public static (string Kind, int Amount) Roll(int roll)
@@ -96,7 +108,7 @@ public static partial class StoreEndpoints
             var today = IstClock.Today(DateTimeOffset.UtcNow);
             var dayStart = new DateTimeOffset(today.ToDateTime(TimeOnly.MinValue), IstClock.Offset);
             var reported = await db.Database.SqlQueryRaw<int>(
-                "SELECT COALESCE(SUM(delta), 0)::int AS \"Value\" FROM coin_ledger WHERE user_id = @u AND created_at >= @t AND reason IN ('mindset','perfect','level','quest','streak')",
+                "SELECT COALESCE(SUM(delta), 0)::int AS \"Value\" FROM coin_ledger WHERE user_id = @u AND created_at >= @t AND reason IN ('mindset','perfect','level','boss','quest','streak')",
                 new NpgsqlParameter("u", userId), new NpgsqlParameter("t", dayStart.ToUniversalTime())).FirstAsync(ct);
 
             var awarded = new List<object>();

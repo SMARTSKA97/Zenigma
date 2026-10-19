@@ -6,8 +6,6 @@ import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 import { Glyph } from '../../shared/glyph';
-import { WalletService } from '../../core/wallet.service';
-import { HintsService } from '../../core/hints.service';
 import { PracticeTabs } from '../../shared/practice-tabs';
 
 /** Practice: every game, endless levels, no pressure. Games with variants (Sudoku) open a chooser first. */
@@ -37,8 +35,6 @@ export class Practice implements OnInit {
   protected readonly soonKinds = GAMES.filter((g) => g.live)
     .map((game) => ({ game, kinds: soonKindsOf(game.id) }))
     .filter((g) => g.kinds.length > 0);
-  protected readonly hints = inject(HintsService);
-  protected readonly wallet = inject(WalletService);
 
   ngOnInit(): void {
     for (const t of PRACTICE_TRACKS) void this.practice.load(t.track);

@@ -7,16 +7,13 @@ import { HapticsService } from '../../core/haptics.service';
 import { HintsService } from '../../core/hints.service';
 import { PrefsService } from '../../core/prefs.service';
 import { SoundService } from '../../core/sound.service';
-import { FREE_ACCENTS, PRIZE_SLICES, STREAK_UNLOCKS, StoreItem, WalletService } from '../../core/wallet.service';
+import { PRIZE_SLICES, STREAK_UNLOCKS, StoreItem, swatchOf, WalletService } from '../../core/wallet.service';
 import { QuestsCard } from '../../shared/quests-card';
 
 type Shelf = 'hints' | 'accent' | 'skin';
+type Section = 'wheel' | 'quests' | 'shop';
 
-const SWATCH: Record<string, string> = {
-  'accent:rose': '#be185d', 'accent:teal': '#0f766e', 'accent:lime': '#4d7c0f', 'accent:sky': '#0369a1', 'accent:crimson': '#b91c1c', 'accent:graphite': '#475569',
-  'skin:midnight': '#101535', 'skin:paper': '#f4ecd9', 'skin:terminal': '#0b140d', 'skin:sakura': '#fdf0f3',
-};
-const SLICE_LABEL: Record<string, string> = { c10: '10', c20: '20', c30: '30', c50: '50', c100: '100', h1: '💡1', h2: '💡2' };
+const SLICE_LABEL: Record<string, string> = { c3: '3', c5: '5', c8: '8', c15: '15', c40: '40', h1: '💡1', h2: '💡2' };
 const SLICE_KEY = (kind: string, amount: number): string => (kind === 'hints' ? `h${amount}` : `c${amount}`);
 
 /** The store: coins, the daily wheel, today's quests, and things to spend coins on. It needs a connection so the balance is the same on every device. */
@@ -37,6 +34,12 @@ export class Store implements OnInit {
   private readonly haptics = inject(HapticsService);
   private readonly sound = inject(SoundService);
 
+  protected readonly section = signal<Section>('wheel');
+  protected readonly sections: { id: Section; icon: string; label: string }[] = [
+    { id: 'wheel', icon: '🎡', label: 'Wheel' },
+    { id: 'quests', icon: '🎯', label: 'Quests' },
+    { id: 'shop', icon: '🛍️', label: 'Shop' },
+  ];
   protected readonly shelf = signal<Shelf>('hints');
   protected readonly shelves: { id: Shelf; label: string }[] = [
     { id: 'hints', label: '💡 Hints' },
@@ -102,7 +105,7 @@ export class Store implements OnInit {
   }
 
   protected swatch(item: StoreItem): string {
-    return SWATCH[item.id] ?? '#888';
+    return swatchOf(item.id);
   }
 
   protected owned(item: StoreItem): boolean {
@@ -139,5 +142,8 @@ export class Store implements OnInit {
     setTimeout(() => this.toast.set(null), 2600);
   }
 
-  protected readonly freeAccents = FREE_ACCENTS;
+  /** A rough rarity from the price, so the shelves read as levels. */
+  protected tier(item: StoreItem): string {
+    return item.price >= 900 ? 'Legendary' : item.price >= 700 ? 'Epic' : item.price >= 340 ? 'Rare' : 'Common';
+  }
 }

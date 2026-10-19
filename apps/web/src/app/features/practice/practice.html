@@ -1,15 +1,6 @@
 <h1>Practice</h1>
 <app-practice-tabs active="puzzles" />
 <p class="muted sub">Endless levels, no pressure. Works offline. Each level is the same for everyone.</p>
-<a class="wheel-card" routerLink="/store">
-  <span class="bulb" aria-hidden="true">🪙</span>
-  <span class="txt">
-    <b>{{ wallet.coins() }} coins · {{ hints.balance() }} hint{{ hints.balance() === 1 ? '' : 's' }}</b>
-    <span>Daily wheel, quests and the store</span>
-  </span>
-  <span class="go">Open</span>
-</a>
-
 <div class="cats" role="tablist" aria-label="Kind of game">
   @for (c of cats; track c.id) {
     <button type="button" role="tab" class="cat" [attr.aria-selected]="cat() === c.id" (click)="cat.set(c.id)">{{ c.name }}</button>

@@ -41,7 +41,7 @@ export class ThemeService {
       new MutationObserver(() => this.barIcons()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-skin'] });
     }
     const skin = document.documentElement.getAttribute('data-skin');
-    const dark = skin ? skin === 'midnight' || skin === 'terminal' : this.mode() === 'dark' || (this.mode() === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+    const dark = skin ? ['midnight', 'terminal', 'evergreen', 'dusk'].includes(skin) : this.mode() === 'dark' || (this.mode() === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
     SystemBars.setStyle({ style: dark ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => undefined);
   }
 

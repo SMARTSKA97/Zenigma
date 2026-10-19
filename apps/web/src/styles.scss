@@ -466,6 +466,68 @@ html:root[data-skin='sakura'] {
   --key-bg: #f3d6df;
   --ink: #3a1622;
 }
+html:root[data-skin='lavender'] {
+  @include light-base;
+  --bg: #f3effb;
+  --surface: #fbf9ff;
+  --surface-2: #e8e0f7;
+  --text: #241a3d;
+  --muted: #6d5f94;
+  --border: #d9cef0;
+  --accent: #6d3fd1;
+  --accent-soft: #e6dcfb;
+  --accent-contrast: #ffffff;
+  --key-bg: #e2d8f4;
+  --ink: #241a3d;
+}
+html:root[data-skin='mono'] {
+  @include light-base;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #efefef;
+  --text: #000000;
+  --muted: #4a4a4a;
+  --border: #c9c9c9;
+  --accent: #000000;
+  --accent-soft: #e6e6e6;
+  --accent-contrast: #ffffff;
+  --key-bg: #e4e4e4;
+  --ink: #000000;
+}
+html:root[data-skin='evergreen'] {
+  @include dark-tokens;
+  --bg: #06100c;
+  --surface: #0d1c15;
+  --surface-2: #13281e;
+  --text: #e2f5ea;
+  --muted: #82b49a;
+  --border: #1d3a2b;
+  --accent: #4ade80;
+  --accent-soft: #12301f;
+  --accent-contrast: #06100c;
+  --hero-bg: #123524;
+  --thumb: #2c4a3a;
+  --key-bg: #1a3326;
+  --ink: #e2f5ea;
+  --ink-contrast: #06100c;
+}
+html:root[data-skin='dusk'] {
+  @include dark-tokens;
+  --bg: #140b12;
+  --surface: #22121f;
+  --surface-2: #2d1a29;
+  --text: #fbe8ef;
+  --muted: #c096ab;
+  --border: #3d2437;
+  --accent: #ff8fb1;
+  --accent-soft: #46182f;
+  --accent-contrast: #140b12;
+  --hero-bg: #3b1632;
+  --thumb: #523248;
+  --key-bg: #36202f;
+  --ink: #fbe8ef;
+  --ink-contrast: #140b12;
+}
 html:root[data-skin='midnight'] {
   @include dark-tokens;
   --bg: #070a1a;
@@ -514,6 +576,12 @@ $accents: (
   graphite: (#475569, #e2e8f0, #ffffff, #cbd5e1, #1e293b, #0a0e14),
   lime: (#4d7c0f, #ecfccb, #ffffff, #bef264, #1a2e05, #0a1203),
   sky: (#0369a1, #e0f2fe, #ffffff, #7dd3fc, #082f49, #03121c),
+  coral: (#d9482b, #ffe4de, #ffffff, #ff9b86, #4a1409, #190703),
+  mint: (#0d9473, #d1fae5, #ffffff, #6ee7b7, #053b2c, #03150f),
+  cyan: (#0e7490, #cffafe, #ffffff, #67e8f9, #083344, #021419),
+  indigo: (#4338ca, #e0e7ff, #ffffff, #a5b4fc, #1e1b4b, #0a0920),
+  plum: (#7e22ce, #f3e8ff, #ffffff, #c084fc, #3b0764, #12041f),
+  bronze: (#92400e, #fde8d7, #ffffff, #e0a272, #3b1a08, #150a04),
 );
 @each $name, $c in $accents {
   html:root[data-accent='#{$name}'] {

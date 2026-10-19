@@ -30,7 +30,7 @@
   </nav>
 
   <div class="right">
-  <a class="coin-chip" routerLink="/store" aria-label="Coins and store"><span aria-hidden="true">🪙</span><b>{{ wallet.coins() }}</b></a>
+  <a class="coin-chip" [class.glow]="wallet.wheelReady()" routerLink="/store" [attr.aria-label]="'Store: ' + wallet.coins() + ' coins, ' + hints.balance() + ' hints' + (wallet.wheelReady() ? '. Your daily wheel spin is ready' : '')"><span aria-hidden="true">🪙</span><b>{{ wallet.coins() }}</b><span class="sep" aria-hidden="true">·</span><span aria-hidden="true">💡</span><b>{{ hints.balance() }}</b></a>
   <div class="status" aria-live="polite">
     @if (conn.offlineMode()) {
       <i class="dot warn"></i>
