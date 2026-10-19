@@ -44,7 +44,7 @@
   border-radius: 0.55rem;
   border: 1.5px solid color-mix(in srgb, var(--text) 22%, transparent);
   background: var(--surface);
-  color: #1c2326;
+  color: var(--text);
   font-weight: 750;
   font-size: 0.95rem;
   line-height: 1.1;
@@ -58,6 +58,7 @@
 .board .good { outline: 3px solid #3a9d5d; outline-offset: -3px; }
 .board .bad { outline: 3px solid var(--bad); outline-offset: -3px; color: #b3261e; }
 .board .hint { outline: 3px solid #e0b020; outline-offset: -3px; animation: pop 0.45s ease-out both, pulse 1.2s ease-in-out 0.45s infinite; }
+.board :is(.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7) { color: #1c2326; }
 .board .c0 { background: oklch(0.9 0.07 250); }
 .board .c1 { background: oklch(0.9 0.08 60); }
 .board .c2 { background: oklch(0.9 0.08 150); }
@@ -95,7 +96,7 @@
   font-size: 0.95rem;
   line-height: 1.4;
   animation: pop 0.45s ease-out both;
-  em { font-style: normal; font-weight: 800; color: #8a6500; }
+  em { font-style: normal; font-weight: 800; color: color-mix(in srgb, #e0b020 70%, var(--text)); }
 }
 .bar {
   display: flex;

@@ -20,11 +20,11 @@ import { DayStreakService } from '../core/day-streak.service';
   `,
   styles: `
     :host { display: block; margin: 0 0 12px; }
-    .ds { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--surface, #fff); border: 1px solid var(--line, #d9dedc); }
+    .ds { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
     .ds.done { border-color: #2f9e6b; }
     .fire { font-size: 1.6rem; }
     .body { display: grid; gap: 2px; }
-    .halves { display: flex; gap: 14px; font-size: 0.85rem; color: var(--muted, #667); }
+    .halves { display: flex; gap: 14px; font-size: 0.85rem; color: var(--muted); }
     .halves .ok { color: #2f9e6b; font-weight: 600; }
     .fine { margin: 4px 4px 0; font-size: 0.78rem; }
   `,

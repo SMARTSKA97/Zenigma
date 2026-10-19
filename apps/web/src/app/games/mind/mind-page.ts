@@ -67,7 +67,7 @@ export class MindPage implements CanLeave {
     const m = this.meta();
     if (!m) return String(score);
     if (short && score === 0 && this.store.record(this.id()).plays === 0) return '–';
-    return m.format ? m.format(score) : `${score} ${m.unit}`;
+    return m.format ? m.format(score) : `${score} ${score === 1 ? m.unit.replace(/s$/, '') : m.unit}`;
   }
 
   protected readonly leaving = signal<((ok: boolean) => void) | null>(null);

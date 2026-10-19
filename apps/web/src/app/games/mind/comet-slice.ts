@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, OnDestroy, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
+import { BackService } from '../../core/back.service';
 import { HapticsService } from '../../core/haptics.service';
-import { advance, Body, H, HEARTS, RUN_SECONDS, segmentHitsCircle, throwBody, throwGap, W } from './comet-slice-engine';
+import { advance, Body, H, HEARTS, RUN_SECONDS, segmentHitsCircle, setFieldHeight, speedUp, heat, throwBody, throwGap, W } from './comet-slice-engine';
 import { MindResult, seeded } from './mind-util';
 
 interface Pop {
@@ -8,6 +9,7 @@ interface Pop {
   y: number;
   text: string;
   age: number;
+  big: boolean;
 }
 
 interface Bit {
@@ -20,17 +22,21 @@ interface Bit {
   gold: boolean;
 }
 
-/** Stars are the same every time, so the sky does not jump about between frames. */
+/** Stars are the same every time, so the sky does not jump about between frames. Three depths drift down at different speeds. */
 const STARS = (() => {
-  const random = seeded('comet-slice-stars');
-  return Array.from({ length: 46 }, () => ({ x: random() * W, y: random() * H * 0.9, r: 0.6 + random() * 1.4, phase: random() * 6 }));
+  const random = seeded('comet-slice-stars-v2');
+  return Array.from({ length: 70 }, () => ({ x: random(), y: random(), r: 0.5 + random() * 1.5, phase: random() * 6, depth: 1 + Math.floor(random() * 3) }));
 })();
 
+/** Seconds of "3, 2, 1" before the first throw. */
+const GET_READY = 2.4;
+
 /**
- * Comets and skulls fall from the top of a night sky, each at its own speed, and everything gets faster the longer you last.
- * Swipe through the comets to collect them (several in one swipe is a combo). A comet that reaches the ground costs a heart, and
- * three hearts is the end. A skull is the end at once: slice one and the run is over, with a huge jolt. Practice has no clock:
- * keep going and beat your best. The daily (`seed`) has a one-minute clock and throws the same comets and skulls at everyone.
+ * Comet Slice fills the whole screen: a night sky with a slow aurora, drifting stars and dark ridges. Comets and skulls fall from
+ * the top, each at its own speed, and everything gets faster the longer you last. Swipe through the comets to collect them (several
+ * in one swipe is a combo). A comet that reaches the ground costs a heart, and three hearts is the end. A skull is the end at once:
+ * slice one and the run is over, with a huge jolt. Practice has no clock: keep going and beat your best. The daily (`seed`) has a
+ * one-minute clock and throws the same comets and skulls at everyone.
  */
 @Component({
   selector: 'app-comet-slice',
@@ -43,17 +49,26 @@ export class CometSlice implements OnInit, OnDestroy {
   /** Set for the daily: the same throws for everyone. */
   readonly seed = input<string | null>(null);
   private readonly haptics = inject(HapticsService);
+  private readonly back = inject(BackService);
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('field');
 
   protected readonly score = signal(0);
   protected readonly left = signal(RUN_SECONDS);
   protected readonly lives = signal(HEARTS);
+  protected readonly hearts = Array.from({ length: HEARTS }, (_, i) => i);
   /** Practice counts up from the start (it has no end but the hearts). */
   protected readonly elapsed = signal('0:00');
   protected readonly boom = signal(false);
-  /** True for a moment after a heart is lost, so the hearts shake and flash. */
+  /** True for a moment after a heart is lost, so the hearts shake and the screen edges flash. */
   protected readonly hit = signal(false);
   protected readonly timed = computed(() => this.seed() !== null);
+  /** 3, 2, 1 before the run starts; 0 once it has. */
+  protected readonly count = signal(3);
+  /** The current combo (2 or more in one swipe), shown big for a moment. `key` restarts the pop animation. */
+  protected readonly combo = signal<{ n: number; key: number } | null>(null);
+  protected readonly pace = signal('1.0');
+  protected readonly hot = signal(false);
+  protected readonly pct = computed(() => (this.left() / RUN_SECONDS) * 100);
 
   private random: () => number = Math.random;
   private bodies: Body[] = [];
@@ -61,26 +76,58 @@ export class CometSlice implements OnInit, OnDestroy {
   private bits: Bit[] = [];
   private trail: { x: number; y: number; age: number }[] = [];
   private seconds = 0;
-  private untilThrow = 0.7;
+  private untilThrow = 0.5;
+  private ready = GET_READY;
   private frame = 0;
   private last = 0;
+  private clock = 0;
   private ended = false;
   private swipeHits = 0;
+  private comboKey = 0;
+  private comboTimer?: ReturnType<typeof setTimeout>;
   private rings: { x: number; y: number; age: number; life: number; size: number; colour: string }[] = [];
+  private streaks: { x: number; y: number; age: number; life: number }[] = [];
   private shake = 0;
   private flash = 0;
+  private danger = 0;
   private finished = false;
   private pointer: { x: number; y: number } | null = null;
+  /** Screen layout: pixels per field unit, and the sideways offset that centres the 320-unit field on wide screens. */
+  private scale = 1;
+  private offsetX = 0;
 
   ngOnInit(): void {
     const seed = this.seed();
     if (seed !== null) this.random = seeded(seed);
+    // The screen is for swiping: the page behind must not scroll, pull to refresh or go back while a run is on.
+    document.documentElement.classList.add('no-pan');
+    this.layout();
     this.last = performance.now();
     this.frame = requestAnimationFrame((t) => this.loop(t));
+    addEventListener('resize', this.onResize);
   }
 
   ngOnDestroy(): void {
     cancelAnimationFrame(this.frame);
+    clearTimeout(this.comboTimer);
+    removeEventListener('resize', this.onResize);
+    document.documentElement.classList.remove('no-pan');
+  }
+
+  private readonly onResize = (): void => this.layout();
+
+  /** Fits the field to the screen: as wide as it can be (320 units), as tall as the screen allows. */
+  private layout(): void {
+    const w = Math.max(1, innerWidth);
+    const h = Math.max(1, innerHeight);
+    this.scale = Math.min(w / W, h / 440);
+    this.offsetX = (w - W * this.scale) / 2;
+    setFieldHeight(h / this.scale);
+  }
+
+  /** The arrow in the corner leaves like the Back button does, so a run in progress asks first. */
+  protected leave(event: Event): void {
+    this.back.up(event);
   }
 
   private loop(now: number): void {
@@ -92,6 +139,14 @@ export class CometSlice implements OnInit, OnDestroy {
   }
 
   private update(dt: number): void {
+    this.clock += dt;
+    if (this.ready > 0) {
+      // "3, 2, 1" while the sky settles; nothing falls and no clock runs yet.
+      this.ready -= dt;
+      this.count.set(this.ready > 0 ? Math.ceil(this.ready / 0.8) : 0);
+      this.fade(dt);
+      return;
+    }
     this.seconds += dt;
     if (!this.ended) this.untilThrow -= dt;
     if (!this.ended && this.untilThrow <= 0) {
@@ -118,6 +173,18 @@ export class CometSlice implements OnInit, OnDestroy {
       this.left.set(Math.max(0, Math.ceil(RUN_SECONDS - this.seconds)));
       if (this.seconds >= RUN_SECONDS) this.end('Time!');
     }
+    this.fade(dt);
+    // How close the nearest comet is to the ground, for the glowing edge that warns of a miss.
+    const lowest = this.bodies.reduce((m, b) => (b.kind === 'comet' && !b.sliced ? Math.max(m, b.y) : m), -999);
+    this.danger = Math.max(0, Math.min(1, (lowest - (H - 150)) / 130));
+    const pace = speedUp(this.seconds).toFixed(1);
+    if (pace !== this.pace()) this.pace.set(pace);
+    const hot = heat(this.seconds) > 0.6;
+    if (hot !== this.hot()) this.hot.set(hot);
+  }
+
+  /** Things that animate whether or not a run is on: sparks, rings, shake, flash, pop-ups, the swipe trail, shooting stars. */
+  private fade(dt: number): void {
     for (const s of this.bits) {
       s.age += dt;
       s.vy += 260 * dt;
@@ -125,6 +192,9 @@ export class CometSlice implements OnInit, OnDestroy {
       s.y += s.vy * dt;
     }
     this.bits = this.bits.filter((s) => s.age < 0.7);
+    if (Math.random() < dt * 0.35 && this.streaks.length < 2) this.streaks.push({ x: 40 + Math.random() * (W - 40), y: Math.random() * H * 0.35, age: 0, life: 0.9 });
+    for (const t of this.streaks) t.age += dt;
+    this.streaks = this.streaks.filter((t) => t.age < t.life);
     for (const r of this.rings) r.age += dt;
     this.rings = this.rings.filter((r) => r.age < r.life);
     this.shake = Math.max(0, this.shake - dt * 30);
@@ -148,7 +218,7 @@ export class CometSlice implements OnInit, OnDestroy {
     this.shake = Math.max(this.shake, 6);
     this.hit.set(true);
     setTimeout(() => this.hit.set(false), 520);
-    this.pops.push({ x: W / 2, y: H - 70, text, age: 0 });
+    this.pops.push({ x: W / 2, y: H - 110, text, age: 0, big: false });
     if (this.lives() <= 0) this.end('Game over');
   }
 
@@ -156,12 +226,12 @@ export class CometSlice implements OnInit, OnDestroy {
   private end(text: string): void {
     if (this.ended) return;
     this.ended = true;
-    this.pops.push({ x: W / 2, y: H / 2, text, age: 0 });
+    this.pops.push({ x: W / 2, y: H / 2, text, age: 0, big: true });
     const n = this.score();
     setTimeout(() => {
       this.finished = true;
       cancelAnimationFrame(this.frame);
-      this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'point' : 'points'}${text === 'Time!' ? ', time up' : text === 'Boom!' ? ', a skull ended the run' : ''}` });
+      this.done.emit({ score: n, detail: text === 'Time!' ? 'Time is up' : text === 'Boom!' ? 'A skull ended the run' : 'Out of hearts' });
     }, text === 'Boom!' ? 1100 : 700);
   }
 
@@ -171,11 +241,11 @@ export class CometSlice implements OnInit, OnDestroy {
     (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
     this.pointer = this.toField(event);
     this.swipeHits = 0;
-    this.slice(this.pointer, this.pointer);
+    if (this.ready <= 0) this.slice(this.pointer, this.pointer);
   }
 
   protected move(event: PointerEvent): void {
-    if (!this.pointer || this.ended) return;
+    if (!this.pointer || this.ended || this.ready > 0) return;
     const to = this.toField(event);
     this.slice(this.pointer, to);
     this.pointer = to;
@@ -188,7 +258,7 @@ export class CometSlice implements OnInit, OnDestroy {
 
   private toField(event: PointerEvent): { x: number; y: number } {
     const box = this.canvasRef().nativeElement.getBoundingClientRect();
-    return { x: ((event.clientX - box.left) / box.width) * W, y: ((event.clientY - box.top) / box.height) * H };
+    return { x: (event.clientX - box.left - this.offsetX) / this.scale, y: (event.clientY - box.top) / this.scale };
   }
 
   private slice(a: { x: number; y: number }, b: { x: number; y: number }): void {
@@ -203,7 +273,8 @@ export class CometSlice implements OnInit, OnDestroy {
         this.swipeHits++;
         this.score.update((s) => s + this.swipeHits);
         this.haptics.place();
-        this.pops.push({ x: body.x, y: body.y, text: this.swipeHits > 1 ? `+${this.swipeHits} combo` : '+1', age: 0 });
+        this.pops.push({ x: body.x, y: body.y, text: `+${this.swipeHits}`, age: 0, big: false });
+        if (this.swipeHits > 1) this.showCombo(this.swipeHits);
         this.burst(body.x, body.y, 12);
         this.ring(body.x, body.y, 'rgba(255,255,255,0.85)', 34, 0.35);
       } else {
@@ -222,6 +293,12 @@ export class CometSlice implements OnInit, OnDestroy {
     }
   }
 
+  private showCombo(n: number): void {
+    this.combo.set({ n, key: ++this.comboKey });
+    clearTimeout(this.comboTimer);
+    this.comboTimer = setTimeout(() => this.combo.set(null), 800);
+  }
+
   private burst(x: number, y: number, count: number): void {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -236,14 +313,21 @@ export class CometSlice implements OnInit, OnDestroy {
     const canvas = this.canvasRef().nativeElement;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const scale = Math.min(2, window.devicePixelRatio || 1);
-    if (canvas.width !== W * scale) {
-      canvas.width = W * scale;
-      canvas.height = H * scale;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const cw = canvas.clientWidth || innerWidth;
+    const ch = canvas.clientHeight || innerHeight;
+    if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) {
+      canvas.width = Math.round(cw * dpr);
+      canvas.height = Math.round(ch * dpr);
     }
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    this.drawSky(ctx);
+    // The sky fills the whole screen; the play itself happens in the 320-unit-wide field in the middle of it.
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.drawSky(ctx, cw, ch);
+    const sx = this.scale * dpr;
+    ctx.setTransform(sx, 0, 0, sx, this.offsetX * dpr, 0);
+    this.drawRidges(ctx);
     if (this.shake > 0) ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
+    for (const t of this.streaks) this.drawShootingStar(ctx, t);
     for (const b of this.bodies) {
       if (b.kind === 'comet') {
         if (b.sliced) this.drawHalves(ctx, b);
@@ -272,103 +356,145 @@ export class CometSlice implements OnInit, OnDestroy {
     ctx.font = '800 20px system-ui, sans-serif';
     ctx.textAlign = 'center';
     for (const p of this.pops) {
-      ctx.fillStyle = `rgba(255,255,255,${Math.max(0, 1 - p.age / 0.8)})`;
+      ctx.globalAlpha = Math.max(0, 1 - p.age / 0.8);
+      ctx.fillStyle = p.big ? '#ffe9a8' : '#ffffff';
+      ctx.font = p.big ? '800 34px system-ui, sans-serif' : '800 20px system-ui, sans-serif';
       ctx.fillText(p.text, p.x, p.y - p.age * 40);
     }
-    this.drawScore(ctx);
+    ctx.globalAlpha = 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.drawDanger(ctx, cw, ch);
     if (this.flash > 0) {
       ctx.fillStyle = `rgba(255,230,180,${this.flash * 0.7})`;
-      ctx.fillRect(-20, -20, W + 40, H + 40);
+      ctx.fillRect(0, 0, cw, ch);
     }
   }
 
-  /** Night sky of our own: midnight blue deepening to teal, a soft green glow, a low moon, stars and dark ridges along the ground. */
-  private drawSky(ctx: CanvasRenderingContext2D): void {
-    const sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, '#050b1f');
-    sky.addColorStop(0.55, '#0b2a4a');
-    sky.addColorStop(1, '#127a80');
+  /**
+   * Night sky of our own, full screen: midnight blue deepening to teal (and warming towards violet as things speed up), a slow
+   * aurora, and three layers of stars that drift down faster the nearer they are.
+   */
+  private drawSky(ctx: CanvasRenderingContext2D, cw: number, ch: number): void {
+    const warm = heat(this.seconds);
+    const sky = ctx.createLinearGradient(0, 0, 0, ch);
+    sky.addColorStop(0, warm > 0 ? `rgb(${5 + 20 * warm},11,${31 + 18 * warm})` : '#050b1f');
+    sky.addColorStop(0.55, `rgb(${11 + 40 * warm},${42 - 14 * warm},${74 + 10 * warm})`);
+    sky.addColorStop(1, `rgb(${18 + 70 * warm},${122 - 50 * warm},${128 - 20 * warm})`);
     ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, W, H);
-    // Faint glow low on the horizon.
-    const glow = ctx.createRadialGradient(W * 0.3, H, 10, W * 0.3, H, 320);
-    glow.addColorStop(0, 'rgba(90,255,200,0.28)');
+    ctx.fillRect(0, 0, cw, ch);
+    // Aurora: three slow ribbons of light.
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 3; k++) {
+      const y0 = ch * (0.22 + k * 0.12);
+      const hue = 150 + k * 38 + warm * 90;
+      const band = ctx.createLinearGradient(0, y0 - 70, 0, y0 + 90);
+      band.addColorStop(0, `hsla(${hue},90%,60%,0)`);
+      band.addColorStop(0.5, `hsla(${hue},90%,60%,${0.11 - k * 0.02})`);
+      band.addColorStop(1, `hsla(${hue},90%,60%,0)`);
+      ctx.fillStyle = band;
+      ctx.beginPath();
+      ctx.moveTo(0, y0 + 90);
+      for (let x = 0; x <= cw; x += 24) ctx.lineTo(x, y0 + Math.sin(x / 90 + this.clock * (0.35 + k * 0.1) + k * 2) * 34);
+      ctx.lineTo(cw, y0 + 90);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+    // A soft glow low on the horizon.
+    const glow = ctx.createRadialGradient(cw * 0.3, ch, 10, cw * 0.3, ch, ch * 0.6);
+    glow.addColorStop(0, 'rgba(90,255,200,0.26)');
     glow.addColorStop(1, 'rgba(90,255,200,0)');
     ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, W, H);
-    // A low moon.
-    ctx.fillStyle = 'rgba(214,238,255,0.9)';
-    ctx.beginPath();
-    ctx.arc(W * 0.8, H - 120, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(214,238,255,0.15)';
-    ctx.beginPath();
-    ctx.arc(W * 0.8, H - 120, 30, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(0, 0, cw, ch);
+    // Stars, falling gently past (faster as the run speeds up).
+    const drift = (8 + 18 * Math.min(1, (speedUp(this.seconds) - 1) / 2.2)) * 1;
     ctx.fillStyle = '#fff';
     for (const s of STARS) {
-      ctx.globalAlpha = 0.45 + 0.4 * Math.sin(this.seconds * 1.6 + s.phase);
+      const y = (((s.y * ch + this.clock * drift * s.depth * 0.5) % ch) + ch) % ch;
+      ctx.globalAlpha = (0.3 + 0.12 * s.depth) + 0.3 * Math.sin(this.clock * 1.6 + s.phase);
       ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.arc(s.x * cw, y, s.r * (0.7 + s.depth * 0.2), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#0a4a56';
-    ctx.beginPath();
-    ctx.moveTo(0, H);
-    ctx.lineTo(0, H - 50);
-    ctx.lineTo(50, H - 74);
-    ctx.lineTo(95, H - 48);
-    ctx.lineTo(150, H - 84);
-    ctx.lineTo(210, H - 46);
-    ctx.lineTo(265, H - 70);
-    ctx.lineTo(W, H - 44);
-    ctx.lineTo(W, H);
-    ctx.fill();
-    ctx.fillStyle = '#06303a';
-    ctx.beginPath();
-    ctx.moveTo(0, H);
-    ctx.lineTo(0, H - 24);
-    ctx.lineTo(70, H - 40);
-    ctx.lineTo(140, H - 20);
-    ctx.lineTo(220, H - 38);
-    ctx.lineTo(W, H - 18);
-    ctx.lineTo(W, H);
-    ctx.fill();
   }
 
-  private drawScore(ctx: CanvasRenderingContext2D): void {
-    const w = 78;
-    const h = 28;
-    const x = (W - w) / 2;
-    const y = 12;
-    ctx.fillStyle = 'rgba(30,120,150,0.55)';
-    ctx.strokeStyle = 'rgba(170,235,240,0.9)';
+  /** A low moon and two ridges of dark hills along the ground, in field units. */
+  private drawRidges(ctx: CanvasRenderingContext2D): void {
+    const moon = ctx.createRadialGradient(W * 0.8, H - 150, 4, W * 0.8, H - 150, 60);
+    moon.addColorStop(0, 'rgba(214,238,255,0.55)');
+    moon.addColorStop(1, 'rgba(214,238,255,0)');
+    ctx.fillStyle = moon;
+    ctx.fillRect(W * 0.8 - 60, H - 210, 120, 120);
+    ctx.fillStyle = 'rgba(224,242,255,0.95)';
+    ctx.beginPath();
+    ctx.arc(W * 0.8, H - 150, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(160,190,215,0.5)';
+    for (const [dx, dy, r] of [[-5, -4, 4], [5, 3, 3], [-1, 8, 2.5]]) {
+      ctx.beginPath();
+      ctx.arc(W * 0.8 + dx, H - 150 + dy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const ridge = (colour: string, base: number, peaks: number[]): void => {
+      ctx.fillStyle = colour;
+      ctx.beginPath();
+      // On a wide screen the hills run on past the 320-unit field, out to the edges.
+      const reach = this.offsetX / this.scale + 60;
+      const tiles = Math.max(1, Math.ceil((W + 2 * reach) / (W + 120)));
+      const step = (W + 120) / (peaks.length - 1);
+      ctx.moveTo(-reach, H);
+      for (let t = 0; t < tiles; t++) peaks.forEach((p, i) => ctx.lineTo(-reach + (t * (peaks.length - 1) + i) * step, H - base - p));
+      ctx.lineTo(W + reach, H);
+      ctx.fill();
+    };
+    ridge('#0a4a56', 26, [30, 58, 24, 66, 28, 52, 30]);
+    ridge('#06303a', 6, [20, 36, 14, 34, 18, 30, 16]);
+  }
+
+  /** The ground glows and then flashes red as a comet nears it, and the screen edges flash when a heart goes. */
+  private drawDanger(ctx: CanvasRenderingContext2D, cw: number, ch: number): void {
+    const level = Math.max(this.danger * 0.55, this.hit() ? 0.7 : 0);
+    if (level <= 0.02) return;
+    const g = ctx.createLinearGradient(0, ch, 0, ch - 120);
+    g.addColorStop(0, `rgba(255,70,80,${level})`);
+    g.addColorStop(1, 'rgba(255,70,80,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, ch - 120, cw, 120);
+  }
+
+  private drawShootingStar(ctx: CanvasRenderingContext2D, t: { x: number; y: number; age: number; life: number }): void {
+    const p = t.age / t.life;
+    const x = t.x - p * 140;
+    const y = t.y + p * 70;
+    const g = ctx.createLinearGradient(x, y, x + 60, y - 30);
+    g.addColorStop(0, `rgba(255,255,255,${0.9 * (1 - p)})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = g;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 14);
-    ctx.fill();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 60, y - 30);
     ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '700 17px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(String(this.score()), W / 2, y + 20);
   }
 
-  /** A white thick stroke that thins out towards where the swipe began. */
+  /** A glowing stroke that thins out towards where the swipe began. */
   private drawSwipe(ctx: CanvasRenderingContext2D): void {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    for (let i = 1; i < this.trail.length; i++) {
-      const p = this.trail[i - 1];
-      const q = this.trail[i];
-      const fade = Math.max(0, 1 - q.age / 0.22);
-      ctx.strokeStyle = `rgba(255,255,255,${fade})`;
-      ctx.lineWidth = 3 + 11 * (i / this.trail.length) * fade;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(q.x, q.y);
-      ctx.stroke();
+    for (const [width, colour, extra] of [[1.8, 'rgba(120,230,255,', 10], [1, 'rgba(255,255,255,', 0]] as const) {
+      for (let i = 1; i < this.trail.length; i++) {
+        const p = this.trail[i - 1];
+        const q = this.trail[i];
+        const fade = Math.max(0, 1 - q.age / 0.22);
+        ctx.strokeStyle = `${colour}${(width > 1 ? 0.35 : 1) * fade})`;
+        ctx.lineWidth = (3 + 11 * (i / this.trail.length) * fade) * width + extra * fade * (width > 1 ? 1 : 0);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(q.x, q.y);
+        ctx.stroke();
+      }
     }
   }
 
@@ -383,6 +509,11 @@ export class CometSlice implements OnInit, OnDestroy {
     const ty = b.y + uy * length;
     const nx = -uy;
     const ny = ux;
+    const halo = ctx.createRadialGradient(b.x, b.y, head * 0.6, b.x, b.y, head * 2.6);
+    halo.addColorStop(0, 'rgba(255,190,110,0.45)');
+    halo.addColorStop(1, 'rgba(255,190,110,0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(b.x - head * 2.6, b.y - head * 2.6, head * 5.2, head * 5.2);
     const tail = ctx.createLinearGradient(b.x, b.y, tx, ty);
     tail.addColorStop(0, 'rgba(255,170,60,0.95)');
     tail.addColorStop(0.35, 'rgba(255,100,200,0.8)');
@@ -432,6 +563,11 @@ export class CometSlice implements OnInit, OnDestroy {
   private drawSkull(ctx: CanvasRenderingContext2D, b: Body): void {
     const { x, y, r } = b;
     const flicker = Math.sin(this.seconds * 14 + b.id) * 0.06;
+    const aura = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2.1);
+    aura.addColorStop(0, `rgba(255,60,60,${0.32 + 0.12 * Math.sin(this.clock * 8 + b.id)})`);
+    aura.addColorStop(1, 'rgba(255,60,60,0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(x - r * 2.1, y - r * 2.1, r * 4.2, r * 4.2);
     for (const [scale, colour] of [[1.25, 'rgba(255,140,40,0.75)'], [1.02, 'rgba(255,214,90,0.95)']] as const) {
       ctx.fillStyle = colour;
       ctx.beginPath();

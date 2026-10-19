@@ -66,38 +66,3 @@
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-
-/* Android: Material 3 switch. A small outlined thumb that grows and fills when on. */
-:host-context([data-platform='android']) .track {
-  width: 52px;
-  height: 32px;
-  background: transparent;
-  border: 2px solid var(--muted);
-}
-:host-context([data-platform='android']) .knob {
-  top: 6px;
-  left: 6px;
-  width: 16px;
-  height: 16px;
-  background: var(--muted);
-  box-shadow: none;
-  transition:
-    transform 0.3s var(--spring),
-    width 0.2s var(--ease),
-    height 0.2s var(--ease),
-    top 0.2s var(--ease),
-    left 0.2s var(--ease),
-    background-color 0.2s var(--ease);
-}
-:host-context([data-platform='android']) .sw[aria-checked='true'] .track {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-:host-context([data-platform='android']) .sw[aria-checked='true'] .knob {
-  top: 2px;
-  left: 2px;
-  width: 24px;
-  height: 24px;
-  transform: translateX(20px);
-  background: var(--accent-contrast);
-}

@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 const KEY = 'zenigma.theme';
@@ -21,11 +21,25 @@ export class ThemeService {
 
   apply(): void {
     const root = document.documentElement;
-    // The Android app follows Material 3; `?ui=android` previews it in a desktop browser.
+    // The Android app looks the same as the web app; the attribute only marks the platform.
     const android = Capacitor.getPlatform() === 'android' || new URLSearchParams(location.search).get('ui') === 'android';
     if (android) root.setAttribute('data-platform', 'android');
     if (this.mode() === 'system') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', this.mode());
+    this.barIcons();
+  }
+
+  /** On Android the status and gesture bars show light icons on a dark app and dark icons on a light one, whatever the phone's own setting is. */
+  private watching = false;
+
+  private barIcons(): void {
+    if (!Capacitor.isNativePlatform()) return;
+    if (!this.watching) {
+      this.watching = true;
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.barIcons());
+    }
+    const dark = this.mode() === 'dark' || (this.mode() === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+    SystemBars.setStyle({ style: dark ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => undefined);
   }
 
   private read(): ThemeMode {

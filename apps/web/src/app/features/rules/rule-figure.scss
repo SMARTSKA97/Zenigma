@@ -42,10 +42,13 @@ figure {
 .fig .c6 { background: oklch(0.9 0.08 20); }
 .fig .c7 { background: oklch(0.93 0.09 90); }
 .fig span {
+  color: var(--text);
+}
+.fig :is(.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7) {
   color: #1c2326;
 }
 .fig .bad {
-  color: #b3261e;
+  color: var(--bad);
 }
 figcaption {
   margin-top: 0.4rem;

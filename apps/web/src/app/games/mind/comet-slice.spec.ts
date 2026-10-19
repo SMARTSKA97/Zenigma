@@ -1,4 +1,4 @@
-import { advance, bombChance, COMET_R, heat, speedUp, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, W } from './comet-slice-engine';
+import { H, MAX_H, MIN_H, setFieldHeight, advance, bombChance, COMET_R, heat, speedUp, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, W } from './comet-slice-engine';
 
 describe('Comet Slice', () => {
   it('detects a swipe through a circle, and one that passes beside it', () => {
@@ -47,5 +47,15 @@ describe('Comet Slice', () => {
     expect(throwGap(RUN_SECONDS, () => 0.5)).toBeLessThan(throwGap(0, () => 0.5));
     expect(bombChance(RUN_SECONDS)).toBeGreaterThan(bombChance(0));
     expect(bombChance(RUN_SECONDS)).toBeLessThan(0.5);
+  });
+
+  it('sizes the field to the screen, within bounds', () => {
+    setFieldHeight(10);
+    expect(H).toBe(MIN_H);
+    setFieldHeight(5000);
+    expect(H).toBe(MAX_H);
+    setFieldHeight(690.4);
+    expect(H).toBe(690);
+    setFieldHeight(480);
   });
 });

@@ -1,6 +1,15 @@
-/** The play field is 320 by 480 units; the screen just scales it. Comets and skulls fall from the top. */
+/**
+ * The play field is 320 units wide (the same for everyone, so the same throws land in the same places) and as tall as the screen
+ * allows, between 440 and 960 units. Comets and skulls fall from the top.
+ */
 export const W = 320;
-export const H = 480;
+export const MIN_H = 440;
+export const MAX_H = 960;
+export let H = 480;
+/** Sets the field's height for the screen in use. */
+export function setFieldHeight(height: number): void {
+  H = Math.round(Math.max(MIN_H, Math.min(MAX_H, height)));
+}
 /** A little pull so that bodies speed up as they fall. */
 export const GRAVITY = 70;
 

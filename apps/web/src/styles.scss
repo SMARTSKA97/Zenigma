@@ -131,6 +131,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overflow-wrap: anywhere;
+  /* Nothing may push the page sideways: a stray wide element is clipped, not scrolled. */
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
+/* While a game that reads swipes is open (Comet Slice), the page itself must not scroll, pull to refresh or go back. */
+html.no-pan,
+html.no-pan body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 h1,
@@ -355,111 +366,6 @@ a.game {
   }
   app-confetti {
     display: none;
-  }
-}
-
-/* ---------------------------------------------------------------------------------------------------------------
-   Android: Material 3. Tonal surfaces without borders or shadows, a primary-coloured filled button, a state layer on
-   press, 56dp outlined fields, Roboto (the system font) and a full-width navigation bar with a pill indicator.
-   --------------------------------------------------------------------------------------------------------------- */
-:root[data-platform='android'] {
-  --font-display: system-ui, 'Roboto', sans-serif;
-  --font-body: system-ui, 'Roboto', sans-serif;
-  --radius: 24px;
-  --shadow: none;
-  --shadow-lift: 0 1px 3px rgb(0 0 0 / 0.2), 0 4px 12px rgb(0 0 0 / 0.12);
-  --ink: var(--accent);
-  --ink-contrast: var(--accent-contrast);
-  --surface: #f9fbfa;
-  --surface-2: #e9eeed;
-  --thumb: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-platform='android']:not([data-theme='light']) {
-    --surface: #141b1e;
-    --surface-2: #232d31;
-    --thumb: #3a474c;
-  }
-}
-:root[data-platform='android'][data-theme='dark'] {
-  --surface: #141b1e;
-  --surface-2: #232d31;
-  --thumb: #3a474c;
-}
-
-:root[data-platform='android'] {
-  h1,
-  h2,
-  h3 {
-    font-weight: 500;
-    letter-spacing: 0;
-  }
-  h1 {
-    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.25rem);
-  }
-
-  .card {
-    background: var(--surface-2);
-    border-color: transparent;
-    box-shadow: none;
-  }
-
-  button,
-  .button {
-    position: relative;
-    overflow: hidden;
-    min-height: 40px;
-    padding: 0.5rem 1.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    border-color: var(--accent);
-  }
-  button::after,
-  .button::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: currentColor;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.35s var(--ease);
-  }
-  button:active:not(:disabled)::after,
-  .button:active::after {
-    opacity: 0.14;
-    transition: none;
-  }
-  button:active:not(:disabled),
-  .button:active {
-    transform: none;
-  }
-  button:hover:not(:disabled),
-  .button:hover {
-    box-shadow: none;
-  }
-  /* Tonal and text buttons for secondary actions. */
-  button.secondary,
-  .button.secondary {
-    background: transparent;
-    color: var(--accent);
-    border-color: var(--border);
-  }
-
-  input,
-  select {
-    min-height: 56px;
-    border-radius: 14px;
-    border-color: var(--muted);
-    background: transparent;
-  }
-  input:focus {
-    border-width: 1px;
-    box-shadow: 0 0 0 1px var(--accent);
-  }
-  label {
-    font-weight: 400;
   }
 }
 

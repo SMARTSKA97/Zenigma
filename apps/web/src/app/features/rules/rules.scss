@@ -39,7 +39,8 @@ h1 {
   width: 3rem;
   height: 3rem;
   border-radius: 14px;
-  background: oklch(0.92 0.06 calc(var(--h) * 1deg));
+  background: oklch(var(--tile-l) var(--tile-c) calc(var(--h) * 1deg));
+  color: oklch(var(--glyph-l) var(--glyph-c) calc(var(--h) * 1deg));
 }
 .art :is(svg) {
   width: 70%;

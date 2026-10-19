@@ -186,46 +186,6 @@ main {
     padding-top: 0.5rem;
     padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
   }
-  /* Game screens take the whole screen; their own back arrow replaces the header and tab bar. */
-  /* Android: a Material 3 navigation bar, flush with the bottom edge and a pill behind the active icon. */
-  :host-context([data-platform='android']) nav {
-    inset: auto 0 0 0;
-    padding: 0.75rem 0.5rem calc(0.75rem + env(safe-area-inset-bottom));
-    border: 0;
-    border-radius: 0;
-    background: var(--surface-2);
-    backdrop-filter: none;
-    box-shadow: none;
-  }
-  :host-context([data-platform='android']) nav a {
-    min-height: 0;
-    padding: 0;
-    gap: 0.25rem;
-    color: var(--muted);
-    font-weight: 500;
-    background: transparent;
-  }
-  :host-context([data-platform='android']) nav a svg {
-    width: 64px;
-    height: 32px;
-    padding: 4px 20px;
-    border-radius: 16px;
-    transition:
-      background-color 0.3s var(--ease),
-      color 0.3s var(--ease);
-  }
-  :host-context([data-platform='android']) nav a.active {
-    color: var(--text);
-    background: transparent;
-    font-weight: 700;
-  }
-  :host-context([data-platform='android']) nav a.active svg {
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
-  :host-context([data-platform='android']) main {
-    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
-  }
   header.hide-on-phone {
     display: none;
   }

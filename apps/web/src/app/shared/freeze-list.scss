@@ -25,7 +25,8 @@ li {
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 12px;
-  background: oklch(0.92 0.06 calc(var(--h) * 1deg));
+  background: oklch(var(--tile-l) var(--tile-c) calc(var(--h) * 1deg));
+  color: oklch(var(--glyph-l) var(--glyph-c) calc(var(--h) * 1deg));
 }
 .art :is(svg) {
   width: 70%;

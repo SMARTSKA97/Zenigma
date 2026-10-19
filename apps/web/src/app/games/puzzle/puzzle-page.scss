@@ -124,10 +124,10 @@
 .stage {
   grid-area: stage;
 }
-/* Phones: the board goes nearly edge to edge. */
+/* Phones: the board may use a little of the page margin, keeping about 15px either side. */
 @media (max-width: 720px) {
   .stage {
-    margin-inline: -1rem;
+    margin-inline: -0.25rem;
   }
 }
 .tools {

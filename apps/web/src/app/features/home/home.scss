@@ -17,7 +17,8 @@ app-home-extras,
 .promo,
 .streaks,
 .community,
-.practice {
+.practice,
+app-day-streak-card {
   grid-column: 1 / -1;
 }
 /* Wide screens: the Android card sits beside the hero, so neither stretches across an empty screen. */
@@ -436,7 +437,10 @@ app-home-extras,
   display: flex;
   gap: 0.6rem;
   overflow-x: auto;
-  padding: 0.1rem 0 0.4rem;
+  /* Runs out to the screen edges, so chips are cut by the edge of the screen rather than by the page margin. */
+  margin-inline: -1.25rem;
+  padding: 0.1rem 1.25rem 0.4rem;
+  scroll-padding-inline: 1.25rem;
   scrollbar-width: none;
   scroll-snap-type: x proximity;
 }

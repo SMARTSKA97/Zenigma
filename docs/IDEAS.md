@@ -147,3 +147,9 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 ## Done: six-game mind set and daily streak (phase 63)
 - `mindSetFor` picks one random live game from every skill (six games, 600 points; Comet Slice has its own daily); API mind board cap is 600.
 - `DayStreakService` (`core/day-streak.service.ts`): the daily streak counts a day only when the mind set and all available daily puzzles are done; puzzle half is marked from the Daily hub on this device. Server per-game streaks unchanged. Possible follow-up: record the combined day in the event log so it follows the player across devices.
+
+## Done: UI pass for 0.22.0 (phase 64)
+- Comet Slice is full screen (`comet-slice.ts`: field is 320 units wide and as tall as the screen, up to 960; `setFieldHeight`; aurora/parallax sky; DOM HUD with safe-area padding; 3-2-1 start; `html.no-pan` while playing so the page cannot scroll or navigate).
+- The Android Material layer was removed: Android now uses the web design and floating tab bar; `ThemeService` sets the Android status/gesture bar icon style from the theme; `SystemBars` is configured with `initialViewportFitValueHint: 'cover'`.
+- Page margins: boards keep about 15px, chip rows bleed to the screen edge, `overflow-x: clip` on html/body.
+- Theme fixes: the word-daily page used an undefined `--card` token (white card in dark mode); demos and rule figures used fixed dark text.
