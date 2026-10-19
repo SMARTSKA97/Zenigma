@@ -1,4 +1,4 @@
-import { advance, bombChance, H, heat, segmentHitsCircle, throwBody, throwGap } from './comet-slice-engine';
+import { advance, bombChance, H, heat, RUN_SECONDS, segmentHitsCircle, throwBody, throwGap } from './comet-slice-engine';
 
 describe('Comet Slice', () => {
   it('detects a swipe through a circle, and one that passes beside it', () => {
@@ -26,8 +26,8 @@ describe('Comet Slice', () => {
   it('gets harder with time but stays within bounds', () => {
     expect(heat(0)).toBe(0);
     expect(heat(1000)).toBe(1);
-    expect(throwGap(120, () => 0.5)).toBeLessThan(throwGap(0, () => 0.5));
-    expect(bombChance(120)).toBeGreaterThan(bombChance(0));
-    expect(bombChance(120)).toBeLessThan(0.5);
+    expect(throwGap(RUN_SECONDS, () => 0.5)).toBeLessThan(throwGap(0, () => 0.5));
+    expect(bombChance(RUN_SECONDS)).toBeGreaterThan(bombChance(0));
+    expect(bombChance(RUN_SECONDS)).toBeLessThan(0.5);
   });
 });

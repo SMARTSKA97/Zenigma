@@ -9,11 +9,25 @@
   max-height: 60vh;
   margin: 0 auto;
   border-radius: 1rem;
-  background: radial-gradient(120% 90% at 50% 0%, #2b3a67, #0e1330);
+  background: radial-gradient(120% 90% at 50% 100%, #3a1b2e, #120c1e 70%);
   touch-action: none;
   user-select: none;
 }
 .tip {
   text-align: center;
   margin-top: 0.75rem;
+}
+
+.boom .field {
+  animation: shake 0.4s;
+  box-shadow: inset 0 0 60px rgba(255, 50, 70, 0.7);
+}
+@keyframes shake {
+  20% { transform: translate(-6px, 3px); }
+  40% { transform: translate(5px, -4px); }
+  60% { transform: translate(-4px, -2px); }
+  80% { transform: translate(3px, 3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boom .field { animation: none; }
 }

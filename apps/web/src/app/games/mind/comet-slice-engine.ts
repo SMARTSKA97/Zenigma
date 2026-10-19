@@ -5,6 +5,7 @@ export const GRAVITY = 520;
 
 export interface Body {
   id: number;
+  /** 'comet' is a fire to collect, 'bomb' is a skull that ends the run. */
   kind: 'comet' | 'bomb';
   x: number;
   y: number;
@@ -16,7 +17,7 @@ export interface Body {
   sliced: boolean;
   /** The body's age when it was sliced. */
   slicedAt?: number;
-  /** A comet that has fallen past the bottom without being sliced. */
+  /** A fire that has fallen past the bottom without being sliced (it costs nothing). */
   missed: boolean;
 }
 
@@ -31,21 +32,24 @@ export function segmentHitsCircle(ax: number, ay: number, bx: number, by: number
   return (cx - px) ** 2 + (cy - py) ** 2 <= r * r;
 }
 
-/** How hard the game is after `seconds` of play, from 0 (gentle) to 1 (frantic, reached after about two minutes). */
-export const heat = (seconds: number): number => Math.min(1, seconds / 120);
+/** How hard the game is after `seconds` of play, from 0 (gentle) to 1 (frantic, reached at the end of a run). */
+export const heat = (seconds: number): number => Math.min(1, seconds / RUN_SECONDS);
 
 /** Seconds until the next throw. */
 export const throwGap = (seconds: number, random: () => number): number => (1.15 - 0.7 * heat(seconds)) * (0.75 + 0.5 * random());
 
 /** Chance that a thrown body is a bomb. */
-export const bombChance = (seconds: number): number => 0.1 + 0.18 * heat(seconds);
+export const bombChance = (seconds: number): number => 0.14 + 0.2 * heat(seconds);
+
+/** A run lasts this long unless a skull is sliced first. */
+export const RUN_SECONDS = 45;
 
 let nextId = 1;
 
 /** A body thrown up from below the bottom edge, rising to somewhere between 55% and 90% of the field's height. */
 export function throwBody(seconds: number, random: () => number): Body {
   const kind = random() < bombChance(seconds) ? 'bomb' : 'comet';
-  const r = kind === 'bomb' ? 22 : 26;
+  const r = kind === 'bomb' ? 26 : 26;
   const x = 40 + random() * (W - 80);
   const peak = H * (0.55 + 0.35 * random());
   const vy = -Math.sqrt(2 * GRAVITY * peak);
