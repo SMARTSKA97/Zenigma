@@ -71,7 +71,7 @@ export class BackService {
     if (a === 'daily-word') return from('/challenges');
     if (a === 'rules') return parts.length === 1 ? '/settings' : '/rules';
     if (a === 'ranks' && parts.length > 1) return '/ranks';
-    if (['practice', 'daily', 'challenges', 'ranks', 'settings', 'stats', 'sync-test'].includes(a)) return '/';
+    if (['practice', 'daily', 'challenges', 'ranks', 'settings', 'stats', 'store', 'sync-test'].includes(a)) return '/';
     if (a === 'badges') return '/stats';
     // About, privacy, version history, account…
     return '/settings';

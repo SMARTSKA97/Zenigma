@@ -21,6 +21,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<HintBalance> HintBalances => Set<HintBalance>();
     public DbSet<MindScore> MindScores => Set<MindScore>();
+    public DbSet<CoinBalance> CoinBalances => Set<CoinBalance>();
+    public DbSet<OwnedItem> OwnedItems => Set<OwnedItem>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -173,6 +175,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.UserId).HasColumnName("user_id");
             e.Property(x => x.Balance).HasColumnName("balance");
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        b.Entity<CoinBalance>(e =>
+        {
+            e.ToTable("coin_balances");
+            e.HasKey(x => x.UserId);
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Balance).HasColumnName("balance");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        b.Entity<OwnedItem>(e =>
+        {
+            e.ToTable("owned_items");
+            e.HasKey(x => new { x.UserId, x.Item });
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Item).HasColumnName("item").HasMaxLength(32);
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
 
         b.Entity<MindScore>(e =>

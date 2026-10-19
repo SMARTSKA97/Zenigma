@@ -21,6 +21,7 @@ import { Sheet } from '../../shared/sheet';
 import { HintWheel } from '../../shared/hint-wheel';
 import { ShareSheet } from '../../shared/share-sheet';
 import { CardInput, gridFromText } from '../../shared/share-card';
+import { WalletService } from '../../core/wallet.service';
 import { HintsService } from '../../core/hints.service';
 import { ScreenGuardService } from '../../core/screen-guard.service';
 import { Hint, hasMistake, hintFor } from '../hints/hint';
@@ -68,6 +69,7 @@ export class PuzzlePage {
   private readonly practiceStore = inject(PracticeStore);
   private readonly dailyApi = inject(PuzzleDailyService);
   protected readonly hints = inject(HintsService);
+  private readonly wallet = inject(WalletService);
   private readonly guard = inject(ScreenGuardService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -564,6 +566,8 @@ export class PuzzlePage {
         this.finalMs.set(result.state.attempt?.elapsedMs ?? this.elapsed());
         this.solved.set(true);
         this.haptics.success();
+        this.wallet.earn('daily', `daily:${game}:${result.state.date}`, 'Daily solved');
+        this.wallet.note('daily');
         void this.store.deleteMeta(this.dailyKey());
         this.boards.clearBoards(); // the boards just changed
         setTimeout(() => void this.widgetSvc.refresh(), 1500);
@@ -707,6 +711,8 @@ export class PuzzlePage {
 
   /** Free hints for playing: the zone boss every tenth level, and a one in three first win each day. */
   private reward(level: number): void {
+    this.wallet.earn('level', `level:${this.track()}:${level}`, 'Level cleared');
+    this.wallet.note('levels');
     const gained = (this.hints.milestone(this.track(), level) ? 1 : 0) + (this.hints.firstWinOfDay() ? 1 : 0);
     if (gained) setTimeout(() => this.flash(`+${gained} hint${gained > 1 ? 's' : ''} earned 💡`), 1200);
   }

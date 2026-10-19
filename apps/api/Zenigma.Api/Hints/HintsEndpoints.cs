@@ -14,7 +14,7 @@ public record HintBalanceDto(int? Balance, int? Short = null);
 /// <summary>
 /// The hint balance for signed-in players. The app keeps playing from its own copy and sends what was earned or spent as ledger
 /// entries; the server applies each entry once (keyed by its id) and answers with the balance every device should show.
-/// Hints that come from free sources never pile up beyond <see cref="FreeCap"/>.
+/// Hints that come from free sources never pile up beyond <see cref="FreeCap"/>; hints bought in the store may take the balance higher (up to 99).
 /// </summary>
 public static partial class HintsEndpoints
 {
@@ -75,7 +75,7 @@ public static partial class HintsEndpoints
                         if (current <= 0) shortBy++;
                     }
                     await db.Database.ExecuteSqlRawAsync(
-                        "UPDATE hint_balances SET balance = LEAST(@cap, GREATEST(0, balance + @d)), updated_at = now() WHERE user_id = @u",
+                        "UPDATE hint_balances SET balance = CASE WHEN @d > 0 THEN GREATEST(balance, LEAST(@cap, balance + @d)) ELSE GREATEST(0, balance + @d) END, updated_at = now() WHERE user_id = @u",
                         [new NpgsqlParameter("cap", FreeCap), new NpgsqlParameter("d", e.Delta), new NpgsqlParameter("u", userId)],
                         ct);
                 }

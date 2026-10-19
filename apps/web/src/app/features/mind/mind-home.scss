@@ -252,3 +252,42 @@ h1 {
     vector-effect: non-scaling-stroke;
   }
 }
+
+/* The three sections of Mind, as a floating dock: Train, Skills, Compare. */
+.dock {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+  margin: 0 0 1rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.14);
+}
+.dock button {
+  display: grid;
+  justify-items: center;
+  gap: 0.05rem;
+  min-height: 0;
+  padding: 0.45rem 0.3rem;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+.dock .ico {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+.dock button[aria-current='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}

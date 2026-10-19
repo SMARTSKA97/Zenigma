@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   NavigationCancel,
@@ -15,6 +15,8 @@ import { AuthService } from './core/auth.service';
 import { BackService } from './core/back.service';
 import { HintsService } from './core/hints.service';
 import { HintsSyncService } from './core/hints-sync.service';
+import { CoinBurst } from './shared/coin-burst';
+import { WalletService } from './core/wallet.service';
 import { MindSyncService } from './core/mind-sync.service';
 import { SyncService } from './core/sync.service';
 import { ConnectionService } from './core/connection.service';
@@ -28,7 +30,7 @@ import { WhatsNew } from './shared/whats-new';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, ServerNotice, NotificationPrompt],
+  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, ServerNotice, NotificationPrompt],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -40,6 +42,7 @@ export class App {
   private readonly router = inject(Router);
   private readonly updater = inject(UpdaterService);
   private readonly reminder = inject(ReminderService);
+  protected readonly wallet = inject(WalletService);
 
   constructor() {
     this.back.listen();
@@ -57,6 +60,18 @@ export class App {
     ),
     { initialValue: this.router.url },
   );
+  /** Practice is also where Mind lives. */
+  protected readonly onPractice = computed(() => /^\/(practice|mind)(\/|\?|$)/.test(this.url()));
+  /** Practice, speed rounds and mind games never need the server, so their screens hold the connection shut. */
+  private readonly practising = computed(() => /^\/(games|speed|mind)\/[^/?]+/.test(this.url()) && !/\/levels(\?|$)/.test(this.url()));
+  private release?: () => void;
+  private readonly holdEffect = effect(() => {
+    const on = this.practising();
+    untracked(() => {
+      this.release?.();
+      this.release = on ? this.conn.hold() : undefined;
+    });
+  });
   protected readonly immersive = computed(() => /^\/(games|daily)\/[^/?]+/.test(this.url()));
 
   /** True while a screen is loading, so slow connections never look frozen. */

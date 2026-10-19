@@ -22,12 +22,15 @@ export class ConnectionService {
   /** Seconds spent waiting for the server in this wake-up, for the notice. */
   readonly waited = signal(0);
   readonly online = signal(typeof navigator === 'undefined' ? true : navigator.onLine);
+  /** Screens that must not touch the server (practice play) each hold the connection; it is back the moment the last one lets go. */
+  private readonly holds = signal(0);
+  readonly paused = computed(() => this.holds() > 0);
 
   /** True when daily challenges, leaderboards and sync can work right now. */
-  readonly serverReady = computed(() => !this.offlineMode() && this.online() && this.server() === 'ready');
+  readonly serverReady = computed(() => !this.offlineMode() && !this.paused() && this.online() && this.server() === 'ready');
   /** The notice to show: warming up, or could not reach it. Never while offline mode is on. */
   readonly notice = computed<'warming' | 'down' | null>(() => {
-    if (this.offlineMode() || !this.online()) return null;
+    if (this.offlineMode() || this.paused() || !this.online()) return null;
     const s = this.server();
     return s === 'warming' || s === 'down' ? s : null;
   });
@@ -45,6 +48,20 @@ export class ConnectionService {
       });
       window.addEventListener('offline', () => this.online.set(false));
     }
+  }
+
+  /**
+   * Practice needs no server, so while a practice screen is open nothing is sent or fetched: fewer wake-ups, fewer requests, a snappier game.
+   * Whatever was queued (results, coins, hints) goes out when the player leaves. Returns the function that lets go.
+   */
+  hold(): () => void {
+    this.holds.update((n) => n + 1);
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.holds.update((n) => Math.max(0, n - 1));
+    };
   }
 
   setOffline(value: boolean): void {
@@ -71,7 +88,7 @@ export class ConnectionService {
 
   /** Pings the server until it answers. One wake-up runs at a time. Resolves true once it is up. */
   wake(): Promise<boolean> {
-    if (this.offlineMode() || !this.online()) return Promise.resolve(false);
+    if (this.offlineMode() || this.paused() || !this.online()) return Promise.resolve(false);
     if (this.server() === 'ready') return Promise.resolve(true);
     // After a failed wake-up, wait a minute before trying again, so a busy screen cannot hammer a server that is down.
     if (this.server() === 'down' && Date.now() - this.failedAt < 60_000) return Promise.resolve(false);

@@ -1,3 +1,4 @@
+import { WalletService } from '../../core/wallet.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
@@ -59,6 +60,7 @@ export class DailyStore implements BoardController {
   private readonly auth = inject(AuthService);
   private readonly device = inject(DeviceService);
   private readonly sync = inject(SyncService);
+  private readonly wallet = inject(WalletService);
   private readonly prefs = inject(PrefsService);
   private readonly haptics = inject(HapticsService);
   private readonly wordList = inject(WordListService);
@@ -186,6 +188,8 @@ export class DailyStore implements BoardController {
         if (response.status === 'won') this.haptics.success();
         if (response.status === 'lost') this.haptics.error();
         if (response.status === 'won') {
+          this.wallet.earn('daily', `daily:word-guess:${this.date()}`, 'Daily solved');
+          this.wallet.note('daily');
           this.flash(['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'][this.guesses().length - 1], 4000);
         }
         if (response.status === 'lost' && response.answer) this.flash(response.answer.toUpperCase(), 6000);

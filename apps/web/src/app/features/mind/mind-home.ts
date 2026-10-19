@@ -9,6 +9,7 @@ import { MindDailyService } from '../../games/mind/mind-daily';
 import { MIND_META, markOf } from '../../games/mind/mind-meta';
 import { MindStore } from '../../games/mind/mind-store';
 import { Glyph } from '../../shared/glyph';
+import { PracticeTabs } from '../../shared/practice-tabs';
 import { Brain } from './brain';
 import { MindDailyPanel } from './mind-daily-panel';
 import { Radar, RadarAxis } from './radar';
@@ -16,7 +17,7 @@ import { Radar, RadarAxis } from './radar';
 /** Mind: today's set, a picture of your skills (brain and radar) with how you compare with other players, and every game by skill. */
 @Component({
   selector: 'app-mind-home',
-  imports: [RouterLink, Glyph, Brain, Radar, MindDailyPanel],
+  imports: [RouterLink, Glyph, Brain, Radar, MindDailyPanel, PracticeTabs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-home.html',
   styleUrl: './mind-home.scss',
@@ -29,6 +30,12 @@ export class MindHome implements OnInit {
   protected readonly mindApi = inject(MindSyncService);
   private readonly profileApi = inject(ProfileService);
 
+  protected readonly sections: { id: 'train' | 'skills' | 'compare'; icon: string; label: string }[] = [
+    { id: 'train', icon: '🎮', label: 'Train' },
+    { id: 'skills', icon: '🧠', label: 'Skills' },
+    { id: 'compare', icon: '⚖️', label: 'Compare' },
+  ];
+  protected readonly section = signal<'train' | 'skills' | 'compare'>('train');
   protected readonly skills = SKILLS;
   protected readonly total = MIND_LIVE.length;
   protected readonly selected = signal<Skill | null>(null);

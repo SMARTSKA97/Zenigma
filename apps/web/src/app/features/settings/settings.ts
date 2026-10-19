@@ -1,5 +1,6 @@
+import { WalletService } from '../../core/wallet.service';
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ConnectionService } from '../../core/connection.service';
 import { SyncService } from '../../core/sync.service';
@@ -33,7 +34,36 @@ export class Settings implements OnInit {
     { id: 'forest', name: 'Forest', color: '#15803d' },
     { id: 'orchid', name: 'Orchid', color: '#a21caf' },
     { id: 'gold', name: 'Gold', color: '#a16207' },
-  ];
+    { id: 'rose', name: 'Rose', color: '#be185d', item: 'accent:rose' },
+    { id: 'teal', name: 'Teal', color: '#0f766e', item: 'accent:teal' },
+    { id: 'lime', name: 'Lime', color: '#4d7c0f', item: 'accent:lime' },
+    { id: 'sky', name: 'Sky', color: '#0369a1', item: 'accent:sky' },
+    { id: 'crimson', name: 'Crimson', color: '#b91c1c', item: 'accent:crimson' },
+    { id: 'graphite', name: 'Graphite', color: '#475569', item: 'accent:graphite' },
+  ] as { id: string; name: string; color: string; item?: string }[];
+  protected readonly skins = [
+    { id: 'none', name: 'Classic', color: '#2b3dae' },
+    { id: 'paper', name: 'Paper', color: '#f4ecd9', item: 'skin:paper' },
+    { id: 'sakura', name: 'Sakura', color: '#f8c6d4', item: 'skin:sakura' },
+    { id: 'midnight', name: 'Midnight', color: '#1a2268', item: 'skin:midnight' },
+    { id: 'terminal', name: 'Terminal', color: '#0f2c17', item: 'skin:terminal' },
+  ] as { id: string; name: string; color: string; item?: string }[];
+  protected readonly wallet = inject(WalletService);
+  private readonly router = inject(Router);
+
+  /** A colour or theme is free, owned, or locked (then it opens the store). */
+  protected pick(kind: 'accent' | 'skin', entry: { id: string; item?: string }): void {
+    if (entry.item && !this.wallet.owned().has(entry.item)) {
+      void this.router.navigateByUrl('/store');
+      return;
+    }
+    if (kind === 'accent') this.prefs.setAccent(entry.id);
+    else this.prefs.setSkin(entry.id);
+  }
+
+  protected locked(entry: { item?: string }): boolean {
+    return !!entry.item && !this.wallet.owned().has(entry.item);
+  }
   protected readonly strengths: SegmentOption<HapticStrength>[] = [
     { value: 'off', label: 'Off' },
     { value: 'light', label: 'Light' },

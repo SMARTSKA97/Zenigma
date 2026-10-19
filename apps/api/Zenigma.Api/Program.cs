@@ -254,6 +254,7 @@ app.MapAuth();
 app.MapSync();
 app.MapProfile();
 app.MapHints();
+app.MapStore();
 app.MapMind();
 app.MapDaily();
 app.MapPuzzleDaily();

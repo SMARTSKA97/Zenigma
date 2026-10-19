@@ -135,6 +135,20 @@ public class HintBalance
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
+public class CoinBalance
+{
+    public string UserId { get; set; } = "";
+    public int Balance { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public class OwnedItem
+{
+    public string UserId { get; set; } = "";
+    public string Item { get; set; } = "";
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
 public class MindScore
 {
     public string UserId { get; set; } = "";

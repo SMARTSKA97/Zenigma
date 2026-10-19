@@ -1,9 +1,17 @@
-<h1>Mind</h1>
-<p class="muted sub">Short games for memory, focus, speed, maths, language and reasoning. See how your skills add up.</p>
+<h1>Practice</h1>
+<app-practice-tabs active="mind" />
 
-<app-mind-daily-panel />
+<nav class="dock" aria-label="Mind sections">
+  @for (t of sections; track t.id) {
+    <button type="button" [attr.aria-current]="section() === t.id ? 'true' : null" (click)="section.set(t.id)">
+      <span class="ico" aria-hidden="true">{{ t.icon }}</span>
+      <span>{{ t.label }}</span>
+    </button>
+  }
+</nav>
 
-<h2 class="sec">Your skills</h2>
+@switch (section()) {
+  @case ('skills') {
 @if (played() === 0) {
   <section class="card empty">
     <p>Play any game below to start filling in your brain map. Each skill is the average of its games, scored against an excellent result.</p>
@@ -48,7 +56,9 @@
   </a>
 }
 
-<h2 class="sec">How you compare</h2>
+  }
+  @case ('compare') {
+    <p class="muted sub">Your marks next to other players, by age group and gender. Always anonymous.</p>
 <section class="card compare">
   @if (!auth.signedIn()) {
     <p>Sign in to see how your marks compare with other players, by age group and gender.</p>
@@ -96,7 +106,12 @@
   }
 </section>
 
-<h2 class="sec">Train</h2>
+  }
+  @default {
+    <p class="muted sub">Short games for memory, focus, speed, maths, language and reasoning.</p>
+<app-mind-daily-panel />
+
+    <h2 class="sec">All games</h2>
 <div class="pills" role="tablist" aria-label="Skill">
   <button type="button" class="pill" role="tab" [attr.aria-selected]="filter() === 'all'" (click)="filter.set('all')">All</button>
   @for (s of skills; track s.id) {
@@ -125,4 +140,6 @@
       }
     </ul>
   </details>
+}
+  }
 }

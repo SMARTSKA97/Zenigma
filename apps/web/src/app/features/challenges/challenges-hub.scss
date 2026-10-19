@@ -30,3 +30,18 @@ h1 {
   color: var(--text);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
 }
+
+/* Every block on a tab is its own detached card with air around it. */
+app-daily-hub,
+app-mind-daily-panel,
+app-word-daily-panel,
+app-day-streak-card,
+app-challenges {
+  display: block;
+}
+app-word-daily-panel {
+  margin-top: 1.6rem;
+}
+app-day-streak-card {
+  margin-bottom: 1.2rem;
+}

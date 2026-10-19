@@ -153,3 +153,9 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - The Android Material layer was removed: Android now uses the web design and floating tab bar; `ThemeService` sets the Android status/gesture bar icon style from the theme; `SystemBars` is configured with `initialViewportFitValueHint: 'cover'`.
 - Page margins: boards keep about 15px, chip rows bleed to the screen edge, `overflow-x: clip` on html/body.
 - Theme fixes: the word-daily page used an undefined `--card` token (white card in dark mode); demos and rule figures used fixed dark text.
+
+## Done: coins, store, wheel and themes (phase 66)
+- Server: Flyway V14 (`coin_balances`, `coin_ledger` idempotent by id and by `ref`, `owned_items`); `Store/StoreEndpoints.cs` (GET /store, POST /store/earn, /store/wheel, /store/buy). The server owns every amount: earn reasons map to fixed coins, `daily` is verified against the player's solved dailies, the rest share a 150-coin-a-day cap, the wheel is one row per India day (`ref wheel:date`), buying is one atomic UPDATE ... WHERE balance >= price. Hint packs may take hint balance up to 99 (the free cap now only limits earns).
+- Client: `WalletService` (optimistic balance, offline earn queue, quests, streak unlocks), `SoundService` (Web Audio, no files), `CoinBurst` (flying coins into the header counter), `/store` page, `data-skin` full themes in styles.scss, six more accents.
+- `ConnectionService.hold()`: practice, speed and mind-game screens hold the connection shut (no requests, no wake-ups); queued work flushes on leaving.
+- Ideas not yet built: watch-an-ad-for-coins (needs an ad SDK), coin gifts between circle friends, seasonal themes, streak-freeze purchases for coins, a weekly chest, cosmetic profile frames, leaderboard flair for owned themes.

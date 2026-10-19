@@ -1,3 +1,4 @@
+import { QuestsCard } from '../../shared/quests-card';
 import { PrefsService } from '../../core/prefs.service';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -16,7 +17,7 @@ import { HintsService } from '../../core/hints.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Glyph, FreezeSheet, HomeExtras, DayStreakCard],
+  imports: [RouterLink, Glyph, FreezeSheet, HomeExtras, DayStreakCard, QuestsCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.html',
   styleUrl: './home.scss',

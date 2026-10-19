@@ -29,6 +29,7 @@ export const routes: Routes = [
   { path: 'ranks/circles', loadComponent: () => import('./features/circles/circles').then((m) => m.Circles) },
   { path: 'ranks', loadComponent: () => import('./features/ranks/ranks').then((m) => m.Ranks) },
   { path: 'challenges', loadComponent: () => import('./features/challenges/challenges-hub').then((m) => m.ChallengesHub) },
+  { path: 'store', loadComponent: () => import('./features/store/store').then((m) => m.Store) },
   { path: 'badges', loadComponent: () => import('./features/badges/badges').then((m) => m.Badges) },
   { path: 'stats', loadComponent: () => import('./features/stats/stats').then((m) => m.StatsPage) },
   { path: 'rules/:game', loadComponent: () => import('./features/rules/rule-page').then((m) => m.RulePage) },

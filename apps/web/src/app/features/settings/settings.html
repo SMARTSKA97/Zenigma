@@ -61,9 +61,20 @@
     <span class="lead">Colour <small>Pick the accent used across the app. It changes right away.</small></span>
     <div class="swatches" role="radiogroup" aria-label="Colour">
       @for (a of accents; track a.id) {
-        <button type="button" class="sw-btn" role="radio" [attr.aria-checked]="prefs.accent() === a.id" [style.--c]="a.color" (click)="prefs.setAccent(a.id)">
+        <button type="button" class="sw-btn" [class.locked]="locked(a)" role="radio" [attr.aria-checked]="prefs.accent() === a.id" [style.--c]="a.color" (click)="pick('accent', a)">
           <i></i>
-          <span>{{ a.name }}</span>
+          <span>{{ locked(a) ? '🔒 ' : '' }}{{ a.name }}</span>
+        </button>
+      }
+    </div>
+  </div>
+  <div class="item stack">
+    <span class="lead">Look <small>A whole new look for the app. Earn them with streaks or buy them in the store.</small></span>
+    <div class="swatches" role="radiogroup" aria-label="Look">
+      @for (a of skins; track a.id) {
+        <button type="button" class="sw-btn" [class.locked]="locked(a)" role="radio" [attr.aria-checked]="prefs.skin() === a.id" [style.--c]="a.color" (click)="pick('skin', a)">
+          <i></i>
+          <span>{{ locked(a) ? '🔒 ' : '' }}{{ a.name }}</span>
         </button>
       }
     </div>
@@ -117,7 +128,13 @@
     </app-switch>
   </div>
   @if (prefs.haptics()) {
-    <div class="item stack">
+    <div class="item">
+    <app-switch [checked]="prefs.sounds()" (checkedChange)="prefs.setSounds($event)">
+      Sounds
+      <small>Little sounds for coins, the wheel and wins.</small>
+    </app-switch>
+  </div>
+  <div class="item stack">
       <span class="lead">Taps <small>A cell chosen, a number placed.</small></span>
       <app-segmented label="Tap strength" [options]="strengths" [value]="prefs.tapHaptics()" (valueChange)="prefs.setTapHaptics($event)" />
     </div>

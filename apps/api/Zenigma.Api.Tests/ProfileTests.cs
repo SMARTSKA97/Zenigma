@@ -198,4 +198,61 @@ public class ProfileTests : IClassFixture<ApiFactory>
         Assert.Equal(80, maths.GetProperty("mine").GetInt32());
         Assert.True(maths.GetProperty("percentile").GetInt32() >= 80);
     }
+
+    [DbFact]
+    public async Task Store_new_wallet_gets_a_welcome_gift_and_the_wheel_pays_once_a_day()
+    {
+        var client = await SignUpAsync();
+        var store = await client.GetFromJsonAsync<JsonElement>("/store", Json);
+        Assert.Equal(25, store.GetProperty("coins").GetInt32());
+        Assert.False(store.GetProperty("spunToday").GetBoolean());
+
+        var spin = await client.PostAsync("/store/wheel", null);
+        Assert.Equal(HttpStatusCode.OK, spin.StatusCode);
+        var again = await client.PostAsync("/store/wheel", null);
+        Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
+        Assert.True((await client.GetFromJsonAsync<JsonElement>("/store", Json)).GetProperty("spunToday").GetBoolean());
+    }
+
+    [DbFact]
+    public async Task Store_buying_takes_coins_once_and_refuses_when_short_or_owned()
+    {
+        var client = await SignUpAsync();
+        await client.GetAsync("/store"); // 25 coins
+
+        var tooDear = await client.PostAsJsonAsync("/store/buy", new { item = "skin:midnight" });
+        Assert.Equal(HttpStatusCode.PaymentRequired, tooDear.StatusCode);
+
+        // Earn enough for a colour: reported earns are paid once per ref.
+        var entries = Enumerable.Range(0, 40).Select(n => new { id = Guid.NewGuid(), reason = "level", @ref = $"level:t:{n}" }).ToArray();
+        var earned = await (await client.PostAsJsonAsync("/store/earn", new { entries })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(25 + 80, earned.GetProperty("coins").GetInt32());
+
+        var repeat = await (await client.PostAsJsonAsync("/store/earn", new { entries })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(25 + 80, repeat.GetProperty("coins").GetInt32());
+
+        var bought = await client.PostAsJsonAsync("/store/buy", new { item = "accent:rose" });
+        Assert.Equal(HttpStatusCode.OK, bought.StatusCode);
+        var state = await bought.Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(5, state.GetProperty("coins").GetInt32());
+        Assert.Contains("accent:rose", state.GetProperty("owned").EnumerateArray().Select(x => x.GetString()));
+
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/store/buy", new { item = "accent:rose" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.PostAsJsonAsync("/store/buy", new { item = "nope" })).StatusCode);
+    }
+
+    [DbFact]
+    public async Task Store_hint_packs_may_go_past_the_free_cap()
+    {
+        var client = await SignUpAsync();
+        await client.PostAsJsonAsync("/hints/sync", new { entries = Array.Empty<object>(), localBalance = 10 });
+        await client.GetAsync("/store");
+        var entries = Enumerable.Range(0, 20).Select(n => new { id = Guid.NewGuid(), reason = "level", @ref = $"level:h:{n}" }).ToArray();
+        await client.PostAsJsonAsync("/store/earn", new { entries }); // 25 + 40 coins
+        var bought = await (await client.PostAsJsonAsync("/store/buy", new { item = "hints-3" })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(13, bought.GetProperty("hints").GetInt32());
+        // A free earn does not lower a balance above the cap.
+        var sync = await (await client.PostAsJsonAsync("/hints/sync", new { entries = new[] { new { id = Guid.NewGuid(), delta = 1, reason = "earn" } }, localBalance = 13 })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(13, sync.GetProperty("balance").GetInt32());
+    }
 }

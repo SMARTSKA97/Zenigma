@@ -413,27 +413,122 @@ a.game {
   .num, .dot { font-size: clamp(1rem, 7cqw, 1.7rem) !important; }
 }
 
+/* Full themes (Settings > Appearance). Each one restyles the whole app, and each is earned or bought in the store. */
+@mixin light-base {
+  --hero-bg: var(--ink);
+  --hero-fg: var(--ink-contrast);
+  --line-mix: 22%;
+  --region-mix: 9%;
+  --thumb: #ffffff;
+  --ink: #1b1b1b;
+  --ink-contrast: #f6f8f7;
+  --good: #167a46;
+  --warn: #9a5b06;
+  --bad: #c42b2b;
+  --tile-l: 0.94;
+  --tile-c: 0.035;
+  --glyph-l: 0.4;
+  --glyph-c: 0.15;
+  --cell-l: 0.9;
+  --cell-c: 0.08;
+  --sun: #f0a21a;
+  --moon: #4f63e6;
+  --mark-correct: #2f9e5f;
+  --mark-present: #c9a227;
+  --mark-absent: #7a828a;
+  color-scheme: light;
+}
+html:root[data-skin='paper'] {
+  @include light-base;
+  --bg: #f4ecd9;
+  --surface: #fbf6e8;
+  --surface-2: #ede3c9;
+  --text: #2b2417;
+  --muted: #7a6c4f;
+  --border: #ddd0ad;
+  --accent: #9a4b14;
+  --accent-soft: #f4dfc0;
+  --accent-contrast: #ffffff;
+  --key-bg: #e6dabb;
+  --ink: #2b2417;
+}
+html:root[data-skin='sakura'] {
+  @include light-base;
+  --bg: #fdf0f3;
+  --surface: #fff9fa;
+  --surface-2: #f8e1e8;
+  --text: #3a1622;
+  --muted: #8a5c69;
+  --border: #f0cfd9;
+  --accent: #c2255c;
+  --accent-soft: #fbd5e2;
+  --accent-contrast: #ffffff;
+  --key-bg: #f3d6df;
+  --ink: #3a1622;
+}
+html:root[data-skin='midnight'] {
+  @include dark-tokens;
+  --bg: #070a1a;
+  --surface: #101535;
+  --surface-2: #171d45;
+  --text: #e8ecff;
+  --muted: #8f9ad0;
+  --border: #232a5c;
+  --accent: #7c8cff;
+  --accent-soft: #1c2360;
+  --accent-contrast: #070a1a;
+  --hero-bg: #1a2268;
+  --thumb: #313b78;
+  --key-bg: #232b5e;
+  --ink: #e8ecff;
+  --ink-contrast: #070a1a;
+}
+html:root[data-skin='terminal'] {
+  @include dark-tokens;
+  --bg: #050a06;
+  --surface: #0b140d;
+  --surface-2: #101c12;
+  --text: #c9f7d0;
+  --muted: #6fae7b;
+  --border: #1a3320;
+  --accent: #39ff7a;
+  --accent-soft: #0f2c17;
+  --accent-contrast: #04110a;
+  --hero-bg: #0f2c17;
+  --hero-fg: #c9f7d0;
+  --thumb: #28422d;
+  --key-bg: #14241a;
+  --ink: #c9f7d0;
+  --ink-contrast: #050a06;
+}
+
 /* Colour themes (Settings > Appearance). Each unlocks as you play; they replace the accent colour only. */
 $accents: (
   sunset: (#c2410c, #ffedd5, #ffffff, #fdba74, #431407, #1a0b04),
   forest: (#15803d, #dcfce7, #ffffff, #86efac, #052e16, #04120a),
   orchid: (#a21caf, #fae8ff, #ffffff, #e879f9, #3b0764, #12041c),
   gold: (#a16207, #fef3c7, #ffffff, #fcd34d, #422006, #140a02),
+  rose: (#be185d, #fce7f3, #ffffff, #f9a8d4, #500724, #180410),
+  teal: (#0f766e, #ccfbf1, #ffffff, #5eead4, #042f2e, #021614),
+  crimson: (#b91c1c, #fee2e2, #ffffff, #fca5a5, #450a0a, #180505),
+  graphite: (#475569, #e2e8f0, #ffffff, #cbd5e1, #1e293b, #0a0e14),
+  lime: (#4d7c0f, #ecfccb, #ffffff, #bef264, #1a2e05, #0a1203),
+  sky: (#0369a1, #e0f2fe, #ffffff, #7dd3fc, #082f49, #03121c),
 );
 @each $name, $c in $accents {
-  :root[data-accent='#{$name}'] {
+  html:root[data-accent='#{$name}'] {
     --accent: #{nth($c, 1)};
     --accent-soft: #{nth($c, 2)};
     --accent-contrast: #{nth($c, 3)};
   }
   @media (prefers-color-scheme: dark) {
-    :root[data-accent='#{$name}']:not([data-theme='light']) {
+    html:root[data-accent='#{$name}']:not([data-theme='light']) {
       --accent: #{nth($c, 4)};
       --accent-soft: #{nth($c, 5)};
       --accent-contrast: #{nth($c, 6)};
     }
   }
-  :root[data-accent='#{$name}'][data-theme='dark'] {
+  html:root[data-accent='#{$name}'][data-theme='dark'] {
     --accent: #{nth($c, 4)};
     --accent-soft: #{nth($c, 5)};
     --accent-contrast: #{nth($c, 6)};

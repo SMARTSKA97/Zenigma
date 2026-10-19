@@ -120,6 +120,33 @@ nav a.active {
   color: var(--ink-contrast);
   background: var(--ink);
 }
+.right {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.coin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.9rem;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.coin-chip.pop {
+  animation: chip-pop 0.5s var(--spring);
+}
+@keyframes chip-pop {
+  50% {
+    transform: scale(1.22);
+  }
+}
 .status {
   justify-self: end;
   display: inline-flex;

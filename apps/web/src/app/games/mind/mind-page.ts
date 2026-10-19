@@ -1,3 +1,4 @@
+import { WalletService } from '../../core/wallet.service';
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -53,6 +54,7 @@ export class MindPage implements CanLeave {
   protected readonly nav = inject(BackService);
   protected readonly store = inject(MindStore);
   protected readonly daily = inject(MindDailyService);
+  private readonly wallet = inject(WalletService);
   private readonly haptics = inject(HapticsService);
   private readonly route = inject(ActivatedRoute);
 
@@ -106,6 +108,7 @@ export class MindPage implements CanLeave {
     // A game that is in today's mind set counts for it, wherever it was started from.
     this.daily.record(this.id(), r.score);
     if (this.record()) this.haptics.success();
+    this.wallet.note('mind');
     this.stage.set('result');
   }
 }

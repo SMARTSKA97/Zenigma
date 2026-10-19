@@ -1,0 +1,97 @@
+<header class="top">
+  <a class="round" href="/" aria-label="Back" (click)="nav.up($event)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></a>
+  <h1>Store</h1>
+</header>
+
+<section class="balance">
+  <div class="big"><span aria-hidden="true">🪙</span><b>{{ wallet.coins() }}</b></div>
+  <div class="small">
+    <span>💡 {{ hints.balance() }} hint{{ hints.balance() === 1 ? '' : 's' }}</span>
+    <span class="muted">Same on every device you sign in on</span>
+  </div>
+</section>
+
+@if (!auth.signedIn()) {
+  <section class="notice card">
+    <p><b>Sign in to use the store.</b> Coins you earn as a guest wait on this device and join your account when you sign in.</p>
+    <a class="button" routerLink="/account">Sign in</a>
+  </section>
+} @else if (!online()) {
+  <section class="notice card">
+    <p><b>The store needs a connection.</b> That keeps your coins, hints and items the same on every device. Turn offline mode off in Settings to open it.</p>
+  </section>
+} @else if (wallet.error()) {
+  <section class="notice card">
+    <p>{{ wallet.error() }}</p>
+    <button type="button" (click)="wallet.refresh()">Try again</button>
+  </section>
+}
+
+<section class="card wheel">
+  <h2>Daily wheel</h2>
+  <p class="muted">One spin a day. Coins, or a free hint. Never empty-handed.</p>
+  <div class="wheel-box">
+    <i class="pointer" aria-hidden="true"></i>
+    <svg viewBox="-100 -100 200 200" role="img" aria-label="Prize wheel" [style.transform]="'rotate(' + angle() + 'deg)'" class="disc" [class.spun]="spinning()">
+      @for (s of slices; track $index) {
+        <path [attr.d]="slicePath($index)" [attr.fill]="colour($index)" stroke="#0b1012" stroke-opacity=".35" />
+        <text [attr.transform]="labelPos($index)" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="15" font-weight="800">{{ label(s) }}</text>
+      }
+      <circle r="14" fill="#0b1012" />
+    </svg>
+  </div>
+  @if (prize(); as p) {
+    <p class="prize" role="status">{{ p }}</p>
+  }
+  <button type="button" class="spin" [disabled]="!online() || wallet.spunToday() || spinning()" (click)="spin()">
+    {{ spinning() ? 'Spinning…' : wallet.spunToday() ? 'Come back tomorrow' : 'Spin' }}
+  </button>
+</section>
+
+<app-quests-card />
+
+<section class="shop">
+  <h2>Shop</h2>
+  <div class="tabs" role="tablist" aria-label="Shop">
+    @for (s of shelves; track s.id) {
+      <button type="button" role="tab" [attr.aria-selected]="shelf() === s.id" (click)="shelf.set(s.id)">{{ s.label }}</button>
+    }
+  </div>
+  @if (shelf() === 'accent') {
+    <p class="muted note">Ocean, Sunset, Forest, Orchid and Gold are free in Settings. These are extra.</p>
+  }
+  @if (!wallet.catalog().length) {
+    <p class="muted">{{ wallet.loading() ? 'Loading…' : 'Open the store online to see what is for sale.' }}</p>
+  }
+  <ul class="items">
+    @for (item of items(); track item.id) {
+      <li class="item" [class.owned]="owned(item)">
+        @if (item.kind === 'hints') {
+          <span class="art" aria-hidden="true">💡</span>
+        } @else {
+          <span class="art sw" [style.--c]="swatch(item)" aria-hidden="true"></span>
+        }
+        <span class="meta">
+          <b>{{ item.name }}</b>
+          @if (unlockNote(item); as n) {
+            <small class="muted">{{ n }}</small>
+          }
+        </span>
+        @if (owned(item)) {
+          <button type="button" class="secondary" (click)="use(item)">{{ using(item) ? 'In use' : 'Use' }}</button>
+        } @else {
+          <button type="button" [disabled]="!online() || busy() === item.id || wallet.coins() < item.price" (click)="buy(item)">🪙 {{ item.price }}</button>
+        }
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="card ads">
+  <h2>More coins</h2>
+  <p class="muted">Watching a short video for coins is coming soon. Until then, quests, dailies and the wheel keep your purse full.</p>
+</section>
+
+@if (toast(); as t) {
+  <p class="toast" role="status">{{ t }}</p>
+}

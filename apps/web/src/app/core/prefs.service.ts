@@ -19,6 +19,8 @@ interface Prefs {
   hideStreaks: boolean;
   crashReports: boolean;
   accent: string;
+  skin: string;
+  sounds: boolean;
   tapHaptics: HapticStrength;
   alertHaptics: HapticStrength;
 }
@@ -43,6 +45,10 @@ export class PrefsService {
   readonly crashReports = signal(true);
   /** The colour theme (see ACCENTS in the settings page). 'default' is the original blue. */
   readonly accent = signal('default');
+  /** A full theme ('none' for the normal light/dark). Earned or bought in the store. */
+  readonly skin = signal('none');
+  /** Small sounds for coins and wins (made on the device, no files). */
+  readonly sounds = signal(true);
   /** How strong the little taps are (a cell chosen, a number placed). */
   readonly tapHaptics = signal<HapticStrength>('light');
   /** How strong the patterns for a mistake, a refused move and a win are. */
@@ -62,6 +68,8 @@ export class PrefsService {
       this.hideStreaks.set(saved.hideStreaks === true);
       this.crashReports.set(saved.crashReports !== false);
       this.accent.set(typeof saved.accent === 'string' ? saved.accent : 'default');
+      this.skin.set(typeof saved.skin === 'string' ? saved.skin : 'none');
+      this.sounds.set(saved.sounds !== false);
       this.tapHaptics.set(strength(saved.tapHaptics, 'light'));
       this.alertHaptics.set(strength(saved.alertHaptics, 'strong'));
     } catch {
@@ -83,6 +91,8 @@ export class PrefsService {
     else document.documentElement.removeAttribute('data-large');
     if (this.accent() !== 'default') document.documentElement.setAttribute('data-accent', this.accent());
     else document.documentElement.removeAttribute('data-accent');
+    if (this.skin() !== 'none') document.documentElement.setAttribute('data-skin', this.skin());
+    else document.documentElement.removeAttribute('data-skin');
   }
 
   setHardMode(value: boolean): void {
@@ -140,6 +150,17 @@ export class PrefsService {
     this.apply();
   }
 
+  setSkin(value: string): void {
+    this.skin.set(value);
+    this.save();
+    this.apply();
+  }
+
+  setSounds(value: boolean): void {
+    this.sounds.set(value);
+    this.save();
+  }
+
   setAccent(value: string): void {
     this.accent.set(value);
     this.save();
@@ -163,7 +184,7 @@ export class PrefsService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), hideStreaks: this.hideStreaks(), crashReports: this.crashReports(), accent: this.accent(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), hideStreaks: this.hideStreaks(), crashReports: this.crashReports(), accent: this.accent(), skin: this.skin(), sounds: this.sounds(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

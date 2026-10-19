@@ -6,13 +6,14 @@ import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
 import { Glyph } from '../../shared/glyph';
-import { HintWheel } from '../../shared/hint-wheel';
+import { WalletService } from '../../core/wallet.service';
 import { HintsService } from '../../core/hints.service';
+import { PracticeTabs } from '../../shared/practice-tabs';
 
 /** Practice: every game, endless levels, no pressure. Games with variants (Sudoku) open a chooser first. */
 @Component({
   selector: 'app-practice',
-  imports: [RouterLink, Glyph, HintWheel],
+  imports: [RouterLink, Glyph, PracticeTabs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './practice.html',
   styleUrl: './practice.scss',
@@ -37,7 +38,7 @@ export class Practice implements OnInit {
     .map((game) => ({ game, kinds: soonKindsOf(game.id) }))
     .filter((g) => g.kinds.length > 0);
   protected readonly hints = inject(HintsService);
-  protected readonly wheel = signal(false);
+  protected readonly wallet = inject(WalletService);
 
   ngOnInit(): void {
     for (const t of PRACTICE_TRACKS) void this.practice.load(t.track);
