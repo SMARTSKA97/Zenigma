@@ -9,13 +9,14 @@ import { Stats, StatsService } from '../../core/stats.service';
 import { UpdaterService } from '../../core/updater.service';
 import { GAMES, gameInfo, practiceEntry } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
+import { DayStreakCard } from '../../shared/day-streak-card';
 import { FreezeSheet } from '../../shared/freeze-sheet';
 import { HomeExtras } from './home-extras';
 import { HintsService } from '../../core/hints.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Glyph, FreezeSheet, HomeExtras],
+  imports: [RouterLink, Glyph, FreezeSheet, HomeExtras, DayStreakCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.html',
   styleUrl: './home.scss',

@@ -1,3 +1,4 @@
+import { DayStreakService } from '../../core/day-streak.service';
 import { WidgetService } from '../../core/widget.service';
 import { ReminderService } from '../../core/reminder.service';
 import { PrefsService } from '../../core/prefs.service';
@@ -29,6 +30,7 @@ export class DailyHub implements OnInit, OnDestroy {
   private readonly statsApi = inject(StatsService);
   private readonly reminder = inject(ReminderService);
   private readonly widget = inject(WidgetService);
+  protected readonly dayStreak = inject(DayStreakService);
   protected readonly stats = signal<Stats | null>(null);
   protected readonly freezesOpen = signal(false);
 
@@ -117,7 +119,11 @@ export class DailyHub implements OnInit, OnDestroy {
     }
     const statsLoaded = this.auth.signedIn() ? this.statsApi.load().then((s) => this.stats.set(s)).catch(() => undefined) : Promise.resolve();
     try {
-      this.hub.set(await this.api.dailyHub());
+      const hub = await this.api.dailyHub();
+      this.hub.set(hub);
+      // Every puzzle that is ready today finished: that is the puzzle half of the daily streak.
+      const ready = hub.games.filter((g) => g.available);
+      if (ready.length > 0 && ready.every((g) => ['solved', 'won', 'lost'].includes(g.status))) this.dayStreak.markPuzzlesDone(hub.date);
       void statsLoaded.then(() => this.armStreakAlert());
     } catch {
       this.failed.set(true);

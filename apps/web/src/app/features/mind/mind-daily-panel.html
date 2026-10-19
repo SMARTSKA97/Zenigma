@@ -5,13 +5,13 @@
       <h2>{{ daily.complete() ? 'Set complete' : daily.doneCount() + ' of ' + daily.games().length + ' done' }}</h2>
     </div>
     <div class="meta">
-      <span class="pts"><b>{{ daily.points() }}</b><small>/ {{ daily.maxPoints }}</small></span>
+      <span class="pts"><b>{{ daily.points() }}</b><small>/ {{ daily.maxPoints() }}</small></span>
       @if (daily.streak(); as n) {
         <span class="streak" [attr.aria-label]="n + ' day streak'">🔥 {{ n }}</span>
       }
     </div>
   </header>
-  <p class="muted lede">Three quick games, one for each of three skills. The same set for everyone today. Finish all three to keep your streak.</p>
+  <p class="muted lede">One quick game from every skill: memory, attention, speed, math, language and logic. The same set for everyone today. Finish all {{ daily.games().length }} and today's puzzles to keep your daily streak.</p>
 
   <ul>
     @for (g of daily.games(); track g) {

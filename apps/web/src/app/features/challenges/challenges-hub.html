@@ -4,6 +4,9 @@
     <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" (click)="pick(t.id)">{{ t.label }}</button>
   }
 </div>
+@if (tab() === 'mind' || tab() === 'puzzles') {
+  <app-day-streak-card />
+}
 @switch (tab()) {
   @case ('mind') {
     <app-mind-daily-panel />

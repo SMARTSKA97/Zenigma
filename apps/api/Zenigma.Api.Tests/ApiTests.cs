@@ -138,13 +138,13 @@ public class ApiTests : IClassFixture<ApiFactory>
     {
         var (client, _, device) = await SignUpAsync();
         var today = Zenigma.Api.Infrastructure.IstClock.Today(DateTimeOffset.UtcNow).ToString("yyyy-MM-dd");
-        var done = new { id = Guid.NewGuid(), kind = "mind.daily.completed", payload = new { date = today, games = new[] { "a", "b", "c" }, points = 250 }, clientCreatedAt = DateTimeOffset.UtcNow };
+        var done = new { id = Guid.NewGuid(), kind = "mind.daily.completed", payload = new { date = today, games = new[] { "a", "b", "c", "d", "e", "f" }, points = 500 }, clientCreatedAt = DateTimeOffset.UtcNow };
         var push = await client.PostAsJsonAsync("/sync/push", new { deviceId = device, platform = "web", events = new[] { done } });
         Assert.Equal(HttpStatusCode.OK, push.StatusCode);
 
         var board = await client.GetFromJsonAsync<JsonElement>("/leaderboards/mind-daily?period=today", Json);
         var me = board.GetProperty("me");
-        Assert.Equal(250, me.GetProperty("value").GetInt64());
+        Assert.Equal(500, me.GetProperty("value").GetInt64());
         Assert.True(me.GetProperty("isMe").GetBoolean());
 
         Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync("/leaderboards/mind-daily?period=all")).StatusCode);

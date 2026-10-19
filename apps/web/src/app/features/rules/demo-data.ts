@@ -184,7 +184,7 @@ export const MIND_DEMOS: Record<string, Demo> = {
   },
   wend: {
     frames: [
-      F([['■', 'C', 'A', 'T', '■'], ['D', 'O', 'G', 'S', '■']], 'A grid of letters with grey blocks. Hidden inside are words of 3, 4, 5 and 6 letters.'),
+      F([['■', 'C', 'A', 'T', '■'], ['D', 'O', 'G', 'S', '■']], 'A grid of letters with grey blocks. Hidden inside are several words, 3 to 11 letters. Monday is small; Sunday is the biggest.'),
       F([['■', '?C', '+A', 'T', '■'], ['D', 'O', 'G', 'S', '■']], 'Drag through touching letters (up, down, left, right) to spell a word.', 'If you are not sure where to start → try a corner or a letter with few neighbours.', [0, 1], [0, 3]),
       F([['■', '+C', '+A', '+T', '■'], ['?D', 'O', 'G', 'S', '■']], 'CAT locks in. Every letter is used exactly once, and the words never cross.', 'If you are stuck → press Hint: it shows the first letter of a word, then the next.', [1, 0], [1, 3]),
     ],

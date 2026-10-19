@@ -7,25 +7,20 @@ import { seeded } from './mind-util';
 
 const STATE_KEY = 'zenigma.mind.daily';
 const DAYS_KEY = 'zenigma.mind.daily.days';
-const SET_SIZE = 3;
-
-/** Comet Slice has a daily of its own (one timed run), so it is not part of the three-game set. */
+/** Comet Slice has a daily of its own (one timed run), so it is not part of the daily set. */
 const HAS_OWN_DAILY: readonly MindGameId[] = ['comet-slice'];
 
-/** Today's mind-training set: three games, each for a different skill, the same for everyone on a given (India) day. */
+/** Today's mind-training set: one random game from each skill category (six games), the same for everyone on a given (India) day. */
 export function mindSetFor(date: string): MindGameId[] {
   const rand = seeded(`mind-daily:${date}`);
   const pool = MIND_LIVE.filter((g) => !HAS_OWN_DAILY.includes(g));
-  const skills = SKILLS.map((s) => s.id).filter((id) => pool.some((g) => MIND_META[g]?.skill === id));
-  // Shuffle the skills, take three, and pick one live game for each.
-  for (let i = skills.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [skills[i], skills[j]] = [skills[j], skills[i]];
-  }
-  return skills.slice(0, SET_SIZE).map((skill: Skill) => {
-    const games = pool.filter((g) => MIND_META[g]?.skill === skill);
-    return games[Math.floor(rand() * games.length)];
-  });
+  // Skills keep their catalogue order; each one gets one live game picked by the day's seed.
+  return SKILLS.map((s) => s.id)
+    .filter((id) => pool.some((g) => MIND_META[g]?.skill === id))
+    .map((skill: Skill) => {
+      const games = pool.filter((g) => MIND_META[g]?.skill === skill);
+      return games[Math.floor(rand() * games.length)];
+    });
 }
 
 interface DayState {
@@ -45,9 +40,12 @@ export class MindDailyService {
   readonly results = computed(() => (this.state().date === this.date() ? this.state().done : {}));
   readonly doneCount = computed(() => this.games().filter((g) => this.results()[g]).length);
   readonly complete = computed(() => this.doneCount() === this.games().length);
-  /** Up to 100 per game; the day's total out of 300. */
+  /** Up to 100 per game; the day's total out of 100 for each game in the set (600 with six). */
   readonly points = computed(() => this.games().reduce((n, g) => n + (this.results()[g]?.mark ?? 0), 0));
-  readonly maxPoints = SET_SIZE * 100;
+  readonly maxPoints = computed(() => this.games().length * 100);
+
+  /** Every day the whole set was finished (newest last). */
+  readonly finishedDays = computed(() => this.days());
 
   /** Days in a row (up to today, or up to yesterday while today is unfinished) with the whole set done. */
   readonly streak = computed(() => {

@@ -1,5 +1,5 @@
 <div class="hud">
-  <span>{{ wordsFound() }} of 4 words{{ daily() ? '' : ' · board ' + boards() }}</span>
+  <span>{{ wordsFound() }} of {{ slots().length }} words{{ daily() ? '' : ' · board ' + boards() }}</span>
   @if (daily()) {
     <span>{{ elapsed() }}s · {{ hints() }} {{ hints() === 1 ? 'hint' : 'hints' }}</span>
   } @else {
@@ -7,13 +7,14 @@
   }
 </div>
 @if (!daily()) {
-  <div class="time"><i [style.width.%]="(clock.left() / 240000) * 100"></i></div>
+  <div class="time"><i [style.width.%]="(clock.left() / 480000) * 100"></i></div>
 }
 @if (ready()) {
   <p class="spelling" [class.flash-bad]="bad()" aria-live="polite">{{ spelling().toUpperCase() || ' ' }}</p>
   <div
     #grid
     class="wgrid"
+    [style.--cols]="size()"
     role="group"
     aria-label="Letters. Drag across touching letters to spell a word."
     (pointerdown)="down($event)"
@@ -21,7 +22,7 @@
     (pointerup)="up()"
     (pointercancel)="up()"
   >
-    @for (i of cells; track i) {
+    @for (i of cells(); track i) {
       <span
         class="wt"
         [class.wall]="walls()[i]"
@@ -34,8 +35,8 @@
     }
   </div>
   <div class="slots" aria-label="Words to find">
-    @for (n of lengths; track n) {
-      @let w = slot(n);
+    @for (n of slots(); track $index) {
+      @let w = slot($index);
       <div class="slot" [class.found]="w.found" [attr.data-hue]="w.found ? w.hue : null">
         @for (l of w.letters; track $index) {
           <span class="sl">{{ l }}</span>

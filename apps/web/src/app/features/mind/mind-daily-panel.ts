@@ -8,7 +8,7 @@ import { MindDailyService } from '../../games/mind/mind-daily';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { Glyph } from '../../shared/glyph';
 
-/** Today's mind set: three short games from three different skills, the same for everyone. */
+/** Today's mind set: one short game from each skill, the same for everyone. */
 @Component({
   selector: 'app-mind-daily-panel',
   imports: [RouterLink, Glyph],

@@ -50,6 +50,7 @@
 }
 
 @if (!prefs.hideStreaks()) {
+<app-day-streak-card />
 <a class="streaks card" routerLink="/stats" aria-label="Your streaks and stats">
   @if (!auth.signedIn()) {
     <div class="sign">

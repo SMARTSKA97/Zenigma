@@ -141,8 +141,8 @@ public static class LeaderboardEndpoints
             return Results.Ok(new LeaderboardDto(game, kind, period, kind == "daily" && period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
         });
 
-        // The daily mind-training set, ranked by points (out of 300 a day). The points are reported by the app, so this board is for fun:
-        // each day is capped at 300 and only a finished set counts.
+        // The daily mind-training set, ranked by points (out of 600 a day). The points are reported by the app, so this board is for fun:
+        // each day is capped at 600 and only a finished set counts.
         app.MapGet("/leaderboards/mind-daily", async (string? period, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, TimeProvider clock, CancellationToken ct) =>
         {
             period ??= "today";
@@ -154,7 +154,7 @@ public static class LeaderboardEndpoints
             var sql = $"""
                 WITH days AS (
                     SELECT e.user_id, e.payload->>'date' AS day,
-                           MAX(LEAST(300, GREATEST(0, COALESCE((e.payload->>'points')::int, 0)))) AS pts
+                           MAX(LEAST(600, GREATEST(0, COALESCE((e.payload->>'points')::int, 0)))) AS pts
                     FROM sync_events e
                     WHERE e.kind = 'mind.daily.completed' AND e.payload->>'date' BETWEEN @start AND @finish
                     GROUP BY e.user_id, e.payload->>'date'

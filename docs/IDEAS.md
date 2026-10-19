@@ -124,7 +124,7 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - Mind game (Language): compound-word chains from a built-in pair list (`games/mind/chain-link-data.ts`), 2 to 6 hidden words, any valid word that joins both neighbours is accepted. Add pairs to the list to grow it.
 
 ## Done: word dailies and Wend rebuilt (phase 54)
-- Wend follows LinkedIn: 5x5 grid with 7 grey wall blocks, four words (3, 4, 5, 6 letters) traced through neighbouring letters, every letter used once, one solution per board (`wend-engine.ts`: path partition board maker, `countSolutions` against the full word list), a real word on the wrong tiles is rejected; word lists built by `tools/generators/words/build-wend.mjs`.
+- Wend follows LinkedIn: grid with grey wall blocks that grows through the week (Mon 5x5 four words, up to Sun 7x7 five or six words of 3 to 11 letters), words traced through neighbouring letters, every letter used once, exactly one solution per board (`wend-engine.ts`: `WEEK` specs, path-partition board maker, `countSolutions` exact cover), a real word on the wrong tiles is rejected; practice grows board by board; 6,660 everyday words in `wend-common.ts`, built by `tools/generators/words/build-wend.mjs`.
 - Dailies for Pinpoint, Chain Link, Crossclimb, Wend and Comet Slice: client-seeded by IST date (`word-daily.ts`, route `/daily-word/:game`, panel in the Puzzles tab), event `wdaily.completed`, board `/leaderboards/word-daily` (V13 index). Not server-validated, so not part of streaks or the widget. Comet Slice (built from screen recordings of Slice's Fire game: comets and skulls fall from the top at random speeds that keep rising, 3 hearts lost by comets reaching the ground, a sliced skull ends the run with a huge vibration; practice is endless, the daily is a 60-second run) uses a seeded random so everyone gets the same throws; its points are score/60 capped at 100.
 
 ## Audit follow-ups (from an outside review, October 2026)
@@ -143,3 +143,7 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - "Offline ready" badge; pre-cache level packs on Wi-Fi when idle; compress share images.
 - Alerts on 5xx and slow responses; run the k6 test and tune from real numbers; small VPS once past ~500 daily users.
 - Cache-Control for the daily puzzle data once it is served without a login.
+
+## Done: six-game mind set and daily streak (phase 63)
+- `mindSetFor` picks one random live game from every skill (six games, 600 points; Comet Slice has its own daily); API mind board cap is 600.
+- `DayStreakService` (`core/day-streak.service.ts`): the daily streak counts a day only when the mind set and all available daily puzzles are done; puzzle half is marked from the Daily hub on this device. Server per-game streaks unchanged. Possible follow-up: record the combined day in the event log so it follows the player across devices.
