@@ -2,14 +2,14 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { indiaDate } from '../../core/hints.service';
 import { SyncService } from '../../core/sync.service';
 
-/** The word games that have a daily board: one puzzle a day, the same for everyone, played once for a result. */
-export const WORD_DAILY_GAMES = ['pinpoint', 'chain-link', 'crossclimb', 'wend'] as const;
+/** The games with an extra daily board (the word games and Comet Slice): the same puzzle or throws for everyone, played once for a result. */
+export const WORD_DAILY_GAMES = ['pinpoint', 'chain-link', 'crossclimb', 'wend', 'comet-slice'] as const;
 export type WordDailyGame = (typeof WORD_DAILY_GAMES)[number];
 export const isWordDaily = (id: string): id is WordDailyGame => (WORD_DAILY_GAMES as readonly string[]).includes(id);
 
 /** What the game's own score means out of the day's board, turned into 0 to 100 points. */
 export function dailyPoints(game: WordDailyGame, score: number): number {
-  const out = game === 'chain-link' ? (score / 5) * 100 : game === 'pinpoint' ? (score / 15) * 100 : game === 'crossclimb' ? (score / 4) * 100 : score;
+  const out = game === 'chain-link' ? (score / 5) * 100 : game === 'pinpoint' ? (score / 15) * 100 : game === 'crossclimb' ? (score / 4) * 100 : game === 'comet-slice' ? (score / 80) * 100 : score;
   return Math.max(0, Math.min(100, Math.round(out)));
 }
 

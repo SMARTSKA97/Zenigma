@@ -1,14 +1,14 @@
 <section class="panel">
   <header>
     <div>
-      <p class="eyebrow">Word dailies · {{ daily.date() }}</p>
+      <p class="eyebrow">Extra dailies · {{ daily.date() }}</p>
       <h2>{{ daily.doneCount() }} of {{ daily.games.length }} done</h2>
     </div>
     <div class="meta">
       <span class="pts"><b>{{ daily.points() }}</b><small>/ {{ daily.games.length * 100 }}</small></span>
     </div>
   </header>
-  <p class="muted lede">One word puzzle each, the same for everyone today. They work without a connection; results reach the board when you are online.</p>
+  <p class="muted lede">One word puzzle each, plus Comet Slice, the same for everyone today. They work without a connection; results reach the board when you are online.</p>
   <ul>
     @for (g of daily.games; track g) {
       @let r = daily.results()[g];

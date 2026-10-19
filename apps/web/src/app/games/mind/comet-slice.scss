@@ -9,9 +9,16 @@
   max-height: 60vh;
   margin: 0 auto;
   border-radius: 1rem;
-  background: radial-gradient(120% 90% at 50% 100%, #3a1b2e, #120c1e 70%);
+  background: #050b1f;
   touch-action: none;
   user-select: none;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 .tip {
   text-align: center;

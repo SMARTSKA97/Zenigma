@@ -82,7 +82,7 @@ export const GAMES: GameInfo[] = [
   { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: true, daily: false, category: 'word', skill: 'language' },
-  { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice comets, dodge bombs, keep your lives.', hue: 15, live: true, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice the falling comets, avoid the skulls.', hue: 15, live: true, daily: false, category: 'mind', skill: 'speed' },
   { id: 'echo-sequence', name: 'Echo Sequence', blurb: 'Watch a pattern of lights, then repeat it. It grows by one each round.', hue: 120, live: true, daily: false, category: 'mind', skill: 'memory' },
   { id: 'grid-recall', name: 'Grid Recall', blurb: 'Memorise which tiles lit up, then tap them from memory.', hue: 140, live: true, daily: false, category: 'mind', skill: 'memory' },
   { id: 'number-recall', name: 'Number Recall', blurb: 'See a number for a moment, then type it back.', hue: 180, live: true, daily: false, category: 'mind', skill: 'memory' },

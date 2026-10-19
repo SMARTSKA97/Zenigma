@@ -18,11 +18,14 @@ describe('word dailies', () => {
     expect(dailyPoints('crossclimb', 2)).toBe(50);
     expect(dailyPoints('wend', 400)).toBe(100);
     expect(dailyPoints('wend', -3)).toBe(0);
+    expect(dailyPoints('comet-slice', 40)).toBe(50);
+    expect(dailyPoints('comet-slice', 500)).toBe(100);
   });
 
   it('knows its games and gives one seed per game and day', () => {
     expect(isWordDaily('wend')).toBe(true);
-    expect(isWordDaily('comet-slice')).toBe(false);
+    expect(isWordDaily('comet-slice')).toBe(true);
+    expect(isWordDaily('sudoku')).toBe(false);
     expect(dailySeed('wend', '2026-10-18')).not.toBe(dailySeed('pinpoint', '2026-10-18'));
     expect(dailySeed('wend', '2026-10-18')).not.toBe(dailySeed('wend', '2026-10-19'));
   });

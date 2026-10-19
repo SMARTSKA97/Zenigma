@@ -1,7 +1,8 @@
-/** The play field is 320 by 480 units; the screen just scales it. */
+/** The play field is 320 by 480 units; the screen just scales it. Comets and skulls fall from the top. */
 export const W = 320;
 export const H = 480;
-export const GRAVITY = 520;
+/** A little pull so that bodies speed up as they fall. */
+export const GRAVITY = 70;
 
 export interface Body {
   id: number;
@@ -42,20 +43,26 @@ export const throwGap = (seconds: number, random: () => number): number => (1.15
 export const bombChance = (seconds: number): number => 0.14 + 0.2 * heat(seconds);
 
 /** A run lasts this long unless a skull is sliced first. */
-export const RUN_SECONDS = 45;
+export const RUN_SECONDS = 60;
+
+/** Radius of the hit area of a comet and of a skull (skulls are the bigger ones, so they are easy to see and to avoid). */
+export const COMET_R = 28;
+export const SKULL_R = 42;
 
 let nextId = 1;
 
-/** A body thrown up from below the bottom edge, rising to somewhere between 55% and 90% of the field's height. */
+/**
+ * A body that appears above the top edge and falls. Each one gets its own speed (from a slow drift to a fast streak) and its
+ * own slant, so no two come down alike.
+ */
 export function throwBody(seconds: number, random: () => number): Body {
   const kind = random() < bombChance(seconds) ? 'bomb' : 'comet';
-  const r = kind === 'bomb' ? 26 : 26;
-  const x = 40 + random() * (W - 80);
-  const peak = H * (0.55 + 0.35 * random());
-  const vy = -Math.sqrt(2 * GRAVITY * peak);
-  // Drift gently towards the middle so bodies do not leave the sides.
-  const vx = ((W / 2 - x) / W) * 120 * (0.4 + random());
-  return { id: nextId++, kind, x, y: H + r, vx, vy, r, age: 0, sliced: false, missed: false };
+  const r = kind === 'bomb' ? SKULL_R : COMET_R;
+  const x = r + random() * (W - 2 * r);
+  const vy = 70 + random() * 300 * (0.6 + 0.4 * heat(seconds));
+  // Slanted, but drifting back towards the middle so bodies do not leave the sides.
+  const vx = (random() - 0.5) * 120 + ((W / 2 - x) / W) * 50;
+  return { id: nextId++, kind, x, y: -r, vx, vy, r, age: 0, sliced: false, missed: false };
 }
 
 /** Moves a body forward by `dt` seconds. */

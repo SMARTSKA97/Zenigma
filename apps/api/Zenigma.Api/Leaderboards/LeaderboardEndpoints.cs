@@ -173,12 +173,12 @@ public static class LeaderboardEndpoints
             return Results.Ok(new LeaderboardDto("mind", "daily", period, period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
         }).RequireAuthorization();
 
-        // A word daily (Pinpoint, Chain Link, Crossclimb, Wend): the day's board ranks the best result of the day by points, then the faster time;
+        // An extra daily (Pinpoint, Chain Link, Crossclimb, Wend, Comet Slice): the day's board ranks the best result of the day by points, then the faster time;
         // the week adds up each day's best. Like the mind board, the numbers are reported by the app, so this is for fun (points capped at 100).
         app.MapGet("/leaderboards/word-daily", async (string? game, string? period, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, TimeProvider clock, CancellationToken ct) =>
         {
             period ??= "today";
-            if (game is not ("pinpoint" or "chain-link" or "crossclimb" or "wend")) return Results.BadRequest(new { error = "Unknown word daily." });
+            if (game is not ("pinpoint" or "chain-link" or "crossclimb" or "wend" or "comet-slice")) return Results.BadRequest(new { error = "Unknown word daily." });
             if (period is not ("today" or "week")) return Results.BadRequest(new { error = "Invalid period for this board." });
             var today = IstClock.Today(clock.GetUtcNow());
             var weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));

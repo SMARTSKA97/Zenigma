@@ -9,6 +9,7 @@ import { HapticsService } from '../../core/haptics.service';
 import { formatDuration, Leaderboard, LeaderboardService } from '../../core/leaderboard.service';
 import { gameInfo } from '../../games/catalog';
 import { ChainLink } from '../../games/mind/chain-link';
+import { CometSlice } from '../../games/mind/comet-slice';
 import { Crossclimb } from '../../games/mind/crossclimb';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { MindResult } from '../../games/mind/mind-util';
@@ -20,7 +21,7 @@ import { Glyph } from '../../shared/glyph';
 /** One word daily: the puzzle of the day (the same for everyone), played once, with today's board under the result. */
 @Component({
   selector: 'app-word-daily-page',
-  imports: [RouterLink, Glyph, Pinpoint, ChainLink, Crossclimb, Wend],
+  imports: [RouterLink, Glyph, Pinpoint, ChainLink, Crossclimb, Wend, CometSlice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './word-daily-page.html',
   styleUrl: './word-daily-page.scss',
@@ -52,6 +53,7 @@ export class WordDailyPage {
       case 'chain-link': return 'One chain of five words. Three lives.';
       case 'crossclimb': return 'One ladder with four rows to find. Three lives.';
       case 'wend': return 'One board. Fewer hints is better.';
+      case 'comet-slice': return 'The same comets and skulls for everyone. One run, a minute at most.';
       default: return '';
     }
   });

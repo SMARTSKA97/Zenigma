@@ -1,16 +1,17 @@
-<div class="hud"><span>{{ score() }} collected</span><span>{{ left() }}s</span></div>
-<div class="time"><i [style.width.%]="(left() / 45) * 100"></i></div>
+<div class="time"><i [style.width.%]="(left() / 60) * 100"></i></div>
+<p class="sr-only" aria-live="polite">{{ score() }} points, {{ left() }} seconds left</p>
 <div class="field-wrap" [class.boom]="boom()">
   <canvas
     #field
     class="field"
     width="320"
     height="480"
-    aria-label="Swipe through the fires. Avoid the skulls."
+    aria-label="Swipe through the comets. Avoid the skulls."
     (pointerdown)="down($event)"
     (pointermove)="move($event)"
     (pointerup)="up()"
     (pointercancel)="up()"
+    (lostpointercapture)="up()"
   ></canvas>
 </div>
-<p class="muted tip">Swipe through the fires. A skull ends the run. Several in one swipe is a combo.</p>
+<p class="muted tip">Swipe through the comets. A skull ends the run. Several in one swipe is a combo.</p>

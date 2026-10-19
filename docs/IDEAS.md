@@ -125,7 +125,7 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 
 ## Done: word dailies and Wend rebuilt (phase 54)
 - Wend follows LinkedIn: 5x5 grid with 7 grey wall blocks, four words (3, 4, 5, 6 letters) traced through neighbouring letters, every letter used once, one solution per board (`wend-engine.ts`: path partition board maker, `countSolutions` against the full word list), a real word on the wrong tiles is rejected; word lists built by `tools/generators/words/build-wend.mjs`.
-- Dailies for Pinpoint, Chain Link, Crossclimb, Wend: client-seeded by IST date (`word-daily.ts`, route `/daily-word/:game`, panel in the Puzzles tab), event `wdaily.completed`, board `/leaderboards/word-daily` (V13 index). Not server-validated, so not part of streaks or the widget. Comet Slice is arcade (Slice Fire style: collect fires, a skull ends the run, 45 seconds, combos) and has no daily.
+- Dailies for Pinpoint, Chain Link, Crossclimb, Wend and Comet Slice: client-seeded by IST date (`word-daily.ts`, route `/daily-word/:game`, panel in the Puzzles tab), event `wdaily.completed`, board `/leaderboards/word-daily` (V13 index). Not server-validated, so not part of streaks or the widget. Comet Slice (built from screen recordings of Slice's Fire game: comets and skulls fall from the top at random speeds, big skulls end the run, 60 seconds, combos) uses a seeded random so everyone gets the same throws; its points are score/80 capped at 100.
 
 ## Audit follow-ups (from an outside review, October 2026)
 - Done: README, SECURITY and roadmap counts agree (6 main games, 25 mind games, email flows need Brevo env vars).

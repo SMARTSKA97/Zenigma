@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, inject, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
 import { advance, Body, H, RUN_SECONDS, segmentHitsCircle, throwBody, throwGap, W } from './comet-slice-engine';
-import { MindResult } from './mind-util';
+import { MindResult, seeded } from './mind-util';
 
 interface Pop {
   x: number;
@@ -10,10 +10,27 @@ interface Pop {
   age: number;
 }
 
+interface Bit {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  age: number;
+  gold: boolean;
+}
+
+/** Stars are the same every time, so the sky does not jump about between frames. */
+const STARS = (() => {
+  const random = seeded('comet-slice-stars');
+  return Array.from({ length: 46 }, () => ({ x: random() * W, y: random() * H * 0.9, r: 0.6 + random() * 1.4, phase: random() * 6 }));
+})();
+
 /**
- * Fires are thrown up from the bottom. Swipe through them to collect them and keep clear of the skulls: slicing a skull ends
- * the run on the spot, with what you have. A fire that falls costs nothing. Slicing several in one swipe scores a bonus.
- * A run lasts 45 seconds, and the throws come faster and with more skulls as it goes.
+ * Comets and skulls fall from the top of a night sky, each at its own speed. Swipe through the comets to collect them and keep
+ * clear of the skulls: slicing a skull ends the run on the spot, with what you have. A comet that gets past costs nothing.
+ * Slicing several in one swipe scores a bonus. A run lasts a minute. Practice is different every time; the daily (`seed`) throws
+ * the same comets and skulls at everyone.
  */
 @Component({
   selector: 'app-comet-slice',
@@ -23,27 +40,31 @@ interface Pop {
 })
 export class CometSlice implements OnInit, OnDestroy {
   readonly done = output<MindResult>();
+  /** Set for the daily: the same throws for everyone. */
+  readonly seed = input<string | null>(null);
   private readonly haptics = inject(HapticsService);
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('field');
 
   protected readonly score = signal(0);
   protected readonly left = signal(RUN_SECONDS);
-  protected readonly combo = signal(0);
   protected readonly boom = signal(false);
 
+  private random: () => number = Math.random;
   private bodies: Body[] = [];
   private pops: Pop[] = [];
+  private bits: Bit[] = [];
   private trail: { x: number; y: number; age: number }[] = [];
-  private sparks: { x: number; y: number; vx: number; vy: number; age: number; hue: number }[] = [];
-  private swipeHits = 0;
   private seconds = 0;
-  private untilThrow = 0.8;
+  private untilThrow = 0.7;
   private frame = 0;
   private last = 0;
   private ended = false;
+  private swipeHits = 0;
   private pointer: { x: number; y: number } | null = null;
 
   ngOnInit(): void {
+    const seed = this.seed();
+    if (seed !== null) this.random = seeded(seed);
     this.last = performance.now();
     this.frame = requestAnimationFrame((t) => this.loop(t));
   }
@@ -65,25 +86,25 @@ export class CometSlice implements OnInit, OnDestroy {
     this.untilThrow -= dt;
     if (this.untilThrow <= 0) {
       // Later throws sometimes come in pairs.
-      const n = this.seconds > 25 && Math.random() < 0.35 ? 2 : 1;
-      for (let i = 0; i < n; i++) this.bodies.push(throwBody(this.seconds, Math.random));
-      this.untilThrow = throwGap(this.seconds, Math.random);
+      const n = this.seconds > 20 && this.random() < 0.35 ? 2 : 1;
+      for (let i = 0; i < n; i++) this.bodies.push(throwBody(this.seconds, this.random));
+      this.untilThrow = throwGap(this.seconds, this.random);
     }
     for (const b of this.bodies) advance(b, dt);
-    this.bodies = this.bodies.filter((b) => b.y - b.r <= H + 5 && !(b.sliced && b.age > 0 && b.y > H + b.r));
+    this.bodies = this.bodies.filter((b) => b.y - b.r <= H + 40 && !(b.sliced && b.age - (b.slicedAt ?? 0) > 0.7));
     this.left.set(Math.max(0, Math.ceil(RUN_SECONDS - this.seconds)));
     if (this.seconds >= RUN_SECONDS) this.end('Time!');
-    for (const s of this.sparks) {
+    for (const s of this.bits) {
       s.age += dt;
-      s.vy += 400 * dt;
+      s.vy += 260 * dt;
       s.x += s.vx * dt;
       s.y += s.vy * dt;
     }
-    this.sparks = this.sparks.filter((s) => s.age < 0.6);
+    this.bits = this.bits.filter((s) => s.age < 0.7);
     for (const p of this.pops) p.age += dt;
     this.pops = this.pops.filter((p) => p.age < 0.8);
     for (const t of this.trail) t.age += dt;
-    this.trail = this.trail.filter((t) => t.age < 0.18);
+    this.trail = this.trail.filter((t) => t.age < 0.22);
   }
 
   private end(text: string): void {
@@ -93,11 +114,13 @@ export class CometSlice implements OnInit, OnDestroy {
     cancelAnimationFrame(this.frame);
     this.draw();
     const n = this.score();
-    setTimeout(() => this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'fire' : 'fires'} collected${text === 'Time!' ? '' : ', a skull ended the run'}` }), 800);
+    setTimeout(() => this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'point' : 'points'}${text === 'Time!' ? '' : ', a skull ended the run'}` }), 800);
   }
 
   protected down(event: PointerEvent): void {
-    (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
+    // Press and drag, with a mouse or a finger. The pointer is captured, so a swipe carries on even if it leaves the field.
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
     this.pointer = this.toField(event);
     this.swipeHits = 0;
     this.slice(this.pointer, this.pointer);
@@ -128,16 +151,15 @@ export class CometSlice implements OnInit, OnDestroy {
       body.sliced = true;
       body.slicedAt = body.age;
       if (body.kind === 'comet') {
-        // The second fire in one swipe is worth 2, the third 3, and so on.
+        // The second comet in one swipe is worth 2, the third 3, and so on.
         this.swipeHits++;
         this.score.update((s) => s + this.swipeHits);
-        this.combo.set(this.swipeHits);
         this.haptics.tick();
         this.pops.push({ x: body.x, y: body.y, text: this.swipeHits > 1 ? `+${this.swipeHits} combo` : '+1', age: 0 });
-        this.burst(body.x, body.y, 24, 8);
+        this.burst(body.x, body.y, 12);
       } else {
         this.haptics.error();
-        this.burst(body.x, body.y, 0, 14);
+        this.burst(body.x, body.y, 16);
         this.boom.set(true);
         this.end('Skull!');
         return;
@@ -145,13 +167,15 @@ export class CometSlice implements OnInit, OnDestroy {
     }
   }
 
-  private burst(x: number, y: number, hue: number, count: number): void {
+  private burst(x: number, y: number, count: number): void {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 60 + Math.random() * 140;
-      this.sparks.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 60, age: 0, hue });
+      const speed = 50 + Math.random() * 150;
+      this.bits.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 40, r: 1.5 + Math.random() * 4, age: 0, gold: Math.random() < 0.25 });
     }
   }
+
+  // ---- drawing ----
 
   private draw(): void {
     const canvas = this.canvasRef().nativeElement;
@@ -163,123 +187,221 @@ export class CometSlice implements OnInit, OnDestroy {
       canvas.height = H * scale;
     }
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    ctx.clearRect(0, 0, W, H);
+    this.drawSky(ctx);
     for (const b of this.bodies) {
-      if (b.sliced && b.kind === 'comet') {
-        // Two halves drifting apart, fading as they cool.
-        const since = b.age - (b.slicedAt ?? b.age);
-        const apart = 8 + since * 80;
-        ctx.globalAlpha = Math.max(0, 1 - since / 0.6);
-        this.drawFire(ctx, b.x - apart, b.y + since * 40, b.r * 0.62, 0, 0);
-        this.drawFire(ctx, b.x + apart, b.y + since * 40, b.r * 0.62, 0, 0);
-        ctx.globalAlpha = 1;
-      } else if (b.kind === 'comet') this.drawFire(ctx, b.x, b.y, b.r, b.vx, b.vy);
-      else if (!b.sliced) this.drawSkull(ctx, b);
+      if (b.kind === 'comet') {
+        if (b.sliced) this.drawHalves(ctx, b);
+        else this.drawComet(ctx, b);
+      } else if (!b.sliced) this.drawSkull(ctx, b);
     }
-    for (const s of this.sparks) {
-      ctx.globalAlpha = Math.max(0, 1 - s.age / 0.6);
-      ctx.fillStyle = `hsl(${s.hue + 12 * (1 - s.age)}, 100%, 60%)`;
+    for (const s of this.bits) {
+      ctx.globalAlpha = Math.max(0, 1 - s.age / 0.7);
+      ctx.fillStyle = s.gold ? '#ffc94d' : '#ffffff';
       ctx.beginPath();
-      ctx.arc(s.x, s.y, 3.2 * (1 - s.age / 0.8), 0, Math.PI * 2);
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-    ctx.lineCap = 'round';
-    for (let i = 1; i < this.trail.length; i++) {
-      const p = this.trail[i - 1];
-      const q = this.trail[i];
-      const fade = Math.max(0, 1 - q.age / 0.18);
-      ctx.strokeStyle = `rgba(255,214,140,${fade * 0.55})`;
-      ctx.lineWidth = 11;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(q.x, q.y);
-      ctx.stroke();
-      ctx.strokeStyle = `rgba(255,255,255,${fade})`;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(q.x, q.y);
-      ctx.stroke();
-    }
+    this.drawSwipe(ctx);
     ctx.font = '800 20px system-ui, sans-serif';
     ctx.textAlign = 'center';
     for (const p of this.pops) {
       ctx.fillStyle = `rgba(255,255,255,${Math.max(0, 1 - p.age / 0.8)})`;
       ctx.fillText(p.text, p.x, p.y - p.age * 40);
     }
+    this.drawScore(ctx);
   }
 
-  /** A ball of fire with a flame tail that trails behind the way it is moving. */
-  private drawFire(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, vx: number, vy: number): void {
-    const speed = Math.hypot(vx, vy);
-    if (speed > 1) {
-      const ux = -vx / speed;
-      const uy = -vy / speed;
-      for (let i = 4; i >= 1; i--) {
-        ctx.fillStyle = `rgba(255,${90 + i * 25},40,${0.1 + 0.08 * (5 - i)})`;
-        ctx.beginPath();
-        ctx.arc(x + ux * r * 0.55 * i, y + uy * r * 0.55 * i, r * (1 - i * 0.14), 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    const glow = ctx.createRadialGradient(x, y, r * 0.4, x, y, r * 1.5);
-    glow.addColorStop(0, 'rgba(255,170,60,0.55)');
-    glow.addColorStop(1, 'rgba(255,120,30,0)');
+  /** Night sky of our own: midnight blue deepening to teal, a soft green glow, a low moon, stars and dark ridges along the ground. */
+  private drawSky(ctx: CanvasRenderingContext2D): void {
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#050b1f');
+    sky.addColorStop(0.55, '#0b2a4a');
+    sky.addColorStop(1, '#127a80');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, H);
+    // Faint glow low on the horizon.
+    const glow = ctx.createRadialGradient(W * 0.3, H, 10, W * 0.3, H, 320);
+    glow.addColorStop(0, 'rgba(90,255,200,0.28)');
+    glow.addColorStop(1, 'rgba(90,255,200,0)');
     ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+    // A low moon.
+    ctx.fillStyle = 'rgba(214,238,255,0.9)';
     ctx.beginPath();
-    ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
+    ctx.arc(W * 0.8, H - 120, 18, 0, Math.PI * 2);
     ctx.fill();
-    const g = ctx.createRadialGradient(x - r * 0.25, y - r * 0.3, r * 0.1, x, y, r);
-    g.addColorStop(0, '#fffbe0');
-    g.addColorStop(0.45, '#ffc533');
-    g.addColorStop(1, '#f0561f');
-    ctx.fillStyle = g;
+    ctx.fillStyle = 'rgba(214,238,255,0.15)';
     ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.arc(W * 0.8, H - 120, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    for (const s of STARS) {
+      ctx.globalAlpha = 0.45 + 0.4 * Math.sin(this.seconds * 1.6 + s.phase);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#0a4a56';
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    ctx.lineTo(0, H - 50);
+    ctx.lineTo(50, H - 74);
+    ctx.lineTo(95, H - 48);
+    ctx.lineTo(150, H - 84);
+    ctx.lineTo(210, H - 46);
+    ctx.lineTo(265, H - 70);
+    ctx.lineTo(W, H - 44);
+    ctx.lineTo(W, H);
+    ctx.fill();
+    ctx.fillStyle = '#06303a';
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    ctx.lineTo(0, H - 24);
+    ctx.lineTo(70, H - 40);
+    ctx.lineTo(140, H - 20);
+    ctx.lineTo(220, H - 38);
+    ctx.lineTo(W, H - 18);
+    ctx.lineTo(W, H);
     ctx.fill();
   }
 
-  /** A skull on a dark orb with a red glow: never touch it. */
+  private drawScore(ctx: CanvasRenderingContext2D): void {
+    const w = 78;
+    const h = 28;
+    const x = (W - w) / 2;
+    const y = 12;
+    ctx.fillStyle = 'rgba(30,120,150,0.55)';
+    ctx.strokeStyle = 'rgba(170,235,240,0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 14);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 17px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(this.score()), W / 2, y + 20);
+  }
+
+  /** A white thick stroke that thins out towards where the swipe began. */
+  private drawSwipe(ctx: CanvasRenderingContext2D): void {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (let i = 1; i < this.trail.length; i++) {
+      const p = this.trail[i - 1];
+      const q = this.trail[i];
+      const fade = Math.max(0, 1 - q.age / 0.22);
+      ctx.strokeStyle = `rgba(255,255,255,${fade})`;
+      ctx.lineWidth = 3 + 11 * (i / this.trail.length) * fade;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(q.x, q.y);
+      ctx.stroke();
+    }
+  }
+
+  /** A pale cratered rock with a long tapering tail: orange where it is hot, pink, then fading into violet. */
+  private drawComet(ctx: CanvasRenderingContext2D, b: Body): void {
+    const speed = Math.hypot(b.vx, b.vy) || 1;
+    const ux = -b.vx / speed;
+    const uy = -b.vy / speed;
+    const head = b.r * 0.72;
+    const length = 70 + speed * 0.55;
+    const tx = b.x + ux * length;
+    const ty = b.y + uy * length;
+    const nx = -uy;
+    const ny = ux;
+    const tail = ctx.createLinearGradient(b.x, b.y, tx, ty);
+    tail.addColorStop(0, 'rgba(255,170,60,0.95)');
+    tail.addColorStop(0.35, 'rgba(255,100,200,0.8)');
+    tail.addColorStop(1, 'rgba(110,60,220,0)');
+    for (const [spread, alpha] of [[1.18, 0.35], [1, 1]] as const) {
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = spread > 1 ? 'rgba(255,190,90,0.55)' : tail;
+      ctx.beginPath();
+      ctx.moveTo(b.x + nx * head * spread, b.y + ny * head * spread);
+      ctx.lineTo(tx, ty);
+      ctx.lineTo(b.x - nx * head * spread, b.y - ny * head * spread);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#ffc861';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, head * 1.12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fbf8ff';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, head, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(150,140,175,0.55)';
+    for (const [dx, dy, r] of [[-0.35, -0.25, 0.16], [0.25, 0.1, 0.12], [-0.05, 0.4, 0.1]]) {
+      ctx.beginPath();
+      ctx.arc(b.x + dx * head, b.y + dy * head, r * head, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /** A cut comet: two white halves that fly apart and fade. */
+  private drawHalves(ctx: CanvasRenderingContext2D, b: Body): void {
+    const since = b.age - (b.slicedAt ?? b.age);
+    const apart = 6 + since * 90;
+    ctx.globalAlpha = Math.max(0, 1 - since / 0.7);
+    ctx.fillStyle = '#fbf8ff';
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.arc(b.x + side * apart, b.y + since * 60, b.r * 0.5, side < 0 ? Math.PI / 2 : -Math.PI / 2, side < 0 ? (Math.PI * 3) / 2 : Math.PI / 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /** A dark, angry face wrapped in a flickering yellow and orange flame. */
   private drawSkull(ctx: CanvasRenderingContext2D, b: Body): void {
     const { x, y, r } = b;
-    const glow = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 1.6);
-    glow.addColorStop(0, 'rgba(255,40,60,0.45)');
-    glow.addColorStop(1, 'rgba(255,40,60,0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(x, y, r * 1.6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#15121c';
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#ff4a5e';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    // Skull: a rounded head over a jaw, two eyes, a nose and teeth.
-    ctx.fillStyle = '#f2efe6';
-    ctx.beginPath();
-    ctx.arc(x, y - r * 0.12, r * 0.55, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillRect(x - r * 0.3, y + r * 0.15, r * 0.6, r * 0.38);
-    ctx.fillStyle = '#15121c';
-    ctx.beginPath();
-    ctx.arc(x - r * 0.22, y - r * 0.12, r * 0.15, 0, Math.PI * 2);
-    ctx.arc(x + r * 0.22, y - r * 0.12, r * 0.15, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(x, y + r * 0.02);
-    ctx.lineTo(x - r * 0.07, y + r * 0.15);
-    ctx.lineTo(x + r * 0.07, y + r * 0.15);
-    ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = '#15121c';
-    ctx.beginPath();
-    for (let i = -1; i <= 1; i++) {
-      ctx.moveTo(x + i * r * 0.14, y + r * 0.3);
-      ctx.lineTo(x + i * r * 0.14, y + r * 0.53);
+    const flicker = Math.sin(this.seconds * 14 + b.id) * 0.06;
+    for (const [scale, colour] of [[1.25, 'rgba(255,140,40,0.75)'], [1.02, 'rgba(255,214,90,0.95)']] as const) {
+      ctx.fillStyle = colour;
+      ctx.beginPath();
+      const tongues = 7;
+      for (let i = 0; i <= tongues * 2; i++) {
+        // Flames point up: spikes on the top half, a rounded bottom.
+        const angle = Math.PI + (i / (tongues * 2)) * Math.PI * 2;
+        const spike = i % 2 === 0 ? 1 : 0.78;
+        const up = Math.sin(angle) < -0.2 ? 1 + flicker * (i % 3) : 0.82;
+        const rr = r * scale * 0.92 * spike * up;
+        const px = x + Math.cos(angle) * rr;
+        const py = y + Math.sin(angle) * rr * (Math.sin(angle) < 0 ? 1.15 : 0.92);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
     }
+    ctx.fillStyle = '#1a1442';
+    ctx.beginPath();
+    ctx.arc(x, y + r * 0.05, r * 0.66, 0, Math.PI * 2);
+    ctx.fill();
+    // Angry eyes.
+    ctx.fillStyle = '#ffe36a';
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(x + side * r * 0.25, y - r * 0.02, r * 0.13, r * 0.1, side * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = '#ffe36a';
+    ctx.lineWidth = r * 0.07;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.42, y - r * 0.22);
+    ctx.lineTo(x - r * 0.1, y - r * 0.1);
+    ctx.moveTo(x + r * 0.42, y - r * 0.22);
+    ctx.lineTo(x + r * 0.1, y - r * 0.1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y + r * 0.36, r * 0.17, Math.PI * 1.1, Math.PI * 1.9);
     ctx.stroke();
   }
 }
