@@ -1,4 +1,4 @@
-import { advance, bombChance, COMET_R, heat, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, W } from './comet-slice-engine';
+import { advance, bombChance, COMET_R, heat, speedUp, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, W } from './comet-slice-engine';
 
 describe('Comet Slice', () => {
   it('detects a swipe through a circle, and one that passes beside it', () => {
@@ -30,9 +30,20 @@ describe('Comet Slice', () => {
     expect(kinds.some((b) => b.kind === 'bomb')).toBe(true);
   });
 
+  it('falls faster and faster the longer you last, with every body at its own speed', () => {
+    expect(speedUp(0)).toBe(1);
+    expect(speedUp(60)).toBeGreaterThan(speedUp(20));
+    expect(speedUp(10000)).toBeLessThan(3.5);
+    const slow = Array.from({ length: 200 }, () => throwBody(0, Math.random).vy);
+    const fast = Array.from({ length: 200 }, () => throwBody(150, Math.random).vy);
+    expect(Math.max(...fast)).toBeGreaterThan(Math.max(...slow) * 1.8);
+    expect(new Set(fast.map((v) => Math.round(v / 5))).size).toBeGreaterThan(20);
+  });
+
   it('gets harder with time but stays within bounds', () => {
     expect(heat(0)).toBe(0);
     expect(heat(1000)).toBe(1);
+    expect(RUN_SECONDS).toBe(60);
     expect(throwGap(RUN_SECONDS, () => 0.5)).toBeLessThan(throwGap(0, () => 0.5));
     expect(bombChance(RUN_SECONDS)).toBeGreaterThan(bombChance(0));
     expect(bombChance(RUN_SECONDS)).toBeLessThan(0.5);

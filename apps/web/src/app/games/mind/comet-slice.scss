@@ -38,3 +38,11 @@
 @media (prefers-reduced-motion: reduce) {
   .boom .field { animation: none; }
 }
+
+.hearts {
+  color: #ff5d73;
+  letter-spacing: 0.2em;
+  .gone {
+    opacity: 0.25;
+  }
+}

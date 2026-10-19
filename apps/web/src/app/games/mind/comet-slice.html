@@ -1,5 +1,13 @@
-<div class="time"><i [style.width.%]="(left() / 60) * 100"></i></div>
-<p class="sr-only" aria-live="polite">{{ score() }} points, {{ left() }} seconds left</p>
+<div class="hud">
+  <span class="hearts" [attr.aria-label]="lives() + ' hearts left'">{{ '♥'.repeat(lives()) }}<span class="gone">{{ '♥'.repeat(3 - lives()) }}</span></span>
+  @if (timed()) {
+    <span>{{ left() }}s</span>
+  }
+</div>
+@if (timed()) {
+  <div class="time"><i [style.width.%]="(left() / 60) * 100"></i></div>
+}
+<p class="sr-only" aria-live="polite">{{ score() }} points</p>
 <div class="field-wrap" [class.boom]="boom()">
   <canvas
     #field
@@ -14,4 +22,4 @@
     (lostpointercapture)="up()"
   ></canvas>
 </div>
-<p class="muted tip">Swipe through the comets. A skull ends the run. Several in one swipe is a combo.</p>
+<p class="muted tip">Swipe through the comets. A skull or a missed comet costs a heart.</p>

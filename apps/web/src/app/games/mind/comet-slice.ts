@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, OnDestroy, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
-import { advance, Body, H, RUN_SECONDS, segmentHitsCircle, throwBody, throwGap, W } from './comet-slice-engine';
+import { advance, Body, H, HEARTS, RUN_SECONDS, segmentHitsCircle, throwBody, throwGap, W } from './comet-slice-engine';
 import { MindResult, seeded } from './mind-util';
 
 interface Pop {
@@ -27,10 +27,10 @@ const STARS = (() => {
 })();
 
 /**
- * Comets and skulls fall from the top of a night sky, each at its own speed. Swipe through the comets to collect them and keep
- * clear of the skulls: slicing a skull ends the run on the spot, with what you have. A comet that gets past costs nothing.
- * Slicing several in one swipe scores a bonus. A run lasts a minute. Practice is different every time; the daily (`seed`) throws
- * the same comets and skulls at everyone.
+ * Comets and skulls fall from the top of a night sky, each at its own speed, and everything gets faster the longer you last.
+ * Swipe through the comets to collect them; slicing several in one swipe scores a bonus. A skull you slice, or a comet that gets
+ * past, costs a heart, and three hearts is the end. Practice has no clock: keep going and beat your best. The daily (`seed`) has
+ * a one-minute clock and throws the same comets and skulls at everyone.
  */
 @Component({
   selector: 'app-comet-slice',
@@ -47,7 +47,9 @@ export class CometSlice implements OnInit, OnDestroy {
 
   protected readonly score = signal(0);
   protected readonly left = signal(RUN_SECONDS);
+  protected readonly lives = signal(HEARTS);
   protected readonly boom = signal(false);
+  protected readonly timed = computed(() => this.seed() !== null);
 
   private random: () => number = Math.random;
   private bodies: Body[] = [];
@@ -90,10 +92,18 @@ export class CometSlice implements OnInit, OnDestroy {
       for (let i = 0; i < n; i++) this.bodies.push(throwBody(this.seconds, this.random));
       this.untilThrow = throwGap(this.seconds, this.random);
     }
-    for (const b of this.bodies) advance(b, dt);
+    for (const b of this.bodies) {
+      advance(b, dt);
+      if (b.missed && b.kind === 'comet' && !b.counted) {
+        b.counted = true;
+        this.lose('Missed');
+      }
+    }
     this.bodies = this.bodies.filter((b) => b.y - b.r <= H + 40 && !(b.sliced && b.age - (b.slicedAt ?? 0) > 0.7));
-    this.left.set(Math.max(0, Math.ceil(RUN_SECONDS - this.seconds)));
-    if (this.seconds >= RUN_SECONDS) this.end('Time!');
+    if (this.timed()) {
+      this.left.set(Math.max(0, Math.ceil(RUN_SECONDS - this.seconds)));
+      if (this.seconds >= RUN_SECONDS) this.end('Time!');
+    }
     for (const s of this.bits) {
       s.age += dt;
       s.vy += 260 * dt;
@@ -107,6 +117,15 @@ export class CometSlice implements OnInit, OnDestroy {
     this.trail = this.trail.filter((t) => t.age < 0.22);
   }
 
+  private lose(text: string): void {
+    if (this.ended) return;
+    this.lives.update((l) => l - 1);
+    this.swipeHits = 0;
+    this.haptics.error();
+    this.pops.push({ x: W / 2, y: H - 60, text, age: 0 });
+    if (this.lives() <= 0) this.end('Game over');
+  }
+
   private end(text: string): void {
     if (this.ended) return;
     this.ended = true;
@@ -114,7 +133,7 @@ export class CometSlice implements OnInit, OnDestroy {
     cancelAnimationFrame(this.frame);
     this.draw();
     const n = this.score();
-    setTimeout(() => this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'point' : 'points'}${text === 'Time!' ? '' : ', a skull ended the run'}` }), 800);
+    setTimeout(() => this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'point' : 'points'}${text === 'Time!' ? ', time up' : ''}` }), 800);
   }
 
   protected down(event: PointerEvent): void {
@@ -158,11 +177,11 @@ export class CometSlice implements OnInit, OnDestroy {
         this.pops.push({ x: body.x, y: body.y, text: this.swipeHits > 1 ? `+${this.swipeHits} combo` : '+1', age: 0 });
         this.burst(body.x, body.y, 12);
       } else {
-        this.haptics.error();
         this.burst(body.x, body.y, 16);
         this.boom.set(true);
-        this.end('Skull!');
-        return;
+        setTimeout(() => this.boom.set(false), 450);
+        this.lose('Skull!');
+        if (this.ended) return;
       }
     }
   }

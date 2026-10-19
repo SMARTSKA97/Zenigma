@@ -9,7 +9,7 @@ export const isWordDaily = (id: string): id is WordDailyGame => (WORD_DAILY_GAME
 
 /** What the game's own score means out of the day's board, turned into 0 to 100 points. */
 export function dailyPoints(game: WordDailyGame, score: number): number {
-  const out = game === 'chain-link' ? (score / 5) * 100 : game === 'pinpoint' ? (score / 15) * 100 : game === 'crossclimb' ? (score / 4) * 100 : game === 'comet-slice' ? (score / 80) * 100 : score;
+  const out = game === 'chain-link' ? (score / 5) * 100 : game === 'pinpoint' ? (score / 15) * 100 : game === 'crossclimb' ? (score / 4) * 100 : game === 'comet-slice' ? (score / 60) * 100 : score;
   return Math.max(0, Math.min(100, Math.round(out)));
 }
 

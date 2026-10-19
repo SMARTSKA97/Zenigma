@@ -18,7 +18,7 @@ describe('word dailies', () => {
     expect(dailyPoints('crossclimb', 2)).toBe(50);
     expect(dailyPoints('wend', 400)).toBe(100);
     expect(dailyPoints('wend', -3)).toBe(0);
-    expect(dailyPoints('comet-slice', 40)).toBe(50);
+    expect(dailyPoints('comet-slice', 30)).toBe(50);
     expect(dailyPoints('comet-slice', 500)).toBe(100);
   });
 

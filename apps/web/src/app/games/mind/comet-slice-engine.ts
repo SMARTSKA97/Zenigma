@@ -6,7 +6,7 @@ export const GRAVITY = 70;
 
 export interface Body {
   id: number;
-  /** 'comet' is a fire to collect, 'bomb' is a skull that ends the run. */
+  /** 'comet' is one to collect, 'bomb' is a skull that costs a heart. */
   kind: 'comet' | 'bomb';
   x: number;
   y: number;
@@ -18,8 +18,10 @@ export interface Body {
   sliced: boolean;
   /** The body's age when it was sliced. */
   slicedAt?: number;
-  /** A fire that has fallen past the bottom without being sliced (it costs nothing). */
+  /** A comet that has fallen past the bottom without being sliced (it costs a heart). */
   missed: boolean;
+  /** Set once the miss has been counted. */
+  counted?: boolean;
 }
 
 /** Whether the segment from (ax, ay) to (bx, by) touches the circle at (cx, cy) with radius r. */
@@ -33,8 +35,11 @@ export function segmentHitsCircle(ax: number, ay: number, bx: number, by: number
   return (cx - px) ** 2 + (cy - py) ** 2 <= r * r;
 }
 
-/** How hard the game is after `seconds` of play, from 0 (gentle) to 1 (frantic, reached at the end of a run). */
-export const heat = (seconds: number): number => Math.min(1, seconds / RUN_SECONDS);
+/** How hard the game is after `seconds` of play, from 0 (gentle) to 1 (frantic, reached after a minute and a half). */
+export const heat = (seconds: number): number => Math.min(1, seconds / 90);
+
+/** How much faster everything falls than at the start: it keeps building for the first few minutes, like Magic Tiles. */
+export const speedUp = (seconds: number): number => 1 + Math.min(2.2, seconds / 50);
 
 /** Seconds until the next throw. */
 export const throwGap = (seconds: number, random: () => number): number => (1.15 - 0.7 * heat(seconds)) * (0.75 + 0.5 * random());
@@ -42,8 +47,11 @@ export const throwGap = (seconds: number, random: () => number): number => (1.15
 /** Chance that a thrown body is a bomb. */
 export const bombChance = (seconds: number): number => 0.14 + 0.2 * heat(seconds);
 
-/** A run lasts this long unless a skull is sliced first. */
+/** The daily is a timed run of this many seconds. Practice has no clock: it goes on until the hearts run out. */
 export const RUN_SECONDS = 60;
+
+/** Hearts at the start. A sliced skull or a comet that gets past costs one. */
+export const HEARTS = 3;
 
 /** Radius of the hit area of a comet and of a skull (skulls are the bigger ones, so they are easy to see and to avoid). */
 export const COMET_R = 28;
@@ -59,7 +67,7 @@ export function throwBody(seconds: number, random: () => number): Body {
   const kind = random() < bombChance(seconds) ? 'bomb' : 'comet';
   const r = kind === 'bomb' ? SKULL_R : COMET_R;
   const x = r + random() * (W - 2 * r);
-  const vy = 70 + random() * 300 * (0.6 + 0.4 * heat(seconds));
+  const vy = (60 + random() * 240) * speedUp(seconds);
   // Slanted, but drifting back towards the middle so bodies do not leave the sides.
   const vx = (random() - 0.5) * 120 + ((W / 2 - x) / W) * 50;
   return { id: nextId++, kind, x, y: -r, vx, vy, r, age: 0, sliced: false, missed: false };
