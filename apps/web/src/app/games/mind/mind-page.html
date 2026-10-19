@@ -23,35 +23,44 @@
       </section>
     }
     @case ('play') {
-      <section class="stage" (pointerdown)="feel($event)">
-        @switch (id()) {
-          @case ('quick-sums') { <app-quick-sums (done)="finish($event)" /> }
-          @case ('colour-clash') { <app-colour-clash (done)="finish($event)" /> }
-          @case ('echo-sequence') { <app-echo-sequence (done)="finish($event)" /> }
-          @case ('grid-recall') { <app-grid-recall (done)="finish($event)" /> }
-          @case ('number-recall') { <app-number-recall (done)="finish($event)" /> }
-          @case ('quick-reflex') { <app-quick-reflex (done)="finish($event)" /> }
-          @case ('odd-one-out') { <app-odd-one-out (done)="finish($event)" /> }
-          @case ('spot-change') { <app-spot-change (done)="finish($event)" /> }
-          @case ('target-tap') { <app-target-tap (done)="finish($event)" /> }
-          @case ('back-track') { <app-back-track (done)="finish($event)" /> }
-          @case ('pair-match') { <app-pair-match (done)="finish($event)" /> }
-          @case ('anagram-rush') { <app-anagram-rush (done)="finish($event)" /> }
-          @case ('missing-letters') { <app-missing-letters (done)="finish($event)" /> }
-          @case ('what-next') { <app-what-next (done)="finish($event)" /> }
-          @case ('target-number') { <app-target-number (done)="finish($event)" /> }
-          @case ('mental-turn') { <app-mental-turn (done)="finish($event)" /> }
-          @case ('number-sort') { <app-number-sort (done)="finish($event)" /> }
-          @case ('dot-count') { <app-dot-count (done)="finish($event)" /> }
-          @case ('opposites') { <app-opposites (done)="finish($event)" /> }
-          @case ('word-recall') { <app-word-recall (done)="finish($event)" /> }
-          @case ('chain-link') { <app-chain-link (done)="finish($event)" /> }
-          @case ('pinpoint') { <app-pinpoint (done)="finish($event)" /> }
-          @case ('crossclimb') { <app-crossclimb (done)="finish($event)" /> }
-          @case ('wend') { <app-wend (done)="finish($event)" /> }
-          @case ('comet-slice') { <app-comet-slice (done)="finish($event)" /> }
-        }
-      </section>
+      @if (ownScreen()) {
+        <ng-container *ngTemplateOutlet="game" />
+      } @else {
+        <app-play-screen [title]="info()?.name ?? ''" [subtitle]="(skill()?.emoji ?? '') + ' ' + (skill()?.name ?? '')">
+          <ng-container *ngTemplateOutlet="game" />
+        </app-play-screen>
+      }
+      <ng-template #game>
+        <section class="stage" (pointerdown)="feel($event)">
+          @switch (id()) {
+            @case ('quick-sums') { <app-quick-sums (done)="finish($event)" /> }
+            @case ('colour-clash') { <app-colour-clash (done)="finish($event)" /> }
+            @case ('echo-sequence') { <app-echo-sequence (done)="finish($event)" /> }
+            @case ('grid-recall') { <app-grid-recall (done)="finish($event)" /> }
+            @case ('number-recall') { <app-number-recall (done)="finish($event)" /> }
+            @case ('quick-reflex') { <app-quick-reflex (done)="finish($event)" /> }
+            @case ('odd-one-out') { <app-odd-one-out (done)="finish($event)" /> }
+            @case ('spot-change') { <app-spot-change (done)="finish($event)" /> }
+            @case ('target-tap') { <app-target-tap (done)="finish($event)" /> }
+            @case ('back-track') { <app-back-track (done)="finish($event)" /> }
+            @case ('pair-match') { <app-pair-match (done)="finish($event)" /> }
+            @case ('anagram-rush') { <app-anagram-rush (done)="finish($event)" /> }
+            @case ('missing-letters') { <app-missing-letters (done)="finish($event)" /> }
+            @case ('what-next') { <app-what-next (done)="finish($event)" /> }
+            @case ('target-number') { <app-target-number (done)="finish($event)" /> }
+            @case ('mental-turn') { <app-mental-turn (done)="finish($event)" /> }
+            @case ('number-sort') { <app-number-sort (done)="finish($event)" /> }
+            @case ('dot-count') { <app-dot-count (done)="finish($event)" /> }
+            @case ('opposites') { <app-opposites (done)="finish($event)" /> }
+            @case ('word-recall') { <app-word-recall (done)="finish($event)" /> }
+            @case ('chain-link') { <app-chain-link (done)="finish($event)" /> }
+            @case ('pinpoint') { <app-pinpoint (done)="finish($event)" /> }
+            @case ('crossclimb') { <app-crossclimb (done)="finish($event)" /> }
+            @case ('wend') { <app-wend (done)="finish($event)" /> }
+            @case ('comet-slice') { <app-comet-slice (done)="finish($event)" /> }
+          }
+        </section>
+      </ng-template>
     }
     @case ('result') {
       <section class="card result" [style.--h]="info()?.hue">

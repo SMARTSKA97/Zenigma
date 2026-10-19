@@ -98,3 +98,17 @@ dd {
   font-weight: 650;
   color: var(--accent);
 }
+
+/* Inside the shared play screen every game fills the width and centres its own content. */
+.stage {
+  width: 100%;
+  max-width: 26rem;
+  margin-inline: auto;
+  display: grid;
+}
+.stage > ::ng-deep * {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+  gap: 1.1rem;
+}
