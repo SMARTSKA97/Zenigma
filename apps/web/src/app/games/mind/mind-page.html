@@ -19,6 +19,7 @@
           <div><dt>Plays</dt><dd>{{ store.record(id()).plays }}</dd></div>
         </dl>
         <button type="button" (click)="start()">Start</button>
+        <a class="button secondary" [routerLink]="['/rules', id()]">Watch the demo</a>
       </section>
     }
     @case ('play') {

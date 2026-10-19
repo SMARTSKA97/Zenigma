@@ -133,6 +133,10 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - Open, worth doing: end-to-end test of offline play, reconnect and sync (Playwright in CI); alerts on 5xx/slow/storage; restore drill for Neon backups and a keystore backup; split `puzzle-page.ts` only where responsibilities are tangled; accessibility pass (keyboard, screen reader, reduced motion); a simple D1/D7 and per-game completion view.
 - Not now: more mini-games, community editors, monetisation.
 
+## Done: game demos (phase 61)
+- `features/rules/demo-player` plays a scripted demo on a small dummy board (frames in `demo-data.ts`: board cells, caption, "If … → do …" tip, finger path). Main games' demos are built from their worked example and techniques in `rules-data.ts`; the mind games have their own frames. Reachable from /rules/:game (now also for every mind game), the Mind intro and the puzzle help sheet. Real video files were not used: they bloat the offline app and cannot show a live practice board.
+- Idea: let the demo run on the real game component with a scripted move list ("guided first game").
+
 ## Next
 - All the Coming soon games are live now (Pinpoint, Crossclimb, Wend, Comet Slice). Crossclimb and Wend use the Word Guess lists; Chain Link and Pinpoint have their own data files to grow.
 - Pinpoint is live (`games/mind/pinpoint-data.ts`, about 75 categories; add more there). Word games share the Mind screen (`/mind/<id>`) and skill 'language'.

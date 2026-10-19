@@ -8,7 +8,13 @@
     </div>
   </header>
 
+  <section class="card" id="demo">
+    <h2>Watch a demo</h2>
+    <app-demo-player [game]="r.id" [hue]="hue()" />
+  </section>
+
   <nav class="jump" aria-label="On this page">
+    <a [routerLink]="[]" fragment="demo">Demo</a>
     <a [routerLink]="[]" fragment="rules">Rules</a>
     <a [routerLink]="[]" fragment="example">Example</a>
     <a [routerLink]="[]" fragment="techniques">Techniques</a>
@@ -75,6 +81,31 @@
     @if (nextGame(); as n) {
       <a class="button secondary" [routerLink]="['/rules', n.id]">Next: {{ n.name }} ›</a>
     }
+  </div>
+} @else if (mind(); as m) {
+  <header class="head" [style.--h]="hue()">
+    <span class="art"><app-glyph [game]="$any(id())" /></span>
+    <div>
+      <h1>{{ info()?.name }}</h1>
+      <p class="goal">{{ m.how }}</p>
+    </div>
+  </header>
+  <section class="card" id="demo">
+    <h2>Watch a demo</h2>
+    <app-demo-player [game]="id()" [hue]="hue()" />
+  </section>
+  @if (situations().length) {
+    <section class="card" id="tips">
+      <h2>What to do when…</h2>
+      <ul>
+        @for (s of situations(); track $index) {
+          <li><b>{{ s[0] }}</b> {{ s[1] }}</li>
+        }
+      </ul>
+    </section>
+  }
+  <div class="cta">
+    <a class="button" [routerLink]="playLink()">Play {{ info()?.name }}</a>
   </div>
 } @else {
   <section class="card">

@@ -1,0 +1,41 @@
+@if (demo(); as d) {
+  <section class="demo" [style.--h]="hue()" aria-label="Demo">
+    <div class="screen">
+      <span class="badge">Demo · {{ index() + 1 }} / {{ count() }}</span>
+      <div class="board" [style.--cols]="cols()">
+        @for (c of cells(); track $index) {
+          <span [class]="classes(c.cell)" [class.span]="c.span" [class.blank]="c.blank">{{ text(c.cell) }}</span>
+        }
+        @if (finger(); as f) {
+          <i
+            class="finger"
+            [class.drag]="f.drag"
+            [style.left.%]="moved() ? f.to.x : f.from.x"
+            [style.top.%]="moved() ? f.to.y : f.from.y"
+            aria-hidden="true"
+          ></i>
+        }
+      </div>
+    </div>
+    @if (frame(); as fr) {
+      <p class="say" aria-live="polite">{{ fr.say }}</p>
+      @if (advice(); as a) {
+        <p class="advice">
+          @if (a.situation) { <b>{{ a.situation }}</b> }
+          <span><em>Do this:</em> {{ a.action }}</span>
+        </p>
+      }
+    }
+    <div class="bar" aria-hidden="true">
+      @for (f of d.frames; track $index) {
+        <button type="button" tabindex="-1" [class.on]="$index <= index()" (click)="go($index)"><i [class.run]="$index === index() && playing()"></i></button>
+      }
+    </div>
+    <div class="controls">
+      <button type="button" class="secondary" (click)="go(index() - 1)" [disabled]="index() === 0" aria-label="Previous step">‹</button>
+      <button type="button" (click)="toggle()">{{ playing() ? 'Pause' : index() + 1 >= count() ? 'Replay' : 'Play' }}</button>
+      <button type="button" class="secondary" (click)="go(index() + 1)" [disabled]="index() + 1 >= count()" aria-label="Next step">›</button>
+      <button type="button" class="secondary" (click)="replay()">From the start</button>
+    </div>
+  </section>
+}

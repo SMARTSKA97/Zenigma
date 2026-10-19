@@ -1,9 +1,23 @@
 <a class="back" routerLink="/settings">‹ Settings</a>
 <h1>How to play</h1>
-<p class="muted lede">Pick a game for its full rules, a worked example and the techniques that solve it.</p>
+<p class="muted lede">Every game has a short animated demo on a practice board, the rules, and what to do in tricky situations.</p>
 
 <div class="grid">
   @for (g of games; track g.id) {
+    <a class="game" [routerLink]="['/rules', g.id]" [style.--h]="g.hue">
+      <span class="art"><app-glyph [game]="$any(g.id)" /></span>
+      <span class="txt">
+        <b>{{ g.name }}</b>
+        <span>{{ g.tagline }}</span>
+      </span>
+      <span class="go" aria-hidden="true">›</span>
+    </a>
+  }
+</div>
+
+<h2 class="sect">Mind games</h2>
+<div class="grid">
+  @for (g of mind; track g.id) {
     <a class="game" [routerLink]="['/rules', g.id]" [style.--h]="g.hue">
       <span class="art"><app-glyph [game]="$any(g.id)" /></span>
       <span class="txt">
