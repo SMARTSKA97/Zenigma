@@ -97,7 +97,7 @@ public static partial class StoreEndpoints
             var dayStart = new DateTimeOffset(today.ToDateTime(TimeOnly.MinValue), IstClock.Offset);
             var reported = await db.Database.SqlQueryRaw<int>(
                 "SELECT COALESCE(SUM(delta), 0)::int AS \"Value\" FROM coin_ledger WHERE user_id = @u AND created_at >= @t AND reason IN ('mindset','perfect','level','quest','streak')",
-                new NpgsqlParameter("u", userId), new NpgsqlParameter("t", dayStart)).FirstAsync(ct);
+                new NpgsqlParameter("u", userId), new NpgsqlParameter("t", dayStart.ToUniversalTime())).FirstAsync(ct);
 
             var awarded = new List<object>();
             foreach (var e in entries)
