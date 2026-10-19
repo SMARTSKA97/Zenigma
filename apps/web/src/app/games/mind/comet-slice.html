@@ -1,8 +1,6 @@
 <div class="hud">
   <span class="hearts" [attr.aria-label]="lives() + ' hearts left'">{{ '♥'.repeat(lives()) }}<span class="gone">{{ '♥'.repeat(3 - lives()) }}</span></span>
-  @if (timed()) {
-    <span>{{ left() }}s</span>
-  }
+  <span>{{ timed() ? left() + 's' : elapsed() }}</span>
 </div>
 @if (timed()) {
   <div class="time"><i [style.width.%]="(left() / 60) * 100"></i></div>

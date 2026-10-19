@@ -13,4 +13,8 @@ describe('mind daily set', () => {
     const days = Array.from({ length: 14 }, (_, i) => mindSetFor(`2026-10-${String(i + 1).padStart(2, '0')}`).join());
     expect(new Set(days).size).toBeGreaterThan(5);
   });
+
+  it('never puts Comet Slice in the three-game set, as it has a daily of its own', () => {
+    for (let i = 1; i <= 28; i++) expect(mindSetFor(`2026-10-${String(i).padStart(2, '0')}`)).not.toContain('comet-slice');
+  });
 });

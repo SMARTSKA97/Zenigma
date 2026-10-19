@@ -9,17 +9,21 @@ const STATE_KEY = 'zenigma.mind.daily';
 const DAYS_KEY = 'zenigma.mind.daily.days';
 const SET_SIZE = 3;
 
+/** Comet Slice has a daily of its own (one timed run), so it is not part of the three-game set. */
+const HAS_OWN_DAILY: readonly MindGameId[] = ['comet-slice'];
+
 /** Today's mind-training set: three games, each for a different skill, the same for everyone on a given (India) day. */
 export function mindSetFor(date: string): MindGameId[] {
   const rand = seeded(`mind-daily:${date}`);
-  const skills = SKILLS.map((s) => s.id).filter((id) => MIND_LIVE.some((g) => MIND_META[g]?.skill === id));
+  const pool = MIND_LIVE.filter((g) => !HAS_OWN_DAILY.includes(g));
+  const skills = SKILLS.map((s) => s.id).filter((id) => pool.some((g) => MIND_META[g]?.skill === id));
   // Shuffle the skills, take three, and pick one live game for each.
   for (let i = skills.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [skills[i], skills[j]] = [skills[j], skills[i]];
   }
   return skills.slice(0, SET_SIZE).map((skill: Skill) => {
-    const games = MIND_LIVE.filter((g) => MIND_META[g]?.skill === skill);
+    const games = pool.filter((g) => MIND_META[g]?.skill === skill);
     return games[Math.floor(rand() * games.length)];
   });
 }

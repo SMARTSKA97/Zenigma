@@ -48,6 +48,8 @@ export class CometSlice implements OnInit, OnDestroy {
   protected readonly score = signal(0);
   protected readonly left = signal(RUN_SECONDS);
   protected readonly lives = signal(HEARTS);
+  /** Practice counts up from the start (it has no end but the hearts). */
+  protected readonly elapsed = signal('0:00');
   protected readonly boom = signal(false);
   protected readonly timed = computed(() => this.seed() !== null);
 
@@ -100,7 +102,10 @@ export class CometSlice implements OnInit, OnDestroy {
       }
     }
     this.bodies = this.bodies.filter((b) => b.y - b.r <= H + 40 && !(b.sliced && b.age - (b.slicedAt ?? 0) > 0.7));
-    if (this.timed()) {
+    if (!this.timed()) {
+      const t = Math.floor(this.seconds);
+      this.elapsed.set(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`);
+    } else {
       this.left.set(Math.max(0, Math.ceil(RUN_SECONDS - this.seconds)));
       if (this.seconds >= RUN_SECONDS) this.end('Time!');
     }
