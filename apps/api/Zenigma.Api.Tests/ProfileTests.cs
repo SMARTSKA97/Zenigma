@@ -205,7 +205,7 @@ public class ProfileTests : IClassFixture<ApiFactory>
     {
         var client = await SignUpAsync();
         var store = await client.GetFromJsonAsync<JsonElement>("/store", Json);
-        Assert.Equal(25, store.GetProperty("coins").GetInt32());
+        Assert.Equal(20, store.GetProperty("coins").GetInt32());
         Assert.False(store.GetProperty("spunToday").GetBoolean());
 
         var spin = await client.PostAsync("/store/wheel", null);
