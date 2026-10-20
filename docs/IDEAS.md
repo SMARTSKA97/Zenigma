@@ -86,7 +86,7 @@ The standing rule: **hints and anything that could be bought never touch a ranki
 ## Engineering and growth
 
 - ✅ CI: web, API with Flyway and xUnit, puzzle generators with verification and vectors, Android build.
-- 📝 **Repo growth** (plan written in docs/LEVELS.md, start at about 300 MB): weekly packs add about 1000 levels per track each week. Plan: keep recent packs in git, move old ones to release assets or object storage, and have the app fetch them by version.
+- 📝 **Repo growth** (plan written in docs/LEVELS.md, start at about 300 MB): levels now grow by 100 per track, only where a player is within 100 levels of the end (phase 68). Plan: keep recent packs in git, move old ones to release assets or object storage, and have the app fetch them by version.
 - 📝 The weekly generation job: split instructions are in docs/LEVELS.md; a full run is about 10 minutes.
 - ✅ The wheel's prize is queued under a per-day id (`wheel:<date>`), and the server counts each id once, so a second device cannot be paid twice (0.20.0). The device that loses sees its balance correct on the next sync.
 - ❌ Old queens/tango/zip/patches progress migration: decided against. Old level numbers were a single difficulty ramp with no stable mapping to the five tiers, so a guess would either skip levels or repeat them. Progress under the tiers starts fresh; badges and totals already count what was cleared.
@@ -159,3 +159,6 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - Client: `WalletService` (optimistic balance, offline earn queue, quests, streak unlocks), `SoundService` (Web Audio, no files), `CoinBurst` (flying coins into the header counter), `/store` page, `data-skin` full themes in styles.scss, six more accents.
 - `ConnectionService.hold()`: practice, speed and mind-game screens hold the connection shut (no requests, no wake-ups); queued work flushes on leaving.
 - Ideas not yet built: watch-an-ad-for-coins (needs an ad SDK), coin gifts between circle friends, seasonal themes, streak-freeze purchases for coins, a weekly chest, cosmetic profile frames, leaderboard flair for owned themes.
+
+## Done: levels on demand (phase 68)
+- `grow-levels.mjs` adds 100 levels (not 1000) and with `--reach reach.csv` only to tracks where a player is within 100 levels of the end; the weekly `Level reach` workflow commits `reach.csv` from `practice_solves` (`reach.sql`). The level map says new levels arrive weekly 100 at a time.

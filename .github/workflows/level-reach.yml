@@ -1,0 +1,31 @@
+name: Level reach
+
+# Once a week, before the level-growth task runs, records how far the furthest player has got in every practice track
+# (tools/generators/puzzles/reach.csv: track and level only, no player data). The growth task adds 100 levels to a track
+# only when a player is within 100 levels of its end.
+on:
+  schedule:
+    - cron: '0 1 * * 1' # Mondays 06:30 IST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reach:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Read the furthest level per track
+        env:
+          DATABASE_URL: ${{ secrets.PUZZLE_DATABASE_URL }}
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -f tools/generators/puzzles/reach.sql > tools/generators/puzzles/reach.csv
+      - name: Commit when it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/generators/puzzles/reach.csv
+          git diff --cached --quiet && exit 0
+          git commit -m "Level reach: furthest practice level per track [skip ci]"
+          git push

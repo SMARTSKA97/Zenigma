@@ -10,15 +10,21 @@ Every practice track (a game, or a kind of a game) has levels that are generated
 - `node build-levels.mjs --all` throws everything away and generates every level again (slow: Zip's hardest levels take seconds each).
 - `node build-levels.mjs --verify` is what CI runs: it checks every pack is complete and regenerates a sample (every 40th level and the last 10 of each track) to prove the shipped levels still match the generators.
 
-## Adding levels every week
+## Adding levels every week (only where players are close to the end)
 
-`node grow-levels.mjs` adds 1000 levels to every track (`level-counts.json`), generates them, and refreshes the test vectors. A scheduled task runs it weekly, runs the tests, pushes a branch, waits for CI and merges to `main`.
+A track grows by **100 levels** at a time, and only when a player is within 100 levels of its end.
+
+1. The `Level reach` workflow (`.github/workflows/level-reach.yml`, Mondays 06:30 IST) runs `reach.sql` against the production database and commits `tools/generators/puzzles/reach.csv`: one line per track, `track,furthest level any player has solved`. No player data.
+2. The weekly growth task runs `node grow-levels.mjs --reach tools/generators/puzzles/reach.csv`. Tracks nobody is near stay as they are. With nobody near an end, nothing is generated that week.
+3. It then runs the tests, pushes a branch, waits for CI and merges to `main`.
+
+`node grow-levels.mjs [amount] [--reach file] [--margin 100] [track-prefix ...]`: without `--reach` every matching track grows (a manual top-up). The last pack of a track may hold fewer than 1000 levels while it fills; existing levels never change when a pack grows.
 
 Difficulty: most tracks reach their hardest setting around level 500 and then repeat the hardest zone-of-ten ramp (easy to hard inside each zone of ten). The Sudoku tiers (Easy to Insane) ramp inside their own clue range.
 
 ## Growth and cost
 
-Each pack is about 115 KB and every pack exists twice (web and API), so a weekly run adds roughly 14 MB to the repository (about 60 tracks). That is fine for months, not years. The plan, to start when the repo passes about 300 MB or a clone takes too long:
+Growth is driven by players now, so the repository only grows where levels are actually being used (100 levels is about 12 KB a track, twice). The plan below is still the answer if it ever gets big. The plan, to start when the repo passes about 300 MB or a clone takes too long:
 
 1. Keep the newest packs of each track in git. Publish older packs as GitHub release assets (or object storage) named `<track>-<n>.json`, and delete them from git history going forward.
 2. The app already fetches a pack only when a player reaches it, so it would fetch old packs from the asset URL instead (the base URL goes in `environment.ts`; the service worker and the Android cache keep working the same way).

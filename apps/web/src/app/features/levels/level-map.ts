@@ -185,7 +185,7 @@ export class LevelMap {
 
   protected readonly moreText = computed(() => {
     const frontier = this.frontier();
-    return frontier >= this.count() ? 'You reached the last level. More are on the way.' : `${this.count() - this.solvedCount()} levels still to go. Solve a level to open the next.`;
+    return frontier >= this.count() ? 'You reached the last level. New levels arrive here every week, 100 at a time.' : `${this.count() - this.solvedCount()} levels still to go. Solve a level to open the next.`;
   });
 
   constructor() {
