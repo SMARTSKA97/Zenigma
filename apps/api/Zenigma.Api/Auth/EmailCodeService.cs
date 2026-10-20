@@ -22,6 +22,10 @@ public class EmailCodeService(AppDbContext db, IOptions<JwtOptions> jwt, TimePro
     private int DailyBudget => config.GetValue("Email:DailyBudget", 250);
     private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(15);
 
+    /// <summary>True when today's email budget is used up. It is the same for everyone, so asking reveals nothing about any one account.</summary>
+    public async Task<bool> BudgetFullAsync(CancellationToken ct) =>
+        await db.EmailCodes.CountAsync(c => c.CreatedAt > clock.GetUtcNow().AddDays(-1), ct) >= DailyBudget;
+
     /// <summary>Makes a fresh code for the person (replacing any earlier one). Null when they asked too often.</summary>
     public async Task<string?> IssueAsync(string userId, string purpose, CancellationToken ct)
     {

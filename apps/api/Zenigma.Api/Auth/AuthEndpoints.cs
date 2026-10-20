@@ -114,6 +114,7 @@ public static class AuthEndpoints
         {
             var log = loggers.CreateLogger("Security");
             if (!mail.Enabled) return Results.Problem(statusCode: StatusCodes.Status501NotImplemented, title: "Email is not set up on this server.");
+            if (await codes.BudgetFullAsync(ct)) return Results.Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "Too many emails have been sent today, so no new code can be sent right now. Try again tomorrow, or sign in with Google.");
             var user = string.IsNullOrWhiteSpace(request.Email) ? null : await users.FindByEmailAsync(request.Email.Trim());
             if (user?.Email is not null)
             {
@@ -184,6 +185,7 @@ public static class AuthEndpoints
             var user = await users.FindByIdAsync(UserIds.Get(principal));
             if (user?.Email is null) return Results.Unauthorized();
             if (user.EmailConfirmed) return Results.Ok(new { verified = true });
+            if (await codes.BudgetFullAsync(ct)) return Results.Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "Too many emails have been sent today, so no new code can be sent right now. Try again tomorrow, or sign in with Google.");
             var code = await codes.IssueAsync(user.Id, EmailCodeService.Verify, ct);
             if (code is null) return Results.Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was sent a moment ago. Check your inbox, or wait a minute.");
             await mail.SendAsync(user.Email, "Confirm your Zenigma email",

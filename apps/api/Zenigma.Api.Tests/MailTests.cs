@@ -129,4 +129,23 @@ public class MailTests : IClassFixture<ApiFactory>
         var me = await client.GetFromJsonAsync<JsonElement>("/auth/me", Json);
         Assert.True(me.GetProperty("emailVerified").GetBoolean());
     }
+
+    [DbFact]
+    public async Task When_the_daily_email_budget_is_used_up_asking_for_a_code_says_so()
+    {
+        var mail = new FakeMail();
+        var factory = _factory.WithWebHostBuilder(b =>
+        {
+            b.UseSetting("Email:DailyBudget", "0");
+            b.ConfigureServices(s => s.AddSingleton<IEmailSender>(mail));
+        });
+        var (client, email, _) = await RegisterAsync(factory);
+
+        var forgot = await client.PostAsJsonAsync("/auth/forgot", new { email });
+        Assert.Equal(HttpStatusCode.TooManyRequests, forgot.StatusCode);
+        // Same answer for an address that has no account, so the budget message reveals nothing about accounts.
+        var unknown = await client.PostAsJsonAsync("/auth/forgot", new { email = "nobody@example.com" });
+        Assert.Equal(HttpStatusCode.TooManyRequests, unknown.StatusCode);
+        Assert.Empty(mail.Sent);
+    }
 }
