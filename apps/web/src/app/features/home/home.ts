@@ -46,10 +46,10 @@ export class Home implements OnInit {
 
   ngOnInit(): void {
     void this.promo.load();
-    // Keep the counts fresh while this screen is open and visible, but only while the server is awake anyway.
+    // Keep the counts fresh while this screen is open and visible, but only while the server is awake anyway, and not often.
     const timer = setInterval(() => {
-      if (!document.hidden) void this.community.load();
-    }, 30_000);
+      if (!document.hidden && this.connection.serverReady() && this.auth.signedIn()) void this.community.load();
+    }, 180_000);
     this.destroyRef.onDestroy(() => clearInterval(timer));
   }
 
