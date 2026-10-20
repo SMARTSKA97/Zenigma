@@ -2,7 +2,8 @@ import { BackService } from '../../core/back.service';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, afterNextRender, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { gameInfo, levelCountOf, TIERS, isPuzzleGame, playLink, PuzzleGameId, trackOf, variantsOf } from '../../games/catalog';
+import { gameInfo, levelCountOf, TIERS, isPuzzleGame, playLink, practiceEntry, PRACTICE_TRACKS, PuzzleGameId, trackOf, variantsOf } from '../../games/catalog';
+import { indiaDate } from '../../core/hints.service';
 import { difficultyOf, parMs, starsFor } from '../../games/puzzle/par';
 import { loadPack, packOf, PACK_SIZE } from '../../games/puzzle/level-source';
 import { PracticeStore, ZONE_SIZE } from '../../games/puzzle/practice.store';
@@ -110,6 +111,7 @@ export class LevelMap {
   protected readonly info = computed(() => gameInfo(this.game()));
   /** How many levels this track has (a Sudoku tier has fewer than the other games). */
   private readonly count = computed(() => levelCountOf(this.track()));
+  protected readonly levelCount = this.count;
   /** "Classic · Easy" for a tier, "Mini" for a plain kind. */
   protected readonly variantName = computed(() => {
     const id = this.variant();
@@ -183,9 +185,26 @@ export class LevelMap {
     return zones;
   });
 
+  /** Within 100 levels of the end of this track (or at it): new levels are added on the next Monday, so point to other games meanwhile. */
+  protected readonly nearEnd = computed(() => this.ready() && this.count() - this.frontier() < 100);
+  protected readonly nextMonday = computed(() => {
+    const today = new Date(`${indiaDate()}T00:00:00Z`);
+    const ahead = ((8 - today.getUTCDay()) % 7) || 7; // days until the next Monday (a Monday itself counts as next week)
+    return new Date(today.getTime() + ahead * 86_400_000).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  });
+  /** Three other games, the ones this player has played the least. */
+  protected readonly elsewhere = computed(() => {
+    if (!this.nearEnd()) return [];
+    const games = [...new Set(PRACTICE_TRACKS.map((t) => t.game))].filter((g) => g !== this.game());
+    return games
+      .map((g) => ({ id: g, info: gameInfo(g), solved: PRACTICE_TRACKS.filter((t) => t.game === g).reduce((n, t) => n + this.practice.solvedLevels(t.track)().size, 0), link: practiceEntry(g) }))
+      .sort((a, b) => a.solved - b.solved)
+      .slice(0, 3);
+  });
+
   protected readonly moreText = computed(() => {
     const frontier = this.frontier();
-    return frontier >= this.count() ? 'You reached the last level. New levels arrive here every week, 100 at a time.' : `${this.count() - this.solvedCount()} levels still to go. Solve a level to open the next.`;
+    return frontier >= this.count() ? 'You reached the last level. 100 new levels are coming.' : `${this.count() - this.solvedCount()} levels still to go. Solve a level to open the next.`;
   });
 
   constructor() {

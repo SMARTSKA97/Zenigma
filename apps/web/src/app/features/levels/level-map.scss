@@ -394,3 +394,30 @@
     border-inline: 0;
   }
 }
+
+/* Close to the end of a track: new levels come next Monday, so point to other games. */
+.near {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.near p {
+  margin: 0 0 0.6rem;
+}
+.picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.picks a {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}

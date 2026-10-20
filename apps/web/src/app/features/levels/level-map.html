@@ -12,6 +12,19 @@
   </a>
 </header>
 
+@if (nearEnd()) {
+  <aside class="near" role="status">
+    <p><b>{{ frontier() >= levelCount() ? 'You finished every level here!' : 'You are close to the end of this game.' }}</b>
+      100 new levels will be added next {{ nextMonday() }}. Until then, try something different:</p>
+    <div class="picks">
+      @for (g of elsewhere(); track g.id) {
+        <a [routerLink]="g.link">{{ g.info?.name }}</a>
+      }
+      <a routerLink="/mind">🧠 Mind games</a>
+    </div>
+  </aside>
+}
+
 <div class="map" [style.--hue]="info()?.hue">
   @for (zone of zones(); track zone.index) {
     <section class="zone" [style.--zh]="zone.hue" [attr.aria-label]="'Levels ' + (zone.index * 10 + 1) + ' to ' + (zone.index * 10 + 10)">
