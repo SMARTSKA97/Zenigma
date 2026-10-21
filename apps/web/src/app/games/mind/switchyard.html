@@ -11,9 +11,9 @@
       <span class="none">none left</span>
     }
   </div>
-  <svg class="yard" [attr.viewBox]="'0 0 120 ' + height()" role="group" aria-label="Rail yard. Tap a round switch to choose the way trains go.">
+  <svg class="yard" [style.width.px]="area().w" [style.height.px]="area().h" [attr.viewBox]="'0 0 120 ' + height()" role="group" aria-label="Rail yard. Tap a round switch to choose the way trains go.">
     <rect class="grass" x="0" y="0" width="120" [attr.height]="height()" rx="6" />
-    @for (t of trees; track $index) {
+    @for (t of trees(); track $index) {
       <g class="tree" [attr.transform]="'translate(' + t[0] + ' ' + t[1] + ')'">
         <circle [attr.r]="t[2]" />
         <circle class="hi" cx="-0.6" cy="-0.8" [attr.r]="t[2] * 0.55" />
@@ -69,17 +69,35 @@
       <circle class="dir" [attr.cx]="p.x" [attr.cy]="p.y" r="1.5" />
     }
     @for (t of trainViews(); track t.id) {
-      <g class="train c{{ t.colour }}" [attr.transform]="'translate(' + t.x + ' ' + t.y + ')'">
-        <g [attr.transform]="'rotate(' + t.angle + ')'">
-          <rect class="wagon" x="-8" y="-2.8" width="6.4" height="5.6" rx="1.3" />
-          <rect class="link" x="-1.7" y="-0.4" width="1.6" height="0.8" />
-          <rect class="loco" x="-0.2" y="-2.8" width="8" height="5.6" rx="2" />
-          <rect class="cab" x="-0.2" y="-2.8" width="2.8" height="5.6" rx="1" />
-          <circle class="stack" cx="4.6" r="1.2" />
-          <circle class="lamp" cx="7.6" r="0.7" />
+      <g class="train c{{ t.colour }}" [attr.transform]="'translate(' + t.x + ' ' + t.y + ') rotate(' + t.angle + ')'">
+        <rect class="shadow" x="-10.4" y="-3" width="20.4" height="7" rx="2" />
+        <!-- wagon -->
+        <rect class="wheel" x="-9.4" y="-3.9" width="2.6" height="1.1" rx="0.4" />
+        <rect class="wheel" x="-9.4" y="2.8" width="2.6" height="1.1" rx="0.4" />
+        <rect class="wheel" x="-5.4" y="-3.9" width="2.6" height="1.1" rx="0.4" />
+        <rect class="wheel" x="-5.4" y="2.8" width="2.6" height="1.1" rx="0.4" />
+        <rect class="body" x="-10" y="-3.2" width="7.8" height="6.4" rx="1.1" />
+        <path class="rib" d="M-8.3 -2.6 V2.6 M-6.1 -2.6 V2.6 M-3.9 -2.6 V2.6" />
+        <rect class="coupler" x="-2.3" y="-0.45" width="1.5" height="0.9" />
+        <!-- locomotive -->
+        <rect class="wheel" x="-0.4" y="-3.9" width="2.4" height="1.1" rx="0.4" />
+        <rect class="wheel" x="-0.4" y="2.8" width="2.4" height="1.1" rx="0.4" />
+        <rect class="wheel" x="4.6" y="-3.9" width="2.4" height="1.1" rx="0.4" />
+        <rect class="wheel" x="4.6" y="2.8" width="2.4" height="1.1" rx="0.4" />
+        <rect class="body" x="-0.8" y="-3.2" width="10" height="6.4" rx="2" />
+        <rect class="boiler" x="3" y="-2.4" width="5.8" height="4.8" rx="2.2" />
+        <path class="band" d="M5 -2.3 V2.3 M7 -2.1 V2.1" />
+        <rect class="cab" x="-0.8" y="-3.2" width="3.6" height="6.4" rx="1" />
+        <rect class="glass" x="0.7" y="-2.5" width="1.5" height="1.5" rx="0.3" />
+        <rect class="glass" x="0.7" y="1" width="1.5" height="1.5" rx="0.3" />
+        <circle class="dome" cx="4.9" cy="0" r="0.95" />
+        <circle class="stack" cx="7.3" cy="0" r="1.25" />
+        <circle class="stack-hi" cx="7.1" cy="-0.25" r="0.45" />
+        <circle class="lamp" cx="9" cy="0" r="0.75" />
+        <g [attr.transform]="'translate(-6.1 0) rotate(' + -t.angle + ')'">
+          <circle class="badge" r="2.4" />
+          <text y="1.1">{{ symbols[t.colour] }}</text>
         </g>
-        <circle class="badge" r="2.5" />
-        <text y="1.1">{{ symbols[t.colour] }}</text>
       </g>
     }
   </svg>

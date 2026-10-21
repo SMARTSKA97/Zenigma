@@ -160,8 +160,8 @@ export function advance(yard: Yard, settings: readonly number[], train: Train, d
   return null;
 }
 
-/** Where a train is on its track, and which way it faces (degrees, 0 is across to the right, 90 is down the page). */
-export function pointAt(edge: Edge, d: number): { u: number; v: number; angle: number } {
+/** Where a train is on its track, and which way it faces (degrees, 0 is across to the right, 90 is down the page). `k` is how much the board is stretched down the page. */
+export function pointAt(edge: Edge, d: number, k = 1): { u: number; v: number; angle: number } {
   let left = Math.max(0, Math.min(edge.len, d));
   for (let i = 1; i < edge.pts.length; i++) {
     const [u0, v0] = edge.pts[i - 1];
@@ -170,7 +170,7 @@ export function pointAt(edge: Edge, d: number): { u: number; v: number; angle: n
     if (left <= seg || i === edge.pts.length - 1) {
       const t = seg === 0 ? 0 : Math.min(1, left / seg);
       // u runs down the page and v across it, so the angle of (across, down) is the angle on screen.
-      return { u: u0 + (u1 - u0) * t, v: v0 + (v1 - v0) * t, angle: (Math.atan2(u1 - u0, v1 - v0) * 180) / Math.PI };
+      return { u: u0 + (u1 - u0) * t, v: v0 + (v1 - v0) * t, angle: (Math.atan2((u1 - u0) * k, v1 - v0) * 180) / Math.PI };
     }
     left -= seg;
   }

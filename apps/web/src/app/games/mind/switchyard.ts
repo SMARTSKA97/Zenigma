@@ -1,14 +1,16 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, output, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, output, signal } from '@angular/core';
 import { HapticsService } from '../../core/haptics.service';
 import { PlayScreen } from '../../shared/play-screen';
 import { MindResult, useTimers } from './mind-util';
-import { advance, branchesFor, buildYard, Edge, gapMs, liveTracks, offsetPts, planTrains, pointAt, roundedPath, spawn, speedFor, Train, trainsInRound, Yard } from './switchyard-engine';
+import { advance, branchesFor, buildYard, Edge, gapMs, liveTracks, offsetPts, planTrains, Pt, pointAt, roundedPath, spawn, speedFor, Train, trainsInRound, Yard } from './switchyard-engine';
 
 /** Width of the board in units; the main line runs down its middle. */
 const W = 120;
 const CX = W / 2;
 const TOP = 16;
 const PAD_BOTTOM = 16;
+/** Pixels kept for the queue and the note above and below the yard. */
+const RESERVE = 100;
 /** A symbol for each colour too, so the trains can be told apart without seeing the colours. */
 export const SYMBOLS = ['●', '■', '▲', '◆', '★'] as const;
 const LIVES = 3;
@@ -34,6 +36,7 @@ export class Switchyard implements OnInit {
   private readonly haptics = inject(HapticsService);
   private readonly timers = useTimers();
   private readonly destroy = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly symbols = SYMBOLS;
   protected readonly hearts = Array.from({ length: LIVES }, (_, i) => i);
@@ -61,23 +64,38 @@ export class Switchyard implements OnInit {
   private last = 0;
   private arrivals = 0;
 
-  protected readonly height = computed(() => this.yard().length + TOP + PAD_BOTTOM);
-  protected readonly trees = TREES;
+  /** The room the yard has, in pixels (the play area minus the queue and the note). */
+  protected readonly area = signal({ w: 360, h: 520 });
+  /** The board is always 120 units wide; its height follows the screen, and the main line is stretched down the page to fill it. */
+  protected readonly height = computed(() => Math.max(90, (W * this.area().h) / this.area().w));
+  protected readonly stretch = computed(() => {
+    const room = this.height() - TOP - PAD_BOTTOM;
+    return Math.max(0.6, Math.min(3.4, room / this.yard().length));
+  });
+  protected readonly trees = computed(() => {
+    const h = this.height();
+    return TREES.map(([x, y, r]) => [x, (y / 140) * h, r]);
+  });
 
-  protected readonly nodes = computed(() => this.yard().nodes.map((n) => ({ ...n, x: CX + n.v, y: TOP + n.u })));
+  protected readonly nodes = computed(() => {
+    const k = this.stretch();
+    return this.yard().nodes.map((n) => ({ ...n, x: CX + n.v, y: TOP + n.u * k }));
+  });
 
   /** Each track drawn as gravel, sleepers and two rails; the ones a train would take right now are lit. */
   protected readonly tracks = computed(() => {
     const yard = this.yard();
     const live = liveTracks(yard, this.settings());
+    const k = this.stretch();
+    const grow = (pts: Pt[]): Pt[] => pts.map(([u, v]) => [u * k, v]);
     const out: { key: string; bed: string; left: string; right: string; live: boolean }[] = [];
     for (const n of yard.nodes) {
       n.out.forEach((e: Edge, k) => {
         out.push({
           key: `${n.id}-${k}`,
-          bed: roundedPath(e.pts, CX, TOP),
-          left: roundedPath(offsetPts(e.pts, 1.7), CX, TOP),
-          right: roundedPath(offsetPts(e.pts, -1.7), CX, TOP),
+          bed: roundedPath(grow(e.pts), CX, TOP),
+          left: roundedPath(offsetPts(grow(e.pts), 1.7), CX, TOP),
+          right: roundedPath(offsetPts(grow(e.pts), -1.7), CX, TOP),
           live: live.has(e),
         });
       });
@@ -93,7 +111,7 @@ export class Switchyard implements OnInit {
       .map((n) => {
         const e = n.out[settings[n.id] ? 1 : 0];
         const [u, v] = e.pts[1];
-        const du = u - n.u;
+        const du = (u - n.u) * this.stretch();
         const dv = v - n.v;
         const len = Math.hypot(du, dv) || 1;
         return { id: n.id, x: n.x + (dv / len) * 4.4, y: n.y + (du / len) * 4.4 };
@@ -101,12 +119,25 @@ export class Switchyard implements OnInit {
   });
 
   protected readonly trainViews = computed(() => {
-    const nodes = this.nodes();
+    const k = this.stretch();
     return this.trains().map((t) => {
-      const p = pointAt(t.edge, t.d);
-      return { id: t.id, colour: t.colour, x: CX + p.v, y: TOP + p.u, angle: p.angle, from: nodes[t.node].id };
+      const p = pointAt(t.edge, t.d, k);
+      return { id: t.id, colour: t.colour, x: CX + p.v, y: TOP + p.u * k, angle: p.angle };
     });
   });
+
+  constructor() {
+    // The yard takes all the height the play area has, and follows it when the phone turns or the window changes.
+    afterNextRender(() => {
+      const body = this.host.nativeElement.querySelector<HTMLElement>('.body');
+      if (!body) return;
+      const measure = (): void => this.area.set({ w: Math.max(200, body.clientWidth), h: Math.max(240, body.clientHeight - RESERVE) });
+      measure();
+      const watch = new ResizeObserver(measure);
+      watch.observe(body);
+      this.destroy.onDestroy(() => watch.disconnect());
+    });
+  }
 
   ngOnInit(): void {
     this.startRound();

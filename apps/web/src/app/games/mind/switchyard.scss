@@ -50,9 +50,7 @@
   background: var(--c);
 }
 .yard {
-  width: 100%;
-  max-width: 24rem;
-  max-height: 64dvh;
+  display: block;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -175,23 +173,65 @@
   }
 }
 .train {
-  .wagon,
-  .loco {
+  .shadow {
+    fill: rgb(0 0 0 / 0.28);
+    transform: translate(0.7px, 0.9px);
+  }
+  .body {
     fill: var(--c);
-    stroke: #fff;
-    stroke-width: 0.7;
+    stroke: rgb(0 0 0 / 0.55);
+    stroke-width: 0.5;
+  }
+  .rib {
+    fill: none;
+    stroke: rgb(255 255 255 / 0.35);
+    stroke-width: 0.45;
+  }
+  .boiler {
+    fill: color-mix(in srgb, var(--c) 72%, #fff);
+    stroke: rgb(0 0 0 / 0.4);
+    stroke-width: 0.4;
+  }
+  .band {
+    fill: none;
+    stroke: rgb(0 0 0 / 0.35);
+    stroke-width: 0.5;
   }
   .cab {
-    fill: color-mix(in srgb, var(--c) 55%, #000);
+    fill: color-mix(in srgb, var(--c) 52%, #000);
+    stroke: rgb(0 0 0 / 0.55);
+    stroke-width: 0.5;
   }
-  .link {
+  .glass {
+    fill: #bfe3f5;
+    stroke: rgb(0 0 0 / 0.5);
+    stroke-width: 0.25;
+  }
+  .wheel {
+    fill: #1b1b1b;
+  }
+  .coupler {
     fill: #222;
+  }
+  .dome {
+    fill: #e9b949;
+    stroke: rgb(0 0 0 / 0.4);
+    stroke-width: 0.25;
   }
   .stack {
     fill: #222;
   }
+  .stack-hi {
+    fill: #666;
+  }
   .lamp {
-    fill: #fff7b0;
+    fill: #fff3a0;
+    filter: drop-shadow(0 0 1.2px #ffe97a);
+  }
+  .badge {
+    fill: #fff;
+    stroke: rgb(0 0 0 / 0.3);
+    stroke-width: 0.3;
   }
   text {
     fill: var(--c);
