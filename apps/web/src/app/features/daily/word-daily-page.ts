@@ -50,7 +50,7 @@ export class WordDailyPage {
   protected readonly what = computed(() => {
     switch (this.game()) {
       case 'pinpoint': return 'Three categories, worth 5 points on the first clue down to 1.';
-      case 'chain-link': return 'One chain of five words. Three lives.';
+      case 'chain-link': return 'One long chain of seven links. Three lives.';
       case 'crossclimb': return 'One ladder with four rows to find. Three lives.';
       case 'wend': return 'One board. Fewer hints is better.';
       case 'comet-slice': return 'The same comets and skulls for everyone. One run, a minute at most.';

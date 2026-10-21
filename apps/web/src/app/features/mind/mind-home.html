@@ -109,9 +109,8 @@
   }
   @default {
     <p class="muted sub">Short games for memory, focus, speed, maths, language and reasoning.</p>
-<app-mind-daily-panel />
 
-    <h2 class="sec">All games</h2>
+    <p class="muted sub2">Today’s mind set lives in Challenges. Practise any game here, as often as you like.</p>
 <div class="pills" role="tablist" aria-label="Skill">
   <button type="button" class="pill" role="tab" [attr.aria-selected]="filter() === 'all'" (click)="filter.set('all')">All</button>
   @for (s of skills; track s.id) {

@@ -201,8 +201,11 @@ function sudokuHint(puzzle: SudokuPuzzle, board: number[]): Hint {
 
 // ------------------------------------------------------------------------------------------------ Zip
 
+/** The solution only depends on the puzzle, so it is worked out once (a big board can take half a second, and a hint is asked for after every move in strict mode). */
+const zipSolutions = new WeakMap<zip.ZipPuzzle, number[] | null>();
 function zipHint(puzzle: zip.ZipPuzzle, path: zip.ZipPath): Hint {
-  const sol = solveZip(puzzle);
+  if (!zipSolutions.has(puzzle)) zipSolutions.set(puzzle, solveZip(puzzle));
+  const sol = zipSolutions.get(puzzle) ?? null;
   if (!sol) return none;
   if (zip.isSolved(puzzle, path)) return done;
   for (let i = 0; i < path.length; i++) {

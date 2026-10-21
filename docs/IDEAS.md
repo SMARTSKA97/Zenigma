@@ -162,3 +162,13 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 
 ## Done: levels on demand (phase 68)
 - `grow-levels.mjs` adds 100 levels (not 1000) and with `--reach reach.csv` only to tracks where a player is within 100 levels of the end; the weekly `Level reach` workflow commits `reach.csv` from `practice_solves` (`reach.sql`). The level map says new levels arrive weekly 100 at a time.
+
+## Done: wheel, harder coins, Wend, Zip, Chain Link, Switchyard (phase 73)
+- The wheel animates with the Web Animations API (`store.ts`): the global reduced-motion CSS kills transitions, so a CSS transition never ran there. Reduced motion gets a short spin.
+- Coins: `EARNS` (client) and `Earns` (server) now daily 2, mindset 5, perfect 8, level 1 (every 5th new level), boss 3 (every 10th), quest 2, chest 4; the reported cap is 30 a day; wheel odds favour 1 and 2 coins.
+- Mind home no longer shows the mind-set panel (it stays in Challenges).
+- Wend: one board per play; the level (zenigma.wend.level) grows on each win; points 100 − 15 per hint − 1 per 10 s over the first minute (floor 40); `markOf` scale 100.
+- Zip bug: `solveZip` (hint solver) built its neighbour table with `size² − holes` entries, so any board with blocked cells threw inside `change()` (strict-mode `hasMistake`) before `checkSolved` ran. Fixed, with a regression test, and the zip solution is memoised per puzzle. The trail and the walls now share one SVG.
+- Chain Link: `linksForRound` 4 to 9 (was 2 to 6), `DAILY_LINKS = 7`; `dailyPoints` divides by 7.
+- Switchyard (`switchyard-engine.ts`, `switchyard.ts`): yards are built from shapes (`split`, `merge`, `straight`); a switch decides a train's way when the train reaches it; trains spawn at a gap that shrinks each round; 3 lives; score is trains delivered (`markOf` scale 40). Ideas: a daily yard with a fixed seed, switches that flip by themselves after a train, crossings.
+

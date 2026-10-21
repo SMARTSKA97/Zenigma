@@ -197,6 +197,13 @@ export const MIND_DEMOS: Record<string, Demo> = {
       F([['+RIVER', 'LAMP', '+APPLE'], ['TRAIN', '+CHAIR', 'BREAD']], 'All three found. One more word each round, and a wrong pick costs a life.'),
     ],
   },
+  switchyard: {
+    frames: [
+      F([['IN', '.', '.'], ['.', '●', '.'], ['🟥', '.', '🟦']], 'Coloured trains roll in from the top. Each one must reach the station of its own colour.'),
+      F([['IN', '.', '.'], ['.', '?⦿', '.'], ['🟥', '.', '🟦']], 'Tap a round switch to choose which way the track goes. Do it before the train gets there.', 'If a train is close → switch first, then check the next one in the queue.', [1, 1]),
+      F([['.', '.', '.'], ['.', '⦿', '.'], ['!🟥', '.', '🟦']], 'A train at the wrong station costs a life. You have three.', 'If two trains need opposite ways → switch right after the first one has passed.'),
+    ],
+  },
   'comet-slice': {
     frames: [
       F([['☄', '.', '.'], ['.', '.', '☄'], ['.', '💀', '.']], 'Comets and skulls fall from the sky, each at its own speed.'),

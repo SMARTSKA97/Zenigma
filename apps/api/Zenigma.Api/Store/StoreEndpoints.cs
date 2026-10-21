@@ -20,7 +20,7 @@ public static class StoreCatalog
     public const int WelcomeCoins = 20;
     public const int MaxHints = 99;
     /// <summary>Coins that come from things the app reports (levels, quests, the mind set) stop here each India day. Verified dailies and the wheel are outside it.</summary>
-    public const int ReportedDailyCap = 60;
+    public const int ReportedDailyCap = 30;
 
     // Prices are set so a colour is a few days of steady play and a full theme is a couple of weeks.
     public static readonly IReadOnlyList<StoreItem> Items =
@@ -54,19 +54,20 @@ public static class StoreCatalog
     /// <summary>Coins per earn reason. "verified" ones are checked against the player's own results on the server.</summary>
     public static readonly IReadOnlyDictionary<string, int> Earns = new Dictionary<string, int>
     {
-        ["daily"] = 5,     // verified: a daily puzzle solved
-        ["mindset"] = 12,  // the whole daily mind set
-        ["perfect"] = 20,  // puzzles and mind set on the same day
-        ["level"] = 1,     // a practice level cleared for the first time
-        ["boss"] = 5,      // every tenth level
-        ["quest"] = 6,     // a daily quest (the chest pays the same again)
-        ["streak"] = 25,   // a streak milestone
+        ["daily"] = 2,     // verified: a daily puzzle solved
+        ["mindset"] = 5,   // the whole daily mind set
+        ["perfect"] = 8,   // puzzles and mind set on the same day
+        ["level"] = 1,     // every fifth new practice level
+        ["boss"] = 3,      // every tenth level
+        ["quest"] = 2,     // a daily quest
+        ["chest"] = 4,     // all three quests
+        ["streak"] = 15,   // a streak milestone
     };
 
     public static readonly IReadOnlyList<(int Weight, string Kind, int Amount)> Wheel =
     [
-        (40, "coins", 3), (25, "coins", 5), (13, "coins", 8), (7, "coins", 15),
-        (8, "hints", 1), (5, "hints", 2), (2, "coins", 40),
+        (45, "coins", 1), (28, "coins", 2), (12, "coins", 3), (5, "coins", 5),
+        (6, "hints", 1), (3, "hints", 2), (1, "coins", 20),
     ];
 
     public static (string Kind, int Amount) Roll(int roll)
@@ -108,7 +109,7 @@ public static partial class StoreEndpoints
             var today = IstClock.Today(DateTimeOffset.UtcNow);
             var dayStart = new DateTimeOffset(today.ToDateTime(TimeOnly.MinValue), IstClock.Offset);
             var reported = await db.Database.SqlQueryRaw<int>(
-                "SELECT COALESCE(SUM(delta), 0)::int AS \"Value\" FROM coin_ledger WHERE user_id = @u AND created_at >= @t AND reason IN ('mindset','perfect','level','boss','quest','streak')",
+                "SELECT COALESCE(SUM(delta), 0)::int AS \"Value\" FROM coin_ledger WHERE user_id = @u AND created_at >= @t AND reason IN ('mindset','perfect','level','boss','quest','chest','streak')",
                 new NpgsqlParameter("u", userId), new NpgsqlParameter("t", dayStart.ToUniversalTime())).FirstAsync(ct);
 
             var awarded = new List<object>();

@@ -39,7 +39,7 @@ describe('WalletService', () => {
     wallet.note('mind');
     wallet.note('mind');
     expect(wallet.questsDone()).toBe(3);
-    expect(wallet.coins()).toBe(EARNS['quest'] * 4); // three quests and the chest
+    expect(wallet.coins()).toBe(EARNS['quest'] * 3 + EARNS['chest']); // three quests and the chest
   });
 });
 

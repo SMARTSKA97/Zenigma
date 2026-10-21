@@ -24,12 +24,8 @@
     @if (head(); as h) {
       <circle [attr.cx]="h.x" [attr.cy]="h.y" r="0.2" />
     }
+    @for (w of walls(); track $index) {
+      <line class="wall" [attr.x1]="w.x1" [attr.y1]="w.y1" [attr.x2]="w.x2" [attr.y2]="w.y2" />
+    }
   </svg>
-  @if (walls().length) {
-    <svg class="walls" [attr.viewBox]="'0 0 ' + puzzle().size + ' ' + puzzle().size" aria-hidden="true">
-      @for (w of walls(); track $index) {
-        <line [attr.x1]="w.x1" [attr.y1]="w.y1" [attr.x2]="w.x2" [attr.y2]="w.y2" />
-      }
-    </svg>
-  }
 </div>

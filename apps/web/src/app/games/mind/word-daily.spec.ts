@@ -14,7 +14,7 @@ describe('word dailies', () => {
   it('turns each game\'s score into 0 to 100 points', () => {
     expect(dailyPoints('pinpoint', 15)).toBe(100);
     expect(dailyPoints('pinpoint', 5)).toBe(33);
-    expect(dailyPoints('chain-link', 5)).toBe(100);
+    expect(dailyPoints('chain-link', 7)).toBe(100);
     expect(dailyPoints('crossclimb', 2)).toBe(50);
     expect(dailyPoints('wend', 400)).toBe(100);
     expect(dailyPoints('wend', -3)).toBe(0);

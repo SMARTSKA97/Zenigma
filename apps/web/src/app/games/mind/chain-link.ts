@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, ou
 import { HapticsService } from '../../core/haptics.service';
 import { GameKeyboard } from '../../shared/game-keyboard';
 import { PlayScreen } from '../../shared/play-screen';
-import { accepts, linksForRound, makeChain, written } from './chain-link-engine';
+import { accepts, DAILY_LINKS, linksForRound, makeChain, written } from './chain-link-engine';
 import { MindResult, seeded, useTimers } from './mind-util';
 
 interface Row {
@@ -14,7 +14,7 @@ interface Row {
 
 /**
  * The first word is given. Each word after it is shown as its first letter and one line per remaining letter. A word is right when it
- * joins with the one before it into a compound word (MAN + MADE = man-made) and with the one after it. Chains grow from 2 words to 6.
+ * joins with the one before it into a compound word (MAN + MADE = man-made) and with the one after it. Chains grow from 4 links to 9.
  * A wrong word or a skip costs a life; three lives.
  */
 @Component({
@@ -26,7 +26,7 @@ interface Row {
 })
 export class ChainLink implements OnInit {
   readonly done = output<MindResult>();
-  /** Set for the daily chain: the same one for everyone, a single chain of five words, played once. */
+  /** Set for the daily chain: the same one for everyone, a single long chain, played once. */
   readonly seed = input<string | null>(null);
   private random: () => number = Math.random;
   private readonly haptics = inject(HapticsService);
@@ -64,7 +64,7 @@ export class ChainLink implements OnInit {
   }
 
   private begin(): void {
-    const chain = makeChain(this.seed() !== null ? 5 : linksForRound(this.round()), this.random, undefined, this.seen);
+    const chain = makeChain(this.seed() !== null ? DAILY_LINKS : linksForRound(this.round()), this.random, undefined, this.seen);
     // The word list is large enough that this does not happen; if it ever did, end kindly instead of hanging.
     if (!chain) return this.finish();
     chain.words.forEach((w) => this.seen.add(w));

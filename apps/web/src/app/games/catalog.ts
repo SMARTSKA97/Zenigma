@@ -35,7 +35,8 @@ export type MindGameId =
   | 'pinpoint'
   | 'crossclimb'
   | 'wend'
-  | 'comet-slice';
+  | 'comet-slice'
+  | 'switchyard';
 
 /** Where a game sits in the apps: logic puzzles, Sudoku, words or mind training. */
 export type Category = 'logic' | 'sudoku' | 'word' | 'mind';
@@ -83,6 +84,7 @@ export const GAMES: GameInfo[] = [
   { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice the falling comets, avoid the skulls.', hue: 15, live: true, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'switchyard', name: 'Switchyard', blurb: 'Switch the tracks so every train reaches its own station.', hue: 200, live: true, daily: false, category: 'mind', skill: 'attention' },
   { id: 'echo-sequence', name: 'Echo Sequence', blurb: 'Watch a pattern of lights, then repeat it. It grows by one each round.', hue: 120, live: true, daily: false, category: 'mind', skill: 'memory' },
   { id: 'grid-recall', name: 'Grid Recall', blurb: 'Memorise which tiles lit up, then tap them from memory.', hue: 140, live: true, daily: false, category: 'mind', skill: 'memory' },
   { id: 'number-recall', name: 'Number Recall', blurb: 'See a number for a moment, then type it back.', hue: 180, live: true, daily: false, category: 'mind', skill: 'memory' },
@@ -107,7 +109,7 @@ export const GAMES: GameInfo[] = [
 ];
 
 /** Mind-training games that can be played now (the rest of them are still coming soon). */
-export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall', 'chain-link', 'pinpoint', 'crossclimb', 'wend', 'comet-slice'];
+export const MIND_LIVE: readonly MindGameId[] = ['quick-sums', 'target-number', 'colour-clash', 'odd-one-out', 'spot-change', 'target-tap', 'quick-reflex', 'back-track', 'echo-sequence', 'grid-recall', 'number-recall', 'pair-match', 'anagram-rush', 'missing-letters', 'what-next', 'mental-turn', 'number-sort', 'dot-count', 'opposites', 'word-recall', 'chain-link', 'pinpoint', 'crossclimb', 'wend', 'comet-slice', 'switchyard'];
 
 export const gameInfo = (id: string): GameInfo | undefined => GAMES.find((g) => g.id === id);
 

@@ -1,15 +1,8 @@
-<app-play-screen title="Wend" [subtitle]="daily() ? 'Daily · ' + weekday() : 'Board ' + boards()">
+<app-play-screen title="Wend" [subtitle]="daily() ? 'Daily · ' + weekday() : 'Level ' + boards()">
   <div end>
     <span>{{ wordsFound() }}/{{ slots().length }} words</span>
-    @if (daily()) {
-      <span class="clock">{{ elapsed() }}s</span>
-    } @else {
-      <span class="clock">{{ seconds() }}s</span>
-    }
+    <span class="clock">{{ elapsed() }}s</span>
   </div>
-  @if (!daily()) {
-    <div class="time" aria-hidden="true"><i [style.width.%]="(clock.left() / 480000) * 100"></i></div>
-  }
   @if (ready()) {
     <p class="spelling" [class.flash-bad]="bad()" [class.empty]="!spelling()" aria-live="polite">{{ spelling().toUpperCase() || 'Trace a word' }}</p>
     <div class="board" [style.--cols]="size()">

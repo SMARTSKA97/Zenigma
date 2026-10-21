@@ -11,13 +11,12 @@ import { MindStore } from '../../games/mind/mind-store';
 import { Glyph } from '../../shared/glyph';
 import { PracticeTabs } from '../../shared/practice-tabs';
 import { Brain } from './brain';
-import { MindDailyPanel } from './mind-daily-panel';
 import { Radar, RadarAxis } from './radar';
 
 /** Mind: today's set, a picture of your skills (brain and radar) with how you compare with other players, and every game by skill. */
 @Component({
   selector: 'app-mind-home',
-  imports: [RouterLink, Glyph, Brain, Radar, MindDailyPanel, PracticeTabs],
+  imports: [RouterLink, Glyph, Brain, Radar, PracticeTabs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-home.html',
   styleUrl: './mind-home.scss',

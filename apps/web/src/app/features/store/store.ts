@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { BackService } from '../../core/back.service';
@@ -13,7 +13,7 @@ import { QuestsCard } from '../../shared/quests-card';
 type Shelf = 'hints' | 'accent' | 'skin';
 type Section = 'wheel' | 'quests' | 'shop';
 
-const SLICE_LABEL: Record<string, string> = { c3: '3', c5: '5', c8: '8', c15: '15', c40: '40', h1: '💡1', h2: '💡2' };
+const SLICE_LABEL: Record<string, string> = { c1: '1', c2: '2', c3: '3', c5: '5', c20: '20', h1: '💡1', h2: '💡2' };
 const SLICE_KEY = (kind: string, amount: number): string => (kind === 'hints' ? `h${amount}` : `c${amount}`);
 
 /** The store: coins, the daily wheel, today's quests, and things to spend coins on. It needs a connection so the balance is the same on every device. */
@@ -55,6 +55,7 @@ export class Store implements OnInit {
   protected readonly online = computed(() => this.auth.signedIn() && !this.conn.offlineMode() && this.conn.online());
   protected readonly items = computed(() => this.wallet.catalog().filter((i) => i.kind === this.shelf()));
   private rounds = 0;
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   ngOnInit(): void {
     void this.wallet.refresh();
@@ -90,7 +91,13 @@ export class Store implements OnInit {
     const options = PRIZE_SLICES.map((v, i) => (v === key ? i : -1)).filter((i) => i >= 0);
     const slice = options[Math.floor(Math.random() * options.length)] ?? 0;
     this.rounds++;
-    this.angle.set(360 * 6 * this.rounds + (360 - (slice * 45 + 22.5)));
+    const from = this.angle();
+    const to = 360 * 6 * this.rounds + (360 - (slice * 45 + 22.5));
+    this.angle.set(to);
+    // The Web Animations API, not a CSS transition: a phone's "reduce motion" setting switches CSS transitions off for the whole page,
+    // and then the wheel would jump. The wheel is the point of the spin, so only Settings > Reduce motion shortens it.
+    const disc = this.host.nativeElement.querySelector<SVGElement>('.disc');
+    disc?.animate([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${to}deg)` }], { duration: this.prefs.motionReduced() ? 600 : 4000, easing: 'cubic-bezier(0.12, 0.7, 0.1, 1)' });
     const ticker = setInterval(() => {
       this.haptics.tick();
       this.sound.tick();

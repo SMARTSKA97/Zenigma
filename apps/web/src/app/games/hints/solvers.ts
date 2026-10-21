@@ -143,7 +143,7 @@ export function solveZip(puzzle: ZipPuzzle): number[] | null {
   const total = n * n - (puzzle.holes?.length ?? 0);
   const top = Math.max(...puzzle.numbers);
   const start = puzzle.numbers.indexOf(1);
-  const nbrs = Array.from({ length: total }, (_, i) => {
+  const nbrs = Array.from({ length: n * n }, (_, i) => {
     const r = Math.floor(i / n);
     const c = i % n;
     const out: number[] = [];

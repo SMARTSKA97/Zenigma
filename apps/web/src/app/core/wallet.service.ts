@@ -10,7 +10,7 @@ import { HintsService, indiaDate } from './hints.service';
 import { SoundService } from './sound.service';
 
 /** What each way of earning pays. The server holds the same table and has the last word. */
-export const EARNS: Record<string, number> = { daily: 5, mindset: 12, perfect: 20, level: 1, boss: 5, quest: 6, streak: 25 };
+export const EARNS: Record<string, number> = { daily: 2, mindset: 5, perfect: 8, level: 1, boss: 3, quest: 2, chest: 4, streak: 15 };
 
 export interface StoreItem {
   id: string;
@@ -56,7 +56,7 @@ interface Saved {
 }
 
 const KEY = 'zenigma.wallet';
-export const PRIZE_SLICES: ('c3' | 'c5' | 'c8' | 'c15' | 'h1' | 'h2' | 'c40')[] = ['c3', 'c5', 'h1', 'c8', 'c3', 'c15', 'h2', 'c40'];
+export const PRIZE_SLICES: ('c1' | 'c2' | 'c3' | 'c5' | 'h1' | 'h2' | 'c20')[] = ['c1', 'c2', 'h1', 'c3', 'c1', 'c5', 'h2', 'c20'];
 
 /** Things that unlock for free by playing (kept on this device; they are only colours). Streak days in a row, both halves of the day done. */
 export const STREAK_UNLOCKS: { days: number; item: string }[] = [
@@ -224,7 +224,7 @@ export class WalletService {
     this.persist();
     const after = this.questsFor(q);
     for (const [id, done] of Object.entries(after)) if (done && !before[id as keyof typeof before]) this.earn('quest', `quest:${today}:${id}`, 'Quest done');
-    if (Object.values(after).every(Boolean) && !Object.values(before).every(Boolean)) this.earn('quest', `quest:${today}:chest`, 'Daily chest');
+    if (Object.values(after).every(Boolean) && !Object.values(before).every(Boolean)) this.earn('chest', `quest:${today}:chest`, 'Daily chest');
   }
 
   private questsFor(q: QuestDay) {

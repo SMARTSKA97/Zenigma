@@ -45,5 +45,8 @@ function walk(path: string[], links: number, random: () => number, graph: Compou
   return null;
 }
 
-/** How many words (after the first) the chain of a given round has: 2, 3, 4, 5, then 6 for every round after. */
-export const linksForRound = (round: number): number => Math.min(6, 1 + round);
+/** How many words (after the first) the chain of a given round has: 4, 5, 6, 7, 8, then 9 for every round after. */
+export const linksForRound = (round: number): number => Math.min(9, 3 + round);
+
+/** Links in the daily chain. */
+export const DAILY_LINKS = 7;

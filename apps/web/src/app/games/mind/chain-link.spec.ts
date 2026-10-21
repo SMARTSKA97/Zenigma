@@ -13,8 +13,8 @@ describe('Chain Link words', () => {
   });
 
   it('can build a chain for every length a round asks for', () => {
-    for (const links of [2, 3, 4, 5, 6]) {
-      for (let i = 0; i < 150; i++) {
+    for (const links of [4, 5, 6, 7, 8, 9]) {
+      for (let i = 0; i < 100; i++) {
         const chain = makeChain(links);
         expect(chain, `${links} links`).not.toBeNull();
         expect(chain!.words.length).toBe(links + 1);
@@ -24,8 +24,8 @@ describe('Chain Link words', () => {
     }
   });
 
-  it('asks for 2 to 6 words, then stays at 6', () => {
-    expect([1, 2, 3, 4, 5, 6, 9].map(linksForRound)).toEqual([2, 3, 4, 5, 6, 6, 6]);
+  it('asks for 4 to 9 links, then stays at 9', () => {
+    expect([1, 2, 3, 4, 5, 6, 9].map(linksForRound)).toEqual([4, 5, 6, 7, 8, 9, 9]);
   });
 
   it('knows man and made go together, and writes the pair', () => {

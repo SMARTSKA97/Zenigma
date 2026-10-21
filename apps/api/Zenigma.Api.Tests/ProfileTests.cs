@@ -238,17 +238,17 @@ public class ProfileTests : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.PaymentRequired, tooDear.StatusCode);
 
         // Reported earns pay once per ref and stop at the daily cap.
-        var entries = Enumerable.Range(0, 80).Select(n => new { id = Guid.NewGuid(), reason = "level", @ref = $"level:t:{n}" }).ToArray();
-        var earned = await (await client.PostAsJsonAsync("/store/earn", new { entries = entries.Take(50) })).Content.ReadFromJsonAsync<JsonElement>(Json);
-        Assert.Equal(20 + 50, earned.GetProperty("coins").GetInt32());
-        var more = await (await client.PostAsJsonAsync("/store/earn", new { entries = entries.Skip(30).Take(50) })).Content.ReadFromJsonAsync<JsonElement>(Json);
-        Assert.Equal(20 + 60, more.GetProperty("coins").GetInt32()); // 60 a day, and the repeats paid nothing
+        var entries = Enumerable.Range(0, 50).Select(n => new { id = Guid.NewGuid(), reason = "level", @ref = $"level:t:{n}" }).ToArray();
+        var earned = await (await client.PostAsJsonAsync("/store/earn", new { entries = entries.Take(20) })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(20 + 20, earned.GetProperty("coins").GetInt32());
+        var more = await (await client.PostAsJsonAsync("/store/earn", new { entries = entries.Skip(10).Take(40) })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal(20 + 30, more.GetProperty("coins").GetInt32()); // 30 a day, and the repeats paid nothing
 
         await GiveCoinsAsync(client, 500);
         var bought = await client.PostAsJsonAsync("/store/buy", new { item = "accent:rose" });
         Assert.Equal(HttpStatusCode.OK, bought.StatusCode);
         var state = await bought.Content.ReadFromJsonAsync<JsonElement>(Json);
-        Assert.Equal(80 + 500 - 200, state.GetProperty("coins").GetInt32());
+        Assert.Equal(50 + 500 - 200, state.GetProperty("coins").GetInt32());
         Assert.Contains("accent:rose", state.GetProperty("owned").EnumerateArray().Select(x => x.GetString()));
 
         Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/store/buy", new { item = "accent:rose" })).StatusCode);

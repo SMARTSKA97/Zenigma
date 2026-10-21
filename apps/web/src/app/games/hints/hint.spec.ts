@@ -4,6 +4,8 @@ import TANGO from '../../../../public/levels/tango-classic-hard-0.json';
 import SUDOKU from '../../../../public/levels/sudoku-classic-insane-0.json';
 import MINI from '../../../../public/levels/sudoku-mini-insane-0.json';
 import ZIP from '../../../../public/levels/zip-classic-hard-0.json';
+import HOLES from '../../../../public/levels/zip-holes-0.json';
+import WALLS from '../../../../public/levels/zip-walls-0.json';
 import PATCHES from '../../../../public/levels/patches-classic-hard-0.json';
 import * as queens from '../queens/engine';
 import * as tango from '../tango/engine';
@@ -72,6 +74,16 @@ describe('hints coach without giving the answer', () => {
       const options = [start + 1, start - 1, start + p.size, start - p.size].filter((c) => c >= 0 && c < p.size * p.size && c !== sol[1] && zip.canStep(p, [start], c));
       if (options.length) expect(hintFor('zip', p, [start, options[0]]).kind).toBe('mistake');
       expect(hintFor('zip', p, sol.slice(0, 3)).kind).toBe('nudge');
+    }
+  });
+
+  it('zip with blocked cells and walls', () => {
+    for (const p of [...pick(HOLES as unknown as zip.ZipPuzzle[]), ...pick(WALLS as unknown as zip.ZipPuzzle[])]) {
+      const sol = solveZip(p)!;
+      expect(sol.length).toBe(zip.cellsToCover(p));
+      expect(zip.isSolved(p, sol)).toBe(true);
+      expect(hintFor('zip', p, zip.blankPath(p)).kind).toBe('nudge');
+      expect(hintFor('zip', p, sol).kind).toBe('done');
     }
   });
 

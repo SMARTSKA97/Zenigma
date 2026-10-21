@@ -3,7 +3,7 @@ import { HapticsService } from '../../core/haptics.service';
 import { PlayScreen } from '../../shared/play-screen';
 import { adjacent, Board, makeBoard, practiceSpec, specForDate } from './wend-engine';
 import { loadWendWords, WendWords } from './wend-words';
-import { MindResult, seeded, useClock, useTimers } from './mind-util';
+import { MindResult, seeded, useTimers } from './mind-util';
 
 interface Found {
   word: string;
@@ -13,15 +13,21 @@ interface Found {
   k: number;
 }
 
-/** Practice is a run of boards that grow from Monday's size to Sunday's. */
-const PRACTICE_MS = 8 * 60 * 1000;
+const LEVEL_KEY = 'zenigma.wend.level';
+const readLevel = (): number => {
+  try {
+    return Math.max(1, Number(localStorage.getItem(LEVEL_KEY)) || 1);
+  } catch {
+    return 1;
+  }
+};
 
 /**
  * Wend, as on LinkedIn: a grid with grey blocks whose letters hide several words (3 to 11 letters), bigger and with more words as the week goes on. Trace each one
  * through touching letters (up, down, left or right), every letter used exactly once. The board has one solution, so a real word on
  * the wrong letters is turned down. Drag across the letters, or tap them one by one and press Check.
  * Hint shows the first letter of the shortest word still to find, and the next letter each time it is pressed again.
- * Played as an eight-minute run of boards from Practice, or as the one board of the day (`seed`).
+ * Played as one board per game from Practice (each win makes the next board bigger), or as the one board of the day (`seed`).
  */
 @Component({
   selector: 'app-wend',
@@ -46,8 +52,6 @@ export class Wend implements OnInit {
   private dragging = false;
   private moved = false;
 
-  protected readonly clock = useClock(PRACTICE_MS, () => this.finish());
-  protected readonly seconds = () => Math.ceil(this.clock.left() / 1000);
   protected readonly ready = signal(false);
   protected readonly letters = signal<string[]>([]);
   protected readonly found = signal<Found[]>([]);
@@ -68,7 +72,7 @@ export class Wend implements OnInit {
   protected readonly elapsed = signal(0);
   /** The day of the week of the daily board (Monday is small, Sunday is the biggest). */
   protected readonly weekday = signal('');
-  protected readonly boards = signal(1);
+  protected readonly boards = signal(readLevel());
   protected readonly wordsFound = signal(0);
   protected readonly daily = computed(() => this.seed() !== null);
   protected readonly cells = computed(() => Array.from({ length: this.size() * this.size() }, (_, i) => i));
@@ -86,7 +90,6 @@ export class Wend implements OnInit {
     if (seed !== null) this.random = seeded(seed);
     this.begin();
     this.ready.set(true);
-    if (!this.daily()) this.clock.start();
     const t0 = Date.now();
     const tick = setInterval(() => this.elapsed.set(Math.floor((Date.now() - t0) / 1000)), 1000);
     this.destroy.onDestroy(() => {
@@ -193,15 +196,15 @@ export class Wend implements OnInit {
   }
 
   private solved(): void {
-    if (this.daily()) {
-      this.ended = true;
-      this.timers.after(900, () => this.finish());
-      return;
+    this.ended = true;
+    if (!this.daily()) {
+      try {
+        localStorage.setItem(LEVEL_KEY, String(this.boards() + 1));
+      } catch {
+        /* the next board is simply the same size */
+      }
     }
-    this.timers.after(1000, () => {
-      this.boards.update((b) => b + 1);
-      this.begin();
-    });
+    this.timers.after(900, () => this.finish());
   }
 
   /** Takes back the last locked word. */
@@ -270,14 +273,10 @@ export class Wend implements OnInit {
 
   private finish(): void {
     this.ended = true;
-    this.clock.stop();
-    if (this.daily()) {
-      // Points for the day: 100, less 15 for every hint (never under 40).
-      const points = Math.max(40, 100 - 15 * this.hints());
-      this.done.emit({ score: points, detail: this.hints() === 0 ? 'No hints used' : `${this.hints()} ${this.hints() === 1 ? 'hint' : 'hints'} used` });
-      return;
-    }
-    const n = this.wordsFound();
-    this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'word' : 'words'} on ${this.boards()} ${this.boards() === 1 ? 'board' : 'boards'}` });
+    // Points for the board: 100, less 15 for every hint and 1 for every 10 seconds past the first minute (never under 40).
+    const slow = Math.max(0, Math.floor((this.elapsed() - 60) / 10));
+    const points = Math.max(40, 100 - 15 * this.hints() - slow);
+    const hinted = this.hints() === 0 ? 'No hints used' : `${this.hints()} ${this.hints() === 1 ? 'hint' : 'hints'} used`;
+    this.done.emit({ score: points, detail: this.daily() ? hinted : `Board ${this.boards()} in ${this.elapsed()}s · ${hinted}` });
   }
 }

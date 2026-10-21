@@ -1,0 +1,158 @@
+:host {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  width: 100%;
+  --c0: #e5484d;
+  --c1: #3b82f6;
+  --c2: #22a559;
+  --c3: #f5a524;
+}
+.queue {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.9rem;
+  small {
+    color: var(--muted);
+    font-weight: 700;
+    margin-right: 0.2rem;
+  }
+  .none {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+}
+.chip {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 0.45rem;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.c0 {
+  --c: var(--c0);
+}
+.c1 {
+  --c: var(--c1);
+}
+.c2 {
+  --c: var(--c2);
+}
+.c3 {
+  --c: var(--c3);
+}
+.chip {
+  background: var(--c);
+}
+.yard {
+  width: 100%;
+  max-width: 24rem;
+  max-height: 60dvh;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.rail {
+  stroke: color-mix(in srgb, var(--ink) 22%, transparent);
+  stroke-width: 1.4;
+  stroke-dasharray: 2 2.4;
+  stroke-linecap: round;
+  &.on {
+    stroke: var(--ink);
+    stroke-dasharray: none;
+    stroke-width: 2.2;
+  }
+}
+.sw {
+  cursor: pointer;
+  outline: none;
+  .hit {
+    fill: transparent;
+  }
+  .hub {
+    fill: var(--surface);
+    stroke: var(--ink);
+    stroke-width: 1.4;
+  }
+  &:active .hub,
+  &:focus-visible .hub {
+    fill: var(--accent);
+  }
+}
+.joiner {
+  fill: var(--ink);
+}
+.dot {
+  fill: var(--ink);
+  opacity: 0.5;
+}
+.gate rect {
+  fill: var(--ink);
+}
+.gate text,
+.station text,
+.train text {
+  fill: #fff;
+  text-anchor: middle;
+  font-weight: 800;
+}
+.gate text {
+  font-size: 5px;
+}
+.station rect,
+.train rect {
+  fill: var(--c);
+}
+.station text {
+  font-size: 7px;
+}
+.train text {
+  font-size: 5.6px;
+}
+.train rect {
+  stroke: color-mix(in srgb, #000 35%, transparent);
+  stroke-width: 0.5;
+}
+.station {
+  transform-box: fill-box;
+  transform-origin: center;
+  &.ok rect {
+    animation: ok 0.5s var(--ease);
+  }
+  &.bad rect {
+    animation: bad 0.5s var(--ease);
+  }
+}
+@keyframes ok {
+  50% {
+    stroke: #fff;
+    stroke-width: 3;
+  }
+}
+@keyframes bad {
+  25% {
+    stroke: var(--ink);
+    stroke-width: 3;
+  }
+  60% {
+    stroke: var(--ink);
+    stroke-width: 3;
+  }
+}
+.note {
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.9rem;
+}
+.hearts {
+  letter-spacing: 0.1em;
+}
+.gone {
+  opacity: 0.25;
+}

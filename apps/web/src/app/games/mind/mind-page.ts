@@ -37,6 +37,7 @@ import { Pinpoint } from './pinpoint';
 import { Crossclimb } from './crossclimb';
 import { Wend } from './wend';
 import { CometSlice } from './comet-slice';
+import { Switchyard } from './switchyard';
 import { PlayScreen } from '../../shared/play-screen';
 import { MindGameId } from '../catalog';
 import { CanLeave } from '../../core/leave';
@@ -45,7 +46,7 @@ import { LeaveSheet } from '../../shared/leave-sheet';
 /** One screen for every mind-training game: how to play, the game, then your score against your best. */
 @Component({
   selector: 'app-mind-page',
-  imports: [NgTemplateOutlet, PlayScreen, RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend, CometSlice],
+  imports: [NgTemplateOutlet, PlayScreen, RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend, CometSlice, Switchyard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-page.html',
   styleUrl: './mind-page.scss',
@@ -63,7 +64,7 @@ export class MindPage implements CanLeave {
   protected readonly meta = computed(() => MIND_META[this.id()]);
   protected readonly skill = computed(() => SKILLS.find((s) => s.id === this.meta()?.skill));
   /** These games draw their own full-screen layout (keyboard, board or sky); every other one is placed in the shared play screen. */
-  protected readonly ownScreen = computed(() => ['wend', 'chain-link', 'crossclimb', 'pinpoint', 'comet-slice'].includes(this.id()));
+  protected readonly ownScreen = computed(() => ['wend', 'chain-link', 'crossclimb', 'pinpoint', 'comet-slice', 'switchyard'].includes(this.id()));
   protected readonly stage = signal<'intro' | 'play' | 'result'>('intro');
   protected readonly result = signal<MindResult | null>(null);
   protected readonly record = signal(false);
