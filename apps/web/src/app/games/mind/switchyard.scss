@@ -7,6 +7,7 @@
   --c1: #3b82f6;
   --c2: #22a559;
   --c3: #f5a524;
+  --c4: #8b5cf6;
 }
 .queue {
   display: flex;
@@ -51,21 +52,65 @@
 .yard {
   width: 100%;
   max-width: 24rem;
-  max-height: 60dvh;
+  max-height: 64dvh;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18));
+  --grass: #2f6b3f;
+  --bed: #3a3b33;
+  --tie: #8a6a45;
+  --steel: #d8dee3;
+}
+.grass {
+  fill: var(--grass);
+}
+.tree circle {
+  fill: #1f5130;
+}
+.tree .hi {
+  fill: #2c6d42;
+}
+.bed,
+.ties,
+.rail {
+  fill: none;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+}
+.bed {
+  stroke: var(--bed);
+  stroke-width: 6.2;
+  stroke-linecap: round;
+}
+.ties {
+  stroke: var(--tie);
+  stroke-width: 5.6;
+  stroke-dasharray: 0.9 1.9;
 }
 .rail {
-  stroke: color-mix(in srgb, var(--ink) 22%, transparent);
-  stroke-width: 1.4;
-  stroke-dasharray: 2 2.4;
-  stroke-linecap: round;
-  &.on {
-    stroke: var(--ink);
-    stroke-dasharray: none;
-    stroke-width: 2.2;
-  }
+  stroke: var(--steel);
+  stroke-width: 0.9;
+}
+/* The tracks a train would take right now are lit; the others are dimmed. */
+.track:not(.live) {
+  opacity: 0.45;
+}
+.track.live .bed {
+  stroke: #24251f;
+}
+.gate path {
+  fill: #5a5a4e;
+  stroke: #25261f;
+  stroke-width: 1;
+}
+.gate .hole {
+  fill: #101510;
+  stroke: none;
+}
+.joiner {
+  fill: var(--bed);
+  opacity: 0.9;
 }
 .sw {
   cursor: pointer;
@@ -73,74 +118,102 @@
   .hit {
     fill: transparent;
   }
-  .hub {
-    fill: var(--surface);
-    stroke: var(--ink);
-    stroke-width: 1.4;
+  .disc {
+    fill: #3f8a52;
+    stroke: #1d4a2b;
+    stroke-width: 1.2;
   }
-  &:active .hub,
-  &:focus-visible .hub {
+  .hub {
+    fill: #1d4a2b;
+  }
+  &:active .disc,
+  &:focus-visible .disc {
     fill: var(--accent);
   }
 }
-.joiner {
-  fill: var(--ink);
-}
-.dot {
-  fill: var(--ink);
-  opacity: 0.5;
-}
-.gate rect {
-  fill: var(--ink);
-}
-.gate text,
-.station text,
-.train text {
+.dir {
   fill: #fff;
-  text-anchor: middle;
-  font-weight: 800;
+  stroke: #1d4a2b;
+  stroke-width: 0.6;
+  pointer-events: none;
 }
-.gate text {
-  font-size: 5px;
-}
-.station rect,
-.train rect {
-  fill: var(--c);
-}
-.station text {
-  font-size: 7px;
-}
-.train text {
-  font-size: 5.6px;
-}
-.train rect {
-  stroke: color-mix(in srgb, #000 35%, transparent);
-  stroke-width: 0.5;
+.badge {
+  fill: #fff;
 }
 .station {
+  .wall {
+    fill: var(--c);
+  }
+  .roof {
+    fill: color-mix(in srgb, var(--c) 62%, #000);
+  }
+  .silo {
+    fill: color-mix(in srgb, var(--c) 78%, #fff);
+  }
+  .door {
+    fill: color-mix(in srgb, var(--c) 40%, #000);
+  }
+  .wall,
+  .roof,
+  .silo {
+    stroke: #fff;
+    stroke-width: 0.9;
+    stroke-linejoin: round;
+  }
+  text {
+    fill: var(--c);
+    font-size: 4.2px;
+    font-weight: 800;
+    text-anchor: middle;
+  }
   transform-box: fill-box;
-  transform-origin: center;
-  &.ok rect {
+  &.ok .wall {
     animation: ok 0.5s var(--ease);
   }
-  &.bad rect {
+  &.bad .wall {
     animation: bad 0.5s var(--ease);
   }
 }
+.train {
+  .wagon,
+  .loco {
+    fill: var(--c);
+    stroke: #fff;
+    stroke-width: 0.7;
+  }
+  .cab {
+    fill: color-mix(in srgb, var(--c) 55%, #000);
+  }
+  .link {
+    fill: #222;
+  }
+  .stack {
+    fill: #222;
+  }
+  .lamp {
+    fill: #fff7b0;
+  }
+  text {
+    fill: var(--c);
+    font-size: 3.4px;
+    font-weight: 800;
+    text-anchor: middle;
+  }
+}
+.c4 {
+  --c: var(--c4);
+}
 @keyframes ok {
   50% {
-    stroke: #fff;
-    stroke-width: 3;
+    stroke: #ffe27a;
+    stroke-width: 2.4;
   }
 }
 @keyframes bad {
-  25% {
-    stroke: var(--ink);
-    stroke-width: 3;
-  }
+  25%,
   60% {
-    stroke: var(--ink);
-    stroke-width: 3;
+    stroke: #111;
+    stroke-width: 2.4;
   }
 }
 .note {

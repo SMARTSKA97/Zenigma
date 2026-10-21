@@ -2,21 +2,24 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { HapticsService } from '../../core/haptics.service';
 import { PlayScreen } from '../../shared/play-screen';
 import { MindResult, useTimers } from './mind-util';
-import { advance, buildYard, gapMs, planTrains, segmentMs, shapeForRound, spawn, Train, trainsInRound, Yard } from './switchyard-engine';
+import { advance, branchesFor, buildYard, Edge, gapMs, liveTracks, offsetPts, planTrains, pointAt, roundedPath, spawn, speedFor, Train, trainsInRound, Yard } from './switchyard-engine';
 
-const W = 100;
-const H = 130;
+/** Width of the board in units; the main line runs down its middle. */
+const W = 120;
+const CX = W / 2;
 const TOP = 16;
-const BOTTOM = 14;
+const PAD_BOTTOM = 16;
 /** A symbol for each colour too, so the trains can be told apart without seeing the colours. */
-export const SYMBOLS = ['●', '■', '▲', '◆'] as const;
+export const SYMBOLS = ['●', '■', '▲', '◆', '★'] as const;
 const LIVES = 3;
 /** Milliseconds from the start of a round to the first train. */
 const LEAD_IN = 2400;
+/** Little trees at the edges of the board: fixed, so the scenery does not jump about. */
+const TREES = [[6, 12, 3.4], [114, 22, 3], [5, 44, 2.6], [115, 58, 3.6], [7, 80, 3], [113, 96, 2.8], [6, 118, 3.4], [114, 132, 3]] as const;
 
 /**
  * Switchyard: coloured trains roll in from the top of a rail yard. Tap a switch (a round hub where the track forks) to choose which way
- * the trains go; joiners merge two tracks into one. Each train has to arrive at the station of its own colour. A train at the wrong
+ * the trains go; sidings rejoin the main line. Each train has to arrive at the station of its own colour. A train at the wrong
  * station costs a life (three lives). Every round has more trains, closer together, and faster, and the yards get bigger.
  */
 @Component({
@@ -37,7 +40,7 @@ export class Switchyard implements OnInit {
   protected readonly round = signal(1);
   protected readonly lives = signal(LIVES);
   protected readonly delivered = signal(0);
-  protected readonly yard = signal<Yard>(buildYard(shapeForRound(1)));
+  protected readonly yard = signal<Yard>(buildYard(branchesFor(1)));
   /** Which way each switch points (0 or 1), by node. */
   protected readonly settings = signal<number[]>([]);
   protected readonly trains = signal<Train[]>([]);
@@ -58,30 +61,50 @@ export class Switchyard implements OnInit {
   private last = 0;
   private arrivals = 0;
 
-  protected readonly nodes = computed(() => {
-    const yard = this.yard();
-    return yard.nodes.map((n) => ({ ...n, x: (W * (n.row + 0.5)) / n.width, y: TOP + (n.layer * (H - TOP - BOTTOM)) / Math.max(1, yard.layers - 1) }));
-  });
+  protected readonly height = computed(() => this.yard().length + TOP + PAD_BOTTOM);
+  protected readonly trees = TREES;
 
-  protected readonly edges = computed(() => {
-    const nodes = this.nodes();
-    const settings = this.settings();
-    const out: { key: string; x1: number; y1: number; x2: number; y2: number; on: boolean }[] = [];
-    for (const n of nodes) {
-      n.next.forEach((to, k) => {
-        const t = nodes[to];
-        out.push({ key: `${n.id}-${to}`, x1: n.x, y1: n.y, x2: t.x, y2: t.y, on: n.next.length === 1 || (settings[n.id] ?? 0) === k });
+  protected readonly nodes = computed(() => this.yard().nodes.map((n) => ({ ...n, x: CX + n.v, y: TOP + n.u })));
+
+  /** Each track drawn as gravel, sleepers and two rails; the ones a train would take right now are lit. */
+  protected readonly tracks = computed(() => {
+    const yard = this.yard();
+    const live = liveTracks(yard, this.settings());
+    const out: { key: string; bed: string; left: string; right: string; live: boolean }[] = [];
+    for (const n of yard.nodes) {
+      n.out.forEach((e: Edge, k) => {
+        out.push({
+          key: `${n.id}-${k}`,
+          bed: roundedPath(e.pts, CX, TOP),
+          left: roundedPath(offsetPts(e.pts, 1.7), CX, TOP),
+          right: roundedPath(offsetPts(e.pts, -1.7), CX, TOP),
+          live: live.has(e),
+        });
       });
     }
     return out;
   });
 
+  /** For each switch, a short stroke from its hub toward the way it is set. */
+  protected readonly pointers = computed(() => {
+    const settings = this.settings();
+    return this.nodes()
+      .filter((n) => n.out.length === 2)
+      .map((n) => {
+        const e = n.out[settings[n.id] ? 1 : 0];
+        const [u, v] = e.pts[1];
+        const du = u - n.u;
+        const dv = v - n.v;
+        const len = Math.hypot(du, dv) || 1;
+        return { id: n.id, x: n.x + (dv / len) * 4.4, y: n.y + (du / len) * 4.4 };
+      });
+  });
+
   protected readonly trainViews = computed(() => {
     const nodes = this.nodes();
     return this.trains().map((t) => {
-      const a = nodes[t.from];
-      const b = nodes[t.to];
-      return { id: t.id, colour: t.colour, x: a.x + (b.x - a.x) * t.f, y: a.y + (b.y - a.y) * t.f };
+      const p = pointAt(t.edge, t.d);
+      return { id: t.id, colour: t.colour, x: CX + p.v, y: TOP + p.u, angle: p.angle, from: nodes[t.node].id };
     });
   });
 
@@ -104,7 +127,7 @@ export class Switchyard implements OnInit {
 
   private startRound(): void {
     const round = this.round();
-    const yard = buildYard(shapeForRound(round));
+    const yard = buildYard(branchesFor(round));
     this.yard.set(yard);
     this.settings.set([]);
     this.plan = planTrains(yard, trainsInRound(round));
@@ -140,10 +163,10 @@ export class Switchyard implements OnInit {
       this.entered++;
       this.waiting.set(this.plan.slice(this.entered));
     }
-    const df = dt / segmentMs(round);
+    const dist = (dt / 1000) * speedFor(round);
     const settings = this.settings();
     for (const train of [...this.live]) {
-      const station = advance(yard, settings, train, df);
+      const station = advance(yard, settings, train, dist);
       if (station !== null) this.arrive(train, station);
     }
     this.trains.set([...this.live]);

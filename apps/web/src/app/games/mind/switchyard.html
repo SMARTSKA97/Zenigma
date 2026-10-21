@@ -11,46 +11,75 @@
       <span class="none">none left</span>
     }
   </div>
-  <svg class="yard" viewBox="0 0 100 130" role="group" aria-label="Rail yard. Tap a switch to choose the way trains go.">
-    @for (e of edges(); track e.key) {
-      <line class="rail" [class.on]="e.on" [attr.x1]="e.x1" [attr.y1]="e.y1" [attr.x2]="e.x2" [attr.y2]="e.y2" />
+  <svg class="yard" [attr.viewBox]="'0 0 120 ' + height()" role="group" aria-label="Rail yard. Tap a round switch to choose the way trains go.">
+    <rect class="grass" x="0" y="0" width="120" [attr.height]="height()" rx="6" />
+    @for (t of trees; track $index) {
+      <g class="tree" [attr.transform]="'translate(' + t[0] + ' ' + t[1] + ')'">
+        <circle [attr.r]="t[2]" />
+        <circle class="hi" cx="-0.6" cy="-0.8" [attr.r]="t[2] * 0.55" />
+      </g>
+    }
+    @for (e of tracks(); track e.key) {
+      <g class="track" [class.live]="e.live">
+        <path class="bed" [attr.d]="e.bed" />
+        <path class="ties" [attr.d]="e.bed" />
+        <path class="rail" [attr.d]="e.left" />
+        <path class="rail" [attr.d]="e.right" />
+      </g>
     }
     @for (n of nodes(); track n.id) {
-      @if (n.colour !== null) {
+      @if (n.kind === 'station') {
         @let a = arrival();
         <g class="station c{{ n.colour }}" [class.ok]="a?.node === n.id && a?.ok" [class.bad]="a?.node === n.id && !a?.ok" [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'">
-          <rect x="-9.5" y="-6" width="19" height="12" rx="3" />
-          <text y="2.6">{{ symbols[n.colour] }}</text>
+          <rect class="silo" x="4.6" y="-4" width="5" height="10.5" rx="2.2" />
+          <rect class="wall" x="-8.4" y="-5.4" width="16.8" height="12.4" rx="1.6" />
+          <path class="roof" d="M-9.6 -5 L0 -12.2 L9.6 -5 Z" />
+          <rect class="door" x="-2.6" y="1.6" width="5.2" height="5.4" rx="0.8" />
+          <circle class="badge" cy="-4.4" r="3.1" />
+          <text y="-3">{{ symbols[n.colour!] }}</text>
         </g>
-      } @else if (n.next.length === 2) {
+      } @else if (n.kind === 'gate') {
+        <g class="gate" [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'">
+          <path d="M-9.5 3 V-3.5 Q-9.5 -11 0 -11 Q9.5 -11 9.5 -3.5 V3 Z" />
+          <path class="hole" d="M-5.6 3 V-2.6 Q-5.6 -7.4 0 -7.4 Q5.6 -7.4 5.6 -2.6 V3 Z" />
+        </g>
+      } @else if (n.kind === 'join') {
+        <circle class="joiner" [attr.cx]="n.x" [attr.cy]="n.y" r="2.2" />
+      }
+    }
+    @for (n of nodes(); track n.id) {
+      @if (n.kind === 'switch') {
         <g
           class="sw"
           role="button"
           tabindex="0"
-          [attr.aria-label]="'Switch, set to the ' + (settings()[n.id] ? 'right' : 'left')"
+          [attr.aria-label]="'Switch, set to the ' + (settings()[n.id] ? 'side' : 'straight') + ' track'"
           [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'"
           (pointerdown)="flip(n.id, $event)"
           (keydown.enter)="flip(n.id, $event)"
           (keydown.space)="flip(n.id, $event)"
         >
-          <circle class="hit" r="10" />
-          <circle class="hub" r="3.6" />
+          <circle class="hit" r="7.5" />
+          <circle class="disc" r="5.6" />
+          <circle class="hub" r="2.2" />
         </g>
-      } @else if (n.into === 2) {
-        <rect class="joiner" x="-2.6" y="-2.6" width="5.2" height="5.2" rx="1" [attr.transform]="'translate(' + n.x + ' ' + n.y + ') rotate(45)'" />
-      } @else if (n.layer === 0) {
-        <g class="gate" [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'">
-          <rect x="-9" y="-6" width="18" height="9" rx="3" />
-          <text y="0.8">IN</text>
-        </g>
-      } @else {
-        <circle class="dot" [attr.cx]="n.x" [attr.cy]="n.y" r="1.4" />
       }
+    }
+    @for (p of pointers(); track p.id) {
+      <circle class="dir" [attr.cx]="p.x" [attr.cy]="p.y" r="1.5" />
     }
     @for (t of trainViews(); track t.id) {
       <g class="train c{{ t.colour }}" [attr.transform]="'translate(' + t.x + ' ' + t.y + ')'">
-        <rect x="-3.8" y="-3.8" width="7.6" height="7.6" rx="2.2" />
-        <text y="1.9">{{ symbols[t.colour] }}</text>
+        <g [attr.transform]="'rotate(' + t.angle + ')'">
+          <rect class="wagon" x="-8" y="-2.8" width="6.4" height="5.6" rx="1.3" />
+          <rect class="link" x="-1.7" y="-0.4" width="1.6" height="0.8" />
+          <rect class="loco" x="-0.2" y="-2.8" width="8" height="5.6" rx="2" />
+          <rect class="cab" x="-0.2" y="-2.8" width="2.8" height="5.6" rx="1" />
+          <circle class="stack" cx="4.6" r="1.2" />
+          <circle class="lamp" cx="7.6" r="0.7" />
+        </g>
+        <circle class="badge" r="2.5" />
+        <text y="1.1">{{ symbols[t.colour] }}</text>
       </g>
     }
   </svg>
