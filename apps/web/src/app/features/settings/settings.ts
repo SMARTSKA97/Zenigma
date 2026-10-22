@@ -30,7 +30,7 @@ export class Settings implements OnInit {
   protected readonly reminder = inject(ReminderService);
   protected readonly install = inject(InstallService);
   protected readonly canDonate = computed(
-    () => !this.updater.fromPlay() && !!(environment.support.kofiUrl || environment.support.upiId || environment.support.paypalUrl),
+    () => !this.updater.fromPlay() && !!(environment.support.upiId || environment.support.sponsorsUrl || environment.support.coffeeUrl || environment.support.kofiUrl || environment.support.paypalUrl),
   );
   protected readonly accents = ACCENTS;
   protected readonly skins = SKINS;

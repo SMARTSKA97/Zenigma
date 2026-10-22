@@ -20,7 +20,7 @@ export class About implements OnInit {
   protected readonly copied = signal('');
   /** Tips are for the website and sideloaded builds: Google Play wants its own billing for anything paid inside an app from the Play Store. */
   protected readonly canDonate = computed(
-    () => !this.updater.fromPlay() && !!(this.support.kofiUrl || this.support.upiId || this.support.paypalUrl),
+    () => !this.updater.fromPlay() && !!(this.support.upiId || this.support.sponsorsUrl || this.support.coffeeUrl || this.support.kofiUrl || this.support.paypalUrl),
   );
   protected readonly upiLink = `upi://pay?pa=${encodeURIComponent(environment.support.upiId)}&pn=${encodeURIComponent('Zenigma')}&cu=INR`;
 

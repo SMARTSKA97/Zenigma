@@ -7,9 +7,11 @@ export const environment = {
    * not a secret and does not go in GitHub secrets. Leave a value empty and that part is simply not shown.
    */
   support: {
-    developer: { name: '', about: 'Made by one person, in spare time.', links: [] as { label: string; url: string }[] },
+    developer: { name: 'SKA97', about: 'Made by one person, in spare time.', links: [{ label: 'GitHub', url: 'https://github.com/SMARTSKA97' }] as { label: string; url: string }[] },
+    upiId: 'ska97@ptaxis',
+    sponsorsUrl: 'https://github.com/sponsors/SMARTSKA97',
+    coffeeUrl: 'https://buymeacoffee.com/smartska97',
     kofiUrl: '',
-    upiId: '',
     paypalUrl: '',
   },
 };
