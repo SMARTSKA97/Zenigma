@@ -333,7 +333,7 @@ public class ProfileTests : IClassFixture<ApiFactory>
         var anon = factory.CreateClient();
         var login = "sponsor" + Guid.NewGuid().ToString("N")[..6];
 
-        var gh = $$"""{"action":"created","sponsorship":{"privacy_level":"public","sponsor":{"login":"{{login}}"},"tier":{"monthly_price_in_dollars":5,"is_one_time":false}}}""";
+        var gh = $$$"""{"action":"created","sponsorship":{"privacy_level":"public","sponsor":{"login":"{{{login}}}"},"tier":{"monthly_price_in_dollars":5,"is_one_time":false}} }""";
         var bad = Signed("/webhooks/github-sponsors", "wrong", gh, "X-Hub-Signature-256", true);
         bad.Headers.Add("X-GitHub-Event", "sponsorship");
         Assert.Equal(HttpStatusCode.Unauthorized, (await anon.SendAsync(bad)).StatusCode);
@@ -350,7 +350,7 @@ public class ProfileTests : IClassFixture<ApiFactory>
         Assert.Single(mine);
         Assert.Equal(JsonValueKind.Null, mine[0].GetProperty("totalInr").ValueKind); // amounts stay private by default
 
-        var bmc = $$"""{"type":"donation.created","data":{"id":"t-{{login}}","amount":10,"currency":"USD","supporter_name":"Coffee Fan","supporter_email":"{{email}}"}}""";
+        var bmc = $$$"""{"type":"donation.created","data":{"id":"t-{{{login}}}","amount":10,"currency":"USD","supporter_name":"Coffee Fan","supporter_email":"{{{email}}}"}}""";
         var sent = Signed("/webhooks/buymeacoffee", "bmc-secret", bmc, "X-Signature-Sha256", false);
         var result = await (await anon.SendAsync(sent)).Content.ReadFromJsonAsync<JsonElement>(Json);
         Assert.True(result.GetProperty("linked").GetBoolean());
