@@ -120,6 +120,15 @@ nav a.active {
   color: var(--ink-contrast);
   background: var(--ink);
 }
+/* The icon of the tab you switch to pops with a spring. */
+nav a.active svg {
+  animation: nav-pop var(--sp-fast-d) var(--sp-fast);
+}
+@keyframes nav-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
 .right {
   justify-self: end;
   display: inline-flex;

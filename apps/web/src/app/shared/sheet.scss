@@ -10,7 +10,7 @@
   position: absolute;
   inset: 0;
   background: rgb(8 12 14 / 0.5);
-  animation: fade 0.25s var(--ease);
+  animation: fade 0.25s var(--fx);
 }
 .sheet {
   position: relative;
@@ -22,7 +22,7 @@
   color: var(--text);
   border-radius: 28px 28px 0 0;
   box-shadow: var(--shadow-lift);
-  animation: up 0.42s var(--spring);
+  animation: up var(--sp-default-d) var(--sp-default);
 }
 .grab {
   display: grid;

@@ -1,3 +1,4 @@
+import { HapticsService } from './core/haptics.service';
 import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -45,7 +46,19 @@ export class App {
   protected readonly wallet = inject(WalletService);
   protected readonly hints = inject(HintsService);
 
+  private readonly haptics = inject(HapticsService);
+
   constructor() {
+    // Like Orion Store, every card, tab and button gives a small tick when pressed. Games and boards buzz for themselves, so they are left out.
+    document.addEventListener(
+      'pointerdown',
+      (e) => {
+        const el = e.target as HTMLElement | null;
+        if (!el?.closest('a, button, [role="button"]') || el.closest('app-play-screen, .board, .keyboard, [class*="board"], app-sheet')) return;
+        this.haptics.tick();
+      },
+      { passive: true },
+    );
     this.back.listen();
     inject(HintsService).visit();
     inject(HintsSyncService);
