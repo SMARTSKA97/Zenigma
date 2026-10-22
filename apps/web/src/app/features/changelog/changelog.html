@@ -2,39 +2,59 @@
   <a routerLink="/settings" class="back" aria-label="Back">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
   </a>
+  <span class="tn" aria-hidden="true">🆕</span>
   <div>
-    <h1>Version history</h1>
-    <p class="muted">What changed in every release.</p>
+    <h1>What's new</h1>
+    <p class="muted">Every release, newest first.</p>
   </div>
 </header>
 
 @if (loading()) {
-  <div class="timeline" aria-busy="true">
-    @for (n of [1, 2, 3]; track n) {
+  <div class="releases" aria-busy="true">
+    @for (n of [1, 2]; track n) {
       <div class="skeleton block"></div>
     }
   </div>
 } @else if (!entries().length) {
-  <section class="card"><p class="muted">The version history is not available right now.</p></section>
+  <section class="empty"><p class="muted">The version history is not available right now.</p></section>
 } @else {
-  <ol class="timeline">
+  <ol class="releases">
     @for (e of entries(); track e.version; let first = $first) {
-      <li [class.latest]="first" [style.--i]="$index">
-        <span class="dot" aria-hidden="true"></span>
-        <article class="card">
-          <div class="top">
-            <h2>{{ e.version }}</h2>
-            @if (first) {
-              <span class="tag">Latest</span>
-            }
-            @if (e.version === current()) {
-              <span class="tag you">Installed</span>
-            }
-            @if (e.date) {
-              <time class="muted" [attr.datetime]="e.date">{{ pretty(e.date) }}</time>
-            }
+      <li>
+        <article class="rel" [class.latest]="first" [class.open]="open() === e.version">
+          <button type="button" class="top" [attr.aria-expanded]="open() === e.version" (click)="toggle(e.version)">
+            <span class="line">
+              <b class="v">v{{ e.version }}</b>
+              @if (first) {
+                <span class="tag">Latest</span>
+              }
+              @if (e.version === current()) {
+                <span class="tag you">Installed</span>
+              }
+            </span>
+            <small class="when">
+              @if (e.date) {
+                <time [attr.datetime]="e.date">{{ pretty(e.date) }}</time>
+              }
+              @if (e.count) {
+                {{ e.date ? ' · ' : '' }}{{ e.count }} change{{ e.count === 1 ? '' : 's' }}
+              }
+            </small>
+          </button>
+          <div class="body">
+            <div class="inner">
+              @for (s of e.sections; track $index) {
+                @if (s.title) {
+                  <h2>{{ s.title }}</h2>
+                }
+                <ul>
+                  @for (item of s.items; track $index) {
+                    <li>{{ item }}</li>
+                  }
+                </ul>
+              }
+            </div>
           </div>
-          <app-notes [text]="e.notes" />
         </article>
       </li>
     }

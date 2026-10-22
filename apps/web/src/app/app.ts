@@ -49,7 +49,7 @@ export class App {
   private readonly haptics = inject(HapticsService);
 
   constructor() {
-    // Like Orion Store, every card, tab and button gives a small tick when pressed. Games and boards buzz for themselves, so they are left out.
+    // Every card, tab and button gives a small tick when pressed. Games and boards buzz for themselves, so they are left out.
     document.addEventListener(
       'pointerdown',
       (e) => {

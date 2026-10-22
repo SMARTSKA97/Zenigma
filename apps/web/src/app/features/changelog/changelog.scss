@@ -2,11 +2,12 @@
   display: block;
   max-width: 40rem;
   margin: 0 auto;
+  padding-bottom: 2rem;
 }
 .head {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 0.8rem;
   margin-bottom: 1.5rem;
   h1,
   p {
@@ -33,73 +34,124 @@
     stroke-linejoin: round;
   }
 }
-.timeline {
-  position: relative;
+.tn {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 38%;
+  background: var(--accent-soft);
+  font-size: 1.2rem;
+}
+.releases {
   list-style: none;
   margin: 0;
-  padding: 0 0 0 2rem;
+  padding: 0;
   display: grid;
-  gap: 1rem;
-}
-/* The line the dots sit on. */
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 0.55rem;
-  top: 0.9rem;
-  bottom: 0.9rem;
-  width: 2px;
-  border-radius: 2px;
-  background: linear-gradient(var(--accent), var(--border) 30%);
-}
-li {
-  position: relative;
-  animation: rise 0.45s var(--ease) backwards;
-  animation-delay: calc(var(--i) * 70ms);
-}
-.dot {
-  position: absolute;
-  left: -2rem;
-  top: 1.25rem;
-  width: 1.15rem;
-  height: 1.15rem;
-  border-radius: 50%;
-  background: var(--bg);
-  border: 2px solid var(--muted);
-}
-.latest .dot {
-  border-color: var(--accent);
-  background: var(--accent);
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-.top {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-bottom: 0.8rem;
-  h2 {
-    margin: 0;
-    font-size: 1.3rem;
-  }
-  time {
-    margin-left: auto;
-    font-size: 0.82rem;
-  }
-}
-.tag {
-  padding: 0.1rem 0.6rem;
-  border-radius: 99px;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-.tag.you {
-  background: var(--accent-soft);
-  color: var(--accent);
+  gap: 10px;
 }
 .block {
-  height: 8rem;
-  border-radius: var(--radius);
+  height: 8.5rem;
+  border-radius: 20px;
+}
+.empty {
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: var(--surface);
+}
+/* One card per release: the newest is tinted, every card opens and closes with a spring, and an open card has bigger corners. */
+.rel {
+  border-radius: 20px;
+  background: var(--surface);
+  transition: border-radius var(--sp-default-d) var(--sp-default);
+}
+.rel.latest {
+  background: var(--accent-soft);
+}
+.rel.open {
+  border-radius: 28px;
+}
+:host .top {
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  justify-items: start;
+  justify-content: stretch;
+  gap: 0.2rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+  text-align: left;
+  font: inherit;
+}
+.line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.v {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
+}
+.tag {
+  padding: 0.12rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.tag.you {
+  background: var(--good, #2e9e5b);
+}
+.when {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--sp-default-d) var(--sp-default);
+}
+.open .body {
+  grid-template-rows: 1fr;
+}
+.inner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 1.25rem;
+}
+.open .inner {
+  padding-bottom: 1.2rem;
+}
+h2 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inner li {
+  position: relative;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.inner li::before {
+  content: '';
+  position: absolute;
+  left: 0.1rem;
+  top: 0.8em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text) 45%, transparent);
 }

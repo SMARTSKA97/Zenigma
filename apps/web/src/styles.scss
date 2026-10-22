@@ -338,7 +338,7 @@ a.item {
   transition: transform var(--sp-fast-d) var(--sp-fast);
 }
 
-/* Page changes: the old screen fades out quickly, the new one fades in and settles up from 98% (like Orion Store's tab switch). */
+/* Page changes: the old screen fades out quickly, the new one fades in and settles up from 98%. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-timing-function: var(--fx);

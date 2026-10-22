@@ -23,6 +23,7 @@
 <h2 class="group">Connection</h2>
 <section class="list">
   <div class="item">
+    <span class="tn" aria-hidden="true">✈️</span>
     <app-switch [checked]="conn.offlineMode()" (checkedChange)="conn.setOffline($event)">
       Offline mode
       <small>
@@ -54,11 +55,11 @@
 <h2 class="group">Appearance</h2>
 <section class="list">
   <div class="item stack">
-    <span class="lead">Theme</span>
+    <span class="lead hd"><span class="tn" aria-hidden="true">🌗</span><span>Theme</span></span>
     <app-segmented label="Theme" [options]="themes" [value]="theme.mode()" (valueChange)="theme.set($event)" />
   </div>
   <div class="item stack">
-    <span class="lead">Colour <small>Pick the accent used across the app. It changes right away.</small></span>
+    <span class="lead hd"><span class="tn" aria-hidden="true">🎨</span><span>Colour <small>Pick the accent used across the app. It changes right away.</small></span></span>
     <div class="swatches" role="radiogroup" aria-label="Colour">
       @for (a of accents; track a.id) {
         <button type="button" class="sw-btn" [class.locked]="locked(a)" role="radio" [attr.aria-checked]="prefs.accent() === a.id" [style.--c]="a.color" (click)="pick('accent', a)">
@@ -69,7 +70,7 @@
     </div>
   </div>
   <div class="item stack">
-    <span class="lead">Look <small>A whole new look for the app. Earn them with streaks or buy them in the store.</small></span>
+    <span class="lead hd"><span class="tn" aria-hidden="true">✨</span><span>Look <small>A whole new look for the app. Earn them with streaks or buy them in the store.</small></span></span>
     <div class="swatches" role="radiogroup" aria-label="Look">
       @for (a of skins; track a.id) {
         <button type="button" class="sw-btn" [class.locked]="locked(a)" role="radio" [attr.aria-checked]="prefs.skin() === a.id" [style.--c]="a.color" (click)="pick('skin', a)">
@@ -80,48 +81,56 @@
     </div>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">👁️</span>
     <app-switch [checked]="prefs.highContrast()" (checkedChange)="prefs.setHighContrast($event)">
       Colour-blind friendly
       <small>Orange and blue, plus letters on Crowns regions.</small>
     </app-switch>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">🎯</span>
     <app-switch [checked]="prefs.strikes()" (checkedChange)="prefs.setStrikes($event)">
       Strict practice
       <small>Three wrong moves reset the board. Practice only; a wrong move is one that cannot be part of the answer.</small>
     </app-switch>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">🙈</span>
     <app-switch [checked]="prefs.blind()" (checkedChange)="prefs.setBlind($event)">
       Blind Sudoku
       <small>No row, column or matching-number highlights. You find them yourself.</small>
     </app-switch>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">⏱️</span>
     <app-switch [checked]="prefs.hideTimer()" (checkedChange)="prefs.setHideTimer($event)">
       Hide the timer
       <small>Quiet mode: the clock still runs and your time still counts, you just do not see it.</small>
     </app-switch>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">🔥</span>
     <app-switch [checked]="prefs.hideStreaks()" (checkedChange)="prefs.setHideStreaks($event)">
       Hide streaks
       <small>No streak counts or "ends tonight" warnings, so playing never feels like a chore.</small>
     </app-switch>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">🔠</span>
     <app-switch [checked]="prefs.largeNumbers()" (checkedChange)="prefs.setLargeNumbers($event)">
       Larger numbers
       <small>Bigger digits and letters on the boards, easier to read.</small>
     </app-switch>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">🐢</span>
     <app-switch [checked]="prefs.reduceMotion()" (checkedChange)="prefs.setReduceMotion($event)">
       Reduce motion
       <small>Turns off board animations and confetti.</small>
     </app-switch>
   </div>
   <div class="item">
+    <span class="tn" aria-hidden="true">📳</span>
     <app-switch [checked]="prefs.haptics()" (checkedChange)="prefs.setHaptics($event)">
       Vibration
       <small>Small taps as you play, and a pattern for mistakes and wins.</small>
@@ -129,17 +138,18 @@
   </div>
   @if (prefs.haptics()) {
     <div class="item">
+    <span class="tn" aria-hidden="true">🔊</span>
     <app-switch [checked]="prefs.sounds()" (checkedChange)="prefs.setSounds($event)">
       Sounds
       <small>Little sounds for coins, the wheel and wins.</small>
     </app-switch>
   </div>
   <div class="item stack">
-      <span class="lead">Taps <small>A cell chosen, a number placed.</small></span>
+      <span class="lead hd"><span class="tn" aria-hidden="true">👆</span><span>Taps <small>A cell chosen, a number placed.</small></span></span>
       <app-segmented label="Tap strength" [options]="strengths" [value]="prefs.tapHaptics()" (valueChange)="prefs.setTapHaptics($event)" />
     </div>
     <div class="item stack">
-      <span class="lead">Mistakes and wins <small>The pattern for a wrong move or a solved puzzle.</small></span>
+      <span class="lead hd"><span class="tn" aria-hidden="true">💥</span><span>Mistakes and wins <small>The pattern for a wrong move or a solved puzzle.</small></span></span>
       <app-segmented label="Alert strength" [options]="strengths" [value]="prefs.alertHaptics()" (valueChange)="prefs.setAlertHaptics($event)" />
     </div>
   }
@@ -149,14 +159,16 @@
   <h2 class="group">Reminders</h2>
   <section class="list">
     <div class="item">
-      <app-switch [checked]="reminder.enabled()" (checkedChange)="reminder.setEnabled($event)">
+      <span class="tn" aria-hidden="true">⏰</span>
+    <app-switch [checked]="reminder.enabled()" (checkedChange)="reminder.setEnabled($event)">
         Daily reminder
         <small>One notification a day, from this phone. Nothing is sent to a server.</small>
       </app-switch>
     </div>
     @if (reminder.enabled()) {
       <div class="item">
-        <app-switch [checked]="reminder.streakAlert()" (checkedChange)="reminder.setStreakAlert($event)">
+        <span class="tn" aria-hidden="true">🔔</span>
+    <app-switch [checked]="reminder.streakAlert()" (checkedChange)="reminder.setStreakAlert($event)">
           Streak alert
           <small>If a streak is still alive, a warning 3 hours before the next puzzles arrive.</small>
         </app-switch>
@@ -176,7 +188,7 @@
   <h2 class="group">App updates</h2>
   <section class="list">
     <div class="item stack">
-      <span class="lead">Version {{ updater.currentVersion() ?? '-' }}</span>
+      <span class="lead hd"><span class="tn" aria-hidden="true">📲</span><span>Version {{ updater.currentVersion() ?? '-' }}</span></span>
       @switch (updater.state()) {
         @case ('checking') {
           <p class="status"><app-loader [size]="18" /> Checking for updates</p>
@@ -206,7 +218,7 @@
   <h2 class="group">Install</h2>
   <section class="list">
     <button type="button" class="item link" (click)="install.install()">
-      <span class="ico">⬇</span>
+      <span class="tn" aria-hidden="true">⬇</span>
       <span class="lead">Install Zenigma<small>Opens like an app and works offline.</small></span>
       <span class="chev">›</span>
     </button>
@@ -215,22 +227,23 @@
 
 <h2 class="group">Explore</h2>
 <section class="list">
-  <a class="item link" routerLink="/stats"><span class="ico">📊</span><span class="lead">Streaks and stats</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/badges"><span class="ico">🏅</span><span class="lead">Badges</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/rules"><span class="ico">📖</span><span class="lead">How to play</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/changelog"><span class="ico">🆕</span><span class="lead">Version history</span><span class="chev">›</span></a>
+  <a class="item link" routerLink="/stats"><span class="tn" aria-hidden="true">📊</span><span class="lead">Streaks and stats</span><span class="chev">›</span></a>
+  <a class="item link" routerLink="/badges"><span class="tn" aria-hidden="true">🏅</span><span class="lead">Badges</span><span class="chev">›</span></a>
+  <a class="item link" routerLink="/rules"><span class="tn" aria-hidden="true">📖</span><span class="lead">How to play</span><span class="chev">›</span></a>
+  <a class="item link" routerLink="/changelog"><span class="tn" aria-hidden="true">🆕</span><span class="lead">Version history</span><span class="chev">›</span></a>
 </section>
 
 <h2 class="group">Your data</h2>
 <section class="list">
   <div class="item">
+    <span class="tn" aria-hidden="true">🐞</span>
     <app-switch [checked]="prefs.crashReports()" (checkedChange)="prefs.setCrashReports($event)">
       Send crash reports
       <small>When the app breaks, send the error message and screen name to Zenigma. No account, no device id, no third party.</small>
     </app-switch>
   </div>
   <button type="button" class="item link" (click)="exportData()">
-    <span class="ico">📦</span>
+    <span class="tn" aria-hidden="true">📦</span>
     <span class="lead">Export my data<small>Download your progress, scores and settings from this device as a JSON file.</small></span>
     <span class="chev">›</span>
   </button>
@@ -238,7 +251,7 @@
 
 <h2 class="group">About</h2>
 <section class="list">
-  <a class="item link" routerLink="/about"><span class="ico">✨</span><span class="lead">About Zenigma</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/privacy"><span class="ico">🔒</span><span class="lead">Privacy policy</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/sync-test"><span class="ico">🛠</span><span class="lead">Diagnostics</span><span class="chev">›</span></a>
+  <a class="item link" routerLink="/about"><span class="tn" aria-hidden="true">✨</span><span class="lead">About Zenigma</span><span class="chev">›</span></a>
+  <a class="item link" routerLink="/privacy"><span class="tn" aria-hidden="true">🔒</span><span class="lead">Privacy policy</span><span class="chev">›</span></a>
+  <a class="item link" routerLink="/sync-test"><span class="tn" aria-hidden="true">🛠</span><span class="lead">Diagnostics</span><span class="chev">›</span></a>
 </section>
