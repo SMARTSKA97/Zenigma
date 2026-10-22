@@ -23,6 +23,8 @@ interface Prefs {
   sounds: boolean;
   tapHaptics: HapticStrength;
   alertHaptics: HapticStrength;
+  /** Bumped when the default vibration got stronger, so old 'light' settings move up once. */
+  hapticsRev?: number;
 }
 
 /** Small per-device settings (not synced). Kept in localStorage so they apply before anything else loads. */
@@ -50,7 +52,7 @@ export class PrefsService {
   /** Small sounds for coins and wins (made on the device, no files). */
   readonly sounds = signal(true);
   /** How strong the little taps are (a cell chosen, a number placed). */
-  readonly tapHaptics = signal<HapticStrength>('light');
+  readonly tapHaptics = signal<HapticStrength>('strong');
   /** How strong the patterns for a mistake, a refused move and a win are. */
   readonly alertHaptics = signal<HapticStrength>('strong');
 
@@ -70,7 +72,8 @@ export class PrefsService {
       this.accent.set(typeof saved.accent === 'string' ? saved.accent : 'default');
       this.skin.set(typeof saved.skin === 'string' ? saved.skin : 'none');
       this.sounds.set(saved.sounds !== false);
-      this.tapHaptics.set(strength(saved.tapHaptics, 'light'));
+      const tap = strength(saved.tapHaptics, 'strong');
+      this.tapHaptics.set(saved.hapticsRev === undefined && tap === 'light' ? 'strong' : tap);
       this.alertHaptics.set(strength(saved.alertHaptics, 'strong'));
     } catch {
       /* storage unavailable: defaults */
@@ -184,7 +187,7 @@ export class PrefsService {
 
   private save(): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), hideStreaks: this.hideStreaks(), crashReports: this.crashReports(), accent: this.accent(), skin: this.skin(), sounds: this.sounds(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics() }));
+      localStorage.setItem(KEY, JSON.stringify({ hardMode: this.hardMode(), highContrast: this.highContrast(), reduceMotion: this.reduceMotion(), haptics: this.haptics(), largeNumbers: this.largeNumbers(), strikes: this.strikes(), blind: this.blind(), hideTimer: this.hideTimer(), hideStreaks: this.hideStreaks(), crashReports: this.crashReports(), accent: this.accent(), skin: this.skin(), sounds: this.sounds(), tapHaptics: this.tapHaptics(), alertHaptics: this.alertHaptics(), hapticsRev: 2 }));
     } catch {
       /* storage unavailable: setting lasts for this session */
     }

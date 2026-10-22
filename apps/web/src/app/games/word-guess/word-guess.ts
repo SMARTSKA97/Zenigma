@@ -11,6 +11,7 @@ import { PrefsService } from '../../core/prefs.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController } from './board';
 import { DailyStore } from './daily.store';
+import { Confetti } from '../../shared/confetti';
 import { Loader } from '../../shared/loader';
 import { Switch } from '../../shared/switch';
 import { SoonPill } from '../../shared/soon-pill';
@@ -21,7 +22,7 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 @Component({
   selector: 'app-word-guess',
-  imports: [RouterLink, Loader, Switch, ShareSheet, HintWheel, SoonPill],
+  imports: [RouterLink, Confetti, Loader, Switch, ShareSheet, HintWheel, SoonPill],
   templateUrl: './word-guess.html',
   styleUrl: './word-guess.scss',
 })

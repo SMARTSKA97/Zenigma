@@ -67,6 +67,7 @@
       <section class="card result" [style.--h]="info()?.hue">
         @if (record()) {
           <p class="new">New best!</p>
+          <app-confetti />
         }
         <p class="big">{{ label(result()?.score ?? 0) }}</p>
         @if (result()?.detail; as d) {

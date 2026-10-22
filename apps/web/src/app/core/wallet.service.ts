@@ -10,7 +10,7 @@ import { HintsService, indiaDate } from './hints.service';
 import { SoundService } from './sound.service';
 
 /** What each way of earning pays. The server holds the same table and has the last word. */
-export const EARNS: Record<string, number> = { daily: 2, mindset: 5, perfect: 8, level: 1, boss: 3, quest: 2, chest: 4, streak: 15 };
+export const EARNS: Record<string, number> = { daily: 1, mindset: 3, perfect: 5, level: 1, boss: 3, quest: 1, chest: 3, streak: 10 };
 
 export interface StoreItem {
   id: string;

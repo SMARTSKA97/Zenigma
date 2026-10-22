@@ -3,7 +3,7 @@
   gap: 1.1rem;
   justify-items: center;
   width: 100%;
-  max-width: 26rem;
+  max-width: 36rem;
   margin-inline: auto;
 }
 .hud {
@@ -35,9 +35,9 @@
 }
 .prompt {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 9vw, 3rem);
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
   font-weight: 700;
-  min-height: 4.5rem;
+  min-height: clamp(4.5rem, 14dvh, 8rem);
   display: grid;
   place-items: center;
   text-align: center;
@@ -49,8 +49,8 @@
   width: 100%;
 }
 :host .opt {
-  min-height: 4.2rem;
-  font-size: 1.5rem;
+  min-height: clamp(4.2rem, 11dvh, 7rem);
+  font-size: clamp(1.5rem, 4.2dvh, 2.1rem);
   font-weight: 700;
   border-radius: 18px;
   border: 1px solid var(--border);
@@ -59,29 +59,45 @@
   box-shadow: none;
   padding: 0.5rem;
 }
+:host .opt {
+  transition:
+    transform 0.22s var(--spring),
+    background-color 0.15s;
+}
 :host .opt:active {
-  transform: scale(0.97);
+  transform: scale(0.93);
   background: var(--accent-soft);
+  transition-duration: 0s;
 }
 :host .opt:disabled {
   opacity: 0.55;
 }
 .flash-bad {
-  animation: bad 0.3s;
+  animation: bad 0.42s;
+}
+.flash-good {
+  animation: good 0.5s var(--spring);
 }
 @keyframes bad {
-  25% {
-    transform: translateX(-6px);
+  15%,
+  55% {
+    transform: translateX(-10px);
   }
+  35%,
   75% {
-    transform: translateX(6px);
+    transform: translateX(10px);
+  }
+}
+@keyframes good {
+  40% {
+    transform: scale(1.12);
   }
 }
 .pads {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.7rem;
-  width: min(100%, 20rem);
+  width: min(92%, 26rem, 46dvh);
 }
 :host .pad {
   aspect-ratio: 1;
@@ -97,7 +113,8 @@
 }
 :host .pad.lit {
   opacity: 1;
-  transform: scale(1.03);
+  transform: scale(1.04);
+  box-shadow: 0 0 2.2rem 0.2rem color-mix(in srgb, currentColor 40%, transparent);
 }
 .say {
   min-height: 1.5rem;
@@ -111,7 +128,7 @@
 .tiles {
   display: grid;
   gap: 0.4rem;
-  width: min(100%, 18rem);
+  width: min(100%, 26rem, 46dvh);
 }
 :host .tile {
   aspect-ratio: 1;
@@ -129,9 +146,11 @@
 }
 :host .tile.bad {
   background: #d94f4f;
+  animation: bad 0.42s;
 }
 :host .tile.good {
   background: var(--good, #2e9e5b);
+  animation: good 0.5s var(--spring);
 }
 
 /* Shapes (Mental Turn): a 4 by 4 grid with some cells filled. */
@@ -171,7 +190,7 @@
 /* Dot Count */
 .field {
   position: relative;
-  width: min(100%, 20rem);
+  width: min(100%, 28rem, 48dvh);
   aspect-ratio: 1;
   border-radius: 20px;
   background: var(--surface-2);
@@ -211,10 +230,12 @@
   background: var(--accent-soft);
 }
 :host .opt.good {
+  animation: good 0.5s var(--spring);
   border-color: var(--good, #2e9e5b);
   background: color-mix(in srgb, var(--good, #2e9e5b) 22%, var(--surface));
 }
 :host .opt.bad {
+  animation: bad 0.42s;
   border-color: var(--bad, #d94f4f);
   background: color-mix(in srgb, var(--bad, #d94f4f) 22%, var(--surface));
 }

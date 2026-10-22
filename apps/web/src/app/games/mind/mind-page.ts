@@ -7,6 +7,7 @@ import { map } from 'rxjs';
 import { BackService } from '../../core/back.service';
 import { HapticsService } from '../../core/haptics.service';
 import { gameInfo, SKILLS } from '../catalog';
+import { Confetti } from '../../shared/confetti';
 import { Glyph } from '../../shared/glyph';
 import { AnagramRush } from './anagram-rush';
 import { BackTrack } from './back-track';
@@ -46,7 +47,7 @@ import { LeaveSheet } from '../../shared/leave-sheet';
 /** One screen for every mind-training game: how to play, the game, then your score against your best. */
 @Component({
   selector: 'app-mind-page',
-  imports: [NgTemplateOutlet, PlayScreen, RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend, CometSlice, Switchyard],
+  imports: [NgTemplateOutlet, Confetti, PlayScreen, RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend, CometSlice, Switchyard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-page.html',
   styleUrl: './mind-page.scss',
@@ -108,7 +109,7 @@ export class MindPage implements CanLeave {
     this.record.set(this.store.add(this.id(), r.score) && r.score > 0);
     // A game that is in today's mind set counts for it, wherever it was started from.
     this.daily.record(this.id(), r.score);
-    if (this.record()) this.haptics.success();
+    this.haptics.success();
     this.wallet.note('mind');
     this.stage.set('result');
   }

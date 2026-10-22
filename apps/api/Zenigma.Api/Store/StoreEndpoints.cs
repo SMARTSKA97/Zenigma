@@ -20,7 +20,7 @@ public static class StoreCatalog
     public const int WelcomeCoins = 20;
     public const int MaxHints = 99;
     /// <summary>Coins that come from things the app reports (levels, quests, the mind set) stop here each India day. Verified dailies and the wheel are outside it.</summary>
-    public const int ReportedDailyCap = 30;
+    public const int ReportedDailyCap = 12;
 
     // Prices are set so a colour is a few days of steady play and a full theme is a couple of weeks.
     public static readonly IReadOnlyList<StoreItem> Items =
@@ -54,19 +54,19 @@ public static class StoreCatalog
     /// <summary>Coins per earn reason. "verified" ones are checked against the player's own results on the server.</summary>
     public static readonly IReadOnlyDictionary<string, int> Earns = new Dictionary<string, int>
     {
-        ["daily"] = 2,     // verified: a daily puzzle solved
-        ["mindset"] = 5,   // the whole daily mind set
-        ["perfect"] = 8,   // puzzles and mind set on the same day
-        ["level"] = 1,     // every fifth new practice level
-        ["boss"] = 3,      // every tenth level
-        ["quest"] = 2,     // a daily quest
-        ["chest"] = 4,     // all three quests
-        ["streak"] = 15,   // a streak milestone
+        ["daily"] = 1,     // verified: a daily puzzle solved
+        ["mindset"] = 3,   // the whole daily mind set
+        ["perfect"] = 5,   // puzzles and mind set on the same day
+        ["level"] = 1,     // every tenth new practice level
+        ["boss"] = 3,      // every twentieth level
+        ["quest"] = 1,     // a daily quest
+        ["chest"] = 3,     // all three quests
+        ["streak"] = 10,   // a streak milestone
     };
 
     public static readonly IReadOnlyList<(int Weight, string Kind, int Amount)> Wheel =
     [
-        (45, "coins", 1), (28, "coins", 2), (12, "coins", 3), (5, "coins", 5),
+        (55, "coins", 1), (25, "coins", 2), (8, "coins", 3), (3, "coins", 5),
         (6, "hints", 1), (3, "hints", 2), (1, "coins", 20),
     ];
 

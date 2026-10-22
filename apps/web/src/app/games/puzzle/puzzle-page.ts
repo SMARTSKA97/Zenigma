@@ -711,8 +711,8 @@ export class PuzzlePage {
 
   /** Free hints for playing: the zone boss every tenth level, and a one in three first win each day. */
   private reward(level: number): void {
-    // Coins are for milestones, not for every level: every fifth, and the boss every tenth.
-    if (level % 5 === 0) this.wallet.earn(level % 10 === 0 ? 'boss' : 'level', `level:${this.track()}:${level}`, level % 10 === 0 ? 'Boss cleared!' : 'Level cleared');
+    // Coins are for milestones, not for every level: every tenth, and the boss every twentieth.
+    if (level % 10 === 0) this.wallet.earn(level % 20 === 0 ? 'boss' : 'level', `level:${this.track()}:${level}`, level % 20 === 0 ? 'Boss cleared!' : 'Level cleared');
     this.wallet.note('levels');
     const gained = (this.hints.milestone(this.track(), level) ? 1 : 0) + (this.hints.firstWinOfDay() ? 1 : 0);
     if (gained) setTimeout(() => this.flash(`+${gained} hint${gained > 1 ? 's' : ''} earned 💡`), 1200);

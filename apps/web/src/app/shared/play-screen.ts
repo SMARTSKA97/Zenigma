@@ -47,7 +47,7 @@ import { BackService } from '../core/back.service';
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      max-width: 34rem;
+      max-width: 46rem;
       margin: 0 auto;
       padding: calc(0.6rem + env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) calc(0.6rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
     }
@@ -114,12 +114,15 @@ import { BackService } from '../core/back.service';
       overscroll-behavior: contain;
       scrollbar-width: none;
     }
+    /* The content spreads over the whole play area: its pieces are spaced evenly, and a child that asks for it (flex: 1) takes the spare height. */
     .inner {
-      margin-block: auto;
+      min-height: 100%;
       width: 100%;
-      display: grid;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      align-items: center;
       gap: 0.8rem;
-      justify-items: center;
     }
     .dock {
       display: grid;

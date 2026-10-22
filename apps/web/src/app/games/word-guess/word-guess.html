@@ -6,9 +6,6 @@
     <div class="title">
       <h1>Word Guess</h1>
       <p class="muted sub">{{ mode() === 'daily' ? 'Daily' + (daily.date() ? ' · ' + daily.date() : '') : 'Practice' }}</p>
-      @if (mode() === 'practice') {
-        <app-soon-pill game="word-guess" />
-      }
     </div>
     @if (!board().finished() && (mode() === 'practice' || daily.phase() === 'playing')) {
       <button type="button" class="hint-btn" (click)="useHint()" aria-label="Use a hint">💡 <b>{{ hints.balance() }}</b></button>
@@ -78,6 +75,9 @@
     </div>
 
     @if (board().finished() && !board().revealing()) {
+      @if (board().status() === 'won') {
+        <app-confetti />
+      }
       <section class="card result">
         <h2>{{ board().status() === 'won' ? 'Solved' : 'The word was ' + (board().answer() ?? '').toUpperCase() }}</h2>
         <div class="recap">
@@ -109,6 +109,7 @@
           @if (mode() === 'practice') {
             <button type="button" class="secondary" (click)="practice.newWord()">New word</button>
             <a class="button secondary" routerLink="/ranks" [queryParams]="{ game: 'word-guess', kind: 'practice' }">Leaderboard</a>
+            <app-soon-pill game="word-guess" />
           } @else {
             <a class="button secondary" routerLink="/ranks" [queryParams]="{ game: 'word-guess', kind: 'daily' }">Leaderboard</a>
             <span class="muted">Next puzzle in {{ untilNext() }}</span>

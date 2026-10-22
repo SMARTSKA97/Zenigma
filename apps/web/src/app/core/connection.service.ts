@@ -42,10 +42,8 @@ export class ConnectionService {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => {
-        this.online.set(true);
-        void this.wake();
-      });
+      // Coming back online does not wake the server by itself: the first call that needs it does.
+      window.addEventListener('online', () => this.online.set(true));
       window.addEventListener('offline', () => this.online.set(false));
     }
   }
@@ -108,7 +106,8 @@ export class ConnectionService {
     const tick = setInterval(() => this.waited.set(Math.round((Date.now() - started) / 1000)), 1000);
     try {
       for (let i = 0; i < ATTEMPTS; i++) {
-        if (this.offlineMode() || !this.online()) {
+        // A wake-up that was already running when a practice screen opened stops there, instead of pinging on while the player plays.
+        if (this.offlineMode() || this.paused() || !this.online()) {
           this.server.set('idle');
           return false;
         }

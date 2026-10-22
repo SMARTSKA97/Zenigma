@@ -10,10 +10,11 @@
   max-width: 30rem;
   margin: 0 auto;
 }
-/* Phones: the board may use a little of the page margin. */
+/* Phones: the game fills the screen under the status bar, so the board takes the spare height. */
 @media (max-width: 720px) {
   .game {
     margin-inline: -0.25rem;
+    height: calc(100dvh - 1.75rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 }
 
@@ -77,7 +78,7 @@
 }
 
 .toast {
-  height: 2.25rem;
+  height: 1.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,32 +99,51 @@
   text-align: center;
 }
 
-/* Board: tiles are sized from the available width AND height so it never overflows on short phones. */
+/* Board: on a phone it fills the height left between the header and the keyboard (tiles grow taller than wide, up to 1.25 to 1), so no
+   screen space is wasted. On a wide screen the tiles stay square. */
 .board {
-  --tile: min(4.6rem, calc((100vw - 1rem - 4 * 0.4rem) / 5), calc((100dvh - 23rem) / 6));
+  --w: min(100vw - 1.5rem, 30rem);
+  --tw: calc((var(--w) - 1.6rem) / 5);
   display: grid;
+  grid-template-rows: repeat(6, minmax(0, 1fr));
   gap: 0.4rem;
+  width: var(--w);
+  flex: 1 1 auto;
+  min-height: calc(var(--tw) * 4.4 + 2rem);
+  max-height: calc(var(--tw) * 7.5 + 2rem);
+}
+.row-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.4rem;
+  min-height: 0;
 }
 @media (min-width: 721px) {
   .board {
     --tile: min(4.4rem, calc((100dvh - 31rem) / 6));
+    grid-template-rows: none;
+    width: auto;
+    flex: none;
+    min-height: 0;
+    max-height: none;
   }
-}
-
-.row-tiles {
-  display: grid;
-  grid-template-columns: repeat(5, var(--tile));
-  gap: 0.4rem;
+  .row-tiles {
+    grid-template-columns: repeat(5, var(--tile));
+  }
+  .tile {
+    width: var(--tile);
+    height: var(--tile);
+    font-size: calc(var(--tile) * 0.55) !important;
+  }
 }
 
 .tile {
   --mark-color: var(--surface);
-  width: var(--tile);
-  height: var(--tile);
+  min-height: 0;
   display: grid;
   place-items: center;
   font-family: var(--font-display);
-  font-size: calc(var(--tile) * 0.55);
+  font-size: calc(var(--tw) * 0.58);
   font-weight: 700;
   text-transform: uppercase;
   background: var(--surface);
@@ -168,7 +188,7 @@
 
 @keyframes pop {
   50% {
-    transform: scale(1.1);
+    transform: scale(1.16);
   }
 }
 
@@ -212,15 +232,16 @@
 @keyframes shake {
   20%,
   60% {
-    transform: translateX(-6px);
+    transform: translateX(-10px);
   }
   40%,
   80% {
-    transform: translateX(6px);
+    transform: translateX(10px);
   }
 }
 
 .keyboard {
+  margin-top: auto;
   display: grid;
   gap: 0.45rem;
   width: 100%;
@@ -239,7 +260,7 @@
   min-height: 0;
   overflow: visible;
   max-width: 3.2rem;
-  height: clamp(2.8rem, 7.5dvh, 3.7rem);
+  height: clamp(2.8rem, 8dvh, 4.2rem);
   padding: 0;
   display: grid;
   place-items: center;

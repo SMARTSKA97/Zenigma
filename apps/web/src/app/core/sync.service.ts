@@ -54,7 +54,8 @@ export class SyncService {
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
         this.online.set(true);
-        void this.sync(); // waits for the server to answer first
+        // Only worth waking the server when something is waiting to be sent.
+        if (this.pendingCount() > 0) void this.sync();
       });
       window.addEventListener('offline', () => this.online.set(false));
     }

@@ -79,8 +79,23 @@ dd {
   font-family: var(--font-display);
   font-size: 2.4rem;
   font-weight: 700;
+  animation: score-in 0.7s var(--spring) 0.15s backwards;
+}
+.result,
+.intro {
+  animation: rise 0.45s var(--ease) backwards;
+}
+@keyframes score-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.18);
+  }
 }
 .new {
+  animation: score-in 0.6s var(--spring) backwards;
   padding: 0.15rem 0.8rem;
   border-radius: 999px;
   background: #f5b82e;
@@ -102,13 +117,17 @@ dd {
 /* Inside the shared play screen every game fills the width and centres its own content. */
 .stage {
   width: 100%;
-  max-width: 26rem;
+  max-width: 36rem;
   margin-inline: auto;
   display: grid;
+  grid-template-rows: 1fr;
+  /* Inside a game screen the stage takes all the height there is, and the game spreads its pieces over it. */
+  flex: 1 1 auto;
 }
 .stage > ::ng-deep * {
   display: grid;
   width: 100%;
   justify-items: center;
+  align-content: space-evenly;
   gap: 1.1rem;
 }
