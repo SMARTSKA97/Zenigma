@@ -301,4 +301,14 @@ public class ProfileTests : IClassFixture<ApiFactory>
         Assert.Equal(550, mine.GetProperty("totalInr").GetInt32());
         Assert.False(mine.TryGetProperty("email", out _));
     }
+
+    [DbFact]
+    public async Task Support_claims_need_an_account_and_a_mailbox_to_notify()
+    {
+        var anon = _factory.CreateClient();
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.PostAsJsonAsync("/support/claim", new { amountInr = 100, method = "upi" })).StatusCode);
+        var client = await SignUpAsync();
+        // No notify address or email service is set up in tests, so the claim is politely unavailable.
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.PostAsJsonAsync("/support/claim", new { amountInr = 100, method = "upi" })).StatusCode);
+    }
 }

@@ -83,4 +83,6 @@ curl -X POST https://<api>/admin/supporters -H "X-Admin-Key: <key>" -H "Content-
   -d '{"name":"SKA97","amountInr":500,"email":"their@account.email","source":"upi","showAmount":true}'
 ```
 
+Set `Support__NotifyEmail` (your own address; needs the Brevo variables too) to get an email when someone taps "Already sent a tip? Tell me" in the app. The email holds their name, account email, amount and method, plus this call ready to fill in. Check the payment in your payment app first. Without the variable the form says it is unavailable.
+
 `name` is what the public wall shows (never the email). If `email` matches a Zenigma account, that account gets the Supporter badge and the Patron colour; from a total of ₹500 the Patron badge and the Aurora theme; from ₹2,000 the Champion badge. The perks are stored as owned items, so they work offline and on every device. `showAmount: false` hides the amount on the wall.

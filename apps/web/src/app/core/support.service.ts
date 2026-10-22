@@ -53,6 +53,17 @@ export class SupportService {
     }
   }
 
+  /** "I supported": tells the owner (by email) so the payment can be checked and the perks switched on. */
+  async claim(amountInr: number, method: string, name: string): Promise<'sent' | 'unavailable' | 'limit' | 'failed'> {
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/support/claim`, { amountInr, method, name }));
+      return 'sent';
+    } catch (e) {
+      const status = (e as { status?: number }).status;
+      return status === 503 ? 'unavailable' : status === 429 ? 'limit' : 'failed';
+    }
+  }
+
   private read(): Supporter[] {
     try {
       const list = JSON.parse(localStorage.getItem(KEY) ?? '[]') as Supporter[];

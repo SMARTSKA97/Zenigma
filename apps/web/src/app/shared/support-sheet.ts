@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { SupportService } from '../core/support.service';
 import { Sheet } from './sheet';
 import { SupportMethods } from './support-methods';
+import { SupportClaim } from './support-claim';
 import { SupporterWall } from './supporter-wall';
 
 /** One tap from anywhere: why tips matter (the servers cost money) and the ways to send one. */
 @Component({
   selector: 'app-support-sheet',
-  imports: [Sheet, SupportMethods, SupporterWall],
+  imports: [Sheet, SupportMethods, SupporterWall, SupportClaim],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (s.open() && s.canDonate()) {
@@ -24,6 +25,7 @@ import { SupporterWall } from './supporter-wall';
           <p class="thanks">You are a {{ tier }}. Thank you! Your {{ tier === 'supporter' ? 'badge and' : 'badges and' }} thank-you looks are on every device you sign in on. Give again any time.</p>
         }
         <app-support-methods />
+        <app-support-claim (closeSheet)="s.open.set(false)" />
         <app-supporter-wall />
         <p class="foot muted">Thank you. Made by {{ s.config.developer.name || 'one person' }}.</p>
       </app-sheet>
