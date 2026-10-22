@@ -54,7 +54,9 @@
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
-  filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.18));
+  /* A box shadow, not a filter: a filter on the whole yard is redrawn every frame while the trains move, which made phones stutter. */
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.18);
   --grass: #2f6b3f;
   --bed: #3a3b33;
   --tie: #8a6a45;

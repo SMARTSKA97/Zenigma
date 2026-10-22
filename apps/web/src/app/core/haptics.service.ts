@@ -14,6 +14,8 @@ export class HapticsService {
   private readonly prefs = inject(PrefsService);
   private readonly native = Capacitor.isNativePlatform();
   private timers: ReturnType<typeof setTimeout>[] = [];
+  /** When the last vibration was asked for, so a burst of taps (a swipe through comets, a fast tapper) is not sent to the phone one by one. */
+  private lastAt = 0;
 
   private get on(): boolean {
     return this.prefs.haptics();
@@ -78,6 +80,10 @@ export class HapticsService {
   }
 
   private buzz(pattern: number[]): void {
+    const now = Date.now();
+    // Short taps closer than 60 ms apart are dropped: the motor cannot show them apart, and every one is a call across to the phone.
+    if (pattern.length === 1 && now - this.lastAt < 60) return;
+    this.lastAt = now;
     try {
       if (this.native) {
         this.timers.forEach(clearTimeout);
