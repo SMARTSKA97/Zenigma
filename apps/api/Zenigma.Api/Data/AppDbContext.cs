@@ -197,6 +197,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.AmountInr).HasColumnName("amount_inr");
             e.Property(x => x.Source).HasColumnName("source").HasMaxLength(16);
             e.Property(x => x.ShowAmount).HasColumnName("show_amount");
+            e.Property(x => x.ExternalId).HasColumnName("external_id").HasMaxLength(64);
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
 

@@ -86,3 +86,19 @@ curl -X POST https://<api>/admin/supporters -H "X-Admin-Key: <key>" -H "Content-
 Set `Support__NotifyEmail` (your own address; needs the Brevo variables too) to get an email when someone taps "Already sent a tip? Tell me" in the app. The email holds their name, account email, amount and method, plus this call ready to fill in. Check the payment in your payment app first. Without the variable the form says it is unavailable.
 
 `name` is what the public wall shows (never the email). If `email` matches a Zenigma account, that account gets the Supporter badge and the Patron colour; from a total of ₹500 the Patron badge and the Aurora theme; from ₹2,000 the Champion badge. The perks are stored as owned items, so they work offline and on every device. `showAmount: false` hides the amount on the wall.
+
+### Automatic recording (GitHub Sponsors and Buy me a coffee)
+
+Both can tell the API about a payment, signed with a secret only they and the API know. Without the secret variable the endpoint answers 404.
+
+| Variable on Render | What it is |
+| --- | --- |
+| `Support__GithubWebhookSecret` | A random string you make up. Paste the same string as the secret in the GitHub webhook. |
+| `Support__BmcWebhookSecret` | The secret Buy me a coffee shows next to the webhook. |
+| `Support__UsdToInr` | Optional. Rupees per dollar for converting dollar amounts, default 85. |
+
+GitHub Sponsors: open github.com/sponsors/SMARTSKA97/dashboard, then Webhooks, then Add webhook. Payload URL `https://<api>/webhooks/github-sponsors`, content type `application/json`, the secret above, and tick only "Sponsorships". A new sponsorship is recorded under the sponsor's GitHub login (or "A kind supporter" if they sponsor privately). GitHub sends nothing for monthly renewals, so each sponsor is recorded once, when they start. GitHub does not send an email address: link the sponsor to their Zenigma account with `POST /admin/supporters/link` (`{"name":"their-github-login","email":"their@account.email"}`, same `X-Admin-Key` header) after they tell you which account is theirs, for example through the "Already sent a tip? Tell me" form.
+
+Buy me a coffee: Developer, then Webhooks, then add `https://<api>/webhooks/buymeacoffee` and copy the secret it shows. Their payload includes the supporter's email, so a tip from an email that matches a Zenigma account switches its perks on by itself. Use the webhook page's "Send test" once and check the Render logs: a "refused" line means the secret does not match.
+
+Amounts from webhooks stay private on the thank-you list (only the name shows) because a tip does not say the amount may be public.

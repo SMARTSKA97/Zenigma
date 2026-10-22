@@ -265,6 +265,7 @@ app.MapStats();
 app.MapCircles();
 app.MapCommunity();
 app.MapSupporters();
+app.MapSupporterWebhooks();
 app.MapErrorReports();
 
 app.Run();

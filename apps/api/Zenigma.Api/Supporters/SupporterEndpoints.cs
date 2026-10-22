@@ -12,6 +12,7 @@ namespace Zenigma.Api.Supporters;
 
 public record SupporterDto(string Name, int? TotalInr, string Tier);
 public record ClaimRequest(string? Name, int AmountInr, string? Method);
+public record LinkRequest(string? Name, string? Email);
 public record AddSupporterRequest(string? Name, int AmountInr, string? Email, string? Source, bool? ShowAmount);
 
 /// <summary>
@@ -24,7 +25,7 @@ public static class SupporterEndpoints
     public const int PatronFrom = 500;
     public const int ChampionFrom = 2000;
     private static readonly TimeSpan Fresh = TimeSpan.FromSeconds(60);
-    private static (DateTimeOffset At, List<SupporterDto> Value)? _cached;
+    internal static (DateTimeOffset At, List<SupporterDto> Value)? _cached;
 
     private static readonly ConcurrentDictionary<string, (DateOnly Day, int Count)> Claims = new();
     private static readonly string[] Methods = ["upi", "github", "coffee", "other"];
@@ -99,11 +100,7 @@ public static class SupporterEndpoints
 
         app.MapPost("/admin/supporters", async (AddSupporterRequest request, HttpContext http, IConfiguration config, UserManager<ApplicationUser> users, AppDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
-            var key = config["Support:AdminKey"];
-            var given = http.Request.Headers["X-Admin-Key"].ToString();
-            if (string.IsNullOrWhiteSpace(key) || key.Length < 16
-                || !CryptographicOperations.FixedTimeEquals(SHA256.HashData(Encoding.UTF8.GetBytes(key)), SHA256.HashData(Encoding.UTF8.GetBytes(given))))
-                return Results.NotFound();
+            if (!SupporterRecorder.IsAdmin(http, config)) return Results.NotFound();
 
             var name = (request.Name ?? "").Trim();
             if (name.Length is 0 or > 40 || request.AmountInr is <= 0 or > 1_000_000)
@@ -113,33 +110,23 @@ public static class SupporterEndpoints
             if (source.Length is 0) source = "manual";
             if (source.Length > 16) source = source[..16];
 
-            ApplicationUser? user = null;
-            if (!string.IsNullOrWhiteSpace(request.Email)) user = await users.FindByEmailAsync(request.Email.Trim());
+            var (linked, tier) = await SupporterRecorder.RecordAsync(db, users, clock, name, request.AmountInr, source, request.ShowAmount ?? true, request.Email, null, ct);
+            return Results.Ok(new { linked, tier });
+        }).AllowAnonymous();
 
-            db.SupporterContributions.Add(new SupporterContribution
-            {
-                Id = Guid.NewGuid(),
-                UserId = user?.Id,
-                Name = name,
-                AmountInr = request.AmountInr,
-                Source = source,
-                ShowAmount = request.ShowAmount ?? true,
-                CreatedAt = clock.GetUtcNow(),
-            });
+        // Attach earlier contributions made under a name (for example a GitHub login) to a Zenigma account, and switch its perks on.
+        app.MapPost("/admin/supporters/link", async (LinkRequest request, HttpContext http, IConfiguration config, UserManager<ApplicationUser> users, AppDbContext db, TimeProvider clock, CancellationToken ct) =>
+        {
+            if (!SupporterRecorder.IsAdmin(http, config)) return Results.NotFound();
+            var user = string.IsNullOrWhiteSpace(request.Email) ? null : await users.FindByEmailAsync(request.Email.Trim());
+            var name = (request.Name ?? "").Trim();
+            if (user is null || name.Length == 0) return Results.BadRequest(new { error = "A contribution name and the email of an existing account are needed." });
+            var rows = await db.SupporterContributions.Where(c => c.UserId == null && c.Name.ToLower() == name.ToLower()).ToListAsync(ct);
+            foreach (var r in rows) r.UserId = user.Id;
             await db.SaveChangesAsync(ct);
-            _cached = null;
-
-            string? tier = null;
-            if (user is not null)
-            {
-                var total = await db.SupporterContributions.Where(c => c.UserId == user.Id).SumAsync(c => c.AmountInr, ct);
-                tier = TierOf(total);
-                var have = await db.OwnedItems.Where(o => o.UserId == user.Id).Select(o => o.Item).ToListAsync(ct);
-                foreach (var item in PerksOf(tier).Except(have))
-                    db.OwnedItems.Add(new OwnedItem { UserId = user.Id, Item = item, CreatedAt = clock.GetUtcNow() });
-                await db.SaveChangesAsync(ct);
-            }
-            return Results.Ok(new { linked = user is not null, tier });
+            SupporterRecorder.Forget();
+            var tier = await SupporterRecorder.GrantAsync(db, user.Id, clock, ct);
+            return Results.Ok(new { linked = rows.Count, tier });
         }).AllowAnonymous();
     }
 }

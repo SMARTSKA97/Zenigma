@@ -311,4 +311,50 @@ public class ProfileTests : IClassFixture<ApiFactory>
         // No notify address or email service is set up in tests, so the claim is politely unavailable.
         Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.PostAsJsonAsync("/support/claim", new { amountInr = 100, method = "upi" })).StatusCode);
     }
+
+    private static HttpRequestMessage Signed(string url, string secret, string body, string header, bool prefix)
+    {
+        var mac = Convert.ToHexString(System.Security.Cryptography.HMACSHA256.HashData(System.Text.Encoding.UTF8.GetBytes(secret), System.Text.Encoding.UTF8.GetBytes(body))).ToLowerInvariant();
+        var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json") };
+        request.Headers.Add(header, prefix ? "sha256=" + mac : mac);
+        return request;
+    }
+
+    [DbFact]
+    public async Task Webhooks_record_signed_payments_once_and_refuse_the_rest()
+    {
+        var factory = _factory.WithWebHostBuilder(b =>
+        {
+            b.UseSetting("Support:GithubWebhookSecret", "gh-secret");
+            b.UseSetting("Support:BmcWebhookSecret", "bmc-secret");
+        });
+        var client = await SignUpAsync(factory);
+        var email = (await client.GetFromJsonAsync<JsonElement>("/profile", Json)).GetProperty("email").GetString()!;
+        var anon = factory.CreateClient();
+        var login = "sponsor" + Guid.NewGuid().ToString("N")[..6];
+
+        var gh = $$"""{"action":"created","sponsorship":{"privacy_level":"public","sponsor":{"login":"{{login}}"},"tier":{"monthly_price_in_dollars":5,"is_one_time":false}}}""";
+        var bad = Signed("/webhooks/github-sponsors", "wrong", gh, "X-Hub-Signature-256", true);
+        bad.Headers.Add("X-GitHub-Event", "sponsorship");
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.SendAsync(bad)).StatusCode);
+
+        for (var n = 0; n < 2; n++)
+        {
+            var ok = Signed("/webhooks/github-sponsors", "gh-secret", gh, "X-Hub-Signature-256", true);
+            ok.Headers.Add("X-GitHub-Event", "sponsorship");
+            ok.Headers.Add("X-GitHub-Delivery", "delivery-" + login); // the same delivery twice counts once
+            Assert.Equal(HttpStatusCode.OK, (await anon.SendAsync(ok)).StatusCode);
+        }
+        var list = await anon.GetFromJsonAsync<JsonElement>("/public/supporters", Json);
+        var mine = list.EnumerateArray().Where(x => x.GetProperty("name").GetString() == login).ToList();
+        Assert.Single(mine);
+        Assert.Equal(JsonValueKind.Null, mine[0].GetProperty("totalInr").ValueKind); // amounts stay private by default
+
+        var bmc = $$"""{"type":"donation.created","data":{"id":"t-{{login}}","amount":10,"currency":"USD","supporter_name":"Coffee Fan","supporter_email":"{{email}}"}}""";
+        var sent = Signed("/webhooks/buymeacoffee", "bmc-secret", bmc, "X-Signature-Sha256", false);
+        var result = await (await anon.SendAsync(sent)).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.True(result.GetProperty("linked").GetBoolean());
+        var owned = (await client.GetFromJsonAsync<JsonElement>("/store", Json)).GetProperty("owned").EnumerateArray().Select(x => x.GetString()).ToList();
+        Assert.Contains("badge:supporter", owned);
+    }
 }

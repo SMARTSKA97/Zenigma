@@ -167,5 +167,6 @@ public class SupporterContribution
     public int AmountInr { get; set; }
     public string Source { get; set; } = "manual";
     public bool ShowAmount { get; set; } = true;
+    public string? ExternalId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }
