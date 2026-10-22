@@ -23,3 +23,93 @@ h2 {
 p {
   margin: 0 0 0.5rem;
 }
+
+.maker {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 28px;
+  background: var(--accent-soft);
+  small {
+    display: block;
+    color: var(--muted);
+  }
+  .links {
+    display: flex;
+    gap: 0.9rem;
+    margin: 0.3rem 0 0;
+  }
+}
+.tn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 42% 58% 52% 48% / 52% 44% 56% 48%;
+  background: var(--c, var(--accent));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.support {
+  margin-bottom: 1rem;
+  h2 {
+    margin: 0.2rem 0.5rem 0.3rem;
+  }
+  > p {
+    margin: 0 0.5rem 0.8rem;
+  }
+}
+/* Segmented rows: 24px outside, 4px between, 2px apart. */
+.group {
+  display: grid;
+  gap: 2px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border-radius: 4px;
+  color: var(--text);
+  text-decoration: none;
+}
+.row:first-child {
+  border-radius: 24px 24px 4px 4px;
+}
+.row:last-child {
+  border-radius: 4px 4px 24px 24px;
+}
+.row:only-child {
+  border-radius: 24px;
+}
+.lead {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+  }
+}
+:host .act {
+  min-height: 0;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: none;
+}

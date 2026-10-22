@@ -252,6 +252,9 @@
 <h2 class="group">About</h2>
 <section class="list">
   <a class="item link" routerLink="/about"><span class="tn" aria-hidden="true">✨</span><span class="lead">About Zenigma</span><span class="chev">›</span></a>
+  @if (canDonate()) {
+    <a class="item link" routerLink="/about" fragment="support"><span class="tn" aria-hidden="true">☕</span><span class="lead">Support Zenigma<small>Optional tips keep the servers running.</small></span><span class="chev">›</span></a>
+  }
   <a class="item link" routerLink="/privacy"><span class="tn" aria-hidden="true">🔒</span><span class="lead">Privacy policy</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/sync-test"><span class="tn" aria-hidden="true">🛠</span><span class="lead">Diagnostics</span><span class="chev">›</span></a>
 </section>

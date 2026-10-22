@@ -2,6 +2,54 @@
 <h1>About Zenigma</h1>
 <p class="lede">A small collection of daily and endless puzzles that work offline, made by one person.</p>
 
+@if (support.developer.name) {
+  <section class="maker">
+    <span class="tn" aria-hidden="true">{{ support.developer.name.charAt(0) }}</span>
+    <div>
+      <strong>{{ support.developer.name }}</strong>
+      <small>{{ support.developer.about }}</small>
+      @if (support.developer.links.length) {
+        <p class="links">
+          @for (l of support.developer.links; track l.url) {
+            <a [href]="l.url" target="_blank" rel="noopener">{{ l.label }}</a>
+          }
+        </p>
+      }
+    </div>
+  </section>
+}
+
+@if (canDonate()) {
+  <section id="support" class="support">
+    <h2>Support Zenigma</h2>
+    <p class="muted">Zenigma is free and always will play offline. Tips pay for the servers, the domain and the email service. They are optional and unlock nothing.</p>
+    <div class="group">
+      @if (support.kofiUrl) {
+        <a class="row" [href]="support.kofiUrl" target="_blank" rel="noopener">
+          <span class="tn" style="--c: #29abe0" aria-hidden="true">☕</span>
+          <span class="lead">Ko-fi<small>Buy a coffee, card or PayPal</small></span>
+          <span class="act">Open</span>
+        </a>
+      }
+      @if (support.upiId) {
+        <div class="row">
+          <span class="tn" style="--c: #22c55e" aria-hidden="true">₹</span>
+          <span class="lead">UPI<small>{{ support.upiId }}</small></span>
+          <a class="act" [href]="upiLink">Pay</a>
+          <button type="button" class="act" (click)="copy('upi', support.upiId)">{{ copied() === 'upi' ? 'Copied' : 'Copy' }}</button>
+        </div>
+      }
+      @if (support.paypalUrl) {
+        <a class="row" [href]="support.paypalUrl" target="_blank" rel="noopener">
+          <span class="tn" style="--c: #0070ba" aria-hidden="true">💳</span>
+          <span class="lead">PayPal<small>Send a one-off amount</small></span>
+          <span class="act">Open</span>
+        </a>
+      }
+    </div>
+  </section>
+}
+
 <section class="card">
   <h2>What is inside</h2>
   <p>

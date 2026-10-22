@@ -1,5 +1,5 @@
 import { ACCENTS, SKINS, WalletService } from '../../core/wallet.service';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ConnectionService } from '../../core/connection.service';
@@ -11,6 +11,7 @@ import { Switch } from '../../shared/switch';
 import { InstallService } from '../../core/install.service';
 import { HapticStrength, PrefsService } from '../../core/prefs.service';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
+import { environment } from '../../../environments/environment';
 import { UpdaterService } from '../../core/updater.service';
 
 @Component({
@@ -28,6 +29,9 @@ export class Settings implements OnInit {
   protected readonly conn = inject(ConnectionService);
   protected readonly reminder = inject(ReminderService);
   protected readonly install = inject(InstallService);
+  protected readonly canDonate = computed(
+    () => !this.updater.fromPlay() && !!(environment.support.kofiUrl || environment.support.upiId || environment.support.paypalUrl),
+  );
   protected readonly accents = ACCENTS;
   protected readonly skins = SKINS;
   protected readonly wallet = inject(WalletService);
