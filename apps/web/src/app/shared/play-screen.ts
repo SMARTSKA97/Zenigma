@@ -51,6 +51,11 @@ import { BackService } from '../core/back.service';
       margin: 0 auto;
       padding: calc(0.6rem + env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) calc(0.6rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
     }
+    @media (min-width: 900px) {
+      .screen {
+        max-width: 64rem;
+      }
+    }
     .bar {
       display: flex;
       align-items: center;

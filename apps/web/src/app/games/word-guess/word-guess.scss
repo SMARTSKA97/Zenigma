@@ -120,7 +120,7 @@
 }
 @media (min-width: 721px) {
   .board {
-    --tile: min(4.4rem, calc((100dvh - 31rem) / 6));
+    --tile: min(5rem, calc((100dvh - 30rem) / 6));
     grid-template-rows: none;
     width: auto;
     flex: none;
@@ -462,4 +462,10 @@
   color: var(--text);
   font-size: 0.85rem;
   box-shadow: none;
+}
+
+@media (min-width: 721px) {
+  .game {
+    max-width: 36rem;
+  }
 }

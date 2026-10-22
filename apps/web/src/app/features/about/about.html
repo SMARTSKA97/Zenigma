@@ -23,44 +23,7 @@
   <section id="support" class="support">
     <h2>Support Zenigma</h2>
     <p class="muted">Zenigma is free and always will play offline. Tips pay for the servers, the domain and the email service. They are optional and unlock nothing.</p>
-    <div class="group">
-      @if (support.sponsorsUrl) {
-        <a class="row" [href]="support.sponsorsUrl" target="_blank" rel="noopener">
-          <span class="tn" style="--c: #db61a2" aria-hidden="true">💖</span>
-          <span class="lead">GitHub Sponsors<small>Monthly or one-off, through GitHub</small></span>
-          <span class="act">Open</span>
-        </a>
-      }
-      @if (support.coffeeUrl) {
-        <a class="row" [href]="support.coffeeUrl" target="_blank" rel="noopener">
-          <span class="tn" style="--c: #f5b82e" aria-hidden="true">☕</span>
-          <span class="lead">Buy me a coffee<small>A one-off tip by card</small></span>
-          <span class="act">Open</span>
-        </a>
-      }
-      @if (support.kofiUrl) {
-        <a class="row" [href]="support.kofiUrl" target="_blank" rel="noopener">
-          <span class="tn" style="--c: #29abe0" aria-hidden="true">☕</span>
-          <span class="lead">Ko-fi<small>Buy a coffee</small></span>
-          <span class="act">Open</span>
-        </a>
-      }
-      @if (support.upiId) {
-        <div class="row">
-          <span class="tn" style="--c: #22c55e" aria-hidden="true">₹</span>
-          <span class="lead">UPI<small>{{ support.upiId }}</small></span>
-          <a class="act" [href]="upiLink">Pay</a>
-          <button type="button" class="act" (click)="copy('upi', support.upiId)">{{ copied() === 'upi' ? 'Copied' : 'Copy' }}</button>
-        </div>
-      }
-      @if (support.paypalUrl) {
-        <a class="row" [href]="support.paypalUrl" target="_blank" rel="noopener">
-          <span class="tn" style="--c: #0070ba" aria-hidden="true">💳</span>
-          <span class="lead">PayPal<small>Send a one-off amount</small></span>
-          <span class="act">Open</span>
-        </a>
-      }
-    </div>
+    <app-support-methods />
   </section>
 }
 

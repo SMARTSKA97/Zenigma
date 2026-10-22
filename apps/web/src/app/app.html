@@ -30,6 +30,11 @@
   </nav>
 
   <div class="right">
+  @if (support.canDonate()) {
+    <button type="button" class="support-chip" (click)="support.open.set(true)" aria-label="Support Zenigma">
+      <span aria-hidden="true">♥</span><b>Support</b>
+    </button>
+  }
   <a class="coin-chip" [class.glow]="wallet.wheelReady()" routerLink="/store" [attr.aria-label]="'Store: ' + wallet.coins() + ' coins, ' + hints.balance() + ' hints' + (wallet.wheelReady() ? '. Your daily wheel spin is ready' : '')"><span aria-hidden="true">🪙</span><b>{{ wallet.coins() }}</b><span class="sep" aria-hidden="true">·</span><span aria-hidden="true">💡</span><b>{{ hints.balance() }}</b></a>
   <div class="status" aria-live="polite">
     @if (conn.offlineMode()) {
@@ -64,6 +69,7 @@
 
 <app-update-sheet />
 <app-whats-new />
+<app-support-sheet />
 <app-notification-prompt />
 @if (back.toast(); as text) {
   <div class="exit-toast" role="status">{{ text }}</div>

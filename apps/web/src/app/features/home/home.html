@@ -12,6 +12,14 @@
   </div>
 </section>
 
+@if (support.canDonate()) {
+  <button type="button" class="support-card" (click)="support.open.set(true)">
+    <span class="heart" aria-hidden="true">♥</span>
+    <span class="stext"><strong>Keep Zenigma running</strong><small>Free, no ads, offline. Tips pay for the servers.</small></span>
+    <span class="sgo">Support</span>
+  </button>
+}
+
 @if (updater.supported && updater.update() && updater.state() === 'available' && !updater.sheetOpen()) {
   <button type="button" class="update" (click)="updater.sheetOpen.set(true)">
     <span class="pulse" aria-hidden="true"></span>

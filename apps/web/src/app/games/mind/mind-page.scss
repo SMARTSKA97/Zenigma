@@ -131,3 +131,9 @@ dd {
   align-content: space-evenly;
   gap: 1.1rem;
 }
+
+@media (min-width: 900px) {
+  .stage {
+    max-width: 52rem;
+  }
+}

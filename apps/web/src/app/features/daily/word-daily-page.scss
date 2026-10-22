@@ -55,3 +55,9 @@
   .pt { color: var(--muted); font-variant-numeric: tabular-nums; }
   .fine { font-size: 0.8rem; }
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 40rem;
+  }
+}

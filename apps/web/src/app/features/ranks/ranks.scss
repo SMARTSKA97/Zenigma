@@ -148,3 +148,9 @@ div.line {
     color: var(--muted);
   }
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 50rem;
+  }
+}

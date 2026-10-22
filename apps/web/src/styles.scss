@@ -661,3 +661,48 @@ $accents: (
     --accent-contrast: #{list.nth($c, 6)};
   }
 }
+
+/* The "Keep Zenigma running" entry on Home and Settings. */
+button.support-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, #db61a2 40%, var(--border));
+  background: linear-gradient(115deg, color-mix(in srgb, #db61a2 16%, var(--surface)), var(--surface));
+  color: var(--text);
+  text-align: left;
+  box-shadow: none;
+}
+.support-card .heart {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 42% 58% 52% 48% / 52% 44% 56% 48%;
+  background: #db61a2;
+  color: #fff;
+  font-size: 1.3rem;
+}
+.support-card .stext,
+.support-card .lead {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.support-card small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+.support-card .sgo {
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  background: #db61a2;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}

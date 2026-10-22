@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth.service';
 import { CommunityService } from '../../core/community.service';
 import { ConnectionService } from '../../core/connection.service';
 import { Stats, StatsService } from '../../core/stats.service';
+import { SupportService } from '../../core/support.service';
 import { UpdaterService } from '../../core/updater.service';
 import { GAMES, gameInfo, practiceEntry } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
@@ -27,6 +28,7 @@ export class Home implements OnInit {
   protected readonly community = inject(CommunityService);
   protected readonly promo = inject(ApkPromoService);
   protected readonly updater = inject(UpdaterService);
+  protected readonly support = inject(SupportService);
   protected readonly hints = inject(HintsService);
   protected readonly prefs = inject(PrefsService);
   private readonly statsApi = inject(StatsService);

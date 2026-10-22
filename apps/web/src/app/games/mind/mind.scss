@@ -240,3 +240,9 @@
   background: color-mix(in srgb, var(--bad, #d94f4f) 22%, var(--surface));
 }
 
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 52rem;
+  }
+}

@@ -108,3 +108,9 @@ h1 {
 .foot {
   font-size: 0.8rem;
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 52rem;
+  }
+}

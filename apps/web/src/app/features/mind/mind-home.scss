@@ -295,3 +295,15 @@ h1 {
 .sub2 {
   margin: 0 0 0.8rem;
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 64rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .games {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

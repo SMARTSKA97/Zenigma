@@ -45,3 +45,9 @@ app-word-daily-panel {
 app-day-streak-card {
   margin-bottom: 1.2rem;
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 64rem;
+  }
+}

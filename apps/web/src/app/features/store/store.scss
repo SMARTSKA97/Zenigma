@@ -287,3 +287,9 @@ h2 {
 .tier[data-tier='Rare'] { color: #3b82c4; }
 .tier[data-tier='Epic'] { color: #a35bd6; }
 .tier[data-tier='Legendary'] { color: #d99a12; }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 52rem;
+  }
+}

@@ -70,3 +70,15 @@
   font-size: 1.6rem;
   color: var(--muted);
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 64rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .list {
+    grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  }
+}

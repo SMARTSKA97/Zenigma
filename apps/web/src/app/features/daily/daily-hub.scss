@@ -263,3 +263,15 @@
   display: block;
   color: var(--text);
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 60rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -113,3 +113,9 @@ p {
   text-decoration: none;
   box-shadow: none;
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 60rem;
+  }
+}

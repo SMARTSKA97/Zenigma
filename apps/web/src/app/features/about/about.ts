@@ -1,12 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { environment } from '../../../environments/environment';
 import { UpdaterService } from '../../core/updater.service';
+import { SupportService } from '../../core/support.service';
+import { SupportMethods } from '../../shared/support-methods';
 
 @Component({
   selector: 'app-about',
-  imports: [RouterLink],
+  imports: [RouterLink, SupportMethods],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './about.html',
   styleUrl: './about.scss',
@@ -17,22 +19,7 @@ export class About implements OnInit {
   protected readonly platform = Capacitor.getPlatform() === 'android' ? 'Android app' : 'Web app';
   protected readonly source = `https://github.com/${environment.githubRepo}`;
   protected readonly support = environment.support;
-  protected readonly copied = signal('');
-  /** Tips are for the website and sideloaded builds: Google Play wants its own billing for anything paid inside an app from the Play Store. */
-  protected readonly canDonate = computed(
-    () => !this.updater.fromPlay() && !!(this.support.upiId || this.support.sponsorsUrl || this.support.coffeeUrl || this.support.kofiUrl || this.support.paypalUrl),
-  );
-  protected readonly upiLink = `upi://pay?pa=${encodeURIComponent(environment.support.upiId)}&pn=${encodeURIComponent('Zenigma')}&cu=INR`;
-
-  protected async copy(key: string, text: string): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(text);
-      this.copied.set(key);
-      setTimeout(() => this.copied.set(''), 1800);
-    } catch {
-      /* clipboard blocked: the value is on screen to copy by hand */
-    }
-  }
+  protected readonly canDonate = inject(SupportService).canDonate;
 
   ngOnInit(): void {
     void this.updater.loadVersion();

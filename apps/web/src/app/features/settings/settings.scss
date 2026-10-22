@@ -242,3 +242,25 @@ small {
 .sw-btn.locked {
   opacity: 0.6;
 }
+
+@media (min-width: 960px) {
+  :host {
+    max-width: 62rem;
+    column-count: 2;
+    column-gap: 2rem;
+  }
+  .profile {
+    column-span: all;
+  }
+  .group {
+    break-after: avoid;
+  }
+  .list {
+    break-inside: avoid;
+  }
+}
+
+:host .support-card {
+  column-span: all;
+  margin-top: 0.75rem;
+}

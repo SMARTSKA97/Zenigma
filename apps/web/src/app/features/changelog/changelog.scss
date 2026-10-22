@@ -155,3 +155,9 @@ ul {
   border-radius: 50%;
   background: color-mix(in srgb, var(--text) 45%, transparent);
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 56rem;
+  }
+}

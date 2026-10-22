@@ -22,3 +22,9 @@ ul {
 li {
   margin: 0.3rem 0;
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 46rem;
+  }
+}

@@ -1,5 +1,6 @@
 import { ACCENTS, SKINS, WalletService } from '../../core/wallet.service';
 import { Component, computed, inject, OnInit } from '@angular/core';
+import { SupportService } from '../../core/support.service';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ConnectionService } from '../../core/connection.service';
@@ -29,9 +30,8 @@ export class Settings implements OnInit {
   protected readonly conn = inject(ConnectionService);
   protected readonly reminder = inject(ReminderService);
   protected readonly install = inject(InstallService);
-  protected readonly canDonate = computed(
-    () => !this.updater.fromPlay() && !!(environment.support.upiId || environment.support.sponsorsUrl || environment.support.coffeeUrl || environment.support.kofiUrl || environment.support.paypalUrl),
-  );
+  protected readonly support = inject(SupportService);
+  protected readonly canDonate = this.support.canDonate;
   protected readonly accents = ACCENTS;
   protected readonly skins = SKINS;
   protected readonly wallet = inject(WalletService);

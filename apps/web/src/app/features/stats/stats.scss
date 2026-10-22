@@ -186,3 +186,16 @@ dl {
     outline-offset: 1px;
   }
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 64rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}

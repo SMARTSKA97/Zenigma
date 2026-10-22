@@ -78,3 +78,15 @@ ul {
   margin: 1.4rem 0 0.6rem;
   font-size: 1.15rem;
 }
+
+@media (min-width: 900px) {
+  :host {
+    max-width: 64rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  }
+}

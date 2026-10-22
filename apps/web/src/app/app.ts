@@ -28,15 +28,18 @@ import { UpdaterService } from './core/updater.service';
 import { Loader } from './shared/loader';
 import { UpdateSheet } from './shared/update-sheet';
 import { WhatsNew } from './shared/whats-new';
+import { SupportService } from './core/support.service';
+import { SupportSheet } from './shared/support-sheet';
 
 @Component({
   selector: 'app-root',
-  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, ServerNotice, NotificationPrompt],
+  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, SupportSheet, ServerNotice, NotificationPrompt],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   protected readonly sync = inject(SyncService);
+  protected readonly support = inject(SupportService);
   protected readonly conn = inject(ConnectionService);
   protected readonly auth = inject(AuthService);
   protected readonly back = inject(BackService);
