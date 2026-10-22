@@ -1,4 +1,4 @@
-import { ACCENTS, SKINS, WalletService } from '../../core/wallet.service';
+import { ACCENTS, Cosmetic, SKINS, WalletService } from '../../core/wallet.service';
 import { Component, computed, inject, OnInit } from '@angular/core';
 import { SupportService } from '../../core/support.service';
 import { Router, RouterLink } from '@angular/router';
@@ -32,15 +32,19 @@ export class Settings implements OnInit {
   protected readonly install = inject(InstallService);
   protected readonly support = inject(SupportService);
   protected readonly canDonate = this.support.canDonate;
-  protected readonly accents = ACCENTS;
-  protected readonly skins = SKINS;
   protected readonly wallet = inject(WalletService);
+  /** The thank-you colour and look show to supporters, and to anyone who could become one. */
+  private readonly visible = (list: Cosmetic[]) => list.filter((c) => !c.supporter || this.canDonate() || (c.item && this.wallet.owned().has(c.item)));
+  protected readonly accents = computed(() => this.visible(ACCENTS));
+  protected readonly skins = computed(() => this.visible(SKINS));
   private readonly router = inject(Router);
+  protected readonly tier = this.wallet.supporterTier;
 
   /** A colour or theme is free, owned, or locked (then it opens the store). */
   protected pick(kind: 'accent' | 'skin', entry: { id: string; item?: string }): void {
     if (entry.item && !this.wallet.owned().has(entry.item)) {
-      void this.router.navigateByUrl('/store');
+      if ((entry as { supporter?: boolean }).supporter) this.support.open.set(true);
+      else void this.router.navigateByUrl('/store');
       return;
     }
     if (kind === 'accent') this.prefs.setAccent(entry.id);

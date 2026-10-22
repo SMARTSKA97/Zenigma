@@ -75,6 +75,8 @@ export interface Cosmetic {
   color: string;
   /** Store id; absent for the free ones. */
   item?: string;
+  /** Not for sale: a thank-you for supporters. */
+  supporter?: boolean;
 }
 export const ACCENTS: Cosmetic[] = [
   { id: 'default', name: 'Ocean', color: '#2b3dae' },
@@ -87,6 +89,7 @@ export const ACCENTS: Cosmetic[] = [
     ['lime', 'Lime', '#4d7c0f'], ['sky', 'Sky', '#0369a1'], ['cyan', 'Cyan', '#0e7490'], ['indigo', 'Indigo', '#4338ca'],
     ['crimson', 'Crimson', '#b91c1c'], ['plum', 'Plum', '#7e22ce'], ['graphite', 'Graphite', '#475569'], ['bronze', 'Bronze', '#92400e'],
   ].map(([id, name, color]) => ({ id, name, color, item: `accent:${id}` })),
+  { id: 'patron', name: 'Patron', color: '#db2777', item: 'accent:patron', supporter: true },
 ];
 export const SKINS: Cosmetic[] = [
   { id: 'none', name: 'Classic', color: '#2b3dae' },
@@ -94,6 +97,7 @@ export const SKINS: Cosmetic[] = [
     ['paper', 'Paper', '#f4ecd9'], ['sakura', 'Sakura', '#f8c6d4'], ['lavender', 'Lavender', '#e0d4f7'], ['mono', 'Mono', '#111111'],
     ['midnight', 'Midnight', '#1a2268'], ['evergreen', 'Evergreen', '#123524'], ['dusk', 'Dusk', '#3b1632'], ['terminal', 'Terminal', '#0f2c17'],
   ].map(([id, name, color]) => ({ id, name, color, item: `skin:${id}` })),
+  { id: 'aurora', name: 'Aurora', color: '#2dd4bf', item: 'skin:aurora', supporter: true },
 ];
 export const swatchOf = (item: string): string => [...ACCENTS, ...SKINS].find((c) => c.item === item)?.color ?? '#888888';
 
@@ -134,6 +138,12 @@ export class WalletService {
   readonly owned = computed(() => {
     const free = STREAK_UNLOCKS.filter((u) => this.best() >= u.days).map((u) => u.item);
     return new Set([...this.serverOwned(), ...free]);
+  });
+
+  /** What this player gave back to Zenigma: kept with the owned items, so it shows offline and on every device. */
+  readonly supporterTier = computed<'champion' | 'patron' | 'supporter' | null>(() => {
+    const o = this.owned();
+    return o.has('badge:champion') ? 'champion' : o.has('badge:patron') ? 'patron' : o.has('badge:supporter') ? 'supporter' : null;
   });
 
   readonly quests = computed<Quest[]>(() => {

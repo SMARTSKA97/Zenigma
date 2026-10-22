@@ -2,7 +2,7 @@
 
 <a class="profile" routerLink="/account">
   @if (auth.user(); as user) {
-    <span class="avatar" aria-hidden="true">{{ (user.displayName || user.email).charAt(0).toUpperCase() }}</span>
+    <span class="avatar" [class.supporter]="tier()" aria-hidden="true">{{ (user.displayName || user.email).charAt(0).toUpperCase() }}</span>
     <span class="pt">
       <strong>{{ user.displayName || user.email }}</strong>
       <small>
@@ -69,7 +69,7 @@
   <div class="item stack">
     <span class="lead hd"><span class="tn" aria-hidden="true">🎨</span><span>Colour <small>Pick the accent used across the app. It changes right away.</small></span></span>
     <div class="swatches" role="radiogroup" aria-label="Colour">
-      @for (a of accents; track a.id) {
+      @for (a of accents(); track a.id) {
         <button type="button" class="sw-btn" [class.locked]="locked(a)" role="radio" [attr.aria-checked]="prefs.accent() === a.id" [style.--c]="a.color" (click)="pick('accent', a)">
           <i></i>
           <span>{{ locked(a) ? '🔒 ' : '' }}{{ a.name }}</span>
@@ -80,7 +80,7 @@
   <div class="item stack">
     <span class="lead hd"><span class="tn" aria-hidden="true">✨</span><span>Look <small>A whole new look for the app. Earn them with streaks or buy them in the store.</small></span></span>
     <div class="swatches" role="radiogroup" aria-label="Look">
-      @for (a of skins; track a.id) {
+      @for (a of skins(); track a.id) {
         <button type="button" class="sw-btn" [class.locked]="locked(a)" role="radio" [attr.aria-checked]="prefs.skin() === a.id" [style.--c]="a.color" (click)="pick('skin', a)">
           <i></i>
           <span>{{ locked(a) ? '🔒 ' : '' }}{{ a.name }}</span>

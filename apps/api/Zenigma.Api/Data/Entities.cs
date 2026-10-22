@@ -158,3 +158,14 @@ public class MindScore
     public int Plays { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }
+
+public class SupporterContribution
+{
+    public Guid Id { get; set; }
+    public string? UserId { get; set; }
+    public string Name { get; set; } = "";
+    public int AmountInr { get; set; }
+    public string Source { get; set; } = "manual";
+    public bool ShowAmount { get; set; } = true;
+    public DateTimeOffset CreatedAt { get; set; }
+}

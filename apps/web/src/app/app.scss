@@ -290,3 +290,12 @@ main {
     padding: 0.3rem 0.55rem;
   }
 }
+
+:host .support-chip.thanks {
+  border-color: #db2777;
+  background: #db2777;
+  color: #fff;
+}
+:host .support-chip.thanks span {
+  color: #fff;
+}

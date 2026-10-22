@@ -10,6 +10,8 @@ import { MindDailyService } from '../../games/mind/mind-daily';
 import { MIND_LIVE } from '../../games/catalog';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
+import { WalletService } from '../../core/wallet.service';
+import { SupportService } from '../../core/support.service';
 import { ChallengesService, activityFrom } from '../challenges/challenges.service';
 
 interface Badge {
@@ -37,6 +39,8 @@ export class Badges implements OnInit {
   private readonly mind = inject(MindStore);
   private readonly mindDaily = inject(MindDailyService);
   private readonly challenges = inject(ChallengesService);
+  private readonly wallet = inject(WalletService);
+  private readonly support = inject(SupportService);
   private readonly stats = signal<Stats | null>(null);
   private readonly loaded = signal(0);
 
@@ -145,10 +149,13 @@ export class Badges implements OnInit {
       { id: 'mindstreak3', icon: '🔥', name: 'Mind streak', text: 'Finish the daily mind set 3 days running', have: this.mindDaily.streak(), need: 3 },
       { id: 'mindstreak7', icon: '☄️', name: 'Mind marathon', text: 'Finish the daily mind set 7 days running', have: this.mindDaily.streak(), need: 7 },
       { id: 'sharp5', icon: '🧠', name: 'Razor sharp', text: 'Reach an excellent score in 5 mind games', have: excellent, need: 5 },
+      { id: 'sup1', icon: '💖', name: 'Supporter', text: 'Chip in for the servers', have: this.wallet.owned().has('badge:supporter') ? 1 : 0, need: 1 },
+      { id: 'sup2', icon: '💎', name: 'Patron', text: 'Give ₹500 in total', have: this.wallet.owned().has('badge:patron') ? 1 : 0, need: 1 },
+      { id: 'sup3', icon: '🏆', name: 'Champion', text: 'Give ₹2,000 in total', have: this.wallet.owned().has('badge:champion') ? 1 : 0, need: 1 },
       { id: 'chal1', icon: '🎯', name: 'Challenge accepted', text: 'Collect your first challenge reward', have: collected, need: 1 },
       { id: 'chal10', icon: '🏁', name: 'Challenge hunter', text: 'Collect 10 challenge rewards', have: collected, need: 10 },
       { id: 'chal50', icon: '🥇', name: 'Challenge legend', text: 'Collect 50 challenge rewards', have: collected, need: 50 },
-    ];
+    ].filter((b) => !b.id.startsWith('sup') || this.support.canDonate() || !!this.wallet.supporterTier());
   });
   private static readonly GROUPS: [string, string[]][] = [
     ['Getting started', ['first', 'lv10', 'lv100', 'lv250', 'lv500', 'lv1000', 'lv2500', 'boss']],
@@ -158,11 +165,12 @@ export class Badges implements OnInit {
     ['Habits', ['clean', 'clean100', 'early', 'owl', 'weekend3', 'bigday', 'days30']],
     ['Mind training', ['mind3', 'mind10', 'mind50', 'allskills', 'brain100', 'mindall', 'mindstreak3', 'mindstreak7', 'sharp', 'sharp5']],
     ['Challenges', ['chal1', 'chal10', 'chal50']],
+    ['Supporters', ['sup1', 'sup2', 'sup3']],
   ];
   /** Badges in sections; inside each, the ones you have come first. */
   protected readonly groups = computed(() => {
     const all = this.badges();
-    return Badges.GROUPS.map(([name, ids]) => {
+    return Badges.GROUPS.filter(([name]) => name !== 'Supporters' || this.support.canDonate() || this.wallet.supporterTier()).map(([name, ids]) => {
       const items = ids.map((id) => all.find((b) => b.id === id)).filter((b): b is Badge => !!b);
       items.sort((a, b) => Number(b.have >= b.need) - Number(a.have >= a.need));
       return { name, items, earned: items.filter((b) => b.have >= b.need).length };

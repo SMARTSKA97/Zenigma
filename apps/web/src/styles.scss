@@ -587,6 +587,23 @@ html:root[data-skin='dusk'] {
   --ink: #fbe8ef;
   --ink-contrast: #140b12;
 }
+html:root[data-skin='aurora'] {
+  @include dark-tokens;
+  --bg: #04121a;
+  --surface: #0a2230;
+  --surface-2: #0f2e40;
+  --text: #e4fbf6;
+  --muted: #84bfb8;
+  --border: #14424f;
+  --accent: #2dd4bf;
+  --accent-soft: #0e3a45;
+  --accent-contrast: #04121a;
+  --hero-bg: linear-gradient(135deg, #0b4a52, #3b1d6e);
+  --thumb: #1f5360;
+  --key-bg: #123747;
+  --ink: #e4fbf6;
+  --ink-contrast: #04121a;
+}
 html:root[data-skin='midnight'] {
   @include dark-tokens;
   --bg: #070a1a;
@@ -641,6 +658,7 @@ $accents: (
   'indigo': (#4338ca, #e0e7ff, #ffffff, #a5b4fc, #1e1b4b, #0a0920),
   'plum': (#7e22ce, #f3e8ff, #ffffff, #c084fc, #3b0764, #12041f),
   'bronze': (#92400e, #fde8d7, #ffffff, #e0a272, #3b1a08, #150a04),
+  'patron': (#db2777, #fce7f3, #ffffff, #f472b6, #4a0d2b, #170410),
 );
 @each $name, $c in $accents {
   html:root[data-accent='#{$name}'] {

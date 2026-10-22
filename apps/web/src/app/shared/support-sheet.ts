@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { SupportService } from '../core/support.service';
 import { Sheet } from './sheet';
 import { SupportMethods } from './support-methods';
+import { SupporterWall } from './supporter-wall';
 
 /** One tap from anywhere: why tips matter (the servers cost money) and the ways to send one. */
 @Component({
   selector: 'app-support-sheet',
-  imports: [Sheet, SupportMethods],
+  imports: [Sheet, SupportMethods, SupporterWall],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (s.open() && s.canDonate()) {
@@ -19,7 +20,11 @@ import { SupportMethods } from './support-methods';
             keeps the daily puzzles and leaderboards online. It unlocks nothing.
           </p>
         </div>
+        @if (s.tier(); as tier) {
+          <p class="thanks">You are a {{ tier }}. Thank you! Your {{ tier === 'supporter' ? 'badge and' : 'badges and' }} thank-you looks are on every device you sign in on. Give again any time.</p>
+        }
         <app-support-methods />
+        <app-supporter-wall />
         <p class="foot muted">Thank you. Made by {{ s.config.developer.name || 'one person' }}.</p>
       </app-sheet>
     }
@@ -54,6 +59,14 @@ import { SupportMethods } from './support-methods';
     }
     :root[data-motion='reduced'] .heart {
       animation: none;
+    }
+    .thanks {
+      margin: 0 0 0.8rem;
+      padding: 0.7rem 1rem;
+      border-radius: 18px;
+      background: color-mix(in srgb, #db2777 12%, var(--surface));
+      font-size: 0.9rem;
+      text-align: center;
     }
     .foot {
       margin: 0.9rem 0 0;

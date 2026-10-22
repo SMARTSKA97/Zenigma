@@ -73,3 +73,14 @@ What was already tuned (migration `V12`, and code): per-player stats read only t
 ## 5. Load test
 
 See `loadtest/README.md`. Run it from your own computer, off-peak, with a throwaway account.
+
+## Supporters
+
+Contributions are recorded by the owner; there is no automatic payment hook yet. Set `Support__AdminKey` on the API (a random string of 16+ characters; without it the endpoint answers 404). After someone pays (UPI, GitHub Sponsors, Buy me a coffee), record it:
+
+```
+curl -X POST https://<api>/admin/supporters -H "X-Admin-Key: <key>" -H "Content-Type: application/json" \
+  -d '{"name":"SKA97","amountInr":500,"email":"their@account.email","source":"upi","showAmount":true}'
+```
+
+`name` is what the public wall shows (never the email). If `email` matches a Zenigma account, that account gets the Supporter badge and the Patron colour; from a total of ₹500 the Patron badge and the Aurora theme; from ₹2,000 the Champion badge. The perks are stored as owned items, so they work offline and on every device. `showAmount: false` hides the amount on the wall.

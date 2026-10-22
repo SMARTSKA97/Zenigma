@@ -263,6 +263,7 @@ app.MapLeaderboards();
 app.MapStats();
 app.MapCircles();
 app.MapCommunity();
+app.MapSupporters();
 app.MapErrorReports();
 
 app.Run();

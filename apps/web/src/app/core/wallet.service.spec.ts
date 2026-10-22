@@ -29,6 +29,17 @@ describe('WalletService', () => {
     expect(TestBed.inject(WalletService).coins()).toBe(EARNS['daily']);
   });
 
+  it('knows the supporter tier from the owned items, and keeps it offline', () => {
+    const wallet = TestBed.inject(WalletService);
+    expect(wallet.supporterTier()).toBeNull();
+    wallet.serverOwned.set(['badge:supporter', 'accent:patron']);
+    expect(wallet.supporterTier()).toBe('supporter');
+    wallet.serverOwned.set(['badge:supporter', 'badge:patron', 'skin:aurora']);
+    expect(wallet.supporterTier()).toBe('patron');
+    wallet.serverOwned.set(['badge:supporter', 'badge:patron', 'badge:champion']);
+    expect(wallet.supporterTier()).toBe('champion');
+  });
+
   it('quests pay when done and the chest pays for all three', () => {
     const wallet = TestBed.inject(WalletService);
     wallet.note('daily');

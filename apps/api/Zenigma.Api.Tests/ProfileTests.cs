@@ -268,4 +268,37 @@ public class ProfileTests : IClassFixture<ApiFactory>
         var sync = await (await client.PostAsJsonAsync("/hints/sync", new { entries = new[] { new { id = Guid.NewGuid(), delta = 1, reason = "earn" } }, localBalance = 13 })).Content.ReadFromJsonAsync<JsonElement>(Json);
         Assert.Equal(13, sync.GetProperty("balance").GetInt32());
     }
+
+    [DbFact]
+    public async Task Supporters_are_listed_publicly_and_their_account_gets_the_perks()
+    {
+        var factory = _factory.WithWebHostBuilder(b => b.UseSetting("Support:AdminKey", "test-admin-key-0123456789"));
+        var client = await SignUpAsync(factory);
+        var me = await client.GetFromJsonAsync<JsonElement>("/profile", Json);
+        var email = me.GetProperty("email").GetString()!;
+
+        var anon = factory.CreateClient();
+        var denied = await anon.PostAsJsonAsync("/admin/supporters", new { name = "Tester", amountInr = 100 });
+        Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
+
+        anon.DefaultRequestHeaders.Add("X-Admin-Key", "test-admin-key-0123456789");
+        var first = await (await anon.PostAsJsonAsync("/admin/supporters", new { name = "Tester", amountInr = 100, email })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.True(first.GetProperty("linked").GetBoolean());
+        Assert.Equal("supporter", first.GetProperty("tier").GetString());
+        var store = await client.GetFromJsonAsync<JsonElement>("/store", Json);
+        var owned = store.GetProperty("owned").EnumerateArray().Select(x => x.GetString()).ToList();
+        Assert.Contains("badge:supporter", owned);
+        Assert.Contains("accent:patron", owned);
+        Assert.DoesNotContain("skin:aurora", owned);
+
+        var second = await (await anon.PostAsJsonAsync("/admin/supporters", new { name = "Tester", amountInr = 450, email })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.Equal("patron", second.GetProperty("tier").GetString());
+        store = await client.GetFromJsonAsync<JsonElement>("/store", Json);
+        Assert.Contains("skin:aurora", store.GetProperty("owned").EnumerateArray().Select(x => x.GetString()));
+
+        var list = await anon.GetFromJsonAsync<JsonElement>("/public/supporters", Json);
+        var mine = list.EnumerateArray().First(x => x.GetProperty("name").GetString() == "Tester");
+        Assert.Equal(550, mine.GetProperty("totalInr").GetInt32());
+        Assert.False(mine.TryGetProperty("email", out _));
+    }
 }
