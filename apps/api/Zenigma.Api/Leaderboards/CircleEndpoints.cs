@@ -85,7 +85,7 @@ public static class CircleEndpoints
             var date = IstClock.Today(clock.GetUtcNow());
             var rows = await db.Database.SqlQueryRaw<FriendRow>("""
                 SELECT c.id AS "CircleId", c.name AS "CircleName",
-                       CASE WHEN u."HideName" THEN 'Player ' || upper(substr(md5(u."Id"), 1, 4)) ELSE COALESCE(NULLIF(u."DisplayName", ''), 'Player ' || upper(substr(md5(u."Id"), 1, 4))) END AS "Name",
+                       (CASE WHEN u."HideName" THEN 'Player ' || upper(substr(md5(u."Id"), 1, 4)) ELSE COALESCE(NULLIF(u."DisplayName", ''), 'Player ' || upper(substr(md5(u."Id"), 1, 4))) END || CASE WHEN NOT u."HideName" AND EXISTS (SELECT 1 FROM owned_items o WHERE o.user_id = u."Id" AND o.item = 'badge:supporter') THEN ' ♥' ELSE '' END) AS "Name",
                        COUNT(a.id)::int AS "Solved"
                 FROM circle_members mine
                 JOIN circles c ON c.id = mine.circle_id
@@ -183,7 +183,7 @@ public static class CircleEndpoints
                 SELECT user_id, puzzle_date FROM daily_attempts WHERE status = 'won' AND puzzle_date >= @s AND puzzle_date < @e
             )
             SELECT c.id AS "CircleId", c.name AS "CircleName",
-                   CASE WHEN u."HideName" THEN 'Player ' || upper(substr(md5(u."Id"), 1, 4)) ELSE COALESCE(NULLIF(u."DisplayName", ''), 'Player ' || upper(substr(md5(u."Id"), 1, 4))) END AS "Name",
+                   (CASE WHEN u."HideName" THEN 'Player ' || upper(substr(md5(u."Id"), 1, 4)) ELSE COALESCE(NULLIF(u."DisplayName", ''), 'Player ' || upper(substr(md5(u."Id"), 1, 4))) END || CASE WHEN NOT u."HideName" AND EXISTS (SELECT 1 FROM owned_items o WHERE o.user_id = u."Id" AND o.item = 'badge:supporter') THEN ' ♥' ELSE '' END) AS "Name",
                    (u."Id" = @u) AS "IsMe", COUNT(s.user_id)::int AS "Solved"
             FROM circle_members mine
             JOIN circles c ON c.id = mine.circle_id

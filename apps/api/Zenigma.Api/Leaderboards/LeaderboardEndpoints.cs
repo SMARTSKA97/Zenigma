@@ -37,7 +37,7 @@ public static class LeaderboardEndpoints
     private const int PageSize = 50;
     private static readonly string[] AllGames = ["word-guess", .. PuzzleRules.Games];
 
-    private const string NameSql = """CASE WHEN u."HideName" THEN 'Player ' || upper(substr(md5(u."Id"), 1, 4)) ELSE COALESCE(NULLIF(u."DisplayName", ''), 'Player ' || upper(substr(md5(u."Id"), 1, 4))) END""";
+    private const string NameSql = """(CASE WHEN u."HideName" THEN 'Player ' || upper(substr(md5(u."Id"), 1, 4)) ELSE COALESCE(NULLIF(u."DisplayName", ''), 'Player ' || upper(substr(md5(u."Id"), 1, 4))) END || CASE WHEN NOT u."HideName" AND EXISTS (SELECT 1 FROM owned_items o WHERE o.user_id = u."Id" AND o.item = 'badge:supporter') THEN ' ♥' ELSE '' END)""";
 
     public static void MapLeaderboards(this IEndpointRouteBuilder app)
     {
