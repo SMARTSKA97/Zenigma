@@ -1,5 +1,5 @@
 import { ACCENTS, Cosmetic, SKINS, WalletService } from '../../core/wallet.service';
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { SupportService } from '../../core/support.service';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -38,6 +38,11 @@ export class Settings implements OnInit {
   protected readonly accents = computed(() => this.visible(ACCENTS));
   protected readonly skins = computed(() => this.visible(SKINS));
   private readonly router = inject(Router);
+  /** The section that is open (one at a time, like an accordion). */
+  protected readonly open = signal<string | null>(null);
+  protected toggle(key: string): void {
+    this.open.update((k) => (k === key ? null : key));
+  }
   protected readonly tier = this.wallet.supporterTier;
 
   /** A colour or theme is free, owned, or locked (then it opens the store). */

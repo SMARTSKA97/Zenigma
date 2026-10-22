@@ -28,7 +28,14 @@
   </button>
 }
 
-<h2 class="group">Connection</h2>
+<div class="accs">
+<div class="acc" [class.open]="open() === 'connection'">
+  <button type="button" class="acc-h" (click)="toggle('connection')" [attr.aria-expanded]="open() === 'connection'">
+    <span class="tn" aria-hidden="true">✈️</span>
+    <span class="at">Connection<small>Offline mode and the server</small></span>
+    <span class="chev" aria-hidden="true">›</span>
+  </button>
+  <div class="acc-b"><div class="acc-in">
 <section class="list">
   <div class="item">
     <span class="tn" aria-hidden="true">✈️</span>
@@ -59,8 +66,16 @@
     }
   </div>
 </section>
+  </div></div>
+</div>
 
-<h2 class="group">Appearance</h2>
+<div class="acc" [class.open]="open() === 'appearance'">
+  <button type="button" class="acc-h" (click)="toggle('appearance')" [attr.aria-expanded]="open() === 'appearance'">
+    <span class="tn" aria-hidden="true">🎨</span>
+    <span class="at">Appearance<small>Theme, colour, sound and haptics</small></span>
+    <span class="chev" aria-hidden="true">›</span>
+  </button>
+  <div class="acc-b"><div class="acc-in">
 <section class="list">
   <div class="item stack">
     <span class="lead hd"><span class="tn" aria-hidden="true">🌗</span><span>Theme</span></span>
@@ -162,9 +177,17 @@
     </div>
   }
 </section>
+  </div></div>
+</div>
 
 @if (reminder.supported) {
-  <h2 class="group">Reminders</h2>
+  <div class="acc" [class.open]="open() === 'reminders'">
+    <button type="button" class="acc-h" (click)="toggle('reminders')" [attr.aria-expanded]="open() === 'reminders'">
+      <span class="tn" aria-hidden="true">🔔</span>
+      <span class="at">Reminders<small>A daily nudge to play</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
   <section class="list">
     <div class="item">
       <span class="tn" aria-hidden="true">⏰</span>
@@ -190,10 +213,18 @@
       <p class="item error">Notifications are blocked for Zenigma. Allow them in Android settings, under Apps, Zenigma, Notifications.</p>
     }
   </section>
+    </div></div>
+  </div>
 }
 
 @if (updater.supported && !updater.fromPlay()) {
-  <h2 class="group">App updates</h2>
+  <div class="acc" [class.open]="open() === 'updates'">
+    <button type="button" class="acc-h" (click)="toggle('updates')" [attr.aria-expanded]="open() === 'updates'">
+      <span class="tn" aria-hidden="true">⬇️</span>
+      <span class="at">App updates<small>Check for a new version</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
   <section class="list">
     <div class="item stack">
       <span class="lead hd"><span class="tn" aria-hidden="true">📲</span><span>Version {{ updater.currentVersion() ?? '-' }}</span></span>
@@ -220,10 +251,18 @@
       }
     </div>
   </section>
+    </div></div>
+  </div>
 }
 
 @if (install.available()) {
-  <h2 class="group">Install</h2>
+  <div class="acc" [class.open]="open() === 'install'">
+    <button type="button" class="acc-h" (click)="toggle('install')" [attr.aria-expanded]="open() === 'install'">
+      <span class="tn" aria-hidden="true">📲</span>
+      <span class="at">Install<small>Add Zenigma to your device</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
   <section class="list">
     <button type="button" class="item link" (click)="install.install()">
       <span class="tn" aria-hidden="true">⬇</span>
@@ -231,17 +270,33 @@
       <span class="chev">›</span>
     </button>
   </section>
+    </div></div>
+  </div>
 }
 
-<h2 class="group">Explore</h2>
+<div class="acc" [class.open]="open() === 'explore'">
+  <button type="button" class="acc-h" (click)="toggle('explore')" [attr.aria-expanded]="open() === 'explore'">
+    <span class="tn" aria-hidden="true">🧭</span>
+    <span class="at">Explore<small>Stats, badges, rules and history</small></span>
+    <span class="chev" aria-hidden="true">›</span>
+  </button>
+  <div class="acc-b"><div class="acc-in">
 <section class="list">
   <a class="item link" routerLink="/stats"><span class="tn" aria-hidden="true">📊</span><span class="lead">Streaks and stats</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/badges"><span class="tn" aria-hidden="true">🏅</span><span class="lead">Badges</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/rules"><span class="tn" aria-hidden="true">📖</span><span class="lead">How to play</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/changelog"><span class="tn" aria-hidden="true">🆕</span><span class="lead">Version history</span><span class="chev">›</span></a>
 </section>
+  </div></div>
+</div>
 
-<h2 class="group">Your data</h2>
+<div class="acc" [class.open]="open() === 'data'">
+  <button type="button" class="acc-h" (click)="toggle('data')" [attr.aria-expanded]="open() === 'data'">
+    <span class="tn" aria-hidden="true">📦</span>
+    <span class="at">Your data<small>Crash reports and your export</small></span>
+    <span class="chev" aria-hidden="true">›</span>
+  </button>
+  <div class="acc-b"><div class="acc-in">
 <section class="list">
   <div class="item">
     <span class="tn" aria-hidden="true">🐞</span>
@@ -256,10 +311,21 @@
     <span class="chev">›</span>
   </button>
 </section>
+  </div></div>
+</div>
 
-<h2 class="group">About</h2>
+<div class="acc" [class.open]="open() === 'about'">
+  <button type="button" class="acc-h" (click)="toggle('about')" [attr.aria-expanded]="open() === 'about'">
+    <span class="tn" aria-hidden="true">✨</span>
+    <span class="at">About<small>About, privacy and diagnostics</small></span>
+    <span class="chev" aria-hidden="true">›</span>
+  </button>
+  <div class="acc-b"><div class="acc-in">
 <section class="list">
   <a class="item link" routerLink="/about"><span class="tn" aria-hidden="true">✨</span><span class="lead">About Zenigma</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/privacy"><span class="tn" aria-hidden="true">🔒</span><span class="lead">Privacy policy</span><span class="chev">›</span></a>
   <a class="item link" routerLink="/sync-test"><span class="tn" aria-hidden="true">🛠</span><span class="lead">Diagnostics</span><span class="chev">›</span></a>
 </section>
+  </div></div>
+</div>
+</div>

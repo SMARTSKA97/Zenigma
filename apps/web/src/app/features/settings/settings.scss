@@ -242,30 +242,112 @@ small {
 .sw-btn.locked {
   opacity: 0.6;
 }
-
-@media (min-width: 960px) {
-  :host {
-    max-width: 62rem;
-    column-count: 2;
-    column-gap: 2rem;
-  }
-  .profile {
-    column-span: all;
-  }
-  .group {
-    break-after: avoid;
-  }
-  .list {
-    break-inside: avoid;
-  }
-}
-
-:host .support-card {
-  column-span: all;
-  margin-top: 0.75rem;
-}
-
 /* Supporters wear a ring. */
 .avatar.supporter {
   box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px #db2777;
+}
+
+:host .support-card {
+  margin-top: 0.75rem;
+}
+
+/* Sections are cards that open (an accordion): tap the header and the settings of that section slide open. */
+.accs {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+.acc {
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: background-color var(--sp-default-d) var(--sp-default), border-color var(--sp-default-d) var(--sp-default);
+}
+.acc.open {
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+:host .acc-h {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+}
+.at {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  font-weight: 650;
+  font-size: 1.02rem;
+}
+.at small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.acc-h .chev {
+  transition: transform var(--sp-default-d) var(--sp-default);
+}
+.acc.open .acc-h .chev {
+  transform: rotate(90deg);
+}
+.acc-b {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--sp-default-d) var(--sp-default);
+}
+.acc.open .acc-b {
+  grid-template-rows: 1fr;
+}
+.acc-in {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0.5rem;
+  visibility: hidden;
+  transition: visibility 0s linear var(--sp-default-d);
+}
+.acc.open .acc-in {
+  padding-bottom: 0.5rem;
+  visibility: visible;
+  transition-delay: 0s;
+}
+:root[data-motion='reduced'] :host .acc-b,
+:root[data-motion='reduced'] :host .acc-h .chev {
+  transition: none;
+}
+
+/* Wide screens: two columns of cards, and the open one takes the whole row so its settings have room. */
+@media (min-width: 900px) {
+  :host {
+    max-width: 62rem;
+  }
+  .accs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .acc.open {
+    grid-column: 1 / -1;
+  }
+  .acc.open .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 0.6rem;
+    align-items: start;
+  }
+  .acc.open .item {
+    border-radius: 14px;
+  }
+  .acc.open .item.stack {
+    grid-column: 1 / -1;
+  }
 }
