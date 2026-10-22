@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, ou
 import { HapticsService } from '../../core/haptics.service';
 import { GameKeyboard } from '../../shared/game-keyboard';
 import { PlayScreen } from '../../shared/play-screen';
-import { MindResult, seeded, shuffled, useTimers } from './mind-util';
+import { MindResult, seeded, shuffled, useTimers, cleanNote } from './mind-util';
 import { PINPOINT, PinpointCategory } from './pinpoint-data';
 import { isCorrect, pointsAt } from './pinpoint-engine';
 
@@ -58,6 +58,9 @@ export class Pinpoint implements OnInit {
     this.guess.update((g) => g + letter);
   }
 
+  /** The typed answer as letters and gaps, so a space shows at once. */
+  protected readonly chars = computed(() => [...this.guess()]);
+
   protected erase(): void {
     this.guess.update((g) => g.slice(0, -1));
   }
@@ -84,7 +87,12 @@ export class Pinpoint implements OnInit {
     this.miss(false);
   }
 
+  private clues = 0;
+  private wrongGuesses = 0;
+
   private miss(wrong = true): void {
+    if (wrong) this.wrongGuesses++;
+    else this.clues++;
     if (wrong) {
       this.haptics.error();
       this.bad.set(true);
@@ -104,7 +112,7 @@ export class Pinpoint implements OnInit {
     this.timers.after(1800, () => {
       if (this.round() + 1 >= this.rounds) {
         const score = this.score();
-        this.done.emit({ score, detail: `${score} of ${this.rounds * 5} points` });
+        this.done.emit({ score, detail: `${score} of ${this.rounds * 5} points · ${cleanNote(this.clues, this.wrongGuesses).replace('hint', 'extra clue')}` });
         return;
       }
       this.round.update((r) => r + 1);

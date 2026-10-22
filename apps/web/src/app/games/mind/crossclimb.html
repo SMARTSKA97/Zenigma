@@ -1,4 +1,4 @@
-<app-play-screen title="Crossclimb" [subtitle]="'Ladder ' + round()">
+<app-play-screen title="Word Climb" [subtitle]="'Ladder ' + round()">
   <div end>
     <span>{{ rowsDone() }} {{ rowsDone() === 1 ? 'rung' : 'rungs' }}</span>
     <span class="hearts" [attr.aria-label]="lives() + ' lives left'">{{ '♥'.repeat(lives()) }}<span class="gone">{{ '♥'.repeat(3 - lives()) }}</span></span>
@@ -27,6 +27,7 @@
   <div dock>
     @if (ready() && !busy()) {
       <div class="actions">
+        <button type="button" class="secondary" (click)="hint()">Hint</button>
         <button type="button" class="secondary" (click)="skip()">Skip (costs a life)</button>
         @if (at() > 1) {
           <button type="button" class="secondary" (click)="undo()">Undo</button>

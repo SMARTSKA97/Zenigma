@@ -1,5 +1,11 @@
 <div class="scrim" (click)="dismissible() && closed.emit()"></div>
-<section class="sheet" role="dialog" aria-modal="true" [attr.aria-label]="label()">
-  <div class="handle" aria-hidden="true"></div>
+<section class="sheet" role="dialog" aria-modal="true" [attr.aria-label]="label()" [class.dragging]="dragging()" [style.transform]="drag() ? 'translateY(' + drag() + 'px)' : null">
+  @if (dismissible()) {
+    <div class="grab" (pointerdown)="grabStart($event)" (pointermove)="grabMove($event)" (pointerup)="grabEnd($event)" (pointercancel)="grabEnd($event)" aria-hidden="true">
+      <div class="handle"></div>
+    </div>
+  } @else {
+    <div class="handle" aria-hidden="true"></div>
+  }
   <ng-content />
 </section>

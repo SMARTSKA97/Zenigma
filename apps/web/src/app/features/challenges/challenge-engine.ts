@@ -70,7 +70,7 @@ export const POOL: Template[] = [
   { id: 'w-clean-8', period: 'weekly', icon: '🧠', title: 'No help needed', text: 'Clear 8 levels without a hint', metric: 'clean', target: 8, reward: 1 },
   { id: 'w-sudoku-8', period: 'weekly', icon: '🔢', title: 'Sudoku week', text: 'Solve 8 Sudoku puzzles', metric: 'sudoku', target: 8, reward: 1 },
   { id: 'w-hard-3', period: 'weekly', icon: '💎', title: 'Hard mode', text: 'Clear 3 Sudoku levels on Hard or above', metric: 'hard', target: 3, reward: 2 },
-  { id: 'w-logic-10', period: 'weekly', icon: '🧩', title: 'Logic lover', text: 'Solve 10 Queens, Tango, Zip or Patches puzzles', metric: 'logic', target: 10, reward: 1 },
+  { id: 'w-logic-10', period: 'weekly', icon: '🧩', title: 'Logic lover', text: 'Solve 10 Crowns, Eclipse, Zipline or Patchwork puzzles', metric: 'logic', target: 10, reward: 1 },
   { id: 'w-words-5', period: 'weekly', icon: '🔤', title: 'Word nerd', text: 'Win 5 Word Guess games', metric: 'words', target: 5, reward: 1 },
   { id: 'w-mind-6', period: 'weekly', icon: '🧠', title: 'Brain gym', text: 'Play 6 mind-training games', metric: 'mind', target: 6, reward: 1 },
   // Weekend (Saturday and Sunday)

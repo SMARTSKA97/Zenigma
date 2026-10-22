@@ -33,7 +33,7 @@ export class ZipBoard {
       .filter((x): x is { number: number; i: number } => x !== null)
       .sort((a, b) => a.number - b.number)
       .map((x) => `${x.number} at row ${Math.floor(x.i / p.size) + 1}, column ${(x.i % p.size) + 1}`);
-    return `Zip board, ${p.size} by ${p.size}. Draw one path through every open cell, reaching the numbers in order.${(p.holes?.length ?? 0) ? ` ${p.holes!.length} cells are blocked.` : ''}${(p.walls?.length ?? 0) ? ` ${p.walls!.length} walls cannot be crossed.` : ''} Numbers: ${where.join('; ')}. Path covers ${this.path().length} of ${p.size * p.size - (p.holes?.length ?? 0)} cells.`;
+    return `Zipline board, ${p.size} by ${p.size}. Draw one path through every open cell, reaching the numbers in order.${(p.holes?.length ?? 0) ? ` ${p.holes!.length} cells are blocked.` : ''}${(p.walls?.length ?? 0) ? ` ${p.walls!.length} walls cannot be crossed.` : ''} Numbers: ${where.join('; ')}. Path covers ${this.path().length} of ${p.size * p.size - (p.holes?.length ?? 0)} cells.`;
   });
 
   protected readonly cells = computed(() => {

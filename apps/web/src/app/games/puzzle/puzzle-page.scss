@@ -516,3 +516,27 @@ a.tool {
     align-self: start;
   }
 }
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.mark {
+  padding: 0.2rem 0.7rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--muted);
+  &.ok {
+    background: #d8f1e1;
+    color: #1a7f43;
+  }
+}
+.flawless {
+  margin: 0;
+  font-weight: 800;
+  color: var(--accent);
+}

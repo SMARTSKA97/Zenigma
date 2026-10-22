@@ -3,7 +3,7 @@ import { HapticsService } from '../../core/haptics.service';
 import { GameKeyboard } from '../../shared/game-keyboard';
 import { PlayScreen } from '../../shared/play-screen';
 import { accepts, DAILY_LINKS, linksForRound, makeChain, written } from './chain-link-engine';
-import { MindResult, seeded, useTimers } from './mind-util';
+import { cleanNote, MindResult, seeded, useTimers } from './mind-util';
 
 interface Row {
   /** The word the chain was built with. */
@@ -41,6 +41,10 @@ export class ChainLink implements OnInit {
   protected readonly bad = signal(false);
   protected readonly busy = signal(false);
   protected readonly seen = new Set<string>();
+  private hints = 0;
+  private mistakes = 0;
+  /** Rows where a hint was used (they do not count as links). */
+  private readonly hinted = new Set<string>();
   private ended = false;
 
   /** The row being filled in. */
@@ -110,6 +114,20 @@ export class ChainLink implements OnInit {
     }
   }
 
+  /** Types the next correct letter of the word (and takes back anything typed that was off the way). */
+  protected hint(): void {
+    const row = this.current();
+    if (this.busy() || !row) return;
+    const target = row.word.slice(1);
+    const typed = this.typed();
+    const base = target.startsWith(typed) ? typed : '';
+    if (base.length >= target.length) return;
+    this.typed.set(base + target[base.length]);
+    this.hints++;
+    this.hinted.add(`${this.round()}:${this.at()}`);
+    this.haptics.tick();
+  }
+
   protected skip(): void {
     const row = this.current();
     if (this.busy() || !row) return;
@@ -119,7 +137,7 @@ export class ChainLink implements OnInit {
 
   private place(word: string, gaveUp = false): void {
     this.rows.update((rows) => rows.map((r, i) => (i === this.at() ? { ...r, shown: word } : r)));
-    if (!gaveUp) this.links.update((n) => n + 1);
+    if (!gaveUp && !this.hinted.has(`${this.round()}:${this.at()}`)) this.links.update((n) => n + 1);
     this.typed.set('');
     if (this.at() + 1 >= this.rows().length) {
       this.busy.set(true);
@@ -138,6 +156,7 @@ export class ChainLink implements OnInit {
     this.bad.set(true);
     this.timers.after(350, () => this.bad.set(false));
     this.typed.set('');
+    this.mistakes++;
     this.lose();
   }
 
@@ -153,6 +172,6 @@ export class ChainLink implements OnInit {
     if (this.ended) return;
     this.ended = true;
     const n = this.links();
-    this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'link' : 'links'} in ${this.round()} ${this.round() === 1 ? 'chain' : 'chains'}` });
+    this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'link' : 'links'} in ${this.round()} ${this.round() === 1 ? 'chain' : 'chains'} · ${cleanNote(this.hints, this.mistakes)}` });
   }
 }

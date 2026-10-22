@@ -36,28 +36,52 @@
 }
 .answer {
   width: 100%;
-  min-height: 3rem;
+  min-height: 3.4rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 0.5rem 1rem;
+  align-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.7rem;
   border-radius: 0.9rem;
   border: 2px solid var(--accent);
   background: var(--surface);
-  font-size: 1.25rem;
-  font-weight: 700;
-  text-align: center;
-  &.empty {
+  .hint {
     color: var(--muted);
     font-weight: 500;
     font-size: 1.05rem;
+    margin-right: 0.15rem;
+  }
+  .ch {
+    display: grid;
+    place-items: center;
+    min-width: 1.5rem;
+    height: 2rem;
+    padding: 0 0.2rem;
+    border-radius: 0.45rem;
+    background: var(--surface-2);
+    border-bottom: 2px solid var(--accent);
+    font-size: 1.15rem;
+    font-weight: 800;
+    animation: pop 0.12s var(--ease);
+  }
+  /* A space is a visible gap between the words. */
+  .gap {
+    width: 0.9rem;
+    height: 2rem;
   }
   .caret {
     width: 2px;
-    height: 1.4em;
+    height: 1.6rem;
     background: var(--accent);
     animation: blink 1s steps(2) infinite;
+  }
+}
+@keyframes pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0.4;
   }
 }
 @keyframes blink {

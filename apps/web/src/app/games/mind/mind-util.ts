@@ -56,6 +56,14 @@ export function useTimers() {
   };
 }
 
+/** How clean a run was, for the result: "No hints, no mistakes", "2 hints, no mistakes", "No hints, 1 mistake". */
+export function cleanNote(hints: number, mistakes: number): string {
+  const h = hints === 0 ? 'no hints' : `${hints} ${hints === 1 ? 'hint' : 'hints'}`;
+  const m = mistakes === 0 ? 'no mistakes' : `${mistakes} ${mistakes === 1 ? 'mistake' : 'mistakes'}`;
+  const text = `${h}, ${m}`;
+  return text[0].toUpperCase() + text.slice(1);
+}
+
 export const pick = <T>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)];
 export const randInt = (min: number, max: number): number => min + Math.floor(Math.random() * (max - min + 1));
 export function shuffled<T>(list: readonly T[], random: () => number = Math.random): T[] {

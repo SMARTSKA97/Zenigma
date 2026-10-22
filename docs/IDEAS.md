@@ -172,3 +172,11 @@ Ranks show the last board at once and refresh quietly; boards are reused for 60 
 - Chain Link: `linksForRound` 4 to 9 (was 2 to 6), `DAILY_LINKS = 7`; `dailyPoints` divides by 7.
 - Switchyard (`switchyard-engine.ts`, `switchyard.ts`): a main line down the board with a junction per branch (`station`, `fork`, `siding`; sides alternate), polyline tracks with rounded corners, rails drawn as two offset lines over sleepers, lit tracks show where a train would go now; station colours (5, with symbols) are shuffled every yard; a switch decides a train's way when it reaches it; speed in units/s and the gap between trains change each round; 3 lives; score is trains delivered (`markOf` scale 40). Ideas: a daily yard with a fixed seed, switches that flip by themselves after a train, crossings.
 
+## Done: hints, scores, ranks, names (phase 75)
+- Hint solutions are memoised per puzzle (`once()` in `hint.ts`), so the board can be checked after every move: `mistakeCount` is now counted in every mode (not only strict/featured) and the result sheet shows no hints / no mistakes / flawless. Mind games say it in `detail` (`cleanNote`); Chain Link and Word Climb got a Hint (a hinted row does not count); Pindown counts extra clues and wrong guesses.
+- Wend's hint was only an animation, which reduced motion switches off: `.hinted` has a ring and tint now.
+- Number Sort: `max(5, 140 - 2.5 s)` (was `150 - 4 s`, which was 0 over 37 s).
+- Sheet: drag the handle down, or tap it, to put it away (`sheet.ts`).
+- Ranks: kind (Daily/Practice) > group (Puzzles/Mind games) > game. New `GET /leaderboards/mind-practice?game=` ranks the best mark per game from `mind_scores` (the marks are reported by the app, like the other mind boards).
+- Renames (display only, ids and routes unchanged): Queens > Crowns, Tango > Eclipse, Zip > Zipline, Patches > Patchwork, Pinpoint > Pindown, Crossclimb > Word Climb. Keeping the old names would need talking to LinkedIn first.
+

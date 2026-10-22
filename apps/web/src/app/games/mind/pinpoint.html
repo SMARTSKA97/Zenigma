@@ -1,4 +1,4 @@
-<app-play-screen title="Pinpoint" [subtitle]="'Category ' + (round() + 1) + ' of ' + total()">
+<app-play-screen title="Pindown" [subtitle]="'Category ' + (round() + 1) + ' of ' + total()">
   <div end><span>{{ score() }} {{ score() === 1 ? 'point' : 'points' }}</span></div>
   <ol class="clues" [class.flash-bad]="bad()">
     @for (n of slots; track n) {
@@ -9,9 +9,20 @@
     }
   </ol>
   @if (outcome() === 'playing') {
-    <div class="answer" [class.empty]="!guess()" role="textbox" aria-label="Your answer">
-      <span>{{ guess() || 'What links them?' }}</span>
-      @if (guess()) { <i class="caret"></i> }
+    <div class="answer" [class.empty]="!guess()" role="textbox" aria-label="Your answer" [attr.aria-valuetext]="guess()">
+      @if (!guess()) {
+        <span class="hint">What links them?</span>
+        <i class="caret"></i>
+      } @else {
+        @for (c of chars(); track $index) {
+          @if (c === ' ') {
+            <span class="gap"></span>
+          } @else {
+            <span class="ch">{{ c.toUpperCase() }}</span>
+          }
+        }
+        <i class="caret"></i>
+      }
     </div>
     <p class="tip">Worth {{ 6 - shown() }} {{ shown() === 5 ? 'point' : 'points' }} now. A wrong guess shows the next clue.</p>
   } @else {

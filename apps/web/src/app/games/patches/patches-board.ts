@@ -31,7 +31,7 @@ export class PatchesBoard {
     const p = this.puzzle();
     const shape = ['', ', wide', ', tall', ', square'];
     const clues = p.clues.map((c) => `row ${Math.floor(c[0] / p.size) + 1}, column ${(c[0] % p.size) + 1}: ${c[1] > 0 ? `area ${c[1]}` : 'area hidden'}${shape[c[2]] ?? ''}`);
-    return `Patches board, ${p.size} by ${p.size}. Drag across cells to draw a rectangle; each holds one clue and has that area. Tap a rectangle to remove it. Clues: ${clues.join('; ')}. ${this.board().length} of ${p.clues.length} rectangles drawn.`;
+    return `Patchwork board, ${p.size} by ${p.size}. Drag across cells to draw a rectangle; each holds one clue and has that area. Tap a rectangle to remove it. Clues: ${clues.join('; ')}. ${this.board().length} of ${p.clues.length} rectangles drawn.`;
   });
 
   protected readonly cells = computed(() => {

@@ -87,7 +87,7 @@ export const GAME_RULES: GameRules[] = [
   },
   {
     id: 'queens',
-    name: 'Queens',
+    name: 'Crowns',
     tagline: 'One queen per row, column and colour.',
     goal: 'Place exactly one queen in every row, every column and every coloured region.',
     rules: [
@@ -171,7 +171,7 @@ export const GAME_RULES: GameRules[] = [
   },
   {
     id: 'tango',
-    name: 'Tango',
+    name: 'Eclipse',
     tagline: 'Suns and moons, never three in a row.',
     goal: 'Fill the 6×6 grid with suns and moons so every rule holds.',
     rules: [
@@ -285,7 +285,7 @@ export const GAME_RULES: GameRules[] = [
   },
   {
     id: 'zip',
-    name: 'Zip',
+    name: 'Zipline',
     tagline: 'One path through every cell.',
     goal: 'Draw a single path from 1 to the highest number that passes through every cell exactly once.',
     rules: [
@@ -349,7 +349,7 @@ export const GAME_RULES: GameRules[] = [
   },
   {
     id: 'patches',
-    name: 'Patches',
+    name: 'Patchwork',
     tagline: 'Cut the grid into rectangles.',
     goal: 'Divide the whole grid into rectangles, each with one number equal to its area.',
     rules: [

@@ -16,13 +16,13 @@ export interface Featured {
 
 const ROTATION: { game: Featured['game']; variant?: string; name: string; from: number }[] = [
   { game: 'sudoku', variant: 'classic-insane', name: 'Sudoku · Classic · Insane', from: 600 },
-  { game: 'queens', variant: 'classic-insane', name: 'Queens · Insane', from: 600 },
+  { game: 'queens', variant: 'classic-insane', name: 'Crowns · Insane', from: 600 },
   { game: 'sudoku', variant: 'diagonal', name: 'Sudoku · Diagonal', from: 1200 },
-  { game: 'zip', variant: 'classic-insane', name: 'Zip · Insane', from: 600 },
+  { game: 'zip', variant: 'classic-insane', name: 'Zipline · Insane', from: 600 },
   { game: 'sudoku', variant: 'windoku', name: 'Sudoku · Windoku', from: 1200 },
-  { game: 'tango', variant: 'classic-insane', name: 'Tango · Insane', from: 600 },
+  { game: 'tango', variant: 'classic-insane', name: 'Eclipse · Insane', from: 600 },
   { game: 'sudoku', variant: 'knight', name: 'Sudoku · Anti-Knight', from: 1200 },
-  { game: 'patches', variant: 'classic-insane', name: 'Patches · Insane', from: 600 },
+  { game: 'patches', variant: 'classic-insane', name: 'Patchwork · Insane', from: 600 },
   { game: 'sudoku', variant: 'mini-insane', name: 'Sudoku · Mini · Insane', from: 600 },
   { game: 'sudoku', variant: 'disjoint', name: 'Sudoku · Disjoint Groups', from: 1200 },
 ];

@@ -18,7 +18,10 @@
   <p class="tip">What joins with the word above, and with the one below?</p>
   <div dock>
     @if (current() && !busy()) {
-      <div class="actions"><button type="button" class="secondary" (click)="skip()">Skip (costs a life)</button></div>
+      <div class="actions">
+        <button type="button" class="secondary" (click)="hint()">Hint</button>
+        <button type="button" class="secondary" (click)="skip()">Skip (costs a life)</button>
+      </div>
       <app-game-keyboard enterLabel="Link" [canEnter]="typed().length === blanks()" (letter)="key($event)" (backspace)="erase()" (enter)="submit()" />
     }
   </div>

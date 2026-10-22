@@ -4,7 +4,7 @@ import { GameKeyboard } from '../../shared/game-keyboard';
 import { PlayScreen } from '../../shared/play-screen';
 import { WordListService } from '../word-guess/word-list.service';
 import { accepts, blanksForRound, buildIndex, distancesTo, Index, makeLadder, neighbours } from './crossclimb-engine';
-import { MindResult, seeded, useTimers } from './mind-util';
+import { cleanNote, MindResult, seeded, useTimers } from './mind-util';
 
 /**
  * A word ladder. The first and last words are given; fill the rows between so that every row differs from the one above it by
@@ -33,6 +33,9 @@ export class Crossclimb implements OnInit {
   private index: Index = new Map();
   private distToEnd: ReadonlyMap<string, number> = new Map();
   private ended = false;
+  private hints = 0;
+  private mistakes = 0;
+  private readonly hinted = new Set<string>();
 
   protected readonly ready = signal(false);
   protected readonly round = signal(1);
@@ -125,8 +128,28 @@ export class Crossclimb implements OnInit {
       this.bad.set(true);
       this.timers.after(350, () => this.bad.set(false));
       this.resetDraft();
+      this.mistakes++;
       this.lose();
     }
+  }
+
+  /** Puts the right new letter into the open row (and moves to its tile). */
+  protected hint(): void {
+    if (this.busy()) return;
+    const rows = this.rows();
+    const above = rows[this.at() - 1]!;
+    const used = rows.filter((r): r is string => !!r);
+    const left = this.last() - this.at() - 1;
+    const fits = (w: string) => accepts(w, above, used, rows[this.last()]!, left, this.everyWord, this.distToEnd);
+    const planned = this.solution[this.at()];
+    const target = fits(planned) ? planned : (neighbours(above, this.index).find(fits) ?? planned);
+    const k = [...target].findIndex((c, i) => c !== above[i]);
+    if (k < 0) return;
+    this.draft.set([...above].map((l, i) => (i === k ? target[i] : l)));
+    this.cursor.set(k);
+    this.hints++;
+    this.hinted.add(`${this.round()}:${this.at()}`);
+    this.haptics.tick();
   }
 
   protected skip(): void {
@@ -152,7 +175,7 @@ export class Crossclimb implements OnInit {
 
   private place(word: string, gaveUp: boolean): void {
     this.rows.update((r) => r.map((w, i) => (i === this.at() ? word : w)));
-    if (!gaveUp) this.rowsDone.update((n) => n + 1);
+    if (!gaveUp && !this.hinted.has(`${this.round()}:${this.at()}`)) this.rowsDone.update((n) => n + 1);
     if (this.at() + 1 >= this.last()) {
       this.busy.set(true);
       this.timers.after(1100, () => {
@@ -178,6 +201,6 @@ export class Crossclimb implements OnInit {
     if (this.ended) return;
     this.ended = true;
     const n = this.rowsDone();
-    this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'rung' : 'rungs'} in ${this.round()} ${this.round() === 1 ? 'ladder' : 'ladders'}` });
+    this.done.emit({ score: n, detail: `${n} ${n === 1 ? 'rung' : 'rungs'} in ${this.round()} ${this.round() === 1 ? 'ladder' : 'ladders'} · ${cleanNote(this.hints, this.mistakes)}` });
   }
 }

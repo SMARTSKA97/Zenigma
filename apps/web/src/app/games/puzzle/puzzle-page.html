@@ -223,6 +223,13 @@
     <div class="result">
       <div class="burst" aria-hidden="true">✓</div>
       <h2>Solved in {{ fmt(finalMs()) }}</h2>
+      <div class="marks" aria-label="How clean the solve was">
+        <span class="mark" [class.ok]="hintsUsed() === 0">{{ hintsUsed() === 0 ? '✓ No hints' : '✗ ' + hintsUsed() + (hintsUsed() === 1 ? ' hint' : ' hints') }}</span>
+        <span class="mark" [class.ok]="mistakeCount() === 0">{{ mistakeCount() === 0 ? '✓ No mistakes' : '✗ ' + mistakeCount() + (mistakeCount() === 1 ? ' mistake' : ' mistakes') }}</span>
+      </div>
+      @if (hintsUsed() === 0 && mistakeCount() === 0) {
+        <p class="flawless">Flawless! No hints, no mistakes.</p>
+      }
       @if (daily()) {
         @if (attempt()?.rank) {
           <p class="muted">You are #{{ attempt()!.rank }} so far today.</p>

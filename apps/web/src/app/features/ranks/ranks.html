@@ -1,30 +1,32 @@
 <h1>Leaderboards</h1>
 
+<app-segmented class="seg" label="Board" [options]="kindOptions" [value]="kind()" (valueChange)="pickKind($event)" />
+<app-segmented class="seg" label="Section" [options]="groupOptions" [value]="group()" (valueChange)="pickGroup($event)" />
+
 <div class="chips" role="tablist" aria-label="Game">
-  @for (g of games; track g.id) {
+  @for (g of games(); track g.id) {
     <button type="button" role="tab" class="chip" [class.on]="game() === g.id" [attr.aria-selected]="game() === g.id" [style.--h]="g.hue" (click)="pickGame(g.id)">
-      <span class="ico"><app-glyph [game]="g.id" /></span>{{ g.name }}
+      <span class="ico"><app-glyph [game]="$any(g.id)" /></span>{{ g.name }}
     </button>
   }
 </div>
 
-@if (circles().length > 0) {
-  <div class="chips scope" role="tablist" aria-label="Who">
-    <button type="button" role="tab" class="chip plain" [class.on]="!circle()" [attr.aria-selected]="!circle()" (click)="pickCircle(null)">Everyone</button>
-    @for (c of circles(); track c.id) {
-      <button type="button" role="tab" class="chip plain" [class.on]="circle() === c.id" [attr.aria-selected]="circle() === c.id" (click)="pickCircle(c.id)">{{ c.name }}</button>
-    }
-    <a class="chip plain manage" routerLink="/ranks/circles">Manage</a>
-  </div>
-} @else if (auth.signedIn()) {
-  <p class="muted caption"><a routerLink="/ranks/circles">Compete with friends in a private circle →</a></p>
+@if (group() === 'puzzles') {
+  @if (circles().length > 0) {
+    <div class="chips scope" role="tablist" aria-label="Who">
+      <button type="button" role="tab" class="chip plain" [class.on]="!circle()" [attr.aria-selected]="!circle()" (click)="pickCircle(null)">Everyone</button>
+      @for (c of circles(); track c.id) {
+        <button type="button" role="tab" class="chip plain" [class.on]="circle() === c.id" [attr.aria-selected]="circle() === c.id" (click)="pickCircle(c.id)">{{ c.name }}</button>
+      }
+      <a class="chip plain manage" routerLink="/ranks/circles">Manage</a>
+    </div>
+  } @else if (auth.signedIn()) {
+    <p class="muted caption"><a routerLink="/ranks/circles">Compete with friends in a private circle →</a></p>
+  }
 }
 
-<app-segmented class="seg" label="Board" [options]="kindOptions" [value]="kind()" (valueChange)="pickKind($event)" />
-@if (kind() === 'daily') {
-  <app-segmented class="seg" label="Period" [options]="dailyPeriods" [value]="period()" (valueChange)="period.set($event)" />
-} @else {
-  <app-segmented class="seg" label="Period" [options]="practicePeriods" [value]="period()" (valueChange)="period.set($event)" />
+@if (periods().length > 1) {
+  <app-segmented class="seg" label="Period" [options]="periods()" [value]="period()" (valueChange)="period.set($event)" />
 }
 
 <p class="muted caption">{{ caption() }}</p>
@@ -44,8 +46,12 @@
   @if (b.entries.length === 0) {
     <section class="card empty">
       <h2>No one yet</h2>
-      <p class="muted">{{ kind() === 'daily' ? 'Be the first to finish today.' : 'Solve a level to get on the board.' }}</p>
-      <a class="button" [routerLink]="kind() === 'daily' ? ['/daily', game()] : ['/games', game()]">Play {{ gameName() }}</a>
+      <p class="muted">{{ kind() === 'daily' ? 'Be the first to finish today.' : group() === 'mind' ? 'Play it to set the first mark.' : 'Solve a level to get on the board.' }}</p>
+      @if (group() === 'mind') {
+        <a class="button" [routerLink]="kind() === 'daily' ? ['/challenges'] : ['/mind', game()]">{{ kind() === 'daily' ? 'Go to Challenges' : 'Play ' + gameName() }}</a>
+      } @else {
+        <a class="button" [routerLink]="kind() === 'daily' ? ['/daily', game()] : ['/games', game()]">Play {{ gameName() }}</a>
+      }
     </section>
   } @else {
     <ol class="list">

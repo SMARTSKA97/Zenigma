@@ -1,8 +1,8 @@
 # Zenigma
 
 Offline-first puzzle and brain-game app: Android (Capacitor) and web (installable PWA), with an ASP.NET Core API on
-PostgreSQL. Six main games (Word Guess, LinkedIn's Queens, Tango, Sudoku, Zip, Patches) with daily puzzles, endless
-levels, streaks and leaderboards. Also 25 mind-training games (including Pinpoint, Chain Link, Crossclimb, Wend and Comet
+PostgreSQL. Six main games (Word Guess, Crowns, Eclipse, Sudoku, Zipline, Patchwork) with daily puzzles, endless
+levels, streaks and leaderboards. Also 25 mind-training games (including Pindown, Chain Link, Word Climb, Wend, Switchyard and Comet
 Slice) with a daily mind set, word dailies and a skills dashboard, weekly/weekend/monthly challenges that earn hints, an
 optional profile with Google sign-in on the web, and an offline mode. `docs/IDEAS.md` is the roadmap (done and to do).
 

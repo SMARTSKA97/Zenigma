@@ -3,7 +3,7 @@ import { HapticsService } from '../../core/haptics.service';
 import { PlayScreen } from '../../shared/play-screen';
 import { adjacent, Board, makeBoard, practiceSpec, specForDate } from './wend-engine';
 import { loadWendWords, WendWords } from './wend-words';
-import { MindResult, seeded, useTimers } from './mind-util';
+import { cleanNote, MindResult, seeded, useTimers } from './mind-util';
 
 interface Found {
   word: string;
@@ -59,6 +59,7 @@ export class Wend implements OnInit {
   protected readonly bad = signal(false);
   protected readonly note = signal('');
   protected readonly hints = signal(0);
+  private mistakes = 0;
   /** The word a hint is working on and how many of its letters are shown. */
   private readonly hintFor = signal<{ k: number; n: number } | null>(null);
   protected readonly hinted = computed(() => {
@@ -178,6 +179,7 @@ export class Wend implements OnInit {
     const key = [...path].sort((a, b) => a - b).join(',');
     const k = this.board.paths.findIndex((p, i) => this.board.words[i] === word && [...p].sort((a, b) => a - b).join(',') === key);
     if (k < 0 || this.found().some((f) => f.k === k)) {
+      this.mistakes++;
       this.haptics.error();
       this.bad.set(true);
       this.note.set(this.words.valid.has(word) ? `${word.toUpperCase()} is a word, but these letters belong to other answers` : `${word.toUpperCase()} is not one of this board's words`);
@@ -276,7 +278,7 @@ export class Wend implements OnInit {
     // Points for the board: 100, less 15 for every hint and 1 for every 10 seconds past the first minute (never under 40).
     const slow = Math.max(0, Math.floor((this.elapsed() - 60) / 10));
     const points = Math.max(40, 100 - 15 * this.hints() - slow);
-    const hinted = this.hints() === 0 ? 'No hints used' : `${this.hints()} ${this.hints() === 1 ? 'hint' : 'hints'} used`;
+    const hinted = cleanNote(this.hints(), this.mistakes);
     this.done.emit({ score: points, detail: this.daily() ? hinted : `Board ${this.boards()} in ${this.elapsed()}s · ${hinted}` });
   }
 }

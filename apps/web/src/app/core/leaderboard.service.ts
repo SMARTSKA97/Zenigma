@@ -77,6 +77,11 @@ export class LeaderboardService {
     return this.cached(`mind:${period}`, `${environment.apiBaseUrl}/leaderboards/mind-daily`, { period });
   }
 
+  /** Practice in one mind game: each player's best mark (0 to 100, value) and how often they played (secondary). */
+  mindPracticeBoard(game: string): Promise<Leaderboard> {
+    return this.cached(`mindp:${game}`, `${environment.apiBaseUrl}/leaderboards/mind-practice`, { game });
+  }
+
   /** The featured level of a week (its Monday as yyyy-mm-dd): fewest mistakes first, then fastest. Players who used hints are not ranked. */
   featuredBoard(week: string): Promise<Leaderboard> {
     return this.cached(`featured:${week}`, `${environment.apiBaseUrl}/leaderboards/featured`, { week });

@@ -58,7 +58,7 @@ export interface GameInfo {
 }
 
 export const CATEGORIES: { id: Category; name: string; blurb: string }[] = [
-  { id: 'logic', name: 'Logic puzzles', blurb: 'Queens, Tango, Zip, Patches and friends.' },
+  { id: 'logic', name: 'Logic puzzles', blurb: 'Crowns, Eclipse, Zipline, Patchwork and friends.' },
   { id: 'sudoku', name: 'Sudoku', blurb: 'Classic, mini and special rules, Easy to Insane.' },
   { id: 'word', name: 'Words', blurb: 'Guess, climb and find words.' },
   { id: 'mind', name: 'Mind training', blurb: 'Short exercises for memory, focus, speed and maths.' },
@@ -75,13 +75,13 @@ export const SKILLS: { id: Skill; name: string; emoji: string }[] = [
 
 export const GAMES: GameInfo[] = [
   { id: 'word-guess', name: 'Word Guess', blurb: 'Five letters, six tries.', hue: 160, live: true, daily: true, category: 'word' },
-  { id: 'queens', name: 'Queens', blurb: 'One queen per row, column and colour.', hue: 330, live: true, daily: true, category: 'logic' },
-  { id: 'tango', name: 'Tango', blurb: 'Suns and moons, never three in a row.', hue: 55, live: true, daily: true, category: 'logic' },
+  { id: 'queens', name: 'Crowns', blurb: 'One queen per row, column and colour.', hue: 330, live: true, daily: true, category: 'logic' },
+  { id: 'tango', name: 'Eclipse', blurb: 'Suns and moons, never three in a row.', hue: 55, live: true, daily: true, category: 'logic' },
   { id: 'sudoku', name: 'Sudoku', blurb: 'The classic: 1 to 9, once per row, column and box.', hue: 250, live: true, daily: true, category: 'sudoku' },
-  { id: 'zip', name: 'Zip', blurb: 'One path through every cell, in order.', hue: 25, live: true, daily: true, category: 'logic' },
-  { id: 'patches', name: 'Patches', blurb: 'Split the grid into matching rectangles.', hue: 300, live: true, daily: true, category: 'logic' },
-  { id: 'pinpoint', name: 'Pinpoint', blurb: 'Name the category from up to five clues.', hue: 200, live: true, daily: false, category: 'word', skill: 'language' },
-  { id: 'crossclimb', name: 'Crossclimb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: true, daily: false, category: 'word', skill: 'language' },
+  { id: 'zip', name: 'Zipline', blurb: 'One path through every cell, in order.', hue: 25, live: true, daily: true, category: 'logic' },
+  { id: 'patches', name: 'Patchwork', blurb: 'Split the grid into matching rectangles.', hue: 300, live: true, daily: true, category: 'logic' },
+  { id: 'pinpoint', name: 'Pindown', blurb: 'Name the category from up to five clues.', hue: 200, live: true, daily: false, category: 'word', skill: 'language' },
+  { id: 'crossclimb', name: 'Word Climb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice the falling comets, avoid the skulls.', hue: 15, live: true, daily: false, category: 'mind', skill: 'speed' },
   { id: 'switchyard', name: 'Switchyard', blurb: 'Switch the tracks so every train reaches its own station.', hue: 200, live: true, daily: false, category: 'mind', skill: 'attention' },
@@ -234,7 +234,7 @@ export const PRACTICE_TRACKS: PracticeTrack[] = PUZZLE_GAMES.flatMap((game): Pra
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const LEVELS = ['Easy', 'Easy', 'Medium', 'Medium', 'Hard', 'Hard', 'Expert'];
 
-/** Queens, Tango, Sudoku and Zip dailies get harder through the week, Monday (easiest) to Sunday (hardest). */
+/** Crowns, Eclipse, Sudoku and Zipline dailies get harder through the week, Monday (easiest) to Sunday (hardest). */
 export function dailyDifficulty(date: string | null | undefined): { day: string; label: string; step: number } | null {
   if (!date) return null;
   const d = new Date(`${date}T00:00:00Z`);
@@ -262,10 +262,10 @@ export const SOON_KINDS: Partial<Record<GameId, SoonKind[]>> = {
   sudoku: [
   ],
   queens: [
-    { name: 'Mini Queens', blurb: 'Small boards for a quick break.' },
-    { name: 'Giant Queens', blurb: 'Bigger boards with more colours.' },
+    { name: 'Mini Crowns', blurb: 'Small boards for a quick break.' },
+    { name: 'Giant Crowns', blurb: 'Bigger boards with more colours.' },
   ],
-  tango: [{ name: 'Big Tango', blurb: 'An 8 by 8 board with more clues to chain.' }],
+  tango: [{ name: 'Big Eclipse', blurb: 'An 8 by 8 board with more clues to chain.' }],
 };
 
 /** Everything on the way for a live game: its own coming-soon kinds plus the variants not playable yet. */

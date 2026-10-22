@@ -25,6 +25,20 @@ const line = (n: number, kind: 'row' | 'col', index: number): number[] => Array.
 const done: Hint = { kind: 'done', cells: [], title: 'Nothing to hint', text: 'The board is already complete.' };
 const none: Hint = { kind: 'none', cells: [], title: 'No hint found', text: 'Try the Check button, or undo your last few moves.' };
 
+/** A puzzle's solution only depends on the puzzle, so it is worked out once (a big board can take a third of a second, and the board is checked after every move). */
+const once = <P extends object, R>(fn: (p: P) => R): ((p: P) => R) => {
+  const seen = new WeakMap<P, R>();
+  return (p) => {
+    if (!seen.has(p)) seen.set(p, fn(p));
+    return seen.get(p) as R;
+  };
+};
+const queensSolution = once(solveQueens);
+const tangoSolution = once(solveTango);
+const sudokuSolution = once((p: SudokuPuzzle) => solveSudoku([...p.givens].map(Number), p));
+const zipSolution = once(solveZip);
+const patchesSolution = once(solvePatches);
+
 export function hintFor(game: PuzzleGameId, puzzle: unknown, state: unknown): Hint {
   switch (game) {
     case 'queens':
@@ -49,7 +63,7 @@ export function hasMistake(game: PuzzleGameId, puzzle: unknown, state: unknown):
 
 function queensHint(puzzle: queens.QueensPuzzle, board: queens.QueensCell[]): Hint {
   const n = puzzle.size;
-  const sol = solveQueens(puzzle);
+  const sol = queensSolution(puzzle);
   if (!sol) return none;
   if (queens.isSolved(puzzle, board)) return done;
 
@@ -104,7 +118,7 @@ function queensHint(puzzle: queens.QueensPuzzle, board: queens.QueensCell[]): Hi
 
 function tangoHint(puzzle: tango.TangoPuzzle, board: tango.TangoCell[]): Hint {
   const N = tango.SIZE;
-  const sol = solveTango(puzzle);
+  const sol = tangoSolution(puzzle);
   if (!sol) return none;
   if (!board.includes('.') && tango.isSolved(puzzle, board)) return done;
 
@@ -157,7 +171,7 @@ function sudokuHint(puzzle: SudokuPuzzle, board: number[]): Hint {
   const n = sizeOf(board.length);
   const rule = puzzle.rule;
   const boxId = (j: number): number => (rule === 'jigsaw' ? Number(puzzle.regions![j]) : boxOf(j, n));
-  const sol = solveSudoku([...puzzle.givens].map(Number), puzzle);
+  const sol = sudokuSolution(puzzle);
   if (!sol) return none;
   if (!board.includes(0) && board.join('') === sol) return done;
 
@@ -201,11 +215,8 @@ function sudokuHint(puzzle: SudokuPuzzle, board: number[]): Hint {
 
 // ------------------------------------------------------------------------------------------------ Zip
 
-/** The solution only depends on the puzzle, so it is worked out once (a big board can take half a second, and a hint is asked for after every move in strict mode). */
-const zipSolutions = new WeakMap<zip.ZipPuzzle, number[] | null>();
 function zipHint(puzzle: zip.ZipPuzzle, path: zip.ZipPath): Hint {
-  if (!zipSolutions.has(puzzle)) zipSolutions.set(puzzle, solveZip(puzzle));
-  const sol = zipSolutions.get(puzzle) ?? null;
+  const sol = zipSolution(puzzle);
   if (!sol) return none;
   if (zip.isSolved(puzzle, path)) return done;
   for (let i = 0; i < path.length; i++) {
@@ -226,7 +237,7 @@ function zipHint(puzzle: zip.ZipPuzzle, path: zip.ZipPath): Hint {
 // ------------------------------------------------------------------------------------------------ Patches
 
 function patchesHint(puzzle: patches.PatchesPuzzle, rects: patches.Rect[]): Hint {
-  const sol = solvePatches(puzzle);
+  const sol = patchesSolution(puzzle);
   if (!sol) return none;
   const key = (r: patches.Rect) => r.join(',');
   const right = new Set(sol.map(key));

@@ -210,6 +210,27 @@ public static class LeaderboardEndpoints
             return Results.Ok(new LeaderboardDto(game, "daily", period, period == "today" ? today.ToString("yyyy-MM-dd") : null, entries, meDto));
         }).RequireAuthorization();
 
+        // Practice in a mind game: each player's best mark (0 to 100) over all time, then the more plays. Like the other mind boards the marks are reported
+        // by the app, so this is for fun.
+        app.MapGet("/leaderboards/mind-practice", async (string? game, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, CancellationToken ct) =>
+        {
+            if (game is null || game.Length is < 1 or > 32 || !game.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '-')) return Results.BadRequest(new { error = "Unknown mind game." });
+            var me = UserIds.Get(principal);
+            var sql = $"""
+                WITH ranked AS (
+                    SELECT s.user_id AS "UserId", {NameSql} AS "Name", s.pct::bigint AS "Value", s.plays::bigint AS "Secondary",
+                           ROW_NUMBER() OVER (ORDER BY s.pct DESC, s.plays DESC, s.user_id) AS "Rank"
+                    FROM mind_scores s JOIN "AspNetUsers" u ON u."Id" = s.user_id
+                    WHERE s.game = @game
+                )
+                """;
+            var rows = await RowsAsync(db, cache, $"mindp|{game}", sql, [new NpgsqlParameter("game", game)], me, ct);
+            var entries = rows.Where(r => r.Rank <= PageSize).Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
+            var mine = rows.FirstOrDefault(r => r.UserId == me);
+            var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
+            return Results.Ok(new LeaderboardDto(game, "practice", "all", null, entries, meDto));
+        }).RequireAuthorization();
+
         // The featured level of a week (`week` is its Monday). Fewest mistakes wins, then the fastest time; a solve that used hints is not ranked.
         // The mistakes are reported by the app, so like the mind board this one is for fun.
         app.MapGet("/leaderboards/featured", async (string? week, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, CancellationToken ct) =>

@@ -121,8 +121,8 @@ export class PuzzlePage {
   protected readonly strikesLeft = signal(3);
   protected readonly strict = computed(() => this.prefs.strikes() && !this.daily());
   private wasWrong = false;
-  /** Moves that made the board impossible to finish, this level (counted for the featured level's weekly board). */
-  private mistakes = 0;
+  /** Moves that made the board impossible to finish, this level (shown on the result and counted for the featured level's weekly board). */
+  protected readonly mistakeCount = signal(0);
   /** Set while "Leave this game?" is open; calling it with the answer lets the navigation go or stops it. */
   protected readonly leaving = signal<((ok: boolean) => void) | null>(null);
   protected readonly shareOpen = signal<{ card: CardInput; text: string } | null>(null);
@@ -130,7 +130,7 @@ export class PuzzlePage {
   /** The first level of a game, the first time: every move is followed by a free hint for the next step. */
   protected readonly tutorial = signal(false);
   /** Hints spent on the level in play (a level solved with help earns at most two stars). */
-  private readonly hintsUsed = signal(0);
+  protected readonly hintsUsed = signal(0);
   private glowTimer?: ReturnType<typeof setTimeout>;
   protected readonly resultOpen = signal(false);
   protected readonly solved = signal(false);
@@ -313,7 +313,7 @@ export class PuzzlePage {
     this.future.set([]);
     this.strikesLeft.set(3);
     this.wasWrong = false;
-    this.mistakes = 0;
+    this.mistakeCount.set(0);
     this.baseMs = keep ? saved.elapsedMs : 0;
     this.stretchStart = Date.now();
     this.phase.set('practice');
@@ -447,10 +447,10 @@ export class PuzzlePage {
   /** In strict practice, a move that makes the board impossible to finish costs a strike; the third resets the board. */
   private strike(): void {
     const p = this.puzzle();
-    const featured = this.featuredLevel > 0 && this.featuredLevel === this.level();
-    if (!p || (!this.strict() && !featured)) return;
+    if (!p) return;
     const wrong = hasMistake(this.game(), p, this.state());
-    if (wrong && !this.wasWrong) this.mistakes++;
+    // A mistake is a move that makes the board impossible to finish, counted in every mode (for the result card).
+    if (wrong && !this.wasWrong) this.mistakeCount.update((n) => n + 1);
     if (!this.strict()) {
       this.wasWrong = wrong;
       return;
@@ -605,7 +605,7 @@ export class PuzzlePage {
       solution,
       elapsedMs,
       hinted: this.hintsUsed() > 0,
-      ...(this.featuredLevel === level ? { featured: featuredFor(new Date()).week, mistakes: this.mistakes } : {}),
+      ...(this.featuredLevel === level ? { featured: featuredFor(new Date()).week, mistakes: this.mistakeCount() } : {}),
     });
     setTimeout(() => this.resultOpen.set(true), 900);
   }

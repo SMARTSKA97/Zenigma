@@ -47,7 +47,8 @@ export class NumberSort implements OnDestroy {
     if (this.tapped().length < 9) return;
     if (this.round() === ROUNDS) {
       const seconds = (Date.now() - this.started + this.penalty) / 1000;
-      const score = Math.max(0, Math.round(150 - 4 * seconds));
+      // About 20 seconds for the five boards is excellent (90 points); finishing always earns something.
+      const score = Math.max(5, Math.round(140 - 2.5 * seconds));
       this.done.emit({ score, detail: `${seconds.toFixed(1)} seconds for ${ROUNDS} boards` });
       return;
     }

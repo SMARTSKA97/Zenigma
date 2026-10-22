@@ -24,9 +24,26 @@
   box-shadow: var(--shadow-lift);
   animation: up 0.42s var(--spring);
 }
+.grab {
+  display: grid;
+  place-items: center;
+  height: 2.6rem;
+  margin: 0 -1.5rem;
+  touch-action: none;
+  cursor: grab;
+}
+.sheet {
+  transition: transform 0.25s var(--ease);
+}
+.sheet.dragging {
+  transition: none;
+}
+.grab .handle {
+  margin: 0;
+}
 .handle {
-  width: 32px;
-  height: 4px;
+  width: 42px;
+  height: 5px;
   margin: 0.5rem auto 1rem;
   border-radius: 99px;
   background: var(--border);
@@ -49,7 +66,8 @@
     border-radius: 28px;
     padding-bottom: 1.5rem;
   }
-  .handle {
+  .handle,
+  .grab {
     display: none;
   }
 }
