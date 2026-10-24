@@ -11,12 +11,21 @@
 @if (game(); as g) {
   @switch (stage()) {
     @case ('intro') {
+      @if (locked()) {
+      <section class="card intro" [style.--h]="info()?.hue">
+        <span class="art"><app-glyph [game]="g" /></span>
+        <p><b>Locked for now</b></p>
+        <p class="muted">Finish today's puzzles and the daily mind set first, then the extra dailies open.</p>
+        <a class="button" routerLink="/challenges">Go to today's challenges</a>
+      </section>
+      } @else {
       <section class="card intro" [style.--h]="info()?.hue">
         <span class="art"><app-glyph [game]="g" /></span>
         <p>{{ how() }}</p>
         <p class="muted">Today's puzzle is the same for everyone. {{ what() }} You get one result a day.</p>
         <button type="button" (click)="start()">Start today's puzzle</button>
       </section>
+      }
     }
     @case ('play') {
       <section class="stage">

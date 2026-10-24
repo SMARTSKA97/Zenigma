@@ -1,21 +1,40 @@
 <h1>Challenges</h1>
 <div class="tabs" role="tablist" aria-label="Challenge type">
   @for (t of tabs; track t.id) {
-    <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" (click)="pick(t.id)">{{ t.label }}</button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" (click)="pick(t.id)">{{ t.label }}@if (t.id === 'extras') {<span class="lock" aria-hidden="true">{{ ds.todayDone() ? ' ✨' : ' 🔒' }}</span>}</button>
   }
 </div>
-@if (tab() === 'mind' || tab() === 'puzzles') {
+@if (tab() !== 'goals') {
   <app-day-streak-card />
 }
 @switch (tab()) {
   @case ('mind') {
     <app-mind-daily-panel />
   }
+  @case ('extras') {
+    @if (ds.todayDone()) {
+      <app-word-daily-panel />
+    } @else {
+      <section class="locked">
+        <span class="big" aria-hidden="true">🔒</span>
+        <h2>Extra dailies unlock when today is done</h2>
+        <p class="muted">Finish all of today's puzzles and the daily mind set, and five more dailies open: Pinpoint, Chain Link, Crossclimb, Wend and Comet Slice, each with its own leaderboard.</p>
+        <ul>
+          <li [class.ok]="ds.puzzlesDone()"><span aria-hidden="true">{{ ds.puzzlesDone() ? '✓' : '○' }}</span> Today's puzzles <button type="button" class="link" (click)="pick('puzzles')">{{ ds.puzzlesDone() ? 'Done' : 'Open' }}</button></li>
+          <li [class.ok]="ds.mindDone()"><span aria-hidden="true">{{ ds.mindDone() ? '✓' : '○' }}</span> Today's mind set <button type="button" class="link" (click)="pick('mind')">{{ ds.mindDone() ? 'Done' : 'Open' }}</button></li>
+        </ul>
+      </section>
+    }
+  }
   @case ('goals') {
     <app-challenges />
   }
   @default {
     <app-daily-hub />
-    <app-word-daily-panel />
+    <button type="button" class="teaser" [class.open]="ds.todayDone()" (click)="pick('extras')">
+      <span aria-hidden="true">{{ ds.todayDone() ? '✨' : '🔒' }}</span>
+      <span class="tt"><b>{{ ds.todayDone() ? 'Extra dailies are open' : 'Extra dailies' }}</b><small>{{ ds.todayDone() ? 'Five more boards with leaderboards' : 'Finish today\'s puzzles and mind set to unlock' }}</small></span>
+      <span aria-hidden="true">›</span>
+    </button>
   }
 }

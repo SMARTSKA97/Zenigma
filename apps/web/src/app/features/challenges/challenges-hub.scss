@@ -8,7 +8,7 @@ h1 {
 }
 .tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.25rem;
   margin-bottom: 1.1rem;
   padding: 0.25rem;
@@ -50,4 +50,46 @@ app-day-streak-card {
   :host {
     max-width: 64rem;
   }
+}
+
+.locked {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  padding: 1.4rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: var(--surface);
+  text-align: center;
+  .big { font-size: 2.4rem; }
+  h2, p { margin: 0; }
+  ul { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+  li { display: flex; align-items: center; gap: 0.6rem; justify-content: center; color: var(--muted); font-weight: 600; }
+  li.ok { color: #2f9e6b; }
+  .link { min-height: 0; padding: 0.2rem 0.7rem; font-size: 0.8rem; }
+}
+.teaser {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 22px;
+  border: 1px dashed var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  box-shadow: none;
+  .tt { flex: 1; display: grid; }
+  small { color: var(--muted); font-weight: 400; }
+  &.open { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+}
+.tabs button {
+  white-space: nowrap;
+  padding-inline: 0.2rem;
+  font-size: 0.92rem;
+}
+.tabs .lock {
+  font-size: 0.8em;
 }

@@ -8,7 +8,7 @@
       <span class="pts"><b>{{ daily.points() }}</b><small>/ {{ daily.games.length * 100 }}</small></span>
     </div>
   </header>
-  <p class="muted lede">One word puzzle each, plus Comet Slice, the same for everyone today. They work without a connection; results reach the board when you are online.</p>
+  <p class="muted lede">One word puzzle each, plus Comet Slice, the same for everyone today. Each has its own leaderboard. They work without a connection; results reach the board when you are online.</p>
   <ul>
     @for (g of daily.games; track g) {
       @let r = daily.results()[g];
@@ -18,7 +18,11 @@
           <b>{{ info(g)?.name }}</b>
           <span class="muted">{{ r ? r.points + ' / 100 · ' + time(r.ms) : info(g)?.blurb }}</span>
         </span>
-        <a class="button" [class.secondary]="!!r" [routerLink]="['/daily-word', g]">{{ r ? 'Board' : 'Play' }}</a>
+        @if (r) {
+          <a class="button secondary" [routerLink]="['/ranks']" [queryParams]="{ group: 'mind', kind: 'daily', game: g }">Ranks</a>
+        } @else {
+          <a class="button" [routerLink]="['/daily-word', g]">Play</a>
+        }
       </li>
     }
   </ul>

@@ -275,3 +275,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.practice-link {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}

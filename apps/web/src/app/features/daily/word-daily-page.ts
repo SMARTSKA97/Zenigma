@@ -16,6 +16,7 @@ import { MindResult } from '../../games/mind/mind-util';
 import { Pinpoint } from '../../games/mind/pinpoint';
 import { Wend } from '../../games/mind/wend';
 import { dailyPoints, isWordDaily, WordDailyGame, WordDailyService } from '../../games/mind/word-daily';
+import { DayStreakService } from '../../core/day-streak.service';
 import { Glyph } from '../../shared/glyph';
 
 /** One word daily: the puzzle of the day (the same for everyone), played once, with today's board under the result. */
@@ -30,6 +31,9 @@ export class WordDailyPage {
   protected readonly nav = inject(BackService);
   protected readonly daily = inject(WordDailyService);
   protected readonly auth = inject(AuthService);
+  protected readonly ds = inject(DayStreakService);
+  /** The extra dailies open once today's puzzles and mind set are done (a result already in stays visible). */
+  protected readonly locked = computed(() => !this.ds.todayDone() && !this.result());
   private readonly conn = inject(ConnectionService);
   private readonly api = inject(LeaderboardService);
   private readonly haptics = inject(HapticsService);

@@ -5,6 +5,7 @@ import { MindStore } from '../../games/mind/mind-store';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
 import { PracticeStore } from '../../games/puzzle/practice.store';
+import { DayStreakService } from '../../core/day-streak.service';
 import { Glyph } from '../../shared/glyph';
 import { PracticeTabs } from '../../shared/practice-tabs';
 
@@ -18,6 +19,7 @@ import { PracticeTabs } from '../../shared/practice-tabs';
 })
 export class Practice implements OnInit {
   private readonly practice = inject(PracticeStore);
+  protected readonly ds = inject(DayStreakService);
   private readonly mindStore = inject(MindStore);
   protected readonly mindCount = MIND_LIVE.length;
   protected readonly cats = [{ id: 'all', name: 'All' }, ...CATEGORIES.filter((c) => c.id !== 'mind')];

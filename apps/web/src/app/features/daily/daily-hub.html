@@ -90,6 +90,7 @@
           @if (st?.rank) {
             <a class="rank" [routerLink]="['/ranks']" [queryParams]="{ game: g.id, kind: 'daily' }" aria-label="Leaderboard">#{{ st!.rank }}</a>
           }
+          <a class="practice-link" [routerLink]="['/games', g.id]" [attr.aria-label]="'Practice ' + g.name">Practice</a>
           @if (!st || !st.available) {
             <span class="muted small">Not ready</span>
           } @else if (st.status === 'new') {

@@ -121,7 +121,8 @@ export function practiceLevel(track, level) {
 export const DAILY_RAMP = {
   queens: [6, 6, 7, 7, 8, 8, 9], // board size
   queensGivens: [2, 2, 1, 1, 1, 0, 0], // queens already placed (fewer is harder)
-  zip: [[5, 8], [5, 6], [6, 8], [6, 6], [6, 5], [7, 8], [7, 6]], // [board size, numbers shown] (fewer numbers is harder)
+  // [board size, numbers shown (fewer is harder), walls the path may not cross, blocked cells it must go around]: plain on Monday, then walls and blocked cells creep in.
+  zip: [[5, 8, 0, 0], [5, 6, 2, 0], [6, 8, 3, 0], [6, 6, 0, 2], [6, 5, 4, 2], [7, 8, 5, 3], [7, 6, 7, 4]],
   tango: [6, 5, 4, 3, 2, 1, 0], // extra clues left in (fewer is harder)
   sudoku: [20, 18, 16, 15, 14, 13, 12], // numbers left in the mini 6x6 grid (fewer is harder)
   patches: [[5, 3], [5, 2], [6, 2], [6, 1], [7, 1], [7, 0], [8, 0]], // [board size, extra shape hints] (fewer is harder)
@@ -141,7 +142,7 @@ export function dailyPuzzle(game, seed, weekday = 3) {
     case 'sudoku':
       return generateSudoku(rng, level, 6); // the daily is the mini 6x6 grid
     case 'zip':
-      return generateZip(level[0], rng, level[1]);
+      return generateZip(level[0], rng, level[1], { walls: level[2], holes: level[3] });
     case 'patches':
       return generatePatches(level[0], rng, level[1]);
   }
