@@ -121,7 +121,8 @@ export class WordGuess implements OnInit, OnDestroy {
     const board = this.board();
     if (event.key === 'Enter') {
       // A focused button handles Enter itself (activating it); don't also submit.
-      if (target?.tagName === 'BUTTON') return;
+      // The on-screen keys are the exception: they keep focus after a tap, so Enter must submit rather than retype the letter.
+      if (target?.tagName === 'BUTTON' && !target.closest('.keyboard')) return;
       event.preventDefault();
       void board.enter();
     } else if (event.key === 'Backspace') {
@@ -192,6 +193,8 @@ export class WordGuess implements OnInit, OnDestroy {
   protected press(event: PointerEvent): void {
     const key = event.currentTarget as HTMLElement;
     key.classList.add('pressed');
+    // Keep focus off the key so a physical Enter/Space afterwards never re-presses it.
+    event.preventDefault();
     setTimeout(() => key.classList.remove('pressed'), 170);
   }
 }
