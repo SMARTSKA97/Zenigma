@@ -202,8 +202,8 @@ export class PuzzlePage {
   private showTimer?: ReturnType<typeof setTimeout>;
   private wrongTimer?: ReturnType<typeof setTimeout>;
   private mistakeTimer?: ReturnType<typeof setTimeout>;
-  /** The board the last hint was about, and how strong it was, so asking again about the same board gets a stronger one. */
-  private lastHint: { key: string; level: 1 | 2 } | null = null;
+  /** The board the last hint was about, so asking again before making a move shows the same hint again without spending another. */
+  private lastHint: { key: string; hint: Hint } | null = null;
 
   constructor() {
     const tick = setInterval(() => this.now.set(Date.now()), 500);
@@ -351,7 +351,7 @@ export class PuzzlePage {
     const p = this.puzzle();
     const s = this.state();
     if (!this.tutorial() || !p || !s || this.solved()) return;
-    const hint = hintFor(this.game(), p, s);
+    const hint = revealFor(this.game(), p, s) ?? hintFor(this.game(), p, s);
     if (hint.kind === 'done' || hint.kind === 'none') {
       this.dismissCoach();
       return;
@@ -682,19 +682,20 @@ export class PuzzlePage {
       this.wheelOpen.set(true);
       return;
     }
-    // Asking again about a board that has not changed gets a stronger hint (the exact cell and what to do), never the same one twice.
+    // Asking again about a board that has not changed shows the same hint again, free: make that move first.
     const key = `${this.game()}:${JSON.stringify(s)}`;
-    const again = this.lastHint?.key === key;
-    if (again && this.lastHint?.level === 2) {
-      this.flash('That is the strongest hint for this board. Make a move and ask again.');
+    if (this.lastHint?.key === key) {
+      this.coach.set(this.lastHint.hint);
+      this.glow(this.lastHint.hint);
+      this.flash('Same hint, no hint spent. Make that move, then ask again.');
       return;
     }
-    const hint = (again ? revealFor(this.game(), p, s) : null) ?? hintFor(this.game(), p, s);
+    const hint = revealFor(this.game(), p, s) ?? hintFor(this.game(), p, s);
     if (hint.kind === 'done' || hint.kind === 'none') {
       this.flash(hint.text);
       return;
     }
-    this.lastHint = { key, level: again ? 2 : 1 };
+    this.lastHint = { key, hint };
     this.hintsUsed.update((n) => n + 1);
     this.hints.spend();
     this.coach.set(hint);
@@ -724,19 +725,29 @@ export class PuzzlePage {
 
   private glow(hint: Hint): void {
     this.clearGlow();
-    const wanted = new Set(hint.cells);
+    const context = new Set(hint.cells);
     this.host.nativeElement.querySelectorAll<HTMLElement>('.stage [data-i]').forEach((el) => {
-      if (!wanted.has(Number(el.getAttribute('data-i')))) return;
-      el.classList.add('hint-glow');
-      if (hint.kind === 'mistake') el.classList.add('hint-mistake');
+      const i = Number(el.getAttribute('data-i'));
+      if (hint.focus !== undefined && i === hint.focus) {
+        el.classList.add('hint-glow');
+        if (hint.kind === 'mistake') el.classList.add('hint-mistake');
+        if (hint.mark) el.setAttribute('data-hint', hint.mark);
+      } else if (context.has(i)) {
+        // The cells the reason is about: a quiet outline, so the one cell to act on stands out.
+        el.classList.add(hint.focus === undefined ? 'hint-glow' : 'hint-soft');
+        if (hint.kind === 'mistake' && hint.focus === undefined) el.classList.add('hint-mistake');
+      }
     });
     // The light stays on until the next move or "Got it", with a long safety timeout.
-    this.glowTimer = setTimeout(() => this.clearGlow(), 20_000);
+    this.glowTimer = setTimeout(() => this.clearGlow(), 60_000);
   }
 
   private clearGlow(): void {
     clearTimeout(this.glowTimer);
-    this.host.nativeElement.querySelectorAll('.hint-glow').forEach((el) => el.classList.remove('hint-glow', 'hint-mistake'));
+    this.host.nativeElement.querySelectorAll('.hint-glow, .hint-soft').forEach((el) => {
+      el.classList.remove('hint-glow', 'hint-mistake', 'hint-soft');
+      el.removeAttribute('data-hint');
+    });
   }
 
   /** Free hints for playing: the zone boss every tenth level, and a one in three first win each day. */

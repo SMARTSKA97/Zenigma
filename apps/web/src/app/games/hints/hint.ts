@@ -18,6 +18,9 @@ export interface Hint {
   cells: number[];
   title: string;
   text: string;
+  /** The one cell the hint is about (lit strongly; the other cells are context), and what belongs in it (shown right on the cell). */
+  focus?: number;
+  mark?: string;
 }
 
 const line = (n: number, kind: 'row' | 'col', index: number): number[] => Array.from({ length: n }, (_, k) => (kind === 'row' ? index * n + k : k * n + index));
@@ -55,100 +58,187 @@ export function hintFor(game: PuzzleGameId, puzzle: unknown, state: unknown): Hi
 }
 
 /**
- * The second, stronger hint for a board that has not changed since the first one: it names the exact cell and says what to do with it,
- * so asking again always gets more than the first time. Null when the board is already finished or cannot be solved.
+ * The hint the player gets when they ask: one concrete step. It lights up the exact cell, says what belongs there (or that what is
+ * there is wrong) and gives the reason in plain words. If something placed is wrong it points at that first. Null when the board is
+ * finished or cannot be solved.
  */
 export function revealFor(game: PuzzleGameId, puzzle: unknown, state: unknown): Hint | null {
   const first = hintFor(game, puzzle, state);
   if (first.kind === 'done' || first.kind === 'none') return null;
   switch (game) {
-    case 'queens': {
-      const p = puzzle as queens.QueensPuzzle;
-      const board = state as queens.QueensCell[];
-      const sol = queensSolution(p);
-      if (!sol) return null;
-      const n = p.size;
-      for (let r = 0; r < n; r++) {
-        const idx = r * n + sol[r];
-        for (let c = 0; c < n; c++) if (board[r * n + c] === queens.QUEEN && c !== sol[r] && !queens.isGiven(p, r * n + c))
-          return { kind: 'mistake', cells: [r * n + c], title: 'This queen is wrong', text: `Take this queen off row ${r + 1}. It looks fine, but the puzzle cannot be finished with it.` };
-        if (board[idx] === queens.MARK) return { kind: 'mistake', cells: [idx], title: 'This ✕ is wrong', text: `Clear this ✕: row ${r + 1} needs its queen right here.` };
-      }
-      let best = -1;
-      let bestOpen = 99;
-      for (let r = 0; r < n; r++) {
-        if (board[r * n + sol[r]] === queens.QUEEN) continue;
-        const open = Array.from({ length: n }, (_, c) => board[r * n + c]).filter((v) => v !== queens.MARK).length;
-        if (open < bestOpen) (best = r), (bestOpen = open);
-      }
-      if (best < 0) return null;
-      return { kind: 'nudge', cells: [best * n + sol[best]], title: 'A queen goes here', text: `Put a queen in row ${best + 1}, column ${sol[best] + 1}. Then work out what it rules out around it.` };
+    case 'queens':
+      return queensReveal(puzzle as queens.QueensPuzzle, state as queens.QueensCell[]);
+    case 'tango':
+      return tangoReveal(puzzle as tango.TangoPuzzle, state as tango.TangoCell[]);
+    case 'sudoku':
+      return sudokuReveal(puzzle as SudokuPuzzle, state as number[]);
+    case 'zip':
+      return zipReveal(puzzle as zip.ZipPuzzle, state as zip.ZipPath);
+    case 'patches':
+      return patchesReveal(puzzle as patches.PatchesPuzzle, state as patches.Rect[]);
+  }
+}
+
+function queensReveal(p: queens.QueensPuzzle, board: queens.QueensCell[]): Hint | null {
+  const sol = queensSolution(p);
+  if (!sol) return null;
+  const n = p.size;
+  for (let r = 0; r < n; r++) {
+    const idx = r * n + sol[r];
+    for (let c = 0; c < n; c++)
+      if (board[r * n + c] === queens.QUEEN && c !== sol[r] && !queens.isGiven(p, r * n + c))
+        return { kind: 'mistake', cells: line(n, 'row', r), focus: r * n + c, mark: '✕', title: 'This queen is wrong', text: `Take this queen off (row ${r + 1}). It may look fine, but the puzzle cannot be finished with it.` };
+    if (board[idx] === queens.MARK) return { kind: 'mistake', cells: line(n, 'row', r), focus: idx, mark: '♛', title: 'This ✕ is wrong', text: `Clear this ✕. Row ${r + 1} needs its queen right here.` };
+  }
+  const queensAt: number[] = [];
+  board.forEach((v, i) => v === queens.QUEEN && queensAt.push(i));
+  const free = (i: number): boolean => {
+    if (board[i] === queens.MARK || board[i] === queens.QUEEN) return false;
+    const r = Math.floor(i / n);
+    const c = i % n;
+    return !queensAt.some((q) => {
+      const qr = Math.floor(q / n);
+      const qc = q % n;
+      return qr === r || qc === c || p.regions[q] === p.regions[i] || (Math.abs(qr - r) <= 1 && Math.abs(qc - c) <= 1);
+    });
+  };
+  const groups: { cells: number[]; label: string }[] = [];
+  for (let k = 0; k < n; k++) {
+    groups.push({ cells: line(n, 'row', k), label: `row ${k + 1}` }, { cells: line(n, 'col', k), label: `column ${k + 1}` });
+    groups.push({ cells: p.regions.map((v, i) => (v === k ? i : -1)).filter((i) => i >= 0), label: 'this colour' });
+  }
+  for (const g of groups) {
+    if (g.cells.some((i) => board[i] === queens.QUEEN)) continue;
+    const open = g.cells.filter(free);
+    if (open.length === 1)
+      return { kind: 'nudge', cells: g.cells, focus: open[0], mark: '♛', title: 'A queen goes here', text: `In ${g.label}, every other cell is ruled out by a queen's row, column, colour or neighbours. This is the only one left, so put a queen here.` };
+  }
+  // No cell is forced by the simple rules: take the row with the fewest cells left and give the answer for it.
+  let best = -1;
+  let bestOpen = 99;
+  for (let r = 0; r < n; r++) {
+    if (board[r * n + sol[r]] === queens.QUEEN) continue;
+    const open = line(n, 'row', r).filter(free).length;
+    if (open < bestOpen) (best = r), (bestOpen = open);
+  }
+  if (best < 0) return null;
+  return { kind: 'nudge', cells: line(n, 'row', best), focus: best * n + sol[best], mark: '♛', title: 'A queen goes here', text: `Row ${best + 1} has ${bestOpen} cells left, and this is the one that works: the others would leave a colour or column with no room for its queen.` };
+}
+
+function tangoReveal(p: tango.TangoPuzzle, board: tango.TangoCell[]): Hint | null {
+  const N = tango.SIZE;
+  const sol = tangoSolution(p);
+  if (!sol) return null;
+  const name = (v: string): string => (v === 's' ? 'sun' : 'moon');
+  const sym = (v: string): string => (v === 's' ? '☀️' : '🌙');
+  const other = (v: string): string => (v === 's' ? 'm' : 's');
+  for (let i = 0; i < board.length; i++)
+    if (board[i] !== '.' && p.givens[i] === '.' && board[i] !== sol[i])
+      return { kind: 'mistake', cells: line(N, 'row', Math.floor(i / N)), focus: i, mark: sym(sol[i]), title: 'This one is wrong', text: `This ${name(board[i])} cannot stay. It should be a ${name(sol[i])}.` };
+  const empty = (i: number) => board[i] === '.';
+  const forced = (cell: number, value: string, cells: number[], title: string, text: string): Hint => ({ kind: 'nudge', cells, focus: cell, mark: sym(value), title, text });
+  // A sign beside a symbol that is already there.
+  for (const [a, b, kind] of p.edges) {
+    if (empty(a) === empty(b)) continue;
+    const [known, open] = empty(a) ? [b, a] : [a, b];
+    const value = kind === '=' ? board[known] : other(board[known]);
+    return forced(open, value, [a, b], kind === '=' ? 'The = sign decides it' : 'The × sign decides it', kind === '=' ? `The = sign says both cells are the same, and the other one is a ${name(board[known])}. Put a ${name(value)} here.` : `The × sign says the two cells differ, and the other one is a ${name(board[known])}. Put a ${name(value)} here.`);
+  }
+  const lines: number[][] = [];
+  for (let k = 0; k < N; k++) lines.push(line(N, 'row', k), line(N, 'col', k));
+  for (const cells of lines) {
+    for (let k = 0; k + 1 < N; k++) {
+      const [a, b] = [cells[k], cells[k + 1]];
+      if (empty(a) || board[a] !== board[b]) continue;
+      for (const end of [cells[k - 1], cells[k + 2]]) if (end !== undefined && empty(end))
+        return forced(end, other(board[a]), [a, b, end], 'Never three in a row', `Two ${name(board[a])}s sit side by side, so a third ${name(board[a])} here would make three in a row. Put a ${name(other(board[a]))}.`);
     }
-    case 'tango': {
-      const p = puzzle as tango.TangoPuzzle;
-      const board = state as tango.TangoCell[];
-      const sol = tangoSolution(p);
-      if (!sol) return null;
-      const name = (v: string): string => (v === 's' ? 'sun ☀️' : 'moon 🌙');
-      for (let i = 0; i < board.length; i++)
-        if (board[i] !== '.' && p.givens[i] === '.' && board[i] !== sol[i]) return { kind: 'mistake', cells: [i], title: 'This symbol is wrong', text: `Change this cell: it should be a ${name(sol[i])}, not a ${name(board[i])}.` };
-      const N = tango.SIZE;
-      let best = -1;
-      let bestLeft = 99;
-      for (let i = 0; i < board.length; i++) {
-        if (board[i] !== '.') continue;
-        const row = line(N, 'row', Math.floor(i / N)).filter((j) => board[j] === '.').length;
-        const col = line(N, 'col', i % N).filter((j) => board[j] === '.').length;
-        if (Math.min(row, col) < bestLeft) (best = i), (bestLeft = Math.min(row, col));
-      }
-      if (best < 0) return null;
-      return { kind: 'nudge', cells: [best], title: 'This cell is easiest', text: `Put a ${name(sol[best])} here. Check why: the line it is in already points to it.` };
-    }
-    case 'sudoku': {
-      const p = puzzle as SudokuPuzzle;
-      const board = state as number[];
-      const sol = sudokuSolution(p);
-      if (!sol) return null;
-      for (let i = 0; i < board.length; i++)
-        if (board[i] && p.givens[i] === '0' && String(board[i]) !== sol[i]) return { kind: 'mistake', cells: [i], title: 'This number is wrong', text: `Clear this ${board[i]}: it cannot be part of the solution, even if nothing clashes yet.` };
-      const empties = board.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
-      if (!empties.length) return null;
-      const fewest = empties.reduce((a, b) => (sudokuCandidates(board, b, p).length < sudokuCandidates(board, a, p).length ? b : a));
-      return { kind: 'nudge', cells: [fewest], title: 'This cell is a ' + sol[fewest], text: `Put a ${sol[fewest]} here (row ${Math.floor(fewest / sizeOf(board.length)) + 1}, column ${(fewest % sizeOf(board.length)) + 1}), then see which cells it settles.` };
-    }
-    case 'zip': {
-      const p = puzzle as zip.ZipPuzzle;
-      const path = state as zip.ZipPath;
-      const sol = zipSolution(p);
-      if (!sol) return null;
-      for (let i = 0; i < path.length; i++)
-        if (path[i] !== sol[i]) return { kind: 'mistake', cells: [path[Math.max(0, i - 1)], path[i]], title: 'Back up to here', text: 'Drag back to the first highlighted cell, then go a different way: the path cannot be finished from the second one.' };
-      const next = sol[path.length];
-      if (next === undefined) return null;
-      return { kind: 'nudge', cells: [path[path.length - 1], next], title: 'Go here next', text: 'The route continues into the highlighted cell. Keep going and check each step against the numbers.' };
-    }
-    case 'patches': {
-      const p = puzzle as patches.PatchesPuzzle;
-      const rects = state as patches.Rect[];
-      const sol = patchesSolution(p);
-      if (!sol) return null;
-      const key = (r: patches.Rect) => r.join(',');
-      const right = new Set(sol.map(key));
-      const n = p.size;
-      const cellsOf = (r: patches.Rect): number[] => {
-        const cells: number[] = [];
-        for (let rr = r[0]; rr <= r[2]; rr++) for (let cc = r[1]; cc <= r[3]; cc++) cells.push(rr * n + cc);
-        return cells;
-      };
-      const bad = rects.find((r) => !right.has(key(r)));
-      if (bad) return { kind: 'mistake', cells: cellsOf(bad), title: 'Remove this rectangle', text: 'It does not fit the answer. Clear it and give those cells to their neighbours.' };
-      const todo = sol.filter((r) => !rects.some((x) => key(x) === key(r)));
-      if (!todo.length) return null;
-      // The smallest missing rectangle is the easiest to place.
-      const pick = todo.reduce((a, b) => (cellsOf(a).length <= cellsOf(b).length ? a : b));
-      return { kind: 'nudge', cells: cellsOf(pick), title: 'Draw this rectangle', text: 'These cells make one rectangle of the answer. Drag across them to draw it.' };
+    for (let k = 0; k + 2 < N; k++) {
+      const [a, m, b] = [cells[k], cells[k + 1], cells[k + 2]];
+      if (!empty(a) && board[a] === board[b] && empty(m)) return forced(m, other(board[a]), [a, m, b], 'Between two the same', `A ${name(board[a])} on each side: another ${name(board[a])} in the gap would make three in a row. Put a ${name(other(board[a]))}.`);
     }
   }
+  for (const cells of lines) {
+    const empties = cells.filter(empty);
+    for (const v of ['s', 'm']) {
+      if (empties.length && cells.filter((i) => board[i] === v).length === N / 2)
+        return forced(empties[0], other(v), cells, 'This line has all its ' + name(v) + 's', `This row or column already holds ${N / 2} ${name(v)}s, which is all it may have. Every empty cell is a ${name(other(v))}: start here.`);
+    }
+  }
+  // Nothing simple: the fullest line, and the answer for its first empty cell.
+  let best: number[] | null = null;
+  for (const cells of lines) {
+    const left = cells.filter(empty).length;
+    if (left && (!best || left < best.filter(empty).length)) best = cells;
+  }
+  if (!best) return null;
+  const cell = best.find(empty)!;
+  return { kind: 'nudge', cells: best, focus: cell, mark: sym(sol[cell]), title: 'Try this one', text: `No simple rule decides a cell here, but this line is the fullest. This cell is a ${name(sol[cell])}: put it in, then see what it settles.` };
+}
+
+function sudokuReveal(p: SudokuPuzzle, board: number[]): Hint | null {
+  const n = sizeOf(board.length);
+  const sol = sudokuSolution(p);
+  if (!sol) return null;
+  const rule = p.rule;
+  const boxId = (j: number): number => (rule === 'jigsaw' ? Number(p.regions![j]) : boxOf(j, n));
+  for (let i = 0; i < board.length; i++)
+    if (board[i] && p.givens[i] === '0' && String(board[i]) !== sol[i])
+      return { kind: 'mistake', cells: board.map((_, j) => (boxId(j) === boxId(i) ? j : -1)).filter((j) => j >= 0), focus: i, mark: sol[i], title: 'This number is wrong', text: `Clear this ${board[i]}. It does not clash yet, but the puzzle cannot be finished with it. This cell should be a ${sol[i]}.` };
+  const empties = board.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
+  if (!empties.length) return null;
+  const cand = new Map(empties.map((i) => [i, sudokuCandidates(board, i, p)]));
+  const naked = empties.find((i) => cand.get(i)!.length === 1);
+  if (naked !== undefined) {
+    const v = cand.get(naked)![0];
+    const row = Math.floor(naked / n);
+    const col = naked % n;
+    return { kind: 'nudge', cells: [...line(n, 'row', row), ...line(n, 'col', col)], focus: naked, mark: String(v), title: `This cell is a ${v}`, text: `Every other number is already used by this cell's row, column or box, so only ${v} is left.` };
+  }
+  const houses: { cells: number[]; label: string }[] = [];
+  for (let b = 0; b < n; b++) houses.push({ cells: board.map((_, j) => (boxId(j) === b ? j : -1)).filter((j) => j >= 0), label: rule === 'jigsaw' ? 'region' : 'box' });
+  for (let k = 0; k < n; k++) houses.push({ cells: line(n, 'row', k), label: 'row' }, { cells: line(n, 'col', k), label: 'column' });
+  for (const h of houses) {
+    for (let d = 1; d <= n; d++) {
+      if (h.cells.some((i) => board[i] === d)) continue;
+      const spots = h.cells.filter((i) => !board[i] && cand.get(i)!.includes(d));
+      if (spots.length === 1) return { kind: 'nudge', cells: h.cells, focus: spots[0], mark: String(d), title: `The ${d} goes here`, text: `In this ${h.label}, the ${d} can go in only one cell. Put it here.` };
+    }
+  }
+  const fewest = empties.reduce((a, b) => (cand.get(b)!.length < cand.get(a)!.length ? b : a));
+  return { kind: 'nudge', cells: [fewest], focus: fewest, mark: sol[fewest], title: `This cell is a ${sol[fewest]}`, text: `No cell is forced by the simple rules. This one has ${cand.get(fewest)!.length} candidates (${cand.get(fewest)!.join(', ')}) and the answer is ${sol[fewest]}.` };
+}
+
+function zipReveal(p: zip.ZipPuzzle, path: zip.ZipPath): Hint | null {
+  const sol = zipSolution(p);
+  if (!sol) return null;
+  for (let i = 0; i < path.length; i++)
+    if (path[i] !== sol[i]) return { kind: 'mistake', cells: [path[Math.max(0, i - 1)], path[i]], focus: path[i], mark: '✕', title: 'Back up to here', text: 'Drag back to the lit cell before this one, then go a different way: the path cannot be finished through the marked cell.' };
+  const next = sol[path.length];
+  if (next === undefined) return null;
+  const nextNumber = zip.nextNumber(p, path);
+  return { kind: 'nudge', cells: [path[path.length - 1]], focus: next, mark: '●', title: 'Go here next', text: `Continue into the marked cell. You are heading for ${nextNumber}, and every cell has to be visited on the way.` };
+}
+
+function patchesReveal(p: patches.PatchesPuzzle, rects: patches.Rect[]): Hint | null {
+  const sol = patchesSolution(p);
+  if (!sol) return null;
+  const key = (r: patches.Rect) => r.join(',');
+  const right = new Set(sol.map(key));
+  const n = p.size;
+  const cellsOf = (r: patches.Rect): number[] => {
+    const cells: number[] = [];
+    for (let rr = r[0]; rr <= r[2]; rr++) for (let cc = r[1]; cc <= r[3]; cc++) cells.push(rr * n + cc);
+    return cells;
+  };
+  const bad = rects.find((r) => !right.has(key(r)));
+  if (bad) return { kind: 'mistake', cells: cellsOf(bad), focus: cellsOf(bad)[0], mark: '✕', title: 'Remove this rectangle', text: 'It does not fit the answer. Clear it and give those cells to the numbers around it.' };
+  const todo = sol.filter((r) => !rects.some((x) => key(x) === key(r)));
+  if (!todo.length) return null;
+  const pick = todo.reduce((a, b) => (cellsOf(a).length <= cellsOf(b).length ? a : b));
+  const cells = cellsOf(pick);
+  const clue = p.clues.find(([cell]) => cells.includes(cell));
+  return { kind: 'nudge', cells, focus: clue ? clue[0] : cells[0], mark: clue ? String(clue[1]) : undefined, title: 'Draw this rectangle', text: `These lit cells make one rectangle${clue ? ` of ${clue[1]}` : ''}. Drag across them to draw it.` };
 }
 
 /** True when the board has something that cannot be part of the one solution (used by the free Check button). */

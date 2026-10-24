@@ -97,29 +97,48 @@ describe('hints coach without giving the answer', () => {
   });
 });
 
-describe('asking again gets a stronger hint', () => {
-  it('names the exact cell, and the right one', () => {
+describe('a hint is one concrete step', () => {
+  it('names the exact cell, and a right one', () => {
     for (const p of pick(QUEENS as unknown as queens.QueensPuzzle[])) {
       const sol = solveQueens(p)!;
-      const board = queens.emptyBoard(p);
-      const second = revealFor('queens', p, board)!;
-      expect(second.cells.length).toBe(1);
-      expect(sol[Math.floor(second.cells[0] / p.size)]).toBe(second.cells[0] % p.size);
+      const h = revealFor('queens', p, queens.emptyBoard(p))!;
+      expect(h.focus).toBeDefined();
+      expect(sol[Math.floor(h.focus! / p.size)]).toBe(h.focus! % p.size);
+      expect(h.text.length).toBeGreaterThan(30);
     }
     for (const p of pick(SUDOKU as unknown as sudoku.SudokuPuzzle[])) {
       const board = [...p.givens].map(Number);
-      const second = revealFor('sudoku', p, board)!;
-      expect(second.cells.length).toBe(1);
-      expect(board[second.cells[0]]).toBe(0);
+      const h = revealFor('sudoku', p, board)!;
+      expect(board[h.focus!]).toBe(0);
+      expect(h.mark).toBe(solveSudoku(board, p)![h.focus!]);
     }
     for (const p of pick(TANGO as unknown as tango.TangoPuzzle[])) {
-      expect(revealFor('tango', p, tango.boardFrom(p))!.cells.length).toBe(1);
+      const sol = solveTango(p)!;
+      const h = revealFor('tango', p, tango.boardFrom(p))!;
+      expect(h.focus).toBeDefined();
+      expect(h.mark).toBe(sol[h.focus!] === 's' ? '☀️' : '🌙');
     }
     for (const p of pick(ZIP as unknown as zip.ZipPuzzle[])) {
-      expect(revealFor('zip', p, zip.blankPath(p))!.cells.length).toBe(2);
+      const h = revealFor('zip', p, zip.blankPath(p))!;
+      expect(h.focus).toBe(solveZip(p)![1]);
     }
     for (const p of pick(PATCHES as unknown as patches.PatchesPuzzle[])) {
-      expect(revealFor('patches', p, patches.blankBoard())!.cells.length).toBeGreaterThan(0);
+      expect(revealFor("patches", p, patches.blankBoard())!.cells.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('every forced move it gives is a move of the real solution, all the way through a Tango board', () => {
+    for (const p of pick(TANGO as unknown as tango.TangoPuzzle[])) {
+      const sol = solveTango(p)!;
+      let board = tango.boardFrom(p);
+      for (let step = 0; step < 40 && board.includes('.'); step++) {
+        const h = revealFor('tango', p, board)!;
+        expect(h.kind).toBe('nudge');
+        const want = sol[h.focus!] as tango.TangoCell;
+        expect(h.mark).toBe(want === 's' ? '☀️' : '🌙');
+        board = board.map((c, i) => (i === h.focus ? want : c));
+      }
+      expect(board.includes('.')).toBe(false);
     }
   });
 });
