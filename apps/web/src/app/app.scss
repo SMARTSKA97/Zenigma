@@ -60,7 +60,7 @@ header {
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
   align-items: center;
   gap: 1rem;
   padding: calc(0.75rem + env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) 0.75rem
@@ -105,6 +105,7 @@ nav a {
 }
 nav a {
   position: relative;
+  white-space: nowrap;
 }
 /* Goals finished and waiting to be collected. */
 nav a .badge {
@@ -237,6 +238,28 @@ main {
   max-width: 90rem;
   margin: 0 auto;
   padding: 1rem max(1.25rem, env(safe-area-inset-right)) 4rem max(1.25rem, env(safe-area-inset-left));
+}
+
+/* Tablets: the status shrinks to its dot so the header never crowds the tabs. */
+@media (min-width: 721px) and (max-width: 1000px) {
+  nav a {
+    padding: 0.45rem 0.75rem;
+  }
+  .status {
+    min-width: 0;
+  }
+  .status span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+:host .support-chip,
+.coin-chip {
+  flex: none;
+  white-space: nowrap;
 }
 
 /* Phones: brand and status on top, navigation as a floating tab bar within thumb reach. */

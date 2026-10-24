@@ -40,10 +40,14 @@ export class Settings implements OnInit {
   protected readonly skins = computed(() => this.visible(SKINS));
   private readonly router = inject(Router);
   /** The section that is open (one at a time, like an accordion). */
-  protected readonly open = signal<string | null>(null);
+  protected readonly open = signal<string | null>(typeof matchMedia === 'function' && matchMedia('(min-width: 768px)').matches ? 'appearance' : null);
   protected toggle(key: string): void {
-    this.open.update((k) => (k === key ? null : key));
+    // On a wide screen the sections are a list with the chosen one beside it, so one always stays chosen.
+    this.open.update((k) => (k === key && !this.wide() ? null : key));
   }
+
+  /** True on a tablet or desktop, where Settings is a list with the detail beside it. */
+  private readonly wide = () => typeof matchMedia === 'function' && matchMedia('(min-width: 768px)').matches;
   protected readonly tier = this.wallet.supporterTier;
 
   /** A colour or theme is free, owned, or locked (then it opens the store). */

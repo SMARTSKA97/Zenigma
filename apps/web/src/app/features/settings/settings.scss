@@ -328,24 +328,86 @@ small {
   transition: none;
 }
 
-/* Wide screens: two columns of cards, and the open one takes the whole row so its settings have room. */
-@media (min-width: 900px) {
+.pane-title {
+  display: none;
+}
+
+/* Tablets and larger: like a tablet's Settings, a list of sections on the left and the chosen one on the right. */
+@media (min-width: 768px) {
   :host {
-    max-width: 62rem;
+    display: grid;
+    grid-template-columns: minmax(16rem, 21rem) minmax(0, 1fr);
+    /* Nineteen slim rows on the left; the last, flexible row lets the tall detail pane span them without stretching the list. */
+    grid-template-rows: repeat(18, auto) 1fr;
+    column-gap: 1.5rem;
+    align-items: start;
+    max-width: 76rem;
   }
-  .accs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  :host > * {
+    grid-column: 1;
   }
-  .acc.open {
+  :host > h1 {
     grid-column: 1 / -1;
   }
+  .quick {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .accs,
+  .acc {
+    display: contents;
+  }
+  :host .support-card {
+    margin-bottom: 0.6rem;
+  }
+  :host .acc-h {
+    grid-column: 1;
+    margin-bottom: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+    padding: 0.7rem 0.9rem;
+  }
+  :host .acc-h .at {
+    font-size: 0.98rem;
+  }
+  .acc-h .chev {
+    transform: none !important;
+  }
+  :host .acc.open .acc-h {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  }
+  .acc:not(.open) .acc-b {
+    display: none;
+  }
+  .acc.open .acc-b {
+    display: block;
+    grid-column: 2;
+    grid-row: 2 / 20;
+    position: sticky;
+    top: 0.5rem;
+    padding: 1.25rem 1.25rem 1rem;
+    border-radius: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .acc-in,
+  .acc.open .acc-in {
+    padding: 0;
+    overflow: visible;
+    visibility: visible;
+  }
+  .pane-title {
+    display: block;
+    margin: 0 0 0.75rem;
+    font-size: 1.35rem;
+  }
+}
+@media (min-width: 1300px) {
   .acc.open .list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2px 0.6rem;
     align-items: start;
-  }
-  .acc.open .item {
-    border-radius: 14px;
   }
   .acc.open .item.stack {
     grid-column: 1 / -1;
@@ -379,7 +441,7 @@ small {
     }
   }
 }
-@media (min-width: 720px) {
+@media (min-width: 720px) and (max-width: 767px) {
   .quick {
     grid-template-columns: repeat(4, 1fr);
   }
