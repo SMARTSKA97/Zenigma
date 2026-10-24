@@ -1,7 +1,8 @@
 import { ACCENTS, Cosmetic, SKINS, WalletService } from '../../core/wallet.service';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { SupportService } from '../../core/support.service';
-import { Router, RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ConnectionService } from '../../core/connection.service';
 import { SyncService } from '../../core/sync.service';
@@ -15,9 +16,24 @@ import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { environment } from '../../../environments/environment';
 import { UpdaterService } from '../../core/updater.service';
 
+/** Matches the stylesheet: a tablet or desktop, or a phone held on its side. */
+const WIDE = '(min-width: 768px), (min-width: 600px) and (orientation: landscape)';
+
+const TITLES: Record<string, string> = {
+  connection: 'Connection',
+  theme: 'Theme and colour',
+  play: 'Play and display',
+  feedback: 'Sound and vibration',
+  reminders: 'Reminders',
+  updates: 'App updates',
+  install: 'Install',
+  data: 'Your data',
+};
+
 @Component({
   selector: 'app-settings',
-  imports: [RouterLink, Loader, Segmented, Switch],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, NgTemplateOutlet, Loader, Segmented, Switch],
+  host: { '[class.wide]': 'wide()' },
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
@@ -39,15 +55,53 @@ export class Settings implements OnInit {
   protected readonly accents = computed(() => this.visible(ACCENTS));
   protected readonly skins = computed(() => this.visible(SKINS));
   private readonly router = inject(Router);
-  /** The section that is open (one at a time, like an accordion). */
-  protected readonly open = signal<string | null>(typeof matchMedia === 'function' && matchMedia('(min-width: 768px)').matches ? 'appearance' : null);
+  /** The section that is open (one at a time, like an accordion) on a phone; the chosen section beside the list on a wide screen. */
+  protected readonly open = signal<string | null>(null);
   protected toggle(key: string): void {
-    // On a wide screen the sections are a list with the chosen one beside it, so one always stays chosen.
-    this.open.update((k) => (k === key && !this.wide() ? null : key));
+    this.open.update((k) => (k === key ? null : key));
   }
 
-  /** True on a tablet or desktop, where Settings is a list with the detail beside it. */
-  private readonly wide = () => typeof matchMedia === 'function' && matchMedia('(min-width: 768px)').matches;
+  /** Wide screens (a tablet, a desktop, or a phone on its side): a list of sections with the chosen one beside it. */
+  private readonly query = typeof matchMedia === 'function' ? matchMedia(WIDE) : null;
+  protected readonly wide = signal(this.query?.matches ?? false);
+  private readonly url = signal(this.router.url);
+  /** The page shown in the right pane (Stats, About and so on); null while a section of this page is shown. */
+  protected readonly child = computed(() => (this.wide() && /^\/settings\/[^/?#]+/.test(this.url()) ? this.url().split(/[?#]/)[0] : null));
+  /** The chosen entry in the list. */
+  protected readonly cur = computed(() => this.child() ?? this.open() ?? 'connection');
+  protected readonly title = computed(() => TITLES[this.cur()] ?? '');
+
+  /** A link inside a page shown beside the list (More from About, a game's rules...) opens in that pane too, not on a new page. */
+  protected keepInPane(event: MouseEvent): void {
+    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const link = (event.target as HTMLElement).closest('a[href]');
+    const href = link?.getAttribute('href') ?? '';
+    const m = /^\/(account|stats|badges|rules|changelog|about|contributors|privacy|sync-test)(\/[^?#]+)?$/.exec(href);
+    if (!m) return;
+    event.preventDefault();
+    void this.router.navigateByUrl(`/settings/${m[1]}${m[2] ?? ''}`);
+  }
+
+  protected select(key: string): void {
+    this.open.set(key);
+    if (this.child()) void this.router.navigate(['/settings']);
+  }
+
+  private readonly follow = (() => {
+    const destroyRef = inject(DestroyRef);
+    const onChange = () => this.wide.set(this.query?.matches ?? false);
+    this.query?.addEventListener('change', onChange);
+    const sub = this.router.events.subscribe((e) => e instanceof NavigationEnd && this.url.set(e.urlAfterRedirects));
+    destroyRef.onDestroy(() => {
+      this.query?.removeEventListener('change', onChange);
+      sub.unsubscribe();
+    });
+    // A page opened beside the list means nothing on a narrow screen: go back to the plain list.
+    effect(() => {
+      if (!this.wide() && /^\/settings\/[^/?#]+/.test(this.url())) void this.router.navigate(['/settings']);
+    });
+  })();
+
   protected readonly tier = this.wallet.supporterTier;
 
   /** A colour or theme is free, owned, or locked (then it opens the store). */

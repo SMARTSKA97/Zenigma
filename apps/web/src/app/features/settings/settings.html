@@ -1,49 +1,4 @@
-<h1>Settings</h1>
-
-<a class="profile" routerLink="/account">
-  @if (auth.user(); as user) {
-    <span class="avatar" [class.supporter]="tier()" aria-hidden="true">{{ (user.displayName || user.email).charAt(0).toUpperCase() }}</span>
-    <span class="pt">
-      <strong>{{ user.displayName || user.email }}</strong>
-      <small>
-        {{ user.email }} ·
-        @if (sync.syncing()) { Syncing } @else if (sync.pendingCount() > 0) { {{ sync.pendingCount() }} to sync } @else if (!sync.online()) { Offline } @else { Synced }
-      </small>
-    </span>
-  } @else {
-    <span class="avatar" aria-hidden="true">?</span>
-    <span class="pt">
-      <strong>Sign in or create account</strong>
-      <small>Guest mode works offline. An account keeps streaks across devices.</small>
-    </span>
-  }
-  <span class="chev" aria-hidden="true">›</span>
-</a>
-
-<div class="quick" role="group" aria-label="Quick links">
-  <a routerLink="/changelog"><span aria-hidden="true">🆕</span><b>What's new</b><small>{{ version() ? 'v' + version() : 'Changelog' }}</small></a>
-  <a routerLink="/about"><span aria-hidden="true">✨</span><b>About</b><small>The app and its maker</small></a>
-  <a routerLink="/contributors"><span aria-hidden="true">♥</span><b>Contributors</b><small>Who keeps it running</small></a>
-  <a routerLink="/rules"><span aria-hidden="true">📖</span><b>How to play</b><small>Every game</small></a>
-</div>
-
-@if (canDonate()) {
-  <button type="button" class="support-card" (click)="support.open.set(true)">
-    <span class="heart" aria-hidden="true">♥</span>
-    <span class="lead">Keep Zenigma running<small>Tips pay for the servers. Optional, and they unlock nothing.</small></span>
-    <span class="chev" aria-hidden="true">›</span>
-  </button>
-}
-
-<div class="accs">
-<div class="acc" [class.open]="open() === 'connection'">
-  <button type="button" class="acc-h" (click)="toggle('connection')" [attr.aria-expanded]="open() === 'connection'">
-    <span class="tn" aria-hidden="true">✈️</span>
-    <span class="at">Connection<small>Offline mode and the server</small></span>
-    <span class="chev" aria-hidden="true">›</span>
-  </button>
-  <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">Connection</h2>
+<ng-template #pConnection>
 <section class="list">
   <div class="item">
     <span class="tn" aria-hidden="true">✈️</span>
@@ -74,17 +29,9 @@
     }
   </div>
 </section>
-  </div></div>
-</div>
+</ng-template>
 
-<div class="acc" [class.open]="open() === 'appearance'">
-  <button type="button" class="acc-h" (click)="toggle('appearance')" [attr.aria-expanded]="open() === 'appearance'">
-    <span class="tn" aria-hidden="true">🎨</span>
-    <span class="at">Appearance<small>Theme, colour, sound and haptics</small></span>
-    <span class="chev" aria-hidden="true">›</span>
-  </button>
-  <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">Appearance</h2>
+<ng-template #pTheme>
 <section class="list">
   <div class="item stack">
     <span class="lead hd"><span class="tn" aria-hidden="true">🌗</span><span>Theme</span></span>
@@ -112,6 +59,11 @@
       }
     </div>
   </div>
+</section>
+</ng-template>
+
+<ng-template #pPlay>
+<section class="list">
   <div class="item">
     <span class="tn" aria-hidden="true">👁️</span>
     <app-switch [checked]="prefs.highContrast()" (checkedChange)="prefs.setHighContrast($event)">
@@ -161,6 +113,11 @@
       <small>Turns off board animations and confetti.</small>
     </app-switch>
   </div>
+</section>
+</ng-template>
+
+<ng-template #pFeedback>
+<section class="list">
   <div class="item">
     <span class="tn" aria-hidden="true">📳</span>
     <app-switch [checked]="prefs.haptics()" (checkedChange)="prefs.setHaptics($event)">
@@ -186,19 +143,10 @@
     </div>
   }
 </section>
-  </div></div>
-</div>
+</ng-template>
 
-@if (reminder.supported) {
-  <div class="acc" [class.open]="open() === 'reminders'">
-    <button type="button" class="acc-h" (click)="toggle('reminders')" [attr.aria-expanded]="open() === 'reminders'">
-      <span class="tn" aria-hidden="true">🔔</span>
-      <span class="at">Reminders<small>A daily nudge to play</small></span>
-      <span class="chev" aria-hidden="true">›</span>
-    </button>
-    <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">Reminders</h2>
-  <section class="list">
+<ng-template #pReminders>
+<section class="list">
     <div class="item">
       <span class="tn" aria-hidden="true">⏰</span>
     <app-switch [checked]="reminder.enabled()" (checkedChange)="reminder.setEnabled($event)">
@@ -223,20 +171,10 @@
       <p class="item error">Notifications are blocked for Zenigma. Allow them in Android settings, under Apps, Zenigma, Notifications.</p>
     }
   </section>
-    </div></div>
-  </div>
-}
+</ng-template>
 
-@if (updater.supported && !updater.fromPlay()) {
-  <div class="acc" [class.open]="open() === 'updates'">
-    <button type="button" class="acc-h" (click)="toggle('updates')" [attr.aria-expanded]="open() === 'updates'">
-      <span class="tn" aria-hidden="true">⬇️</span>
-      <span class="at">App updates<small>Check for a new version</small></span>
-      <span class="chev" aria-hidden="true">›</span>
-    </button>
-    <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">App updates</h2>
-  <section class="list">
+<ng-template #pUpdates>
+<section class="list">
     <div class="item stack">
       <span class="lead hd"><span class="tn" aria-hidden="true">📲</span><span>Version {{ updater.currentVersion() ?? '-' }}</span></span>
       @switch (updater.state()) {
@@ -262,55 +200,19 @@
       }
     </div>
   </section>
-    </div></div>
-  </div>
-}
+</ng-template>
 
-@if (install.available()) {
-  <div class="acc" [class.open]="open() === 'install'">
-    <button type="button" class="acc-h" (click)="toggle('install')" [attr.aria-expanded]="open() === 'install'">
-      <span class="tn" aria-hidden="true">📲</span>
-      <span class="at">Install<small>Add Zenigma to your device</small></span>
-      <span class="chev" aria-hidden="true">›</span>
-    </button>
-    <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">Install</h2>
-  <section class="list">
+<ng-template #pInstall>
+<section class="list">
     <button type="button" class="item link" (click)="install.install()">
       <span class="tn" aria-hidden="true">⬇</span>
       <span class="lead">Install Zenigma<small>Opens like an app and works offline.</small></span>
       <span class="chev">›</span>
     </button>
   </section>
-    </div></div>
-  </div>
-}
+</ng-template>
 
-<div class="acc" [class.open]="open() === 'explore'">
-  <button type="button" class="acc-h" (click)="toggle('explore')" [attr.aria-expanded]="open() === 'explore'">
-    <span class="tn" aria-hidden="true">🧭</span>
-    <span class="at">Explore<small>Stats, badges, rules and history</small></span>
-    <span class="chev" aria-hidden="true">›</span>
-  </button>
-  <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">Explore</h2>
-<section class="list">
-  <a class="item link" routerLink="/stats"><span class="tn" aria-hidden="true">📊</span><span class="lead">Streaks and stats</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/badges"><span class="tn" aria-hidden="true">🏅</span><span class="lead">Badges</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/rules"><span class="tn" aria-hidden="true">📖</span><span class="lead">How to play</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/changelog"><span class="tn" aria-hidden="true">🆕</span><span class="lead">Version history</span><span class="chev">›</span></a>
-</section>
-  </div></div>
-</div>
-
-<div class="acc" [class.open]="open() === 'data'">
-  <button type="button" class="acc-h" (click)="toggle('data')" [attr.aria-expanded]="open() === 'data'">
-    <span class="tn" aria-hidden="true">📦</span>
-    <span class="at">Your data<small>Crash reports and your export</small></span>
-    <span class="chev" aria-hidden="true">›</span>
-  </button>
-  <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">Your data</h2>
+<ng-template #pData>
 <section class="list">
   <div class="item">
     <span class="tn" aria-hidden="true">🐞</span>
@@ -325,22 +227,225 @@
     <span class="chev">›</span>
   </button>
 </section>
-  </div></div>
-</div>
+</ng-template>
 
-<div class="acc" [class.open]="open() === 'about'">
-  <button type="button" class="acc-h" (click)="toggle('about')" [attr.aria-expanded]="open() === 'about'">
-    <span class="tn" aria-hidden="true">✨</span>
-    <span class="at">About<small>About, privacy and diagnostics</small></span>
+@if (wide()) {
+  <div class="split">
+    <aside class="rail" aria-label="Settings sections">
+      <h1>Settings</h1>
+      <a class="profile" routerLink="/settings/account" routerLinkActive="on">
+        @if (auth.user(); as user) {
+          <span class="avatar" [class.supporter]="tier()" aria-hidden="true">{{ (user.displayName || user.email).charAt(0).toUpperCase() }}</span>
+          <span class="pt">
+            <strong>{{ user.displayName || user.email }}</strong>
+            <small>@if (sync.syncing()) { Syncing } @else if (sync.pendingCount() > 0) { {{ sync.pendingCount() }} to sync } @else if (!sync.online()) { Offline } @else { Synced }</small>
+          </span>
+        } @else {
+          <span class="avatar" aria-hidden="true">?</span>
+          <span class="pt"><strong>Sign in or create account</strong><small>Guest mode works offline</small></span>
+        }
+        <span class="chev" aria-hidden="true">›</span>
+      </a>
+      @if (canDonate()) {
+        <button type="button" class="support-card" (click)="support.open.set(true)">
+          <span class="heart" aria-hidden="true">♥</span>
+          <span class="lead">Keep Zenigma running</span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+      }
+      <div class="group" role="group" aria-label="Settings">
+        <p class="gh">Settings</p>
+        <button type="button" class="ri" [class.on]="cur() === 'connection'" (click)="select('connection')"><span class="tn" aria-hidden="true">✈️</span><span>Connection</span></button>
+        <button type="button" class="ri" [class.on]="cur() === 'theme'" (click)="select('theme')"><span class="tn" aria-hidden="true">🎨</span><span>Theme and colour</span></button>
+        <button type="button" class="ri" [class.on]="cur() === 'play'" (click)="select('play')"><span class="tn" aria-hidden="true">🎯</span><span>Play and display</span></button>
+        <button type="button" class="ri" [class.on]="cur() === 'feedback'" (click)="select('feedback')"><span class="tn" aria-hidden="true">📳</span><span>Sound and vibration</span></button>
+        @if (reminder.supported) {
+        <button type="button" class="ri" [class.on]="cur() === 'reminders'" (click)="select('reminders')"><span class="tn" aria-hidden="true">🔔</span><span>Reminders</span></button>
+        }
+        @if (updater.supported && !updater.fromPlay()) {
+        <button type="button" class="ri" [class.on]="cur() === 'updates'" (click)="select('updates')"><span class="tn" aria-hidden="true">⬇️</span><span>App updates</span></button>
+        }
+        @if (install.available()) {
+        <button type="button" class="ri" [class.on]="cur() === 'install'" (click)="select('install')"><span class="tn" aria-hidden="true">📲</span><span>Install</span></button>
+        }
+      </div>
+      <div class="group" role="group" aria-label="Your progress">
+        <p class="gh">Your progress</p>
+        <a class="ri" routerLink="/settings/stats" routerLinkActive="on"><span class="tn" aria-hidden="true">📊</span><span>Streaks and stats</span></a>
+        <a class="ri" routerLink="/settings/badges" routerLinkActive="on"><span class="tn" aria-hidden="true">🏅</span><span>Badges</span></a>
+        <button type="button" class="ri" [class.on]="cur() === 'data'" (click)="select('data')"><span class="tn" aria-hidden="true">📦</span><span>Your data</span></button>
+      </div>
+      <div class="group" role="group" aria-label="Help and info">
+        <p class="gh">Help and info</p>
+        <a class="ri" routerLink="/settings/rules" routerLinkActive="on"><span class="tn" aria-hidden="true">📖</span><span>How to play</span></a>
+        <a class="ri" routerLink="/settings/changelog" routerLinkActive="on"><span class="tn" aria-hidden="true">🆕</span><span>What's new</span></a>
+        <a class="ri" routerLink="/settings/about" routerLinkActive="on"><span class="tn" aria-hidden="true">✨</span><span>About</span></a>
+        <a class="ri" routerLink="/settings/contributors" routerLinkActive="on"><span class="tn" aria-hidden="true">♥</span><span>Contributors</span></a>
+        <a class="ri" routerLink="/settings/privacy" routerLinkActive="on"><span class="tn" aria-hidden="true">🔒</span><span>Privacy policy</span></a>
+        <a class="ri" routerLink="/settings/sync-test" routerLinkActive="on"><span class="tn" aria-hidden="true">🛠</span><span>Diagnostics</span></a>
+      </div>
+    </aside>
+    <section class="detail" [attr.aria-label]="title()">
+      <div class="child" [hidden]="!child()" (click)="keepInPane($event)"><router-outlet /></div>
+      @if (!child()) {
+        <h2 class="pane-title">{{ title() }}</h2>
+        @switch (cur()) {
+          @case ('connection') { <ng-container *ngTemplateOutlet="pConnection" /> }
+          @case ('theme') { <ng-container *ngTemplateOutlet="pTheme" /> }
+          @case ('play') { <ng-container *ngTemplateOutlet="pPlay" /> }
+          @case ('feedback') { <ng-container *ngTemplateOutlet="pFeedback" /> }
+          @case ('reminders') { <ng-container *ngTemplateOutlet="pReminders" /> }
+          @case ('updates') { <ng-container *ngTemplateOutlet="pUpdates" /> }
+          @case ('install') { <ng-container *ngTemplateOutlet="pInstall" /> }
+          @case ('data') { <ng-container *ngTemplateOutlet="pData" /> }
+        }
+      }
+    </section>
+  </div>
+} @else {
+  <h1>Settings</h1>
+
+  <a class="profile" routerLink="/account">
+    @if (auth.user(); as user) {
+      <span class="avatar" [class.supporter]="tier()" aria-hidden="true">{{ (user.displayName || user.email).charAt(0).toUpperCase() }}</span>
+      <span class="pt">
+        <strong>{{ user.displayName || user.email }}</strong>
+        <small>
+          {{ user.email }} ·
+          @if (sync.syncing()) { Syncing } @else if (sync.pendingCount() > 0) { {{ sync.pendingCount() }} to sync } @else if (!sync.online()) { Offline } @else { Synced }
+        </small>
+      </span>
+    } @else {
+      <span class="avatar" aria-hidden="true">?</span>
+      <span class="pt">
+        <strong>Sign in or create account</strong>
+        <small>Guest mode works offline. An account keeps streaks across devices.</small>
+      </span>
+    }
     <span class="chev" aria-hidden="true">›</span>
-  </button>
-  <div class="acc-b"><div class="acc-in">
-<h2 class="pane-title">About</h2>
-<section class="list">
-  <a class="item link" routerLink="/about"><span class="tn" aria-hidden="true">✨</span><span class="lead">About Zenigma</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/privacy"><span class="tn" aria-hidden="true">🔒</span><span class="lead">Privacy policy</span><span class="chev">›</span></a>
-  <a class="item link" routerLink="/sync-test"><span class="tn" aria-hidden="true">🛠</span><span class="lead">Diagnostics</span><span class="chev">›</span></a>
-</section>
-  </div></div>
-</div>
-</div>
+  </a>
+
+  <div class="quick" role="group" aria-label="Quick links">
+    <a routerLink="/changelog"><span aria-hidden="true">🆕</span><b>What's new</b><small>{{ version() ? 'v' + version() : 'Changelog' }}</small></a>
+    <a routerLink="/about"><span aria-hidden="true">✨</span><b>About</b><small>The app and its maker</small></a>
+    <a routerLink="/contributors"><span aria-hidden="true">♥</span><b>Contributors</b><small>Who keeps it running</small></a>
+    <a routerLink="/rules"><span aria-hidden="true">📖</span><b>How to play</b><small>Every game</small></a>
+  </div>
+
+  @if (canDonate()) {
+    <button type="button" class="support-card" (click)="support.open.set(true)">
+      <span class="heart" aria-hidden="true">♥</span>
+      <span class="lead">Keep Zenigma running<small>Tips pay for the servers. Optional, and they unlock nothing.</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+  }
+
+  <div class="accs">
+  <div class="acc" [class.open]="open() === 'connection'">
+    <button type="button" class="acc-h" (click)="toggle('connection')" [attr.aria-expanded]="open() === 'connection'">
+      <span class="tn" aria-hidden="true">✈️</span>
+      <span class="at">Connection<small>Offline mode and the server</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
+  <ng-container *ngTemplateOutlet="pConnection" />
+    </div></div>
+  </div>
+
+  <div class="acc" [class.open]="open() === 'appearance'">
+    <button type="button" class="acc-h" (click)="toggle('appearance')" [attr.aria-expanded]="open() === 'appearance'">
+      <span class="tn" aria-hidden="true">🎨</span>
+      <span class="at">Appearance<small>Theme, colour, sound and haptics</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
+  <ng-container *ngTemplateOutlet="pTheme" />
+  <ng-container *ngTemplateOutlet="pPlay" />
+  <ng-container *ngTemplateOutlet="pFeedback" />
+    </div></div>
+  </div>
+
+  @if (reminder.supported) {
+    <div class="acc" [class.open]="open() === 'reminders'">
+      <button type="button" class="acc-h" (click)="toggle('reminders')" [attr.aria-expanded]="open() === 'reminders'">
+        <span class="tn" aria-hidden="true">🔔</span>
+        <span class="at">Reminders<small>A daily nudge to play</small></span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+      <div class="acc-b"><div class="acc-in">
+  <ng-container *ngTemplateOutlet="pReminders" />
+    </div></div>
+    </div>
+  }
+
+  @if (updater.supported && !updater.fromPlay()) {
+    <div class="acc" [class.open]="open() === 'updates'">
+      <button type="button" class="acc-h" (click)="toggle('updates')" [attr.aria-expanded]="open() === 'updates'">
+        <span class="tn" aria-hidden="true">⬇️</span>
+        <span class="at">App updates<small>Check for a new version</small></span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+      <div class="acc-b"><div class="acc-in">
+  <ng-container *ngTemplateOutlet="pUpdates" />
+    </div></div>
+    </div>
+  }
+
+  @if (install.available()) {
+    <div class="acc" [class.open]="open() === 'install'">
+      <button type="button" class="acc-h" (click)="toggle('install')" [attr.aria-expanded]="open() === 'install'">
+        <span class="tn" aria-hidden="true">📲</span>
+        <span class="at">Install<small>Add Zenigma to your device</small></span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+      <div class="acc-b"><div class="acc-in">
+  <ng-container *ngTemplateOutlet="pInstall" />
+    </div></div>
+    </div>
+  }
+
+  <div class="acc" [class.open]="open() === 'explore'">
+    <button type="button" class="acc-h" (click)="toggle('explore')" [attr.aria-expanded]="open() === 'explore'">
+      <span class="tn" aria-hidden="true">🧭</span>
+      <span class="at">Explore<small>Stats, badges, rules and history</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
+  <h2 class="pane-title">Explore</h2>
+  <section class="list">
+    <a class="item link" routerLink="/stats"><span class="tn" aria-hidden="true">📊</span><span class="lead">Streaks and stats</span><span class="chev">›</span></a>
+    <a class="item link" routerLink="/badges"><span class="tn" aria-hidden="true">🏅</span><span class="lead">Badges</span><span class="chev">›</span></a>
+    <a class="item link" routerLink="/rules"><span class="tn" aria-hidden="true">📖</span><span class="lead">How to play</span><span class="chev">›</span></a>
+    <a class="item link" routerLink="/changelog"><span class="tn" aria-hidden="true">🆕</span><span class="lead">Version history</span><span class="chev">›</span></a>
+  </section>
+    </div></div>
+  </div>
+
+  <div class="acc" [class.open]="open() === 'data'">
+    <button type="button" class="acc-h" (click)="toggle('data')" [attr.aria-expanded]="open() === 'data'">
+      <span class="tn" aria-hidden="true">📦</span>
+      <span class="at">Your data<small>Crash reports and your export</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
+  <ng-container *ngTemplateOutlet="pData" />
+    </div></div>
+  </div>
+
+  <div class="acc" [class.open]="open() === 'about'">
+    <button type="button" class="acc-h" (click)="toggle('about')" [attr.aria-expanded]="open() === 'about'">
+      <span class="tn" aria-hidden="true">✨</span>
+      <span class="at">About<small>About, privacy and diagnostics</small></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="acc-b"><div class="acc-in">
+  <h2 class="pane-title">About</h2>
+  <section class="list">
+    <a class="item link" routerLink="/about"><span class="tn" aria-hidden="true">✨</span><span class="lead">About Zenigma</span><span class="chev">›</span></a>
+    <a class="item link" routerLink="/privacy"><span class="tn" aria-hidden="true">🔒</span><span class="lead">Privacy policy</span><span class="chev">›</span></a>
+    <a class="item link" routerLink="/sync-test"><span class="tn" aria-hidden="true">🛠</span><span class="lead">Diagnostics</span><span class="chev">›</span></a>
+  </section>
+    </div></div>
+  </div>
+  </div>
+}

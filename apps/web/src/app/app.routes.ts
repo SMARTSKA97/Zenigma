@@ -41,6 +41,22 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', loadComponent: () => import('./features/home/home').then((m) => m.Home) },
   { path: 'sync-test', loadComponent: () => import('./features/sync-test/sync-test').then((m) => m.SyncTest) },
   { path: 'account', loadComponent: () => import('./features/account/account').then((m) => m.Account) },
-  { path: 'settings', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
+  {
+    path: 'settings',
+    loadComponent: () => import('./features/settings/settings').then((m) => m.Settings),
+    // On a wide screen these open beside the list of sections instead of replacing the page.
+    children: [
+      { path: 'account', loadComponent: () => import('./features/account/account').then((m) => m.Account) },
+      { path: 'stats', loadComponent: () => import('./features/stats/stats').then((m) => m.StatsPage) },
+      { path: 'badges', loadComponent: () => import('./features/badges/badges').then((m) => m.Badges) },
+      { path: 'rules/:game', loadComponent: () => import('./features/rules/rule-page').then((m) => m.RulePage) },
+      { path: 'rules', loadComponent: () => import('./features/rules/rules').then((m) => m.Rules) },
+      { path: 'changelog', loadComponent: () => import('./features/changelog/changelog').then((m) => m.Changelog) },
+      { path: 'about', loadComponent: () => import('./features/about/about').then((m) => m.About) },
+      { path: 'contributors', loadComponent: () => import('./features/about/contributors').then((m) => m.Contributors) },
+      { path: 'privacy', loadComponent: () => import('./features/about/privacy').then((m) => m.Privacy) },
+      { path: 'sync-test', loadComponent: () => import('./features/sync-test/sync-test').then((m) => m.SyncTest) },
+    ],
+  },
   { path: '**', redirectTo: '' },
 ];

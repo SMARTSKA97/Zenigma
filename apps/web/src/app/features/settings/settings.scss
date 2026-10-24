@@ -328,89 +328,168 @@ small {
   transition: none;
 }
 
-.pane-title {
-  display: none;
+.acc-in .list + .list {
+  margin-top: 0.6rem;
 }
 
-/* Tablets and larger: like a tablet's Settings, a list of sections on the left and the chosen one on the right. */
-@media (min-width: 768px) {
-  :host {
-    display: grid;
-    grid-template-columns: minmax(16rem, 21rem) minmax(0, 1fr);
-    /* Nineteen slim rows on the left; the last, flexible row lets the tall detail pane span them without stretching the list. */
-    grid-template-rows: repeat(18, auto) 1fr;
-    column-gap: 1.5rem;
-    align-items: start;
-    max-width: 76rem;
+/*
+ * Wide screens (a tablet, a desktop, or a phone on its side): like a tablet's own Settings, a list on the left and the chosen
+ * page on the right. Each side scrolls on its own, so a short landscape screen can still reach everything.
+ */
+:host(.wide) {
+  max-width: 80rem;
+  padding-bottom: 0;
+}
+.split {
+  --pane-h: calc(100dvh - 6.5rem);
+  display: grid;
+  grid-template-columns: minmax(13.5rem, 19rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.rail,
+.detail {
+  position: sticky;
+  top: 0.25rem;
+  max-height: var(--pane-h);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.rail {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0 0.25rem 0.5rem 0;
+  h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.7rem;
   }
-  :host > * {
-    grid-column: 1;
+  .profile {
+    padding: 0.65rem 0.8rem;
+    border-radius: 20px;
+    border: 1px solid transparent;
   }
-  :host > h1 {
-    grid-column: 1 / -1;
-  }
-  .quick {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .accs,
-  .acc {
-    display: contents;
-  }
-  :host .support-card {
-    margin-bottom: 0.6rem;
-  }
-  :host .acc-h {
-    grid-column: 1;
-    margin-bottom: 0.4rem;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    background: var(--surface);
-    padding: 0.7rem 0.9rem;
-  }
-  :host .acc-h .at {
-    font-size: 0.98rem;
-  }
-  .acc-h .chev {
-    transform: none !important;
-  }
-  :host .acc.open .acc-h {
-    background: var(--accent-soft);
+  .profile.on {
     border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
   }
-  .acc:not(.open) .acc-b {
-    display: none;
+  .profile .avatar {
+    width: 2.6rem;
+    height: 2.6rem;
+    font-size: 1.1rem;
   }
-  .acc.open .acc-b {
-    display: block;
-    grid-column: 2;
-    grid-row: 2 / 20;
-    position: sticky;
-    top: 0.5rem;
-    padding: 1.25rem 1.25rem 1rem;
-    border-radius: 28px;
-    background: var(--surface);
-    border: 1px solid var(--border);
+  .profile small {
+    font-size: 0.78rem;
   }
-  .acc-in,
-  .acc.open .acc-in {
-    padding: 0;
-    overflow: visible;
-    visibility: visible;
-  }
-  .pane-title {
-    display: block;
-    margin: 0 0 0.75rem;
-    font-size: 1.35rem;
+  .support-card {
+    margin: 0;
+    padding: 0.6rem 0.8rem;
   }
 }
+.group {
+  display: grid;
+  gap: 2px;
+  margin-top: 0.4rem;
+}
+.gh {
+  margin: 0 0 0.2rem 0.5rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:host .ri {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 560;
+  text-align: left;
+  text-decoration: none;
+}
+:host .ri:hover {
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+}
+:host .ri.on {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.ri .tn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  font-size: 1rem;
+}
+.ri.on .tn {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+}
+.detail {
+  padding: 1.1rem 1.25rem 1.25rem;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.pane-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+}
+/* A page opened beside the list (Stats, About, ...) fills the pane: it drops its own width limit and outer spacing. */
+.child {
+  min-height: 0;
+}
+.child ::ng-deep > * {
+  display: block;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.child ::ng-deep a.back[href='/settings'] {
+  display: none;
+}
+.child ::ng-deep > * > h1:first-child,
+.child ::ng-deep > * > header:first-child h1 {
+  margin-top: 0;
+}
 @media (min-width: 1300px) {
-  .acc.open .list {
+  .detail .list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2px 0.6rem;
     align-items: start;
   }
-  .acc.open .item.stack {
+  .detail .item.stack {
     grid-column: 1 / -1;
+  }
+}
+/* A phone on its side: the header and tab bar take much of the height, so the panes use what is left and the title moves into the list. */
+@media (max-height: 520px) {
+  .split {
+    --pane-h: calc(100dvh - 5.5rem);
+  }
+  .rail h1 {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .split {
+    --pane-h: calc(100dvh - 9.5rem);
+  }
+}
+@media (max-width: 720px) and (max-height: 520px) {
+  .split {
+    --pane-h: calc(100dvh - 8.5rem);
   }
 }
 
