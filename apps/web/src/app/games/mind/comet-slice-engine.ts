@@ -77,8 +77,11 @@ export function throwBody(seconds: number, random: () => number): Body {
   const r = kind === 'bomb' ? SKULL_R : COMET_R;
   const x = r + random() * (W - 2 * r);
   const vy = (60 + random() * 240) * speedUp(seconds);
-  // Slanted, but drifting back towards the middle so bodies do not leave the sides.
-  const vx = (random() - 0.5) * 120 + ((W / 2 - x) / W) * 50;
+  // Slanted in any direction, but never so much that the body would leave the sides before it reaches the bottom.
+  const fall = (-vy + Math.sqrt(vy * vy + 2 * GRAVITY * (H + 2 * r))) / GRAVITY;
+  const lo = Math.max(-80, (r - x) / fall);
+  const hi = Math.min(80, (W - r - x) / fall);
+  const vx = lo + random() * (hi - lo);
   return { id: nextId++, kind, x, y: -r, vx, vy, r, age: 0, sliced: false, missed: false };
 }
 
@@ -88,13 +91,5 @@ export function advance(b: Body, dt: number): void {
   b.vy += GRAVITY * dt;
   b.x += b.vx * dt;
   b.y += b.vy * dt;
-  // The sides are walls: a body bounces off them, so nothing ever leaves the screen sideways and gets lost.
-  if (b.x < b.r) {
-    b.x = b.r;
-    b.vx = Math.abs(b.vx);
-  } else if (b.x > W - b.r) {
-    b.x = W - b.r;
-    b.vx = -Math.abs(b.vx);
-  }
   if (!b.sliced && b.vy > 0 && b.y - b.r > H) b.missed = true;
 }
