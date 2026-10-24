@@ -11,95 +11,14 @@
       <span class="none">none left</span>
     }
   </div>
-  <svg class="yard" [style.width.px]="area().w" [style.height.px]="area().h" [attr.viewBox]="'0 0 120 ' + height()" role="group" aria-label="Rail yard. Tap a round switch to choose the way trains go.">
-    <rect class="grass" x="0" y="0" width="120" [attr.height]="height()" rx="6" />
-    @for (t of trees(); track $index) {
-      <g class="tree" [attr.transform]="'translate(' + t[0] + ' ' + t[1] + ')'">
-        <circle [attr.r]="t[2]" />
-        <circle class="hi" cx="-0.6" cy="-0.8" [attr.r]="t[2] * 0.55" />
-      </g>
-    }
-    @for (e of tracks(); track e.key) {
-      <g class="track" [class.live]="e.live">
-        <path class="bed" [attr.d]="e.bed" />
-        <path class="ties" [attr.d]="e.bed" />
-        <path class="rail" [attr.d]="e.left" />
-        <path class="rail" [attr.d]="e.right" />
-      </g>
-    }
-    @for (n of nodes(); track n.id) {
-      @if (n.kind === 'station') {
-        @let a = arrival();
-        <g class="station c{{ n.colour }}" [class.ok]="a?.node === n.id && a?.ok" [class.bad]="a?.node === n.id && !a?.ok" [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'">
-          <rect class="silo" x="4.6" y="-4" width="5" height="10.5" rx="2.2" />
-          <rect class="wall" x="-8.4" y="-5.4" width="16.8" height="12.4" rx="1.6" />
-          <path class="roof" d="M-9.6 -5 L0 -12.2 L9.6 -5 Z" />
-          <rect class="door" x="-2.6" y="1.6" width="5.2" height="5.4" rx="0.8" />
-          <circle class="badge" cy="-4.4" r="3.1" />
-          <text y="-3">{{ symbols[n.colour!] }}</text>
-        </g>
-      } @else if (n.kind === 'gate') {
-        <g class="gate" [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'">
-          <path d="M-9.5 3 V-3.5 Q-9.5 -11 0 -11 Q9.5 -11 9.5 -3.5 V3 Z" />
-          <path class="hole" d="M-5.6 3 V-2.6 Q-5.6 -7.4 0 -7.4 Q5.6 -7.4 5.6 -2.6 V3 Z" />
-        </g>
-      } @else if (n.kind === 'join') {
-        <circle class="joiner" [attr.cx]="n.x" [attr.cy]="n.y" r="2.2" />
+  <div class="stage" [class.hurt]="hurt()" [style.width.px]="area().w" [style.height.px]="area().h">
+    <canvas #yard class="yard" role="group" aria-label="Rail yard. Tap a round switch to choose the way trains go." (pointerdown)="tap($event)"></canvas>
+    <!-- The switches again as buttons, for keyboards and screen readers. -->
+    <div class="sr-only">
+      @for (id of switches(); track id) {
+        <button type="button" (click)="flip(id)">Switch {{ $index + 1 }}, set to the {{ settings()[id] ? 'side' : 'straight' }} track</button>
       }
-    }
-    @for (n of nodes(); track n.id) {
-      @if (n.kind === 'switch') {
-        <g
-          class="sw"
-          role="button"
-          tabindex="0"
-          [attr.aria-label]="'Switch, set to the ' + (settings()[n.id] ? 'side' : 'straight') + ' track'"
-          [attr.transform]="'translate(' + n.x + ' ' + n.y + ')'"
-          (pointerdown)="flip(n.id, $event)"
-          (keydown.enter)="flip(n.id, $event)"
-          (keydown.space)="flip(n.id, $event)"
-        >
-          <circle class="hit" r="7.5" />
-          <circle class="disc" r="5.6" />
-          <circle class="hub" r="2.2" />
-        </g>
-      }
-    }
-    @for (p of pointers(); track p.id) {
-      <circle class="dir" [attr.cx]="p.x" [attr.cy]="p.y" r="1.5" />
-    }
-    @for (t of trainViews(); track t.id) {
-      <g class="train c{{ t.colour }}" [attr.transform]="'translate(' + t.x + ' ' + t.y + ') rotate(' + t.angle + ')'">
-        <rect class="shadow" x="-10.4" y="-3" width="20.4" height="7" rx="2" />
-        <!-- wagon -->
-        <rect class="wheel" x="-9.4" y="-3.9" width="2.6" height="1.1" rx="0.4" />
-        <rect class="wheel" x="-9.4" y="2.8" width="2.6" height="1.1" rx="0.4" />
-        <rect class="wheel" x="-5.4" y="-3.9" width="2.6" height="1.1" rx="0.4" />
-        <rect class="wheel" x="-5.4" y="2.8" width="2.6" height="1.1" rx="0.4" />
-        <rect class="body" x="-10" y="-3.2" width="7.8" height="6.4" rx="1.1" />
-        <path class="rib" d="M-8.3 -2.6 V2.6 M-6.1 -2.6 V2.6 M-3.9 -2.6 V2.6" />
-        <rect class="coupler" x="-2.3" y="-0.45" width="1.5" height="0.9" />
-        <!-- locomotive -->
-        <rect class="wheel" x="-0.4" y="-3.9" width="2.4" height="1.1" rx="0.4" />
-        <rect class="wheel" x="-0.4" y="2.8" width="2.4" height="1.1" rx="0.4" />
-        <rect class="wheel" x="4.6" y="-3.9" width="2.4" height="1.1" rx="0.4" />
-        <rect class="wheel" x="4.6" y="2.8" width="2.4" height="1.1" rx="0.4" />
-        <rect class="body" x="-0.8" y="-3.2" width="10" height="6.4" rx="2" />
-        <rect class="boiler" x="3" y="-2.4" width="5.8" height="4.8" rx="2.2" />
-        <path class="band" d="M5 -2.3 V2.3 M7 -2.1 V2.1" />
-        <rect class="cab" x="-0.8" y="-3.2" width="3.6" height="6.4" rx="1" />
-        <rect class="glass" x="0.7" y="-2.5" width="1.5" height="1.5" rx="0.3" />
-        <rect class="glass" x="0.7" y="1" width="1.5" height="1.5" rx="0.3" />
-        <circle class="dome" cx="4.9" cy="0" r="0.95" />
-        <circle class="stack" cx="7.3" cy="0" r="1.25" />
-        <circle class="stack-hi" cx="7.1" cy="-0.25" r="0.45" />
-        <circle class="lamp" cx="9" cy="0" r="0.75" />
-        <g [attr.transform]="'translate(-6.1 0) rotate(' + -t.angle + ')'">
-          <circle class="badge" r="2.4" />
-          <text y="1.1">{{ symbols[t.colour] }}</text>
-        </g>
-      </g>
-    }
-  </svg>
+    </div>
+  </div>
   <p class="note" aria-live="polite">{{ note() }}</p>
 </app-play-screen>

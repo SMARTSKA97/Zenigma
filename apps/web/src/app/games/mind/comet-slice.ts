@@ -313,16 +313,17 @@ export class CometSlice implements OnInit, OnDestroy {
     const canvas = this.canvasRef().nativeElement;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth || innerWidth;
     const ch = canvas.clientHeight || innerHeight;
+    // Phones are sharp; a big desktop window is drawn a little softer rather than slowly (at most ~1.4 million pixels).
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1, Math.sqrt(1_400_000 / (cw * ch))));
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) {
       canvas.width = Math.round(cw * dpr);
       canvas.height = Math.round(ch * dpr);
     }
     // The sky fills the whole screen; the play itself happens in the 320-unit-wide field in the middle of it.
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.drawSky(ctx, cw, ch);
+    this.paintSky(ctx, cw, ch);
     const sx = this.scale * dpr;
     ctx.setTransform(sx, 0, 0, sx, this.offsetX * dpr, 0);
     this.drawRidges(ctx);
@@ -368,6 +369,31 @@ export class CometSlice implements OnInit, OnDestroy {
       ctx.fillStyle = `rgba(255,230,180,${this.flash * 0.7})`;
       ctx.fillRect(0, 0, cw, ch);
     }
+  }
+
+  private skyLayer: HTMLCanvasElement | null = null;
+  private skyAt = -1;
+
+  /** The sky is slow and soft, so it is painted at half size about ten times a second and just stretched in between. */
+  private paintSky(ctx: CanvasRenderingContext2D, cw: number, ch: number): void {
+    const w = Math.max(1, Math.round(cw / 2));
+    const h = Math.max(1, Math.round(ch / 2));
+    let layer = this.skyLayer;
+    if (!layer) layer = this.skyLayer = document.createElement('canvas');
+    const stale = layer.width !== w || layer.height !== h;
+    if (stale) {
+      layer.width = w;
+      layer.height = h;
+    }
+    if (stale || this.clock - this.skyAt > 0.09 || this.clock < this.skyAt) {
+      const c = layer.getContext('2d');
+      if (c) {
+        c.setTransform(0.5, 0, 0, 0.5, 0, 0);
+        this.drawSky(c, cw, ch);
+      }
+      this.skyAt = this.clock;
+    }
+    ctx.drawImage(layer, 0, 0, cw, ch);
   }
 
   /**

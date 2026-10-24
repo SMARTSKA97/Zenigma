@@ -1,4 +1,4 @@
-import { advance, branchesFor, buildYard, Branch, COLOURS, gapMs, liveTracks, offsetPts, planTrains, pointAt, routeFrom, spawn, speedFor, stationsOf, trainsInRound } from './switchyard-engine';
+import { advance, destinationOf, edgeLen, branchesFor, buildYard, Branch, COLOURS, gapMs, liveTracks, offsetPts, planTrains, pointAt, routeFrom, spawn, speedFor, stationsOf, trainsInRound } from './switchyard-engine';
 
 const SETS: Branch[][] = [['station'], ['station', 'station'], ['station', 'fork', 'station'], ['fork', 'siding', 'station'], ['station', 'fork', 'siding', 'fork']];
 
@@ -93,5 +93,25 @@ describe('Switchyard', () => {
     expect(trainsInRound(3)).toBeGreaterThan(trainsInRound(1));
     expect(branchesFor(1)).toEqual(['station']);
     expect(branchesFor(40)).toContain('fork');
+  });
+
+  it('moves at the same on-screen speed on every track when the board is stretched', () => {
+    const yard = buildYard(['station', 'siding'], () => 0.3);
+    const settings: number[] = [];
+    const train = spawn(yard, 1, 0, settings);
+    const k = 2;
+    const before = edgeLen(train.edge, k);
+    expect(before).toBeGreaterThan(train.edge.len);
+    advance(yard, settings, train, before - 0.5, k);
+    expect(train.node).toBe(0);
+    advance(yard, settings, train, 1, k);
+    expect(train.node).toBe(train.edge === yard.nodes[0].out[0] ? 0 : train.node);
+  });
+
+  it('knows which station a train is heading for', () => {
+    const yard = buildYard(['station'], () => 0.3);
+    const train = spawn(yard, 1, 0, [0, 0]);
+    expect(stationsOf(yard).map((n) => n.id)).toContain(destinationOf(yard, train, [0, 0]));
+    expect(stationsOf(yard).map((n) => n.id)).toContain(destinationOf(yard, train, [0, 1]));
   });
 });

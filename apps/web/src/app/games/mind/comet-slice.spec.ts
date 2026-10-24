@@ -58,4 +58,13 @@ describe('Comet Slice', () => {
     expect(H).toBe(690);
     setFieldHeight(480);
   });
+
+  it('bounces off the side walls instead of leaving the field', () => {
+    const b = { id: 1, kind: 'comet' as const, x: 40, y: 100, vx: -400, vy: 10, r: 28, age: 0, sliced: false, missed: false };
+    for (let i = 0; i < 40; i++) {
+      advance(b, 0.05);
+      expect(b.x).toBeGreaterThanOrEqual(b.r);
+      expect(b.x).toBeLessThanOrEqual(W - b.r);
+    }
+  });
 });

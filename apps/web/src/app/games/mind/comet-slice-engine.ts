@@ -88,5 +88,13 @@ export function advance(b: Body, dt: number): void {
   b.vy += GRAVITY * dt;
   b.x += b.vx * dt;
   b.y += b.vy * dt;
+  // The sides are walls: a body bounces off them, so nothing ever leaves the screen sideways and gets lost.
+  if (b.x < b.r) {
+    b.x = b.r;
+    b.vx = Math.abs(b.vx);
+  } else if (b.x > W - b.r) {
+    b.x = W - b.r;
+    b.vx = -Math.abs(b.vx);
+  }
   if (!b.sliced && b.vy > 0 && b.y - b.r > H) b.missed = true;
 }

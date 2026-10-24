@@ -148,25 +148,47 @@ export const spawn = (yard: Yard, id: number, colour: number, settings: readonly
  * Moves a train along by `dist`. A switch decides the way when the train reaches it, so a tap that comes too late changes nothing for that
  * train. Returns the station node when the train arrives at one.
  */
-export function advance(yard: Yard, settings: readonly number[], train: Train, dist: number): number | null {
+export function advance(yard: Yard, settings: readonly number[], train: Train, dist: number, k = 1): number | null {
   train.d += dist;
-  while (train.d >= train.edge.len) {
-    train.d -= train.edge.len;
+  // `d` and `dist` are measured on the screen, where the board is stretched `k` times down the page, so a train looks equally fast on every track.
+  let len = edgeLen(train.edge, k);
+  while (train.d >= len) {
+    train.d -= len;
     train.node = train.edge.to;
     const next = routeFrom(yard, train.node, settings);
     if (!next) return train.node;
     train.edge = next;
+    len = edgeLen(next, k);
   }
   return null;
 }
 
+/** The length of a track as it looks on the screen, where the board is stretched `k` times down the page. */
+export function edgeLen(edge: Edge, k = 1): number {
+  if (k === 1) return edge.len;
+  let sum = 0;
+  for (let i = 1; i < edge.pts.length; i++) sum += Math.hypot((edge.pts[i][0] - edge.pts[i - 1][0]) * k, edge.pts[i][1] - edge.pts[i - 1][1]);
+  return sum;
+}
+
+/** The station a train would reach if the switches stayed as they are now. */
+export function destinationOf(yard: Yard, train: Train, settings: readonly number[]): number {
+  let node = train.edge.to;
+  for (let guard = 0; guard < 64; guard++) {
+    const next = routeFrom(yard, node, settings);
+    if (!next) return node;
+    node = next.to;
+  }
+  return node;
+}
+
 /** Where a train is on its track, and which way it faces (degrees, 0 is across to the right, 90 is down the page). `k` is how much the board is stretched down the page. */
 export function pointAt(edge: Edge, d: number, k = 1): { u: number; v: number; angle: number } {
-  let left = Math.max(0, Math.min(edge.len, d));
+  let left = Math.max(0, Math.min(edgeLen(edge, k), d));
   for (let i = 1; i < edge.pts.length; i++) {
     const [u0, v0] = edge.pts[i - 1];
     const [u1, v1] = edge.pts[i];
-    const seg = Math.hypot(u1 - u0, v1 - v0);
+    const seg = Math.hypot((u1 - u0) * k, v1 - v0);
     if (left <= seg || i === edge.pts.length - 1) {
       const t = seg === 0 ? 0 : Math.min(1, left / seg);
       // u runs down the page and v across it, so the angle of (across, down) is the angle on screen.
