@@ -24,7 +24,7 @@ import { CardInput, gridFromText } from '../../shared/share-card';
 import { WalletService } from '../../core/wallet.service';
 import { HintsService } from '../../core/hints.service';
 import { ScreenGuardService } from '../../core/screen-guard.service';
-import { Hint, hasMistake, hintFor } from '../hints/hint';
+import { Hint, hasMistake, hintFor, revealFor } from '../hints/hint';
 import { dailyDifficulty, gameInfo, levelCountOf, isPuzzleGame, mapLink, playLink, PuzzleGameId, trackOf } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
@@ -188,16 +188,22 @@ export class PuzzlePage {
       case 'unavailable':
         return { title: "Today's puzzle is not ready", text: 'Try again in a little while.' };
       case 'ready':
-        return { title: "Today's puzzle", text: 'One attempt per day. Your clock starts when you tap start.' };
+        return { title: "Today's puzzle", text: 'One attempt per day. Your clock starts when you tap start, and the same puzzle goes to everyone.' };
       default:
         return { title: 'Playing on another device', text: "Today's puzzle is open on another device. If it goes idle for a couple of minutes you can continue here." };
     }
   });
 
+  /** The goal and the main rules of this game, for the screen before the daily starts. */
+  protected readonly howTo = computed(() => RULES_BY_ID.get(this.game()) ?? null);
+
   private heartbeat?: ReturnType<typeof setInterval>;
   private saveTimer?: ReturnType<typeof setTimeout>;
   private showTimer?: ReturnType<typeof setTimeout>;
   private wrongTimer?: ReturnType<typeof setTimeout>;
+  private mistakeTimer?: ReturnType<typeof setTimeout>;
+  /** The board the last hint was about, and how strong it was, so asking again about the same board gets a stronger one. */
+  private lastHint: { key: string; level: 1 | 2 } | null = null;
 
   constructor() {
     const tick = setInterval(() => this.now.set(Date.now()), 500);
@@ -314,6 +320,8 @@ export class PuzzlePage {
     this.strikesLeft.set(3);
     this.wasWrong = false;
     this.mistakeCount.set(0);
+    clearTimeout(this.mistakeTimer);
+    this.lastHint = null;
     this.baseMs = keep ? saved.elapsedMs : 0;
     this.stretchStart = Date.now();
     this.phase.set('practice');
@@ -444,32 +452,44 @@ export class PuzzlePage {
     void this.checkSolved();
   }
 
-  /** In strict practice, a move that makes the board impossible to finish costs a strike; the third resets the board. */
+  /**
+   * A move that makes the board impossible to finish is a mistake, but only once it has stood for a moment (the same pause as the
+   * warning), so a cell cycling through its states, or a move the player takes back at once, is never counted. In strict practice the
+   * third mistake resets the board.
+   */
   private strike(): void {
     const p = this.puzzle();
+    clearTimeout(this.mistakeTimer);
     if (!p) return;
-    const wrong = hasMistake(this.game(), p, this.state());
-    // A mistake is a move that makes the board impossible to finish, counted in every mode (for the result card).
-    if (wrong && !this.wasWrong) this.mistakeCount.update((n) => n + 1);
-    if (!this.strict()) {
-      this.wasWrong = wrong;
+    if (!hasMistake(this.game(), p, this.state())) {
+      this.wasWrong = false;
       return;
     }
-    if (wrong && !this.wasWrong) {
-      this.strikesLeft.update((n) => n - 1);
-      this.haptics.error();
-      if (this.strikesLeft() <= 0) {
-        this.flash('Three strikes. The board was reset.');
-        this.strikesLeft.set(3);
-        this.history.set([]);
-        this.future.set([]);
-        this.state.set(ADAPTERS[this.game()].blank(p));
-        this.wasWrong = false;
-        return;
-      }
-      this.flash(`Not quite. ${this.strikesLeft()} ${this.strikesLeft() === 1 ? 'strike' : 'strikes'} left.`);
+    if (this.wasWrong) return; // the same mistake, already counted
+    this.mistakeTimer = setTimeout(() => this.confirmMistake(), this.warnDelay());
+  }
+
+  private confirmMistake(): void {
+    const p = this.puzzle();
+    if (!p || this.locked() || this.wasWrong || !hasMistake(this.game(), p, this.state())) return;
+    this.wasWrong = true;
+    this.mistakeCount.update((n) => n + 1);
+    this.haptics.error();
+    if (!this.strict()) {
+      this.flash('Something on the board is off. Tap Check, or use a hint to find it.');
+      return;
     }
-    this.wasWrong = wrong;
+    this.strikesLeft.update((n) => n - 1);
+    if (this.strikesLeft() <= 0) {
+      this.flash('Three strikes. The board was reset.');
+      this.strikesLeft.set(3);
+      this.history.set([]);
+      this.future.set([]);
+      this.state.set(ADAPTERS[this.game()].blank(p));
+      this.wasWrong = false;
+      return;
+    }
+    this.flash(`Not quite. ${this.strikesLeft()} ${this.strikesLeft() === 1 ? 'strike' : 'strikes'} left.`);
   }
 
   protected undo(): void {
@@ -481,6 +501,7 @@ export class PuzzlePage {
     this.state.set(h[h.length - 1]);
     this.history.set(h.slice(0, -1));
     this.scheduleSave();
+    this.strike();
   }
 
   protected redo(): void {
@@ -492,6 +513,7 @@ export class PuzzlePage {
     this.state.set(f[0]);
     this.future.set(f.slice(1));
     this.scheduleSave();
+    this.strike();
     void this.checkSolved();
   }
 
@@ -660,11 +682,19 @@ export class PuzzlePage {
       this.wheelOpen.set(true);
       return;
     }
-    const hint = hintFor(this.game(), p, s);
+    // Asking again about a board that has not changed gets a stronger hint (the exact cell and what to do), never the same one twice.
+    const key = `${this.game()}:${JSON.stringify(s)}`;
+    const again = this.lastHint?.key === key;
+    if (again && this.lastHint?.level === 2) {
+      this.flash('That is the strongest hint for this board. Make a move and ask again.');
+      return;
+    }
+    const hint = (again ? revealFor(this.game(), p, s) : null) ?? hintFor(this.game(), p, s);
     if (hint.kind === 'done' || hint.kind === 'none') {
       this.flash(hint.text);
       return;
     }
+    this.lastHint = { key, level: again ? 2 : 1 };
     this.hintsUsed.update((n) => n + 1);
     this.hints.spend();
     this.coach.set(hint);

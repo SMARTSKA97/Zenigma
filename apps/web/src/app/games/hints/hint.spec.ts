@@ -12,7 +12,7 @@ import * as tango from '../tango/engine';
 import * as sudoku from '../sudoku/engine';
 import * as zip from '../zip/engine';
 import * as patches from '../patches/engine';
-import { hintFor } from './hint';
+import { hintFor, revealFor } from './hint';
 import { solvePatches, solveQueens, solveSudoku, solveTango, solveZip } from './solvers';
 
 const pick = <T>(levels: T[]): T[] => [0, 4, 9, 14, 99, 500, 999].map((i) => levels[i]).filter(Boolean);
@@ -93,6 +93,33 @@ describe('hints coach without giving the answer', () => {
       expect(hintFor('patches', p, []).kind).toBe('nudge');
       expect(hintFor('patches', p, sol).kind).toBe('done');
       expect(hintFor('patches', p, [[0, 0, 0, 0]]).kind === 'mistake' || sol.some((r) => r.join() === '0,0,0,0')).toBe(true);
+    }
+  });
+});
+
+describe('asking again gets a stronger hint', () => {
+  it('names the exact cell, and the right one', () => {
+    for (const p of pick(QUEENS as unknown as queens.QueensPuzzle[])) {
+      const sol = solveQueens(p)!;
+      const board = queens.emptyBoard(p);
+      const second = revealFor('queens', p, board)!;
+      expect(second.cells.length).toBe(1);
+      expect(sol[Math.floor(second.cells[0] / p.size)]).toBe(second.cells[0] % p.size);
+    }
+    for (const p of pick(SUDOKU as unknown as sudoku.SudokuPuzzle[])) {
+      const board = [...p.givens].map(Number);
+      const second = revealFor('sudoku', p, board)!;
+      expect(second.cells.length).toBe(1);
+      expect(board[second.cells[0]]).toBe(0);
+    }
+    for (const p of pick(TANGO as unknown as tango.TangoPuzzle[])) {
+      expect(revealFor('tango', p, tango.boardFrom(p))!.cells.length).toBe(1);
+    }
+    for (const p of pick(ZIP as unknown as zip.ZipPuzzle[])) {
+      expect(revealFor('zip', p, zip.blankPath(p))!.cells.length).toBe(2);
+    }
+    for (const p of pick(PATCHES as unknown as patches.PatchesPuzzle[])) {
+      expect(revealFor('patches', p, patches.blankBoard())!.cells.length).toBeGreaterThan(0);
     }
   });
 });

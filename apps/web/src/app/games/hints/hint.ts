@@ -54,6 +54,103 @@ export function hintFor(game: PuzzleGameId, puzzle: unknown, state: unknown): Hi
   }
 }
 
+/**
+ * The second, stronger hint for a board that has not changed since the first one: it names the exact cell and says what to do with it,
+ * so asking again always gets more than the first time. Null when the board is already finished or cannot be solved.
+ */
+export function revealFor(game: PuzzleGameId, puzzle: unknown, state: unknown): Hint | null {
+  const first = hintFor(game, puzzle, state);
+  if (first.kind === 'done' || first.kind === 'none') return null;
+  switch (game) {
+    case 'queens': {
+      const p = puzzle as queens.QueensPuzzle;
+      const board = state as queens.QueensCell[];
+      const sol = queensSolution(p);
+      if (!sol) return null;
+      const n = p.size;
+      for (let r = 0; r < n; r++) {
+        const idx = r * n + sol[r];
+        for (let c = 0; c < n; c++) if (board[r * n + c] === queens.QUEEN && c !== sol[r] && !queens.isGiven(p, r * n + c))
+          return { kind: 'mistake', cells: [r * n + c], title: 'This queen is wrong', text: `Take this queen off row ${r + 1}. It looks fine, but the puzzle cannot be finished with it.` };
+        if (board[idx] === queens.MARK) return { kind: 'mistake', cells: [idx], title: 'This ✕ is wrong', text: `Clear this ✕: row ${r + 1} needs its queen right here.` };
+      }
+      let best = -1;
+      let bestOpen = 99;
+      for (let r = 0; r < n; r++) {
+        if (board[r * n + sol[r]] === queens.QUEEN) continue;
+        const open = Array.from({ length: n }, (_, c) => board[r * n + c]).filter((v) => v !== queens.MARK).length;
+        if (open < bestOpen) (best = r), (bestOpen = open);
+      }
+      if (best < 0) return null;
+      return { kind: 'nudge', cells: [best * n + sol[best]], title: 'A queen goes here', text: `Put a queen in row ${best + 1}, column ${sol[best] + 1}. Then work out what it rules out around it.` };
+    }
+    case 'tango': {
+      const p = puzzle as tango.TangoPuzzle;
+      const board = state as tango.TangoCell[];
+      const sol = tangoSolution(p);
+      if (!sol) return null;
+      const name = (v: string): string => (v === 's' ? 'sun ☀️' : 'moon 🌙');
+      for (let i = 0; i < board.length; i++)
+        if (board[i] !== '.' && p.givens[i] === '.' && board[i] !== sol[i]) return { kind: 'mistake', cells: [i], title: 'This symbol is wrong', text: `Change this cell: it should be a ${name(sol[i])}, not a ${name(board[i])}.` };
+      const N = tango.SIZE;
+      let best = -1;
+      let bestLeft = 99;
+      for (let i = 0; i < board.length; i++) {
+        if (board[i] !== '.') continue;
+        const row = line(N, 'row', Math.floor(i / N)).filter((j) => board[j] === '.').length;
+        const col = line(N, 'col', i % N).filter((j) => board[j] === '.').length;
+        if (Math.min(row, col) < bestLeft) (best = i), (bestLeft = Math.min(row, col));
+      }
+      if (best < 0) return null;
+      return { kind: 'nudge', cells: [best], title: 'This cell is easiest', text: `Put a ${name(sol[best])} here. Check why: the line it is in already points to it.` };
+    }
+    case 'sudoku': {
+      const p = puzzle as SudokuPuzzle;
+      const board = state as number[];
+      const sol = sudokuSolution(p);
+      if (!sol) return null;
+      for (let i = 0; i < board.length; i++)
+        if (board[i] && p.givens[i] === '0' && String(board[i]) !== sol[i]) return { kind: 'mistake', cells: [i], title: 'This number is wrong', text: `Clear this ${board[i]}: it cannot be part of the solution, even if nothing clashes yet.` };
+      const empties = board.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
+      if (!empties.length) return null;
+      const fewest = empties.reduce((a, b) => (sudokuCandidates(board, b, p).length < sudokuCandidates(board, a, p).length ? b : a));
+      return { kind: 'nudge', cells: [fewest], title: 'This cell is a ' + sol[fewest], text: `Put a ${sol[fewest]} here (row ${Math.floor(fewest / sizeOf(board.length)) + 1}, column ${(fewest % sizeOf(board.length)) + 1}), then see which cells it settles.` };
+    }
+    case 'zip': {
+      const p = puzzle as zip.ZipPuzzle;
+      const path = state as zip.ZipPath;
+      const sol = zipSolution(p);
+      if (!sol) return null;
+      for (let i = 0; i < path.length; i++)
+        if (path[i] !== sol[i]) return { kind: 'mistake', cells: [path[Math.max(0, i - 1)], path[i]], title: 'Back up to here', text: 'Drag back to the first highlighted cell, then go a different way: the path cannot be finished from the second one.' };
+      const next = sol[path.length];
+      if (next === undefined) return null;
+      return { kind: 'nudge', cells: [path[path.length - 1], next], title: 'Go here next', text: 'The route continues into the highlighted cell. Keep going and check each step against the numbers.' };
+    }
+    case 'patches': {
+      const p = puzzle as patches.PatchesPuzzle;
+      const rects = state as patches.Rect[];
+      const sol = patchesSolution(p);
+      if (!sol) return null;
+      const key = (r: patches.Rect) => r.join(',');
+      const right = new Set(sol.map(key));
+      const n = p.size;
+      const cellsOf = (r: patches.Rect): number[] => {
+        const cells: number[] = [];
+        for (let rr = r[0]; rr <= r[2]; rr++) for (let cc = r[1]; cc <= r[3]; cc++) cells.push(rr * n + cc);
+        return cells;
+      };
+      const bad = rects.find((r) => !right.has(key(r)));
+      if (bad) return { kind: 'mistake', cells: cellsOf(bad), title: 'Remove this rectangle', text: 'It does not fit the answer. Clear it and give those cells to their neighbours.' };
+      const todo = sol.filter((r) => !rects.some((x) => key(x) === key(r)));
+      if (!todo.length) return null;
+      // The smallest missing rectangle is the easiest to place.
+      const pick = todo.reduce((a, b) => (cellsOf(a).length <= cellsOf(b).length ? a : b));
+      return { kind: 'nudge', cells: cellsOf(pick), title: 'Draw this rectangle', text: 'These cells make one rectangle of the answer. Drag across them to draw it.' };
+    }
+  }
+}
+
 /** True when the board has something that cannot be part of the one solution (used by the free Check button). */
 export function hasMistake(game: PuzzleGameId, puzzle: unknown, state: unknown): boolean {
   return hintFor(game, puzzle, state).kind === 'mistake';

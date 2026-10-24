@@ -38,6 +38,18 @@
       <section class="card panel">
         <h2>{{ panel().title }}</h2>
         <p class="muted">{{ panel().text }}</p>
+        @if (phase() === 'ready' && howTo(); as r) {
+          <div class="howto">
+            <b>How it works</b>
+            <p>{{ r.goal }}</p>
+            <ul>
+              @for (rule of r.rules.slice(0, 4); track rule) {
+                <li>{{ rule }}</li>
+              }
+            </ul>
+            <a [routerLink]="['/rules', game()]">Full rules, a worked example and tips ›</a>
+          </div>
+        }
         <div class="actions">
           @switch (phase()) {
             @case ('signin') {
