@@ -1,7 +1,7 @@
 import { WalletService } from '../../core/wallet.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/auth.service';
 import { DeviceService } from '../../core/device.service';
@@ -170,7 +170,7 @@ export class DailyStore implements BoardController {
     this.busy.set(true);
     try {
       const deviceId = await this.device.deviceId();
-      const response = await firstValueFrom(this.http.post<GuessResponse>(`${this.url}/guess`, { deviceId, word }));
+      const response = await firstValueFrom(this.http.post<GuessResponse>(`${this.url}/guess`, { deviceId, word }).pipe(timeout(15000)));
       const guess: Guess = { word: response.guess.word, marks: marksFromString(response.guess.marks) };
 
       this.guesses.update((g) => [...g, guess]);
