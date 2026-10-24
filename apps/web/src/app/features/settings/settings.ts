@@ -24,6 +24,7 @@ import { UpdaterService } from '../../core/updater.service';
 export class Settings implements OnInit {
   protected readonly theme = inject(ThemeService);
   protected readonly updater = inject(UpdaterService);
+  protected readonly version = this.updater.currentVersion;
   protected readonly prefs = inject(PrefsService);
   protected readonly auth = inject(AuthService);
   protected readonly sync = inject(SyncService);

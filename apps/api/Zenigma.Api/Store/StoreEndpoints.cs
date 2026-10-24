@@ -55,13 +55,14 @@ public static class StoreCatalog
     public static readonly IReadOnlyDictionary<string, int> Earns = new Dictionary<string, int>
     {
         ["daily"] = 1,     // verified: a daily puzzle solved
-        ["mindset"] = 3,   // the whole daily mind set
-        ["perfect"] = 5,   // puzzles and mind set on the same day
+        ["mindset"] = 2,   // the whole daily mind set
+        ["perfect"] = 3,   // puzzles and mind set on the same day
         ["level"] = 1,     // every tenth new practice level
-        ["boss"] = 3,      // every twentieth level
+        ["boss"] = 2,      // every twentieth level
         ["quest"] = 1,     // a daily quest
-        ["chest"] = 3,     // all three quests
+        ["chest"] = 2,     // all three quests
         ["streak"] = 10,   // a streak milestone
+        ["badge"] = 5,     // a badge collected (once per badge, so it is not part of the daily cap)
     };
 
     public static readonly IReadOnlyList<(int Weight, string Kind, int Amount)> Wheel =
@@ -127,7 +128,7 @@ public static partial class StoreEndpoints
                     var solved = await StreakService.SolvedDatesAsync(db, userId, parts[1], ct);
                     if (!solved.Contains(date)) continue;
                 }
-                else
+                else if (e.Reason != "badge")
                 {
                     if (reported + amount > StoreCatalog.ReportedDailyCap) continue;
                 }
@@ -137,7 +138,7 @@ public static partial class StoreEndpoints
                     [new NpgsqlParameter("id", e.Id.Value), new NpgsqlParameter("u", userId), new NpgsqlParameter("d", amount), new NpgsqlParameter("r", e.Reason), new NpgsqlParameter("f", e.Ref)],
                     ct);
                 if (inserted != 1) continue;
-                if (e.Reason != "daily") reported += amount;
+                if (e.Reason is not ("daily" or "badge")) reported += amount;
                 await db.Database.ExecuteSqlRawAsync(
                     "UPDATE coin_balances SET balance = balance + @d, updated_at = now() WHERE user_id = @u",
                     [new NpgsqlParameter("d", amount), new NpgsqlParameter("u", userId)], ct);

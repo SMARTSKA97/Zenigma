@@ -351,3 +351,36 @@ small {
     grid-column: 1 / -1;
   }
 }
+
+/* The things worth finding at once: what's new, who made it, who supports it, how to play. */
+.quick {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+  a {
+    display: grid;
+    gap: 0.05rem;
+    padding: 0.8rem 1rem;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    span {
+      font-size: 1.3rem;
+    }
+    small {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+}
+@media (min-width: 720px) {
+  .quick {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

@@ -1,3 +1,4 @@
+import { ChallengesService } from './features/challenges/challenges.service';
 import { HapticsService } from './core/haptics.service';
 import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -48,6 +49,7 @@ export class App {
   private readonly reminder = inject(ReminderService);
   protected readonly wallet = inject(WalletService);
   protected readonly hints = inject(HintsService);
+  protected readonly goals = inject(ChallengesService);
 
   private readonly haptics = inject(HapticsService);
 

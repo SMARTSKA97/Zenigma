@@ -103,6 +103,31 @@ nav a {
     color 0.2s var(--ease),
     background-color 0.25s var(--ease);
 }
+nav a {
+  position: relative;
+}
+/* Goals finished and waiting to be collected. */
+nav a .badge {
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  animation: nav-pop var(--sp-fast-d) var(--sp-fast);
+}
+@media (max-width: 720px) {
+  nav a .badge {
+    position: absolute;
+    top: 0.2rem;
+    left: calc(50% + 0.45rem);
+  }
+}
 nav a svg {
   display: none;
   width: 22px;
@@ -134,8 +159,11 @@ nav a.active svg {
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
+  min-width: 0;
 }
 .coin-chip {
+  flex: none;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -185,6 +213,9 @@ nav a.active svg {
   font-size: 0.8125rem;
   color: var(--muted);
   white-space: nowrap;
+  /* A fixed slot, so "Waking server" appearing or going never pushes the coin counter around. */
+  min-width: 7.4rem;
+  justify-content: flex-end;
 }
 .dot {
   width: 8px;
@@ -210,6 +241,20 @@ main {
 
 /* Phones: brand and status on top, navigation as a floating tab bar within thumb reach. */
 @media (max-width: 720px) {
+  .right {
+    gap: 0.45rem;
+  }
+  /* On a phone the status is only a dot or spinner (the words are in the notice below), so the coin card keeps its shape. */
+  .status {
+    min-width: 0;
+  }
+  .status span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
   header {
     grid-template-columns: 1fr auto;
     /* backdrop-filter would make the header the containing block of the fixed tab bar. */

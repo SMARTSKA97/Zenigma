@@ -20,6 +20,13 @@
   <span class="chev" aria-hidden="true">›</span>
 </a>
 
+<div class="quick" role="group" aria-label="Quick links">
+  <a routerLink="/changelog"><span aria-hidden="true">🆕</span><b>What's new</b><small>{{ version() ? 'v' + version() : 'Changelog' }}</small></a>
+  <a routerLink="/about"><span aria-hidden="true">✨</span><b>About</b><small>The app and its maker</small></a>
+  <a routerLink="/contributors"><span aria-hidden="true">♥</span><b>Contributors</b><small>Who keeps it running</small></a>
+  <a routerLink="/rules"><span aria-hidden="true">📖</span><b>How to play</b><small>Every game</small></a>
+</div>
+
 @if (canDonate()) {
   <button type="button" class="support-card" (click)="support.open.set(true)">
     <span class="heart" aria-hidden="true">♥</span>

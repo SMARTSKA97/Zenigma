@@ -19,12 +19,18 @@
   </section>
 }
 
+<section class="tiles" aria-label="More about Zenigma">
+  <a routerLink="/changelog"><span aria-hidden="true">🆕</span><b>What's new</b><small>{{ version() ? 'Version ' + version() : 'Version history' }}</small></a>
+  <a routerLink="/contributors"><span aria-hidden="true">♥</span><b>Contributors</b><small>Who keeps it running</small></a>
+  <a routerLink="/rules"><span aria-hidden="true">📖</span><b>How to play</b><small>Every game explained</small></a>
+  <a [href]="source + '/issues'" target="_blank" rel="noopener"><span aria-hidden="true">💬</span><b>Feedback</b><small>Report a bug or an idea</small></a>
+</section>
+
 @if (canDonate()) {
   <section id="support" class="support">
     <h2>Support Zenigma</h2>
     <p class="muted">Zenigma is free and always will play offline. Tips pay for the servers, the domain and the email service. They are optional and unlock nothing.</p>
     <app-support-methods />
-    <app-supporter-wall />
   </section>
 }
 

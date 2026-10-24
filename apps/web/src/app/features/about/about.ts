@@ -5,11 +5,10 @@ import { environment } from '../../../environments/environment';
 import { UpdaterService } from '../../core/updater.service';
 import { SupportService } from '../../core/support.service';
 import { SupportMethods } from '../../shared/support-methods';
-import { SupporterWall } from '../../shared/supporter-wall';
 
 @Component({
   selector: 'app-about',
-  imports: [RouterLink, SupportMethods, SupporterWall],
+  imports: [RouterLink, SupportMethods],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './about.html',
   styleUrl: './about.scss',

@@ -10,6 +10,8 @@ export interface Supporter {
   name: string;
   /** Rupees in total; null when the supporter keeps the amount private. */
   totalInr: number | null;
+  /** What was paid, as it was paid, e.g. "$5 (₹425)"; null when the supporter keeps the amount private. */
+  display?: string | null;
   tier: 'supporter' | 'patron' | 'champion';
 }
 
@@ -51,6 +53,11 @@ export class SupportService {
     } catch {
       this.loadedAt = 0;
     }
+  }
+
+  /** Opening the Contributors page is a reason to reach the server: wake it if needed, then refresh the wall. */
+  async refresh(): Promise<void> {
+    if (await this.conn.wake()) await this.load();
   }
 
   /** "I supported": tells the owner (by email) so the payment can be checked and the perks switched on. */

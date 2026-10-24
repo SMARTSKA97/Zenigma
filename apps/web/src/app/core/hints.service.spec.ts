@@ -65,8 +65,8 @@ describe('HintsService', () => {
 
   it('does not use up the spin, a milestone or the first win when the stash is full', () => {
     const hints = new HintsService();
-    hints.grant(10);
-    expect(hints.balance()).toBe(10);
+    hints.grant(FREE_CAP);
+    expect(hints.balance()).toBe(FREE_CAP);
     expect(hints.canSpin()).toBe(false);
     expect(hints.milestone('queens', 10)).toBe(false);
     expect(hints.firstWinOfDay(0)).toBe(false);

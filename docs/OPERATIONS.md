@@ -95,7 +95,7 @@ Both can tell the API about a payment, signed with a secret only they and the AP
 | --- | --- |
 | `Support__GithubWebhookSecret` | A random string you make up. Paste the same string as the secret in the GitHub webhook. |
 | `Support__BmcWebhookSecret` | The secret Buy me a coffee shows next to the webhook. |
-| `Support__UsdToInr` | Optional. Rupees per dollar for converting dollar amounts, default 85. |
+| `Support__UsdToInr` | Optional fallback only. A dollar payment is converted at the live rate of the moment it arrives and stored with that rate; this figure (default 85) is used only if the rates feed cannot be reached. |
 
 GitHub Sponsors: open github.com/sponsors/SMARTSKA97/dashboard, then Webhooks, then Add webhook. Payload URL `https://<api>/webhooks/github-sponsors`, content type `application/json`, the secret above, and tick only "Sponsorships". A new sponsorship is recorded under the sponsor's GitHub login (or "A kind supporter" if they sponsor privately). GitHub sends nothing for monthly renewals, so each sponsor is recorded once, when they start. GitHub does not send an email address: link the sponsor to their Zenigma account with `POST /admin/supporters/link` (`{"name":"their-github-login","email":"their@account.email"}`, same `X-Admin-Key` header) after they tell you which account is theirs, for example through the "Already sent a tip? Tell me" form.
 

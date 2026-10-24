@@ -76,6 +76,7 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<EmailCodeService>();
 builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection(BrevoOptions.Section));
 builder.Services.AddHttpClient<IEmailSender, BrevoEmailSender>(c => c.Timeout = TimeSpan.FromSeconds(8));
+builder.Services.AddHttpClient<Zenigma.Api.Supporters.ExchangeRates>(c => c.Timeout = TimeSpan.FromSeconds(6));
 builder.Services.AddHostedService<RefreshTokenCleanup>();
 builder.Services.AddHostedService<Zenigma.Api.Infrastructure.SyncEventRetention>();
 builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.Section));

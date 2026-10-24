@@ -9,7 +9,7 @@ export interface HintEntry {
 
 const KEY = 'zenigma.hints';
 /** Hints from free sources never pile up beyond this, so a stash cannot trivialise the levels. */
-export const FREE_CAP = 10;
+export const FREE_CAP = 6;
 export const START_HINTS = 3;
 
 interface Saved {
@@ -129,7 +129,7 @@ export class HintsService {
   /** One spin a day. 1 hint is most common, 3 is rare; there is never an empty result. */
   spin(random = Math.random()): WheelPrize | null {
     if (!this.canSpin()) return null;
-    const hints: 1 | 2 | 3 = random < 0.6 ? 1 : random < 0.9 ? 2 : 3;
+    const hints: 1 | 2 | 3 = random < 0.75 ? 1 : random < 0.95 ? 2 : 3;
     this.saved.spun = indiaDate();
     this.spunToday.set(true);
     this.grant(hints, 'wheel', `wheel:${indiaDate()}`);
@@ -147,13 +147,13 @@ export class HintsService {
     return this.grant(1, 'milestone') > 0;
   }
 
-  /** First practice win of the day: a one in three chance of a hint. */
+  /** First practice win of the day: a one in five chance of a hint. */
   firstWinOfDay(random = Math.random()): boolean {
     const today = indiaDate();
     if (this.saved.firstWin === today || !this.hasRoom()) return false;
     this.saved.firstWin = today;
     this.save();
-    return random < 1 / 3 && this.grant(1, 'first-win') > 0;
+    return random < 1 / 5 && this.grant(1, 'first-win') > 0;
   }
 
   /** Opening the app after a week or more away brings a free hint. */

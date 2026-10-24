@@ -10,7 +10,7 @@ using Zenigma.Api.Data;
 
 namespace Zenigma.Api.Supporters;
 
-public record SupporterDto(string Name, int? TotalInr, string Tier);
+public record SupporterDto(string Name, int? TotalInr, string Tier, string? Display = null);
 public record ClaimRequest(string? Name, int AmountInr, string? Method);
 public record LinkRequest(string? Name, string? Email);
 public record AddSupporterRequest(string? Name, int AmountInr, string? Email, string? Source, bool? ShowAmount);
@@ -29,6 +29,13 @@ public static class SupporterEndpoints
 
     private static readonly ConcurrentDictionary<string, (DateOnly Day, int Count)> Claims = new();
     private static readonly string[] Methods = ["upi", "github", "coffee", "other"];
+
+    private static string Describe(string currency, decimal? original, int inr)
+    {
+        if (original is null || currency == "INR") return $"₹{inr}";
+        var symbol = currency switch { "USD" => "$", "EUR" => "€", "GBP" => "£", _ => currency + " " };
+        return $"{symbol}{original.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} (₹{inr})";
+    }
 
     public static string TierOf(int totalInr) => totalInr >= ChampionFrom ? "champion" : totalInr >= PatronFrom ? "patron" : "supporter";
 
@@ -53,13 +60,16 @@ public static class SupporterEndpoints
             var now = clock.GetUtcNow();
             if (_cached is { } hit && now - hit.At < Fresh) return Results.Ok(hit.Value);
 
-            var rows = await db.SupporterContributions.AsNoTracking().Select(c => new { c.Name, c.AmountInr, c.ShowAmount }).ToListAsync(ct);
+            var rows = await db.SupporterContributions.AsNoTracking().Select(c => new { c.Name, c.AmountInr, c.ShowAmount, c.Currency, c.OriginalAmount }).ToListAsync(ct);
             var list = rows
                 .GroupBy(r => r.Name.Trim(), StringComparer.OrdinalIgnoreCase)
                 .Select(g =>
                 {
                     var total = g.Sum(r => r.AmountInr);
-                    return new SupporterDto(g.Key, g.All(r => r.ShowAmount) ? total : null, TierOf(total));
+                    var shown = g.All(r => r.ShowAmount);
+                    // What was paid, as it was paid: "$5 (₹425)" for dollars, "₹100" for rupees.
+                    var parts = g.Select(r => Describe(r.Currency, r.OriginalAmount, r.AmountInr)).ToList();
+                    return new SupporterDto(g.Key, shown ? total : null, TierOf(total), shown ? (parts.Count <= 3 ? string.Join(" + ", parts) : $"₹{total}") : null);
                 })
                 .OrderByDescending(s => s.TotalInr ?? 0).ThenBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                 .Take(100)

@@ -14,7 +14,7 @@ const PULL_BATCH = 200;
 /** Played-offline results wait on the device until this many pile up (then they wake the server), or something else wakes it. */
 const WAKE_AT_PENDING = 20;
 /** At app start, a signed-in player's waiting results are sent after this long without a sync, even if few. */
-const STALE_MS = 6 * 60 * 60 * 1000;
+const STALE_MS = 24 * 60 * 60 * 1000;
 /** After the last result of a play session, waiting results go out once the player has been idle this long (one wake per session). */
 export const IDLE_FLUSH_MS = 90_000;
 /** Retry delays after a failed sync, then every last delay: the app stays quiet when the server is really down. */

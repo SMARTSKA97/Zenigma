@@ -14,7 +14,7 @@ import { SupportService } from '../core/support.service';
             <span class="mark" aria-hidden="true">{{ p.tier === 'champion' ? '👑' : p.tier === 'patron' ? '💎' : '♥' }}</span>
             <span class="who">{{ p.name }}</span>
             @if (p.totalInr !== null) {
-              <span class="amt">₹{{ p.totalInr }}</span>
+              <span class="amt">{{ p.display || '₹' + p.totalInr }}</span>
             }
           </li>
         }

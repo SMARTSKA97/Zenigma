@@ -119,3 +119,26 @@ p {
     max-width: 60rem;
   }
 }
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  a {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 22px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    span {
+      font-size: 1.4rem;
+    }
+    small {
+      color: var(--muted);
+    }
+  }
+}

@@ -39,11 +39,12 @@ public static class SupporterWebhooks
         return a.Length == b.Length && CryptographicOperations.FixedTimeEquals(a, b);
     }
 
-    private static int ToInr(decimal amount, string? currency, IConfiguration config)
+    /// <summary>The rupees a payment was worth at the moment it came in, and the rate used (null for rupees).</summary>
+    private static async Task<(int Inr, decimal? Rate)> ToInrAsync(decimal amount, string currency, ExchangeRates rates, CancellationToken ct)
     {
-        var rate = decimal.TryParse(config["Support:UsdToInr"], System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var r) && r > 0 ? r : 85m;
-        var inr = string.Equals(currency, "INR", StringComparison.OrdinalIgnoreCase) ? amount : amount * rate;
-        return (int)Math.Clamp(Math.Round(inr), 1, 1_000_000);
+        if (string.Equals(currency, "INR", StringComparison.OrdinalIgnoreCase)) return ((int)Math.Clamp(Math.Round(amount), 1, 1_000_000), null);
+        var rate = await rates.RateToInrAsync(currency, ct);
+        return ((int)Math.Clamp(Math.Round(amount * rate), 1, 1_000_000), rate);
     }
 
     private static string? Str(JsonElement e, string name) =>
@@ -68,7 +69,7 @@ public static class SupporterWebhooks
     public static void MapSupporterWebhooks(this IEndpointRouteBuilder app)
     {
         // GitHub Sponsors: Settings of the sponsors dashboard > Webhooks. Content type application/json, event "Sponsorships".
-        app.MapPost("/webhooks/github-sponsors", async (HttpRequest request, IConfiguration config, UserManager<ApplicationUser> users, AppDbContext db, TimeProvider clock, ILoggerFactory loggers, CancellationToken ct) =>
+        app.MapPost("/webhooks/github-sponsors", async (HttpRequest request, IConfiguration config, UserManager<ApplicationUser> users, AppDbContext db, ExchangeRates rates, TimeProvider clock, ILoggerFactory loggers, CancellationToken ct) =>
         {
             var secret = config["Support:GithubWebhookSecret"];
             if (string.IsNullOrWhiteSpace(secret)) return Results.NotFound();
@@ -90,13 +91,14 @@ public static class SupporterWebhooks
             var name = isPrivate ? "A kind supporter" : CleanName(login, "A kind supporter");
             var delivery = request.Headers["X-GitHub-Delivery"].ToString();
             var id = "gh:" + (delivery.Length > 0 ? delivery : Convert.ToHexString(SHA256.HashData(body))[..32]);
-            await SupporterRecorder.RecordAsync(db, users, clock, name, ToInr(dollars, "USD", config), "github", false, null, id[..Math.Min(64, id.Length)], ct);
+            var (ghInr, ghRate) = await ToInrAsync(dollars, "USD", rates, ct);
+            await SupporterRecorder.RecordAsync(db, users, clock, name, ghInr, "github", false, null, id[..Math.Min(64, id.Length)], ct, "USD", dollars, ghRate);
             loggers.CreateLogger("Supporters").LogInformation("Recorded a GitHub sponsorship");
             return Results.Ok(new { recorded = true });
         }).AllowAnonymous();
 
         // Buy me a coffee: Developer > Webhooks. The payload names differ a little between their event types, so this reads what is there.
-        app.MapPost("/webhooks/buymeacoffee", async (HttpRequest request, IConfiguration config, UserManager<ApplicationUser> users, AppDbContext db, TimeProvider clock, ILoggerFactory loggers, CancellationToken ct) =>
+        app.MapPost("/webhooks/buymeacoffee", async (HttpRequest request, IConfiguration config, UserManager<ApplicationUser> users, AppDbContext db, ExchangeRates rates, TimeProvider clock, ILoggerFactory loggers, CancellationToken ct) =>
         {
             var secret = config["Support:BmcWebhookSecret"];
             if (string.IsNullOrWhiteSpace(secret)) return Results.NotFound();
@@ -121,12 +123,14 @@ public static class SupporterWebhooks
             var amount = Num(data, "amount") ?? Num(data, "total_amount") ?? 0;
             if (amount <= 0) return Results.Ok(new { ignored = "no amount" });
             var currency = Str(data, "currency") ?? "USD";
-            var inr = ToInr(amount, currency, config);
+            currency = currency.Trim().ToUpperInvariant();
+            if (currency.Length != 3) currency = "USD";
+            var (inr, rate) = await ToInrAsync(amount, currency, rates, ct);
             var name = CleanName(Str(data, "supporter_name"), "A kind supporter");
             var email = Str(data, "supporter_email") ?? Str(data, "payer_email");
             var raw = Str(data, "id") ?? Str(data, "transaction_id") ?? Str(root, "id");
             var id = "bmc:" + (raw ?? Convert.ToHexString(SHA256.HashData(body))[..32]);
-            var (linked, tier) = await SupporterRecorder.RecordAsync(db, users, clock, name, inr, "coffee", false, email, id[..Math.Min(64, id.Length)], ct);
+            var (linked, tier) = await SupporterRecorder.RecordAsync(db, users, clock, name, inr, "coffee", false, email, id[..Math.Min(64, id.Length)], ct, currency, rate is null ? null : amount, rate);
             log.LogInformation("Recorded a Buy me a coffee payment (account linked: {Linked})", linked);
             return Results.Ok(new { recorded = true, linked, tier });
         }).AllowAnonymous();

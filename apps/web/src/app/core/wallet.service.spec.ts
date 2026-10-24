@@ -46,9 +46,8 @@ describe('WalletService', () => {
     expect(wallet.questsDone()).toBe(1);
     const afterOne = wallet.coins();
     expect(afterOne).toBeGreaterThanOrEqual(EARNS['quest']);
-    for (let i = 0; i < 3; i++) wallet.note('levels');
-    wallet.note('mind');
-    wallet.note('mind');
+    for (let i = 0; i < 5; i++) wallet.note('levels');
+    for (let i = 0; i < 3; i++) wallet.note('mind');
     expect(wallet.questsDone()).toBe(3);
     expect(wallet.coins()).toBe(EARNS['quest'] * 3 + EARNS['chest']); // three quests and the chest
   });

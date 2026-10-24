@@ -10,7 +10,7 @@ import { HintsService, indiaDate } from './hints.service';
 import { SoundService } from './sound.service';
 
 /** What each way of earning pays. The server holds the same table and has the last word. */
-export const EARNS: Record<string, number> = { daily: 1, mindset: 3, perfect: 5, level: 1, boss: 3, quest: 1, chest: 3, streak: 10 };
+export const EARNS: Record<string, number> = { daily: 1, mindset: 2, perfect: 3, level: 1, boss: 2, quest: 1, chest: 2, streak: 10, badge: 5 };
 
 export interface StoreItem {
   id: string;
@@ -152,8 +152,8 @@ export class WalletService {
     const c = q.date === today ? q : { date: today, daily: 0, levels: 0, mind: 0 };
     return [
       { id: 'daily', label: 'Solve a daily puzzle', goal: 1, count: c.daily },
-      { id: 'levels', label: 'Clear 3 practice levels', goal: 3, count: c.levels },
-      { id: 'mind', label: 'Play 2 mind games', goal: 2, count: c.mind },
+      { id: 'levels', label: 'Clear 5 practice levels', goal: 5, count: c.levels },
+      { id: 'mind', label: 'Play 3 mind games', goal: 3, count: c.mind },
     ].map((x) => ({ ...x, count: Math.min(x.count, x.goal), done: x.count >= x.goal })) as Quest[];
   });
   readonly questsDone = computed(() => this.quests().filter((q) => q.done).length);

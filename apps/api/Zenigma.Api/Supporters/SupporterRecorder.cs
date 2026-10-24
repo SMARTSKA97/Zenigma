@@ -22,7 +22,8 @@ public static class SupporterRecorder
     /// <summary>Records a contribution (once per external id). Returns whether it reached an account, and that account's tier.</summary>
     public static async Task<(bool Linked, string? Tier)> RecordAsync(
         AppDbContext db, UserManager<ApplicationUser> users, TimeProvider clock,
-        string name, int amountInr, string source, bool showAmount, string? email, string? externalId, CancellationToken ct)
+        string name, int amountInr, string source, bool showAmount, string? email, string? externalId, CancellationToken ct,
+        string currency = "INR", decimal? original = null, decimal? rate = null)
     {
         if (externalId is not null && await db.SupporterContributions.AnyAsync(c => c.ExternalId == externalId, ct)) return (false, null);
 
@@ -35,6 +36,9 @@ public static class SupporterRecorder
             UserId = user?.Id,
             Name = name,
             AmountInr = amountInr,
+            Currency = currency,
+            OriginalAmount = original,
+            RateToInr = rate,
             Source = source,
             ShowAmount = showAmount,
             ExternalId = externalId,

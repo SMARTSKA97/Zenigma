@@ -1,6 +1,9 @@
 <a class="back" routerLink="/stats">‹ Stats</a>
 <h1>Badges</h1>
 <p class="muted lede">{{ earned() }} of {{ badges().length }} earned. Streak badges need you to be signed in.</p>
+@if (waiting() > 0) {
+  <button type="button" class="collect-all" (click)="collectAll()">Collect {{ waiting() }} badge {{ waiting() === 1 ? 'reward' : 'rewards' }}</button>
+}
 @for (g of groups(); track g.name) {
   <h2 class="group">{{ g.name }} <span class="muted">{{ g.earned }}/{{ g.items.length }}</span></h2>
   <div class="grid">
@@ -13,6 +16,17 @@
         <i [style.width.%]="(min(b) / b.need) * 100"></i>
       </span>
       <span class="num">{{ b.have >= b.need ? 'Earned' : min(b) + ' / ' + b.need }}</span>
+      @if (reward(b.id); as r) {
+        @if (r.coins > 0) {
+          @if (b.have >= b.need && !claimed().includes(b.id)) {
+            <button type="button" class="claim" [disabled]="blocked(b)" (click)="collect(b)">{{ blocked(b) ? 'Use a hint first' : 'Collect' }} · +{{ r.coins }}🪙{{ r.hints ? ' +' + r.hints + '💡' : '' }}</button>
+          } @else if (b.have < b.need) {
+            <span class="prize">Reward +{{ r.coins }}🪙{{ r.hints ? ' +' + r.hints + '💡' : '' }}</span>
+          } @else {
+            <span class="prize done">Collected ✓</span>
+          }
+        }
+      }
     </article>
   }
   </div>

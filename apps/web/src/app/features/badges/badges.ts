@@ -10,9 +10,19 @@ import { MindDailyService } from '../../games/mind/mind-daily';
 import { MIND_LIVE } from '../../games/catalog';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
+import { HintsService, FREE_CAP } from '../../core/hints.service';
 import { WalletService } from '../../core/wallet.service';
 import { SupportService } from '../../core/support.service';
 import { ChallengesService, activityFrom } from '../challenges/challenges.service';
+
+const CLAIMED_KEY = 'zenigma.badges.claimed';
+/** The hard ones pay 3 hints, the good ones 1; every badge pays 5 coins (the supporter badges are a thank-you and pay nothing). */
+const HARD = new Set(['lv1000', 'lv2500', 'streak100', 'daily200', 'clean100', 'insane1', 'mindall', 'brain100', 'chal50']);
+const EASY = new Set(['first', 'lv10', 'boss', 'early', 'owl', 'mind3', 'chal1']);
+export function rewardOf(id: string): { coins: number; hints: number } {
+  if (id.startsWith('sup')) return { coins: 0, hints: 0 };
+  return { coins: 5, hints: HARD.has(id) ? 3 : EASY.has(id) ? 0 : 1 };
+}
 
 interface Badge {
   id: string;
@@ -41,6 +51,9 @@ export class Badges implements OnInit {
   private readonly challenges = inject(ChallengesService);
   private readonly wallet = inject(WalletService);
   private readonly support = inject(SupportService);
+  protected readonly hints = inject(HintsService);
+  protected readonly claimed = signal<string[]>(this.readClaimed());
+  protected readonly reward = rewardOf;
   private readonly stats = signal<Stats | null>(null);
   private readonly loaded = signal(0);
 
@@ -185,6 +198,41 @@ export class Badges implements OnInit {
       // Saved stats first; refreshed only if the server is awake anyway, so opening Badges never wakes it.
       this.stats.set(this.statsApi.peek());
       void this.statsApi.refreshIfAwake().then((s) => s && this.stats.set(s)).catch(() => undefined);
+    }
+  }
+
+  /** Earned badges whose reward has not been collected yet. */
+  protected readonly waiting = computed(() => this.badges().filter((b) => b.have >= b.need && !this.claimed().includes(b.id) && (rewardOf(b.id).coins > 0)).length);
+
+  /** True when a badge's hint reward would not fit in the stash (collect after using some hints). */
+  protected blocked(b: Badge): boolean {
+    return rewardOf(b.id).hints > 0 && this.hints.balance() > FREE_CAP - rewardOf(b.id).hints;
+  }
+
+  protected collect(b: Badge): void {
+    const r = rewardOf(b.id);
+    if (b.have < b.need || this.claimed().includes(b.id) || r.coins === 0 || this.blocked(b)) return;
+    if (r.hints) this.hints.grant(r.hints, 'badge', `badge:${b.id}`);
+    this.wallet.earn('badge', `badge:${b.id}`, `Badge: ${b.name}`);
+    const next = [...this.claimed(), b.id];
+    this.claimed.set(next);
+    try {
+      localStorage.setItem(CLAIMED_KEY, JSON.stringify(next));
+    } catch {
+      /* the reward is still paid once: the ref is unique */
+    }
+  }
+
+  protected collectAll(): void {
+    for (const b of this.badges()) this.collect(b);
+  }
+
+  private readClaimed(): string[] {
+    try {
+      const v = JSON.parse(localStorage.getItem(CLAIMED_KEY) ?? '[]') as unknown;
+      return Array.isArray(v) ? (v as string[]) : [];
+    } catch {
+      return [];
     }
   }
 

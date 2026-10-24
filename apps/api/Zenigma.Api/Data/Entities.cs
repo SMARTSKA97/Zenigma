@@ -165,6 +165,10 @@ public class SupporterContribution
     public string? UserId { get; set; }
     public string Name { get; set; } = "";
     public int AmountInr { get; set; }
+    /// <summary>The currency it was paid in, the amount in it, and the rupees one unit was worth when it came in (null for rupees).</summary>
+    public string Currency { get; set; } = "INR";
+    public decimal? OriginalAmount { get; set; }
+    public decimal? RateToInr { get; set; }
     public string Source { get; set; } = "manual";
     public bool ShowAmount { get; set; } = true;
     public string? ExternalId { get; set; }
