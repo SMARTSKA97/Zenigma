@@ -7,8 +7,8 @@ import { PINPOINT, PinpointCategory } from './pinpoint-data';
 import { isCorrect, pointsAt } from './pinpoint-engine';
 
 const ROUNDS = 5;
-/** The daily game is three categories. */
-const DAILY_ROUNDS = 3;
+/** The daily game is one category. */
+const DAILY_ROUNDS = 1;
 
 /**
  * Five words that all belong to one category are shown a clue at a time, vaguest first. Name the category. A wrong guess reveals the next clue.
@@ -23,7 +23,7 @@ const DAILY_ROUNDS = 3;
 })
 export class Pinpoint implements OnInit {
   readonly done = output<MindResult>();
-  /** Set for the daily game: the same three categories for everyone, played once. */
+  /** Set for the daily game: the same category for everyone, played once. */
   readonly seed = input<string | null>(null);
   private rounds = ROUNDS;
   private readonly haptics = inject(HapticsService);
