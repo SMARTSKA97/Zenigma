@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ConnectionService } from '../../core/connection.service';
@@ -7,11 +7,13 @@ import { gameInfo, SKILLS } from '../../games/catalog';
 import { MindDailyService } from '../../games/mind/mind-daily';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { Glyph } from '../../shared/glyph';
+import { CardInput } from '../../shared/share-card';
+import { ShareSheet } from '../../shared/share-sheet';
 
 /** Today's mind set: one short game from each skill, the same for everyone. */
 @Component({
   selector: 'app-mind-daily-panel',
-  imports: [RouterLink, Glyph],
+  imports: [RouterLink, Glyph, ShareSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-daily-panel.html',
   styleUrl: './mind-daily-panel.scss',
@@ -21,6 +23,17 @@ export class MindDailyPanel implements OnInit {
   private readonly api = inject(LeaderboardService);
   protected readonly auth = inject(AuthService);
   private readonly conn = inject(ConnectionService);
+  protected readonly sharing = signal(false);
+
+  /** The finished set as a card: points out of the maximum (no answers, so nothing is spoiled) and the day's streak. */
+  protected readonly shareData = computed<{ card: CardInput; text: string }>(() => {
+    const score = `${this.daily.points()} / ${this.daily.maxPoints()}`;
+    const streak = this.daily.streak();
+    return {
+      text: `Zenigma mind set ${this.daily.date()}: ${score}${streak ? ` · 🔥 ${streak}` : ''}\nhttps://zenigma.ska97homelab.uk`,
+      card: { name: 'Mind set', label: `Daily ${this.daily.date()}`, hue: 285, grid: [], score, streak },
+    };
+  });
   protected readonly period = signal<'today' | 'week'>('today');
   protected readonly board = signal<Leaderboard | null>(null);
   protected readonly boardFailed = signal(false);

@@ -1,14 +1,29 @@
-<app-sheet label="Share your result" (closed)="closed.emit()">
+<app-sheet label="Share" (closed)="closed.emit()">
   <div class="wrap">
-    <h2>Share your result</h2>
-    <div class="preview" [class.loading]="!url()">
-      @if (url(); as src) {
-        <img [src]="src" alt="Result card showing your finished board, time and streak" />
+    <h2>{{ streakCard() ? 'Share your streak' : 'Share your result' }}</h2>
+    <div class="rail" [class.loading]="!slides().length" (scroll)="onScroll($event)" role="group" aria-label="Pictures to share">
+      @for (s of slides(); track s.label) {
+        <figure class="slide" [class.sticker]="s.sticker">
+          <img [src]="s.url" [alt]="s.alt" />
+        </figure>
+      } @empty {
+        <figure class="slide"></figure>
       }
     </div>
+    @if (slides().length > 1) {
+      <div class="dots" aria-hidden="true">
+        @for (s of slides(); track s.label; let i = $index) {
+          <i [class.on]="i === index()"></i>
+        }
+      </div>
+      <p class="muted">{{ current()?.label }}{{ current()?.sticker ? ': copy or save it to lay over any photo' : '' }}</p>
+    }
     <div class="actions">
-      <button type="button" [disabled]="!blob()" (click)="send()">Share</button>
-      <button type="button" class="secondary" [disabled]="!blob()" (click)="save()">Save image</button>
+      <button type="button" [disabled]="!current()" (click)="send()">Share</button>
+      @if (canCopyImage) {
+        <button type="button" class="secondary" [disabled]="!current()" (click)="copyImage()">{{ imageCopied() ? 'Copied' : 'Copy image' }}</button>
+      }
+      <button type="button" class="secondary" [disabled]="!current()" (click)="save()">Save</button>
       <button type="button" class="secondary" (click)="copy()">{{ copied() ? 'Copied' : 'Copy text' }}</button>
     </div>
     @if (note()) {

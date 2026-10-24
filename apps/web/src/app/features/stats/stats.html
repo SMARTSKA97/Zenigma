@@ -20,7 +20,7 @@
 } @else if (stats(); as s) {
   <button type="button" class="secondary share-streak" (click)="shareStreak()">Share my streak</button>
   @if (shareCard(); as c) {
-    <app-share-sheet [card]="c.card" [text]="c.text" (closed)="shareCard.set(null)" />
+    <app-share-sheet [card]="c.card ?? null" [streakCard]="c.streakCard ?? null" [text]="c.text" (closed)="shareCard.set(null)" />
   }
   <app-insights [stats]="s" [limit]="5" class="ins" />
   <section class="rewards card">

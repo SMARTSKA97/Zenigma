@@ -7,7 +7,8 @@ import { SyncService } from '../../core/sync.service';
 import { DAILY_GAMES } from '../../games/catalog';
 import { Glyph } from '../../shared/glyph';
 import { FreezeList } from '../../shared/freeze-sheet';
-import { CardInput } from '../../shared/share-card';
+import { CardInput, StreakCardInput } from '../../shared/share-card';
+import { streakShare } from '../../shared/streak-share';
 import { ShareSheet } from '../../shared/share-sheet';
 import { Insights } from './insights';
 
@@ -40,19 +41,15 @@ export class StatsPage implements OnInit {
     return Array.from({ length: 35 }, (_, i) => new Date(end - (34 - i) * 86_400_000).toISOString().slice(0, 10));
   });
 
-  protected readonly shareCard = signal<{ card: CardInput; text: string } | null>(null);
+  protected readonly shareCard = signal<{ card?: CardInput; streakCard?: StreakCardInput; text: string } | null>(null);
 
-  /** A picture of the last four weeks: a green square for each day any daily was solved, blue when a freeze covered it. */
+  /** A streak card to post as it is, and a sticker to lay over a photo. */
   protected shareStreak(): void {
     const s = this.stats();
     if (!s) return;
-    const days = this.days().slice(7); // four weeks
-    const mark = (d: string) => (s.games.some((g) => g.recent.includes(d)) ? '🟩' : s.games.some((g) => g.frozen.includes(d)) ? '🟦' : '⬛');
-    const grid = Array.from({ length: 4 }, (_, w) => days.slice(w * 7, w * 7 + 7).map(mark));
     const streak = Math.max(0, ...s.games.map((g) => g.current));
     const best = Math.max(0, ...s.games.map((g) => g.best));
-    const text = [`Zenigma · ${streak}-day streak`, '', ...grid.map((r) => r.join('')), '', `Best streak ${best} days`].join('\n');
-    this.shareCard.set({ text, card: { name: 'Zenigma', label: `${streak}-day streak`, hue: 25, grid, streak, score: `Best ${best}` } });
+    this.shareCard.set(streakShare(Math.max(1, streak), this.auth.user()?.displayName, best));
   }
 
   ngOnInit(): void {

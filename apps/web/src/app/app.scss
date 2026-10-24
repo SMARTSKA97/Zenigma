@@ -276,8 +276,10 @@ main {
     flex: 1;
     flex-direction: column;
     gap: 0.1rem;
-    padding: 0.5rem 0.25rem 0.4rem;
-    font-size: 0.72rem;
+    min-width: 0;
+    padding: 0.5rem 0.1rem 0.4rem;
+    font-size: clamp(0.62rem, 3.1vw, 0.72rem);
+    white-space: nowrap;
     min-height: 54px;
     justify-content: center;
   }

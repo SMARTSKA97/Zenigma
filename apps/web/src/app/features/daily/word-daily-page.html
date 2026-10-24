@@ -45,6 +45,12 @@
           <p class="muted">{{ detail() || 'Done for today' }} · {{ time(r.ms) }}</p>
         }
         <p class="muted">Come back tomorrow for a new one.</p>
+        @if (shareData(); as sd) {
+          <button type="button" (click)="sharing.set(true)">Share result</button>
+          @if (sharing()) {
+            <app-share-sheet [card]="sd.card" [text]="sd.text" (closed)="sharing.set(false)" />
+          }
+        }
         @if (auth.signedIn()) {
           <div class="board">
             <b>Today's board</b>

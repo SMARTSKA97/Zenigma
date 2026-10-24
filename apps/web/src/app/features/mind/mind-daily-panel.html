@@ -26,6 +26,12 @@
       </li>
     }
   </ul>
+  @if (daily.complete()) {
+    <button type="button" class="secondary" (click)="sharing.set(true)">Share my set</button>
+    @if (sharing()) {
+      <app-share-sheet [card]="shareData().card" [text]="shareData().text" (closed)="sharing.set(false)" />
+    }
+  }
   @if (auth.signedIn()) {
     <div class="board">
       <div class="head">

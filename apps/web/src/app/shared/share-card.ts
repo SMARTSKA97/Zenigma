@@ -216,3 +216,104 @@ export async function renderCard(input: CardInput): Promise<Blob> {
 
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('card'))), 'image/png'));
 }
+
+// ---------------------------------------------------------------------------------------------- streak card
+
+export interface StreakCardInput {
+  days: number;
+  /** The player's name for the footer (a guest gets a plain line). */
+  name: string;
+  /** "Oct 24, 2026". */
+  date: string;
+  best?: number;
+}
+
+/** A flame, drawn from curves so it needs no emoji font. `h` is its height; (cx, top) is the tip. */
+function flame(ctx: CanvasRenderingContext2D, cx: number, top: number, h: number, outer: string, inner: string): void {
+  const w = h * 0.78;
+  const body = (scale: number, dy: number, color: string) => {
+    const s = scale;
+    const x = cx;
+    const y = top + dy;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x + w * 0.1 * s, y + h * 0.22 * s, x + w * 0.52 * s, y + h * 0.34 * s, x + w * 0.5 * s, y + h * 0.68 * s);
+    ctx.bezierCurveTo(x + w * 0.48 * s, y + h * 0.9 * s, x + w * 0.26 * s, y + h * s, x, y + h * s);
+    ctx.bezierCurveTo(x - w * 0.26 * s, y + h * s, x - w * 0.48 * s, y + h * 0.9 * s, x - w * 0.5 * s, y + h * 0.68 * s);
+    ctx.bezierCurveTo(x - w * 0.52 * s, y + h * 0.46 * s, x - w * 0.22 * s, y + h * 0.4 * s, x - w * 0.14 * s, y + h * 0.18 * s);
+    ctx.bezierCurveTo(x - w * 0.1 * s, y + h * 0.1 * s, x - w * 0.04 * s, y + h * 0.04 * s, x, y);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  };
+  body(1, 0, outer);
+  body(0.52, h * 0.48, inner);
+}
+
+/**
+ * The streak picture: a solid card (to post as it is) or a sticker with a clear background (to lay over any photo).
+ */
+export async function renderStreak(input: StreakCardInput, variant: 'card' | 'sticker'): Promise<Blob> {
+  const W = 1080;
+  const H = variant === 'card' ? 1350 : 1080;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+  const font = (weight: number, size: number) => `${weight} ${size}px "Segoe UI", system-ui, -apple-system, Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+
+  if (variant === 'card') {
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#ff9a1f');
+    bg.addColorStop(1, '#f2570f');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W / 2, 520, 40, W / 2, 520, 560);
+    glow.addColorStop(0, 'rgba(255,240,150,0.55)');
+    glow.addColorStop(1, 'rgba(255,240,150,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+    // The four-square brand mark and name, centred at the top.
+    ctx.fillStyle = '#ffffff';
+    for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+      roundRect(ctx, W / 2 - 150 + dx * 26, 96 + dy * 26, 20, 20, 5);
+      ctx.fill();
+    }
+    ctx.textAlign = 'left';
+    ctx.font = font(800, 56);
+    ctx.fillText('Zenigma', W / 2 - 100, 146);
+    ctx.textAlign = 'center';
+    flame(ctx, W / 2, 190, 330, '#ffe14a', '#fff6c2');
+    ctx.fillStyle = '#fff6c2';
+    ctx.font = font(900, input.days >= 100 ? 300 : 360);
+    ctx.fillText(String(input.days), W / 2, 910);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = font(800, 96);
+    ctx.fillText('day streak', W / 2, 1030);
+    ctx.font = font(600, 40);
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.textAlign = 'left';
+    ctx.fillText(input.name, 72, 1270);
+    ctx.textAlign = 'right';
+    ctx.fillText(input.date, W - 72, 1270);
+    ctx.textAlign = 'center';
+  } else {
+    // A sticker: nothing behind it, so it stays readable on a light or a dark photo through a soft shadow.
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = 28;
+    ctx.shadowOffsetY = 6;
+    flame(ctx, W / 2, 120, 300, '#ff9a1f', '#ffe14a');
+    ctx.fillStyle = '#ffffff';
+    ctx.font = font(900, 300);
+    ctx.fillText(String(input.days), W / 2, 700);
+    ctx.font = font(800, 90);
+    ctx.fillText('day streak', W / 2, 810);
+    ctx.shadowColor = 'transparent';
+    ctx.font = font(600, 38);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillText('Zenigma', W / 2, 920);
+  }
+  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('card'))), 'image/png'));
+}

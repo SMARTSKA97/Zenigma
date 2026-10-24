@@ -18,11 +18,13 @@ import { Wend } from '../../games/mind/wend';
 import { dailyPoints, isWordDaily, WordDailyGame, WordDailyService } from '../../games/mind/word-daily';
 import { DayStreakService } from '../../core/day-streak.service';
 import { Glyph } from '../../shared/glyph';
+import { CardInput } from '../../shared/share-card';
+import { ShareSheet } from '../../shared/share-sheet';
 
 /** One word daily: the puzzle of the day (the same for everyone), played once, with today's board under the result. */
 @Component({
   selector: 'app-word-daily-page',
-  imports: [RouterLink, Glyph, Pinpoint, ChainLink, Crossclimb, Wend, CometSlice],
+  imports: [RouterLink, Glyph, ShareSheet, Pinpoint, ChainLink, Crossclimb, Wend, CometSlice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './word-daily-page.html',
   styleUrl: './word-daily-page.scss',
@@ -45,6 +47,19 @@ export class WordDailyPage {
   protected readonly how = computed(() => MIND_META[this.id() as keyof typeof MIND_META]?.how ?? '');
   protected readonly stage = signal<'intro' | 'play' | 'result'>('intro');
   protected readonly detail = signal('');
+  protected readonly sharing = signal(false);
+
+  /** A card with the score out of 100 (no answers, so nothing is spoiled), the time and today's streak. */
+  protected readonly shareData = computed<{ card: CardInput; text: string } | null>(() => {
+    const r = this.result();
+    const info = this.info();
+    if (!r || !info) return null;
+    const score = `${r.points} / 100`;
+    return {
+      text: `Zenigma ${info.name} ${this.daily.date()}: ${score} in ${formatDuration(r.ms)}\nhttps://zenigma.ska97homelab.uk`,
+      card: { name: info.name, label: `Daily ${this.daily.date()}`, hue: info.hue, grid: [], score, time: formatDuration(r.ms), streak: this.ds.streak() },
+    };
+  });
   protected readonly board = signal<Leaderboard | null>(null);
   protected readonly boardFailed = signal(false);
   protected readonly seed = computed(() => (this.game() ? this.daily.seed(this.game()!) : ''));
