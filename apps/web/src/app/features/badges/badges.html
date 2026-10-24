@@ -19,7 +19,7 @@
       @if (reward(b.id); as r) {
         @if (r.coins > 0) {
           @if (b.have >= b.need && !claimed().includes(b.id)) {
-            <button type="button" class="claim" [disabled]="blocked(b)" (click)="collect(b)">{{ blocked(b) ? 'Use a hint first' : 'Collect' }} · +{{ r.coins }}🪙{{ r.hints ? ' +' + r.hints + '💡' : '' }}</button>
+            <button type="button" class="claim" (click)="collect(b)">Collect · +{{ r.coins }}🪙{{ r.hints ? ' +' + r.hints + '💡' : '' }}</button>
           } @else if (b.have < b.need) {
             <span class="prize">Reward +{{ r.coins }}🪙{{ r.hints ? ' +' + r.hints + '💡' : '' }}</span>
           } @else {

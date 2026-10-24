@@ -18,7 +18,7 @@ public record HintBalanceDto(int? Balance, int? Short = null);
 /// </summary>
 public static partial class HintsEndpoints
 {
-    public const int FreeCap = 10;
+    public const int FreeCap = 20;
     public const int MaxEntries = 100;
 
     [GeneratedRegex("^[a-z0-9._-]{1,24}$")]

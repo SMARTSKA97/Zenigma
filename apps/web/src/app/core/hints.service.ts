@@ -109,9 +109,12 @@ export class HintsService {
     this.saved.outbox = [...this.saved.outbox, { id, delta, reason }].slice(-300);
   }
 
-  /** Gives hints from a free source (capped). Returns how many were actually added. */
-  grant(count: number, reason = 'earn', id?: string): number {
-    const room = Math.max(0, FREE_CAP - this.balance());
+  /**
+   * Gives hints from a free source (capped at the stash size). A reward the player has earned and collects themselves
+   * (a goal or a badge) passes `earned` and is paid in full, even over the cap. Returns how many were actually added.
+   */
+  grant(count: number, reason = 'earn', id?: string, earned = false): number {
+    const room = earned ? count : Math.max(0, FREE_CAP - this.balance());
     const added = Math.min(count, room);
     if (added > 0) {
       this.balance.update((b) => b + added);

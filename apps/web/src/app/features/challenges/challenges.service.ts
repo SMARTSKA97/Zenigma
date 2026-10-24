@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AuthService } from '../../core/auth.service';
-import { FREE_CAP, HintsService } from '../../core/hints.service';
+import { HintsService } from '../../core/hints.service';
 import { Stats, StatsService } from '../../core/stats.service';
 import { SyncService } from '../../core/sync.service';
 import { MindStore } from '../../games/mind/mind-store';
@@ -80,16 +80,13 @@ export class ChallengesService {
     return this.isClaimed(c) ? 0 : c.template.reward - (this.paid()[c.claimKey] ?? 0);
   }
 
-  /** True when the hint stash has no room, so collecting would pay nothing. */
-  readonly full = computed(() => this.hints.balance() >= FREE_CAP);
 
   /**
-   * Collects the hints for a finished goal. Only what fits in the stash is paid; the rest stays collectable, so a full
-   * stash never wastes a reward. Returns how many were added.
+   * Collects the hints for a finished goal. Earned rewards are always paid in full, even when the stash is at its cap. Returns how many were added.
    */
   claim(c: ChallengeState): number {
     if (!c.done || this.isClaimed(c)) return 0;
-    const added = this.hints.grant(this.owed(c), 'challenge');
+    const added = this.hints.grant(this.owed(c), 'challenge', undefined, true);
     if (added === 0) return 0;
     const paid = { ...this.paid(), [c.claimKey]: (this.paid()[c.claimKey] ?? 0) + added };
     if (paid[c.claimKey] >= c.template.reward) {

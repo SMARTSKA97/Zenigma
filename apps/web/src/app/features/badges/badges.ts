@@ -10,7 +10,7 @@ import { MindDailyService } from '../../games/mind/mind-daily';
 import { MIND_LIVE } from '../../games/catalog';
 import { MIND_META } from '../../games/mind/mind-meta';
 import { MindGameId } from '../../games/catalog';
-import { HintsService, FREE_CAP } from '../../core/hints.service';
+import { HintsService } from '../../core/hints.service';
 import { WalletService } from '../../core/wallet.service';
 import { SupportService } from '../../core/support.service';
 import { ChallengesService, activityFrom } from '../challenges/challenges.service';
@@ -204,15 +204,10 @@ export class Badges implements OnInit {
   /** Earned badges whose reward has not been collected yet. */
   protected readonly waiting = computed(() => this.badges().filter((b) => b.have >= b.need && !this.claimed().includes(b.id) && (rewardOf(b.id).coins > 0)).length);
 
-  /** True when a badge's hint reward would not fit in the stash (collect after using some hints). */
-  protected blocked(b: Badge): boolean {
-    return rewardOf(b.id).hints > 0 && this.hints.balance() > FREE_CAP - rewardOf(b.id).hints;
-  }
-
   protected collect(b: Badge): void {
     const r = rewardOf(b.id);
-    if (b.have < b.need || this.claimed().includes(b.id) || r.coins === 0 || this.blocked(b)) return;
-    if (r.hints) this.hints.grant(r.hints, 'badge', `badge:${b.id}`);
+    if (b.have < b.need || this.claimed().includes(b.id) || r.coins === 0) return;
+    if (r.hints) this.hints.grant(r.hints, 'badge', `badge:${b.id}`, true);
     this.wallet.earn('badge', `badge:${b.id}`, `Badge: ${b.name}`);
     const next = [...this.claimed(), b.id];
     this.claimed.set(next);

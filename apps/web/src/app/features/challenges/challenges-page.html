@@ -28,7 +28,7 @@
           @if (c.isClaimed(s)) {
             <span class="got">Collected</span>
           } @else if (s.done) {
-            <button type="button" class="collect" [disabled]="c.full()" (click)="collect(s)">{{ c.full() ? 'Stash full' : '+' + c.owed(s) + ' 💡' }}</button>
+            <button type="button" class="collect" (click)="collect(s)">{{ '+' + c.owed(s) + ' 💡' }}</button>
           } @else {
             <span class="num">{{ min(s) }}/{{ s.template.target }}</span>
             <span class="reward">+{{ s.template.reward }} 💡</span>
