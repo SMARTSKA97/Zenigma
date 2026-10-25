@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { isIosDevice } from './install.service';
+import { isAndroidDevice, isIosDevice } from './install.service';
 import { ConnectionService } from './connection.service';
 import { UpdaterService } from './updater.service';
 import { WalletService } from './wallet.service';
@@ -45,7 +45,7 @@ export class SupportService {
   /** The generic UPI link: on Android this opens the system chooser of every UPI app. */
   readonly upiLink = this.upiUrl();
   readonly isIos = isIosDevice();
-  readonly isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+  readonly isAndroid = isAndroidDevice();
   /** Phones can open a UPI app; computers show a QR code to scan with one instead. */
   readonly isMobile = this.isIos || this.isAndroid;
   /** Whether the UPI panel (amount, apps, QR) is open. */

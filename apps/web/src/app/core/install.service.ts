@@ -5,6 +5,19 @@ export function isIosDevice(): boolean {
   return typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 }
 
+/**
+ * Android, including a browser set to "Desktop site" (whose user agent no longer says Android: it still reports touch on Linux,
+ * and Chromium's userAgentData says Android when the user agent does not).
+ */
+export function isAndroidDevice(): boolean {
+  if (typeof navigator === 'undefined' || isIosDevice()) return false;
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return true;
+  const hinted = (navigator as unknown as { userAgentData?: { platform?: string } }).userAgentData?.platform;
+  if (hinted === 'Android') return true;
+  return /Linux/.test(ua) && !/CrOS/.test(ua) && navigator.maxTouchPoints > 1;
+}
+
 function isStandalone(): boolean {
   if (typeof window === 'undefined') return false;
   return (navigator as unknown as { standalone?: boolean }).standalone === true || window.matchMedia?.('(display-mode: standalone)').matches === true;
