@@ -3,7 +3,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { SupportService } from '../core/support.service';
 
-const CHIPS = [49, 99, 199, 499];
+const TIERS = [
+  { amount: 49, emoji: '☕', label: 'A chai' },
+  { amount: 99, emoji: '🍪', label: 'A snack' },
+  { amount: 199, emoji: '🍛', label: 'A meal' },
+  { amount: 499, emoji: '🎉', label: 'Big thanks' },
+];
 
 /**
  * Pay by UPI: pick an amount, then pay with an app (Android shows its chooser of every UPI app, iPhone gets a list) or scan a QR code with any
@@ -16,72 +21,91 @@ const CHIPS = [49, 99, 199, 499];
   template: `
     @if (state() === 'sent') {
       <div class="box ok">
-        <strong>Thank you! 💚</strong>
-        <p>I will check the payment and your badge and look switch on soon, on every device you sign in on.</p>
-        <button type="button" class="ghost" (click)="done()">Close</button>
+        <div class="big" aria-hidden="true">💚</div>
+        <strong>Thank you!</strong>
+        <p>I will check the payment, and your badge and look switch on soon, on every device you sign in on.</p>
+        <button type="button" class="primary" (click)="done()">Close</button>
       </div>
     } @else if (s.pending()) {
       <div class="box">
-        <strong>Did your {{ s.pending()?.amountInr ? '₹' + s.pending()?.amountInr : '' }} payment go through?</strong>
+        <strong class="q">Did your {{ s.pending()?.amountInr ? '₹' + s.pending()?.amountInr : '' }} payment go through?</strong>
         @if (!auth.signedIn()) {
           <p>Sign in so your thank-you goes to your account, then come back and tap yes.</p>
           <div class="row">
-            <button type="button" (click)="signIn()">Sign in</button>
+            <button type="button" class="primary" (click)="signIn()">Sign in</button>
             <button type="button" class="ghost" (click)="notYet()">Not yet</button>
           </div>
         } @else {
           <p>Your UPI app has the receipt. Tell me and I will check it on my side.</p>
           <div class="row">
-            <button type="button" [disabled]="busy()" (click)="yes()">{{ busy() ? 'Sending' : 'Yes, it did' }}</button>
+            <button type="button" class="primary" [disabled]="busy()" (click)="yes()">{{ busy() ? 'Sending…' : 'Yes, it did' }}</button>
             <button type="button" class="ghost" (click)="notYet()">No, not yet</button>
           </div>
         }
         @if (state() === 'unavailable') {
-          <p class="bad">Not available right now. Please try again later.</p>
+          <p class="bad">Tips are not switched on right now. Please try again later.</p>
         } @else if (state() === 'limit') {
           <p class="bad">That is enough for today. Thank you!</p>
         } @else if (state() === 'failed') {
-          <p class="bad">Could not send that. Please try again.</p>
+          <p class="bad">I could not reach the server (it may be waking up). Your payment is remembered here: tap “Yes, it did” again in a minute.</p>
         }
       </div>
     } @else {
       <div class="box">
-        <div class="chips" role="group" aria-label="Amount">
-          @for (c of chips; track c) {
-            <button type="button" class="chip" [class.on]="amount() === c" (click)="pick(c)">₹{{ c }}</button>
-          }
-          <label class="custom">
-            <span aria-hidden="true">₹</span>
-            <input type="number" inputmode="numeric" min="1" max="100000" placeholder="Other" aria-label="Other amount in rupees" [value]="isChip() ? '' : (amount() ?? '')" (input)="custom($event)" />
-          </label>
-        </div>
-
-        @if (s.isAndroid) {
-          <a class="pay" [href]="s.upiUrl(amount())" (click)="started()">Pay {{ amount() ? '₹' + amount() : '' }} with a UPI app</a>
-          <p class="hint">Android shows every UPI app on your phone in its own picker. Come back here afterwards and I will ask how it went.</p>
-        } @else if (s.isIos) {
-          <div class="apps" role="group" aria-label="Pay with">
-            @for (a of s.upiApps(amount()); track a.name) {
-              <a [href]="a.href" [style.--c]="a.color" (click)="started()"><i aria-hidden="true"></i>{{ a.name }}<span aria-hidden="true">›</span></a>
-            }
+        <header>
+          <span class="rupee" aria-hidden="true">₹</span>
+          <div>
+            <strong>Pay by UPI</strong>
+            <small>{{ s.config.upiId }}</small>
           </div>
-          <p class="hint">iPhone does not let websites list your installed apps, so pick yours here. If yours is not listed or does not open, choose “Any other UPI app”, or show the QR code and scan it with a UPI app on another phone, or copy the UPI ID.</p>
+          <button type="button" class="ghost sm" (click)="copy()">{{ copied() ? 'Copied' : 'Copy ID' }}</button>
+        </header>
+
+        <div class="tiers" role="group" aria-label="Amount">
+          @for (t of tiers; track t.amount) {
+            <button type="button" class="tier" [class.on]="amount() === t.amount" [attr.aria-pressed]="amount() === t.amount" (click)="pick(t.amount)">
+              <span class="em" aria-hidden="true">{{ t.emoji }}</span>
+              <b>₹{{ t.amount }}</b>
+              <small>{{ t.label }}</small>
+            </button>
+          }
+        </div>
+        <label class="custom">
+          <span>Or any amount</span>
+          <span class="field">₹<input type="number" inputmode="numeric" min="1" max="100000" placeholder="Your own" aria-label="Your own amount in rupees" [value]="isTier() ? '' : (amount() ?? '')" (input)="custom($event)" /></span>
+        </label>
+
+        @if (s.isMobile) {
+          <div class="seg" role="tablist" aria-label="How to pay">
+            <button type="button" role="tab" [attr.aria-selected]="mode() === 'apps'" [class.on]="mode() === 'apps'" (click)="mode.set('apps')">Open an app</button>
+            <button type="button" role="tab" [attr.aria-selected]="mode() === 'qr'" [class.on]="mode() === 'qr'" (click)="mode.set('qr')">Show QR code</button>
+          </div>
         }
 
-        @if (!s.isMobile || showQr()) {
+        @if (mode() === 'apps' && s.isMobile) {
+          @if (s.isAndroid) {
+            <a class="primary pay" [href]="s.upiUrl(amount())" (click)="started()">Pay {{ amount() ? '₹' + amount() : '' }} with a UPI app</a>
+            <p class="hint">Android lists every UPI app on your phone. Come back here afterwards and I will ask how it went.</p>
+          } @else {
+            <div class="apps" role="group" aria-label="Pay with">
+              @for (a of s.upiApps(amount()); track a.name) {
+                <a [href]="a.href" [style.--c]="a.color" (click)="started()"><i aria-hidden="true"></i>{{ a.name }}<span aria-hidden="true">›</span></a>
+              }
+            </div>
+            <p class="hint">iPhone does not let websites list your installed apps. Pick yours, or choose “Any other UPI app”, or switch to the QR code and scan it from a UPI app on another phone.</p>
+          }
+        } @else {
           <div class="qr">
             @if (qr(); as src) {
-              <img [src]="src" alt="UPI QR code. Scan it with any UPI app." width="180" height="180" />
+              <img [src]="src" alt="UPI QR code. Scan it with any UPI app." width="200" height="200" />
             } @else if (qrFailed()) {
-              <span class="muted">Could not make the QR code here. Copy the UPI ID ({{ s.config.upiId }}) and paste it into your UPI app.</span>
+              <span class="hint">Could not make the QR code here. Copy the UPI ID and paste it into your UPI app.</span>
             } @else {
-              <span class="muted">Making the QR code…</span>
+              <span class="hint">Making the QR code…</span>
             }
-            <p class="hint">{{ s.isMobile ? 'Scan this from another phone' : 'Scan with any UPI app' }} (GPay, PhonePe, Paytm, your bank's app…).</p>
+            <p class="hint">{{ s.isMobile ? 'Scan this from another phone' : 'Scan with any UPI app' }}: GPay, PhonePe, Paytm, your bank’s app…</p>
           </div>
-          <button type="button" class="ghost" (click)="started()">I have paid</button>
-        } @else {
-          <button type="button" class="ghost" (click)="openQr()">Show a QR code instead</button>
+          <button type="button" class="primary" (click)="started()">I have paid</button>
         }
       </div>
     }
@@ -92,58 +116,152 @@ const CHIPS = [49, 99, 199, 499];
     }
     .box {
       display: grid;
-      gap: 0.75rem;
-      padding: 0.9rem 1rem 1rem;
-      background: var(--surface);
-      border-radius: 4px;
-    }
-    .box.ok strong {
-      color: var(--good);
+      gap: 0.85rem;
+      padding-bottom: 0.5rem;
     }
     .box p {
       margin: 0;
     }
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
+    .box.ok {
+      justify-items: center;
+      text-align: center;
     }
-    .chip,
-    .custom {
+    .big {
+      font-size: 3rem;
+      animation: pop 0.5s var(--ease, ease-out);
+    }
+    @keyframes pop {
+      from {
+        transform: scale(0.3);
+        opacity: 0;
+      }
+    }
+    .q {
+      font-size: 1.1rem;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    header div {
+      flex: 1;
+      min-width: 0;
+    }
+    header small {
+      display: block;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+    .rupee {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      border-radius: 42% 58% 52% 48% / 52% 44% 56% 48%;
+      background: #22c55e;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .tiers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+    .tier {
+      display: grid;
+      justify-items: center;
+      gap: 0.05rem;
       min-height: 0;
-      padding: 0.4rem 0.9rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
+      padding: 0.6rem 0.3rem;
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
       background: transparent;
       color: var(--text);
       font: inherit;
-      font-weight: 700;
       box-shadow: none;
+      transition:
+        transform 0.15s,
+        background 0.15s,
+        border-color 0.15s;
     }
-    .chip.on {
-      background: var(--accent);
+    @media (min-width: 30rem) {
+      .tiers {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    .tier:active {
+      transform: scale(0.95);
+    }
+    .tier .em {
+      font-size: 1.35rem;
+    }
+    .tier b {
+      font-size: 1.05rem;
+    }
+    .tier small {
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+    .tier.on {
       border-color: var(--accent);
-      color: #fff;
+      background: color-mix(in srgb, var(--accent) 16%, transparent);
     }
     .custom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .field {
       display: inline-flex;
       align-items: center;
-      gap: 0.2rem;
-      padding: 0.2rem 0.8rem;
+      gap: 0.25rem;
+      padding: 0.35rem 0.8rem;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      color: var(--text);
+      font-weight: 700;
     }
-    .custom input {
-      width: 4.5rem;
+    .field input {
+      width: 6rem;
       min-height: 0;
-      padding: 0.2rem;
+      padding: 0.1rem;
       border: 0;
       background: transparent;
       color: inherit;
       font: inherit;
     }
-    .pay,
-    button:not(.chip):not(.ghost) {
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 3px;
+      border-radius: 999px;
+      background: var(--surface-2);
+    }
+    .seg button {
+      min-height: 0;
+      padding: 0.5rem;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 700;
+      box-shadow: none;
+    }
+    .seg button.on {
+      background: var(--accent);
+      color: #fff;
+    }
+    .primary {
       display: block;
-      padding: 0.75rem 1rem;
+      padding: 0.8rem 1rem;
       border: 0;
       border-radius: 999px;
       background: var(--accent);
@@ -155,7 +273,7 @@ const CHIPS = [49, 99, 199, 499];
     }
     .ghost {
       min-height: 0;
-      padding: 0.5rem 1rem;
+      padding: 0.55rem 1rem;
       border: 1px solid var(--border);
       border-radius: 999px;
       background: transparent;
@@ -164,13 +282,16 @@ const CHIPS = [49, 99, 199, 499];
       font-weight: 600;
       box-shadow: none;
     }
+    .ghost.sm {
+      padding: 0.3rem 0.8rem;
+      font-size: 0.82rem;
+    }
     .row {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
     }
-    .hint,
-    .muted {
+    .hint {
       color: var(--muted);
       font-size: 0.8rem;
     }
@@ -180,14 +301,14 @@ const CHIPS = [49, 99, 199, 499];
     }
     .apps {
       display: grid;
-      gap: 2px;
+      gap: 0.4rem;
     }
     .apps a {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      padding: 0.6rem 0.8rem;
-      border-radius: 14px;
+      padding: 0.7rem 0.9rem;
+      border-radius: 16px;
       background: var(--surface-2);
       color: var(--text);
       font-weight: 600;
@@ -206,13 +327,15 @@ const CHIPS = [49, 99, 199, 499];
     .qr {
       display: grid;
       justify-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
       text-align: center;
     }
     .qr img {
-      border-radius: 12px;
+      width: min(62vw, 14rem);
+      height: auto;
+      border-radius: 14px;
       background: #fff;
-      padding: 6px;
+      padding: 8px;
     }
   `,
 })
@@ -220,10 +343,11 @@ export class UpiPay {
   protected readonly s = inject(SupportService);
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  protected readonly chips = CHIPS;
+  protected readonly tiers = TIERS;
+  protected readonly mode = signal<'apps' | 'qr'>(this.s.isMobile ? 'apps' : 'qr');
+  protected readonly copied = signal(false);
   protected readonly amount = signal<number | null>(99);
   protected readonly qr = signal('');
-  protected readonly showQr = signal(false);
   protected readonly qrFailed = signal(false);
   protected readonly busy = signal(false);
   protected readonly state = signal<'idle' | 'sent' | 'unavailable' | 'limit' | 'failed'>('idle');
@@ -232,7 +356,7 @@ export class UpiPay {
     // The QR code follows the amount; computers always show it, phones only when asked.
     effect(() => {
       const amount = this.amount();
-      if (this.s.isMobile && !this.showQr()) return;
+      if (this.mode() !== 'qr') return;
       this.qrFailed.set(false);
       void this.s
         .qr(amount)
@@ -241,8 +365,18 @@ export class UpiPay {
     });
   }
 
-  protected isChip(): boolean {
-    return CHIPS.includes(this.amount() ?? -1);
+  protected isTier(): boolean {
+    return TIERS.some((t) => t.amount === this.amount());
+  }
+
+  protected async copy(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.s.config.upiId);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 1800);
+    } catch {
+      /* the ID is on screen to copy by hand */
+    }
   }
 
   protected pick(c: number): void {
@@ -252,10 +386,6 @@ export class UpiPay {
   protected custom(e: Event): void {
     const n = Math.round(Number((e.target as HTMLInputElement).value));
     this.amount.set(n > 0 && n <= 100000 ? n : null);
-  }
-
-  protected openQr(): void {
-    this.showQr.set(true);
   }
 
   /** The person is heading to their UPI app (or says they have paid): coming back asks how it went. */

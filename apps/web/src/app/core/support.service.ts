@@ -102,7 +102,6 @@ export class SupportService {
     const p = this.pending();
     if (!p) return;
     if (Date.now() - p.at > 6 * 60 * 60 * 1000) return this.clearPending();
-    this.open.set(true);
     this.paying.set(true);
   }
 
