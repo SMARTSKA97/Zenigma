@@ -1,6 +1,7 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { LocalStore } from '../../core/local-store';
-import { levelCountOf } from '../catalog';
+import { SyncService } from '../../core/sync.service';
+import { levelCountOf, trackOf } from '../catalog';
 
 /** Levels come in zones of ten: each climbs from easy (the first) to hard (the tenth). */
 export const ZONE_SIZE = 10;
@@ -46,7 +47,66 @@ const saveKey = (game: string) => `puzzle.save.${game}`;
 @Injectable({ providedIn: 'root' })
 export class PracticeStore {
   private readonly store = inject(LocalStore);
+  private readonly sync = inject(SyncService);
   private readonly all = signal<Partial<Record<string, Progress>>>({});
+  private restoring = false;
+  private again: { kind: string; payload: unknown }[] | null = null;
+
+  constructor() {
+    // Every solved level is an event in the account's log, and it comes back with sign-in. So a new device (or the installed iPhone app,
+    // whose storage is apart from Safari's) gets its solved levels and best times back, instead of starting from level 1.
+    effect(() => {
+      const events = this.sync.events();
+      untracked(() => void this.restore(events));
+    });
+  }
+
+  /** Merges the solved levels found in the event log into this device's progress. Never removes or worsens anything. */
+  async restore(events: { kind: string; payload: unknown }[]): Promise<void> {
+    if (this.restoring) {
+      this.again = events; // events arrived mid-run: go through them once more afterwards
+      return;
+    }
+    this.restoring = true;
+    try {
+      const found = new Map<string, { solved: Set<number>; best: Map<number, number>; clean: Set<number> }>();
+      for (const e of events) {
+        if (e.kind !== 'puzzle.practice.solved') continue;
+        const p = e.payload as { game?: string; variant?: string; level?: number; elapsedMs?: number; hinted?: boolean } | null;
+        if (!p?.game || !Number.isInteger(p.level) || (p.level as number) < 1) continue;
+        const track = trackOf(p.game, p.variant);
+        const f = found.get(track) ?? { solved: new Set<number>(), best: new Map<number, number>(), clean: new Set<number>() };
+        const level = p.level as number;
+        f.solved.add(level);
+        if (typeof p.elapsedMs === 'number' && p.elapsedMs > 0) f.best.set(level, Math.min(f.best.get(level) ?? Infinity, p.elapsedMs));
+        if (!p.hinted) f.clean.add(level);
+        found.set(track, f);
+      }
+      for (const [track, f] of found) {
+        const current = this.all()[track] ?? (await this.store.getMeta<Progress>(progressKey(track))) ?? { solved: [], best: {} };
+        const solved = new Set(current.solved);
+        let changed = false;
+        for (const l of f.solved) if (!solved.has(l)) (solved.add(l), (changed = true));
+        const best = { ...current.best };
+        for (const [l, ms] of f.best) if (best[l] === undefined || ms < best[l]) (best[l] = ms, (changed = true));
+        // Hinted unless it was ever solved clean.
+        const hinted = new Set(current.hinted ?? []);
+        for (const l of f.solved) {
+          if (f.clean.has(l)) hinted.delete(l);
+          else if (!current.solved.includes(l)) hinted.add(l);
+        }
+        if (!changed) continue;
+        const next: Progress = { ...current, solved: [...solved].sort((a, b) => a - b), best, hinted: [...hinted] };
+        this.all.update((all) => ({ ...all, [track]: next }));
+        await this.store.setMeta(progressKey(track), next);
+      }
+    } finally {
+      this.restoring = false;
+      const next = this.again;
+      this.again = null;
+      if (next) void this.restore(next);
+    }
+  }
 
   async load(game: string): Promise<void> {
     const saved = await this.store.getMeta<Progress>(progressKey(game));
