@@ -182,3 +182,20 @@ The API sends one-time six-digit codes through Brevo's HTTP API. Set these on Re
 Limits built in: a code lasts 15 minutes, works once, locks after 5 wrong tries; one new code a minute and 5 an hour per person; 5 email requests a minute per IP; 250 codes a day across everyone (Brevo's free plan sends 300 a day). Migration `V10__email_codes.sql` adds the table.
 
 Step by step (reusing an existing Brevo account), usage checks for Render and Neon, and slow-query tooling are in `OPERATIONS.md`.
+
+## What runs when (CI and Deploy)
+
+Both workflows decide what to run from the files a push changed (`.github/scripts/changes.sh`), and every job has a time limit.
+
+| You changed | CI checks | Deploy does |
+|---|---|---|
+| Only docs, README, release notes | nothing | nothing |
+| The Angular app (`apps/web/src`, `public`) | web tests and build (plus the dependency audit) | publishes the website |
+| `apps/api` | API build, tests, vulnerability check | runs Flyway only if migrations changed, then redeploys Render |
+| `db/migrations` | API job (migrations on a throwaway database) | Flyway on Neon, then loads upcoming puzzles |
+| `tools/generators`, levels, `tests/vectors` | generators check, web and API | loads upcoming puzzles, publishes the website |
+| `apps/web/android`, `package.json`, Capacitor config | Android debug build too | nothing extra |
+| `.github/workflows/ci.yml` or `.github/scripts` | everything | nothing |
+
+Deploy compares with the **last successful deploy**, so if one fails the next push retries what was missed. To deploy everything
+by hand, run the Deploy workflow with **Run workflow** (it ignores the filters).

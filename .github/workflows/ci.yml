@@ -12,9 +12,33 @@ concurrency:
 permissions:
   contents: read
 
+# Only the parts a push touched are checked (see .github/scripts/changes.sh): a UI change skips the API and the database,
+# a docs change skips everything. Every job has a time limit, so a stuck run ends instead of hanging.
 jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      api: ${{ steps.c.outputs.api }}
+      web: ${{ steps.c.outputs.web }}
+      puzzles: ${{ steps.c.outputs.puzzles }}
+      android: ${{ steps.c.outputs.android }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - id: c
+        run: .github/scripts/changes.sh ci
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
   api:
     name: API (build, migrate, test)
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -50,6 +74,9 @@ jobs:
 
   puzzles:
     name: Puzzle generators (levels and vectors are up to date)
+    needs: changes
+    if: needs.changes.outputs.puzzles == 'true'
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -67,6 +94,9 @@ jobs:
 
   web:
     name: Web (test, build)
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -86,6 +116,9 @@ jobs:
 
   android:
     name: Android (debug build)
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -98,6 +131,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+          cache: gradle
       - name: Accept Android SDK licenses and install platform 36
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true

@@ -1,7 +1,10 @@
 name: Deploy
 
-# Runs on every push to main. Order matters: database first, then the API (which expects the new schema),
-# then the web app. Render's own auto-deploy must be OFF so the API only ever deploys after its migrations.
+# Runs on every push to main, but only deploys what changed since the last successful deploy (see .github/scripts/changes.sh):
+# new migrations run Flyway, API changes redeploy Render, UI changes publish the website, docs changes do nothing.
+# Order matters: database first, then the API (which expects the new schema), then the web app.
+# Render's own auto-deploy must be OFF so the API only ever deploys after its migrations.
+# Run it by hand (workflow_dispatch) to deploy everything.
 on:
   push:
     branches: [main]
@@ -13,10 +16,33 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      api: ${{ steps.c.outputs.api }}
+      db: ${{ steps.c.outputs.db }}
+      web_deploy: ${{ steps.c.outputs.web_deploy }}
+      puzzles: ${{ steps.c.outputs.puzzles }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - id: c
+        run: .github/scripts/changes.sh deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE_SHA: ${{ github.event.before }}
+
   migrate:
     name: Migrate database (Flyway to Neon)
+    needs: changes
+    if: needs.changes.outputs.db == 'true'
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -30,7 +56,10 @@ jobs:
 
   puzzles:
     name: Load upcoming daily puzzles
-    needs: migrate
+    needs: [changes, migrate]
+    # The database step may be skipped (no new migration); a failed one still stops the rest.
+    if: ${{ !cancelled() && needs.migrate.result != 'failure' && needs.changes.outputs.puzzles == 'true' }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -52,7 +81,10 @@ jobs:
 
   api:
     name: Deploy API (Render)
-    needs: migrate
+    needs: [changes, migrate]
+    # The database step may be skipped (no new migration); a failed one still stops the rest.
+    if: ${{ !cancelled() && needs.migrate.result != 'failure' && needs.changes.outputs.api == 'true' }}
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -61,7 +93,10 @@ jobs:
 
   web:
     name: Deploy web (Cloudflare Pages)
-    needs: migrate
+    needs: [changes, migrate]
+    # The database step may be skipped (no new migration); a failed one still stops the rest.
+    if: ${{ !cancelled() && needs.migrate.result != 'failure' && needs.changes.outputs.web_deploy == 'true' }}
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     environment: production
     defaults:
