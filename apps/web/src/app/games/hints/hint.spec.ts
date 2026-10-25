@@ -12,7 +12,7 @@ import * as tango from '../tango/engine';
 import * as sudoku from '../sudoku/engine';
 import * as zip from '../zip/engine';
 import * as patches from '../patches/engine';
-import { hintFor, revealFor } from './hint';
+import { applyHint, hintFor, revealFor } from './hint';
 import { solvePatches, solveQueens, solveSudoku, solveTango, solveZip } from './solvers';
 
 const pick = <T>(levels: T[]): T[] => [0, 4, 9, 14, 99, 500, 999].map((i) => levels[i]).filter(Boolean);
@@ -139,6 +139,33 @@ describe('a hint is one concrete step', () => {
         board = board.map((c, i) => (i === h.focus ? want : c));
       }
       expect(board.includes('.')).toBe(false);
+    }
+  });
+
+  it('Show me makes the hint\'s own move, and following it solves a Tango board', () => {
+    for (const p of pick(TANGO as unknown as tango.TangoPuzzle[])) {
+      let board = tango.boardFrom(p);
+      for (let step = 0; step < 40 && board.includes('.'); step++) {
+        board = applyHint('tango', p, board, revealFor('tango', p, board)!) as tango.TangoCell[];
+      }
+      expect(board.includes('.')).toBe(false);
+      expect(tango.conflicts(p, board).size).toBe(0);
+    }
+  });
+
+  it('Show me steps a Zip path forward and takes back a wrong step', () => {
+    for (const p of pick(ZIP as unknown as zip.ZipPuzzle[])) {
+      const path = zip.blankPath(p);
+      const next = applyHint('zip', p, path, revealFor('zip', p, path)!) as number[];
+      expect(next.length).toBe(2);
+      expect(next[1]).toBe(solveZip(p)![1]);
+    }
+  });
+
+  it('Show me has nothing to do for a rectangle to draw', () => {
+    for (const p of pick(PATCHES as unknown as patches.PatchesPuzzle[])) {
+      const h = revealFor('patches', p, patches.blankBoard())!;
+      expect(applyHint('patches', p, patches.blankBoard(), h)).toBeNull();
     }
   });
 });

@@ -32,6 +32,8 @@
           <button type="button" class="secondary" (click)="share()">Share</button>
           <a class="button secondary" [routerLink]="['/games', game()]">Practice</a>
         </div>
+        <app-result-stats [game]="game()" />
+        <app-up-next [exclude]="game()" />
       </section>
     }
     @default {
@@ -142,7 +144,12 @@
           @if (tutorial()) {
             <button type="button" class="secondary" (click)="endTutorial()">Skip tutorial</button>
           } @else {
-            <button type="button" class="secondary" (click)="dismissCoach()">Got it</button>
+            <span class="coach-actions">
+              @if (canShowMe()) {
+                <button type="button" (click)="showMe()">Show me</button>
+              }
+              <button type="button" class="secondary" (click)="dismissCoach()">Got it</button>
+            </span>
           }
         </div>
       }
@@ -249,10 +256,12 @@
             <p class="pct">Faster than <b>{{ pct }}%</b> of players today</p>
           }
         }
+        <app-result-stats [game]="game()" />
         <div class="actions">
           <a class="button" [routerLink]="['/ranks']" [queryParams]="{ game: game(), kind: 'daily' }" (click)="resultOpen.set(false)">Leaderboard</a>
           <button type="button" class="secondary" (click)="share()">Share</button>
         </div>
+        <app-up-next [exclude]="game()" (go)="resultOpen.set(false)" />
       } @else {
         <div class="stars" role="img" [attr.aria-label]="stars() + ' of 3 stars'">
           @for (n of [1, 2, 3]; track n) {
@@ -277,6 +286,7 @@
           <button type="button" class="secondary" (click)="share()">Share</button>
           <button type="button" class="secondary" (click)="openLevel(level())">Replay</button>
         </div>
+        <app-up-next (go)="resultOpen.set(false)" />
       }
     </div>
   </app-sheet>

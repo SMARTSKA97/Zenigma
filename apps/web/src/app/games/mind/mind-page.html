@@ -85,6 +85,9 @@
             <a class="button secondary" routerLink="/mind">Mind</a>
           }
         </div>
+        @if (daily.inSet(id())) {
+          <app-up-next [exclude]="id()" />
+        }
       </section>
     }
   }

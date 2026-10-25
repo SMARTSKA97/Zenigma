@@ -8,6 +8,7 @@ import { BackService } from '../../core/back.service';
 import { HapticsService } from '../../core/haptics.service';
 import { gameInfo, SKILLS } from '../catalog';
 import { Confetti } from '../../shared/confetti';
+import { UpNext } from '../../shared/up-next';
 import { Glyph } from '../../shared/glyph';
 import { AnagramRush } from './anagram-rush';
 import { BackTrack } from './back-track';
@@ -47,7 +48,7 @@ import { LeaveSheet } from '../../shared/leave-sheet';
 /** One screen for every mind-training game: how to play, the game, then your score against your best. */
 @Component({
   selector: 'app-mind-page',
-  imports: [NgTemplateOutlet, Confetti, PlayScreen, RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend, CometSlice, Switchyard],
+  imports: [NgTemplateOutlet, UpNext, Confetti, PlayScreen, RouterLink, Glyph, LeaveSheet, QuickSums, ColourClash, EchoSequence, GridRecall, NumberRecall, QuickReflex, OddOneOut, SpotChange, TargetTap, BackTrack, PairMatch, AnagramRush, MissingLetters, WhatNext, TargetNumber, MentalTurn, NumberSort, DotCount, Opposites, WordRecall, ChainLink, Pinpoint, Crossclimb, Wend, CometSlice, Switchyard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mind-page.html',
   styleUrl: './mind-page.scss',

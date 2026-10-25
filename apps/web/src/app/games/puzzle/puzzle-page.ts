@@ -20,11 +20,13 @@ import { CanLeave } from '../../core/leave';
 import { Sheet } from '../../shared/sheet';
 import { HintWheel } from '../../shared/hint-wheel';
 import { ShareSheet } from '../../shared/share-sheet';
+import { ResultStats } from '../../shared/result-stats';
+import { UpNext } from '../../shared/up-next';
 import { CardInput, gridFromText } from '../../shared/share-card';
 import { WalletService } from '../../core/wallet.service';
 import { HintsService } from '../../core/hints.service';
 import { ScreenGuardService } from '../../core/screen-guard.service';
-import { Hint, hasMistake, hintFor, revealFor } from '../hints/hint';
+import { Hint, hasMistake, hintFor, revealFor, applyHint } from '../hints/hint';
 import { dailyDifficulty, gameInfo, levelCountOf, isPuzzleGame, mapLink, playLink, PuzzleGameId, trackOf } from '../catalog';
 import { QueensBoard } from '../queens/queens-board';
 import { SudokuBoard } from '../sudoku/sudoku-board';
@@ -49,7 +51,7 @@ const SLOW_WARN_DELAY_MS = 3000;
 
 @Component({
   selector: 'app-puzzle-page',
-  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, HintWheel, ShareSheet, LeaveSheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
+  imports: [NgTemplateOutlet, RouterLink, Confetti, Loader, Sheet, HintWheel, ShareSheet, ResultStats, UpNext, LeaveSheet, QueensBoard, TangoBoard, SudokuBoard, ZipBoard, PatchesBoard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './puzzle-page.html',
   styleUrl: './puzzle-page.scss',
@@ -716,6 +718,27 @@ export class PuzzlePage {
       this.flash('No mistakes so far. Keep going!');
       this.haptics.tap();
     }
+  }
+
+  /** The hint on show has a step that can be made for the player in one move (not a rectangle to draw). */
+  protected readonly canShowMe = computed(() => {
+    const c = this.coach();
+    const p = this.puzzle();
+    const s = this.state();
+    return !!c && !this.tutorial() && !this.locked() && !!p && s != null && applyHint(this.game(), p, s, c) !== null;
+  });
+
+  /** "Show me": makes the hint's own move on the board (the hint was already paid for). */
+  protected showMe(): void {
+    const c = this.coach();
+    const p = this.puzzle();
+    const s = this.state();
+    if (!c || !p || s == null || this.locked()) return;
+    const next = applyHint(this.game(), p, s, c);
+    if (next === null) return;
+    this.coach.set(null);
+    this.change(next);
+    this.haptics.tap();
   }
 
   protected dismissCoach(): void {

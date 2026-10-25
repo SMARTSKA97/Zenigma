@@ -115,6 +115,10 @@
             <span class="muted">Next puzzle in {{ untilNext() }}</span>
           }
         </div>
+        @if (mode() === 'daily') {
+          <app-result-stats game="word-guess" />
+          <app-up-next exclude="word-guess" />
+        }
       </section>
     } @else {
       <div class="keyboard" aria-label="Keyboard">

@@ -343,6 +343,12 @@ a.tool {
   min-height: 0;
   padding: 0.45rem 0.8rem;
 }
+.coach-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
 .coach.mistake {
   background: color-mix(in srgb, #e8742a 14%, var(--surface));
   border-color: color-mix(in srgb, #e8742a 55%, var(--border));

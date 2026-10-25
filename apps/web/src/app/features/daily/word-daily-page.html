@@ -75,6 +75,7 @@
         } @else {
           <p class="muted"><a routerLink="/account">Sign in</a> to appear on the board.</p>
         }
+        <app-up-next [exclude]="game()" />
         <a class="button secondary" routerLink="/challenges">Back to challenges</a>
       </section>
     }

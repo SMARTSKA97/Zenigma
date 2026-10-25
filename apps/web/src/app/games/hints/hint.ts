@@ -454,3 +454,42 @@ function patchesHint(puzzle: patches.PatchesPuzzle, rects: patches.Rect[]): Hint
     ? { kind: 'nudge', cells: [clue[0]], title: 'Only one rectangle fits this number', text: `The ${clue[1]} has just one place to grow. Which cells does it have to take?` }
     : { kind: 'nudge', cells: [clue[0]], title: 'Start with this number', text: `The ${clue[1]} has ${count} possible rectangles left. Which ones would crowd the numbers around it?` };
 }
+
+/**
+ * "Show me": the board after the hint's own step is made, or null when that step cannot be made in one move (a rectangle to draw).
+ * It costs nothing extra: the hint was already paid for when it was shown.
+ */
+export function applyHint(game: PuzzleGameId, puzzle: unknown, state: unknown, hint: Hint): unknown | null {
+  const at = hint.focus;
+  if (at === undefined || !hint.mark) return null;
+  switch (game) {
+    case 'queens': {
+      const board = [...(state as queens.QueensCell[])];
+      // A wrong queen comes off; otherwise the cell takes a queen (a ✕ in a cell that needs one is replaced).
+      board[at] = hint.kind === 'mistake' && hint.mark === '✕' ? queens.EMPTY : queens.QUEEN;
+      return board;
+    }
+    case 'tango': {
+      const board = [...(state as tango.TangoCell[])];
+      board[at] = hint.mark === '☀️' ? 's' : 'm';
+      return board;
+    }
+    case 'sudoku': {
+      const board = [...(state as number[])];
+      const digit = Number(hint.mark);
+      if (!Number.isInteger(digit)) return null;
+      board[at] = digit;
+      return board;
+    }
+    case 'zip': {
+      const path = state as zip.ZipPath;
+      if (hint.mark === '✕') {
+        const i = path.indexOf(at);
+        return i > 0 ? path.slice(0, i) : null;
+      }
+      return zip.step(puzzle as zip.ZipPuzzle, path, at);
+    }
+    default:
+      return null;
+  }
+}

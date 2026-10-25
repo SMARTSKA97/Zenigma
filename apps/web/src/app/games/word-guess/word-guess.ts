@@ -6,6 +6,8 @@ import { ScreenGuardService } from '../../core/screen-guard.service';
 import { BackService } from '../../core/back.service';
 import { HintsService } from '../../core/hints.service';
 import { HintWheel } from '../../shared/hint-wheel';
+import { UpNext } from '../../shared/up-next';
+import { ResultStats } from '../../shared/result-stats';
 import { wordHint } from './engine';
 import { PrefsService } from '../../core/prefs.service';
 import { SyncService } from '../../core/sync.service';
@@ -22,7 +24,7 @@ const KEY_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
 @Component({
   selector: 'app-word-guess',
-  imports: [RouterLink, Confetti, Loader, Switch, ShareSheet, HintWheel, SoonPill],
+  imports: [RouterLink, Confetti, Loader, Switch, ShareSheet, HintWheel, SoonPill, UpNext, ResultStats],
   templateUrl: './word-guess.html',
   styleUrl: './word-guess.scss',
 })

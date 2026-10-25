@@ -18,13 +18,14 @@ import { Wend } from '../../games/mind/wend';
 import { dailyPoints, isWordDaily, WordDailyGame, WordDailyService } from '../../games/mind/word-daily';
 import { DayStreakService } from '../../core/day-streak.service';
 import { Glyph } from '../../shared/glyph';
+import { UpNext } from '../../shared/up-next';
 import { CardInput } from '../../shared/share-card';
 import { ShareSheet } from '../../shared/share-sheet';
 
 /** One word daily: the puzzle of the day (the same for everyone), played once, with today's board under the result. */
 @Component({
   selector: 'app-word-daily-page',
-  imports: [RouterLink, Glyph, ShareSheet, Pinpoint, ChainLink, Crossclimb, Wend, CometSlice],
+  imports: [RouterLink, Glyph, ShareSheet, UpNext, Pinpoint, ChainLink, Crossclimb, Wend, CometSlice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './word-daily-page.html',
   styleUrl: './word-daily-page.scss',
