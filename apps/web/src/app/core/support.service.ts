@@ -36,6 +36,21 @@ export class SupportService {
       !!(this.config.upiId || this.config.sponsorsUrl || this.config.coffeeUrl || this.config.kofiUrl || this.config.paypalUrl),
   );
   readonly upiLink = `upi://pay?pa=${encodeURIComponent(environment.support.upiId)}&pn=${encodeURIComponent('Zenigma')}&cu=INR`;
+  /**
+   * On an iPhone a plain upi:// link goes to whichever installed app claimed it first (often WhatsApp), with no chooser.
+   * Android shows its own chooser of every UPI app, so only iOS needs one drawn here: each app's own address, then the generic link.
+   */
+  readonly isIos = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+  readonly upiApps: { name: string; color: string; href: string }[] = (() => {
+    const q = `pa=${encodeURIComponent(environment.support.upiId)}&pn=${encodeURIComponent('Zenigma')}&cu=INR`;
+    return [
+      { name: 'Google Pay', color: '#4285f4', href: `gpay://upi/pay?${q}` },
+      { name: 'PhonePe', color: '#5f259f', href: `phonepe://pay?${q}` },
+      { name: 'Paytm', color: '#00b9f1', href: `paytmmp://pay?${q}` },
+      { name: 'CRED', color: '#1c1c1c', href: `credpay://upi/pay?${q}` },
+      { name: 'Any other UPI app', color: '#22c55e', href: `upi://pay?${q}` },
+    ];
+  })();
   private loadedAt = 0;
 
   /** Refreshes the wall. Never wakes the server: only asks while it is awake anyway. */

@@ -11,9 +11,21 @@ import { SupportService } from '../core/support.service';
         <div class="row">
           <span class="tn" style="--c: #22c55e" aria-hidden="true">₹</span>
           <span class="lead">UPI<small>{{ s.config.upiId }}</small></span>
-          <a class="act primary" [href]="s.upiLink">Pay</a>
+          @if (s.isIos) {
+            <button type="button" class="act primary" [attr.aria-expanded]="choosing()" (click)="choosing.set(!choosing())">Pay</button>
+          } @else {
+            <a class="act primary" [href]="s.upiLink">Pay</a>
+          }
           <button type="button" class="act" (click)="copy(s.config.upiId)">{{ copied() ? 'Copied' : 'Copy' }}</button>
         </div>
+        @if (s.isIos && choosing()) {
+          <div class="apps" role="group" aria-label="Pay with">
+            <p>Pick the app you pay with. If it is not installed, nothing happens: copy the UPI ID and paste it into your app instead.</p>
+            @for (a of s.upiApps; track a.name) {
+              <a [href]="a.href" [style.--c]="a.color"><i aria-hidden="true"></i>{{ a.name }}<span aria-hidden="true">›</span></a>
+            }
+          </div>
+        }
       }
       @if (s.config.sponsorsUrl) {
         <a class="row" [href]="s.config.sponsorsUrl" target="_blank" rel="noopener">
@@ -110,6 +122,39 @@ import { SupportService } from '../core/support.service';
       text-decoration: none;
       box-shadow: none;
     }
+    .apps {
+      display: grid;
+      gap: 2px;
+      padding: 0.5rem 0.75rem 0.75rem;
+      background: var(--surface);
+      border-radius: 4px;
+    }
+    .apps p {
+      margin: 0 0 0.35rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .apps a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 14px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .apps a i {
+      width: 0.9rem;
+      height: 0.9rem;
+      border-radius: 50%;
+      background: var(--c);
+    }
+    .apps a span {
+      margin-left: auto;
+      color: var(--muted);
+    }
     :host .act.primary {
       background: var(--accent);
       border-color: var(--accent);
@@ -120,6 +165,7 @@ import { SupportService } from '../core/support.service';
 export class SupportMethods {
   protected readonly s = inject(SupportService);
   protected readonly copied = signal(false);
+  protected readonly choosing = signal(false);
 
   protected async copy(text: string): Promise<void> {
     try {
