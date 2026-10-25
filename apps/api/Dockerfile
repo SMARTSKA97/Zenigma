@@ -1,8 +1,8 @@
 # Build context: apps/api
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# The SDK is pinned to the version in global.json (and CI), so Render and CI build the same way.
+FROM mcr.microsoft.com/dotnet/sdk:10.0.100 AS build
 WORKDIR /src
-# global.json pins the SDK for CI only; the image brings its own (newest) SDK, so it is not copied here.
-COPY Directory.Build.props ./
+COPY global.json Directory.Build.props ./
 COPY Zenigma.Api/Zenigma.Api.csproj Zenigma.Api/
 # ReadyToRun (precompiled code) makes a cold start after Render's idle sleep noticeably faster and uses less CPU while warming up.
 RUN dotnet restore Zenigma.Api/Zenigma.Api.csproj -r linux-x64 -p:PublishReadyToRun=true
