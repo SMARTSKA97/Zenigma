@@ -1,0 +1,11 @@
+name: Idea or feature request
+description: A new game, a better screen, anything that would make Zenigma nicer
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see?
+      description: Say what problem it solves. Links to a similar game or app are welcome.
+    validations:
+      required: true

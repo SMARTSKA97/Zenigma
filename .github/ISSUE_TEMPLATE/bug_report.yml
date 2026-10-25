@@ -1,0 +1,23 @@
+name: Bug report
+description: Something is broken or does not behave as described
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you saw instead. Screenshots help.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where do you play?
+      options: [Android app, iPhone or iPad (installed web app), Safari or Chrome in the browser, Desktop browser]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Settings > About shows it.

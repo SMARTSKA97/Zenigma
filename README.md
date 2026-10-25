@@ -16,7 +16,7 @@ Crowns · Eclipse · Sudoku · Zipline · Patchwork · Word Guess · 25 mind gam
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?logo=postgresql&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[**Play now**](https://zenigma.ska97homelab.uk) · [**Download for Android**](https://github.com/SMARTSKA97/Zenigma/releases) · [**iPhone and iPad**](#iphone-and-ipad) · [Roadmap](docs/IDEAS.md)
+[**Play now**](https://zenigma.ska97homelab.uk) · [**Download for Android**](https://github.com/SMARTSKA97/Zenigma/releases) · [**iPhone and iPad**](#iphone-and-ipad) · [Roadmap](docs/ROADMAP.md)
 
 </div>
 
@@ -82,24 +82,25 @@ Play in any modern browser at [zenigma.ska97homelab.uk](https://zenigma.ska97hom
 
 ## How it works
 
-```mermaid
-flowchart LR
-  subgraph Device["Your device (works offline)"]
-    UI["Angular 22 app<br/>signals, zoneless"] --> Store[("IndexedDB<br/>results and events")]
-    UI --- Engines["Game engines and<br/>puzzle generators"]
-  end
-  Store <-- "sync when online" --> API
-  subgraph Server["Server (optional)"]
-    API["ASP.NET Core API<br/>.NET 10"] --> DB[("PostgreSQL")]
-  end
-  Android["Capacitor 8<br/>Android shell"] --- UI
-```
+![How Zenigma fits together](docs/img/architecture.png)
+
+<sub>Diagram source: [`docs/img/architecture.mmd`](docs/img/architecture.mmd)</sub>
 
 - **Offline-first.** Results are events in an on-device log. They sync to the server when a connection exists, are applied
   once, and come back to any device you sign in on.
 - **One codebase.** The same Angular app is the website, the installable web app and the Android app (Capacitor).
 - **Shared engines.** The TypeScript and C# game engines are checked against the same test vectors in `tests/vectors`.
 - **Gentle on the server.** The app never wakes the server just by opening; boards, the daily and sign-in do.
+
+## Roadmap
+
+| When | What |
+|---|---|
+| **Now (0.24)** | “Show me” hints, streak share card, tablet-style Settings, UPI pay with QR, updates and install guide for iPhone and iPad |
+| **Next** | More mind games, blocked cells, iPhone streak reminders, per-game results synced to your account |
+| **Later** | Android widget, Word Guess in more languages, level editor and community levels, Google Play, a native iOS app with a widget |
+
+The full plan, and what will never happen (ads, tracking, paid rankings), is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Repository
 
@@ -111,7 +112,7 @@ flowchart LR
 | `tools/generators` | Puzzle and level generators |
 | `tests/vectors` | Shared test vectors for the TypeScript and C# game engines |
 | `mobile/release-notes` | One `<version>.md` per Android release |
-| `docs` | [Deployment](docs/DEPLOYMENT.md), [operations](docs/OPERATIONS.md), [scaling](docs/SCALING.md), [security](docs/SECURITY.md), [roadmap](docs/IDEAS.md) |
+| `docs` | [Deployment](docs/DEPLOYMENT.md), [operations](docs/OPERATIONS.md), [scaling](docs/SCALING.md), [security](docs/SECURITY.md), [roadmap and ideas](docs/ROADMAP.md) |
 
 ## Develop
 
@@ -137,14 +138,29 @@ environment variables and GitHub secrets; see [docs/DEPLOYMENT.md](docs/DEPLOYME
 
 ## Support
 
-Zenigma is free and has no ads. The server, database, domain and email service are paid for by one person; a tip of any
-size keeps the daily puzzles and leaderboards online. It unlocks nothing. You can tip from **Settings → Contributors**
-(UPI, GitHub Sponsors and more).
+Zenigma is free, has no ads and plays offline. The server, database, domain and email service are paid for by one person.
+A tip of any size keeps the daily puzzles and leaderboards online. **It unlocks nothing**: it is only a thank-you, and
+supporters get a badge and a place on the wall of thanks.
+
+<table>
+  <tr>
+    <td align="center" width="200"><img src="docs/img/upi-qr.png" width="160" alt="UPI QR code" /><br/><sub>Scan with any UPI app<br/><code>ska97@ptaxis</code></sub></td>
+    <td>
+      <a href="https://github.com/sponsors/SMARTSKA97"><img src="https://img.shields.io/badge/Sponsor-GitHub-db61a2?logo=githubsponsors&logoColor=white" alt="GitHub Sponsors" /></a>
+      <a href="https://buymeacoffee.com/smartska97"><img src="https://img.shields.io/badge/Buy%20me%20a-coffee-ffdd00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
+      <br/><br/>
+      In the app, open <b>Settings → Contributors</b> to pay with a UPI app, then tap “Yes, it did” so the thank-you
+      switches on.<br/><br/>
+      No money? <b>Star the repo</b>, tell a friend, report a bug or send an idea. That helps just as much.
+    </td>
+  </tr>
+</table>
 
 ## Contributing
 
-Bug reports and ideas are welcome: open an issue. For code, branch from `main`, keep the tests green, and see
-[SECURITY.md](SECURITY.md) to report a vulnerability privately.
+Zenigma welcomes help, from a typo to a new game. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the ways to help, how to
+send a pull request and how to become a collaborator, and use the [issue forms](https://github.com/SMARTSKA97/Zenigma/issues/new/choose)
+for bugs and ideas. Security problems go privately to [SECURITY.md](SECURITY.md).
 
 ## License
 

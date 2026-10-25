@@ -1,0 +1,15 @@
+flowchart LR
+  subgraph Device["Your device - works offline"]
+    UI["Angular 22 app<br/>signals, zoneless"]
+    Engines["Game engines and<br/>puzzle generators"]
+    Store[("IndexedDB<br/>results and events")]
+    UI --> Engines
+    UI --> Store
+  end
+  subgraph Server["Server - optional"]
+    API["ASP.NET Core API<br/>.NET 10"]
+    DB[("PostgreSQL")]
+    API --> DB
+  end
+  Store <-->|sync when online| API
+  Android["Capacitor 8<br/>Android shell"] --> UI
