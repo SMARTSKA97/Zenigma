@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideServiceWorker } from '@angular/service-worker';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 import { LocalStore } from './core/local-store';
@@ -12,6 +13,7 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideRouter([]),
+        provideServiceWorker('ngsw-worker.js', { enabled: false }),
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: LocalStore, useValue: new MemoryStore() },

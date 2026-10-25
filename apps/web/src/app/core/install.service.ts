@@ -22,6 +22,8 @@ export class InstallService {
   /** True while the browser is offering to install the app. */
   readonly available = signal(false);
   readonly installed = signal(false);
+  /** The picture guide for iPhone and iPad: which tab is open, or null when closed. */
+  readonly guide = signal<'install' | 'update' | null>(null);
   /** iOS has no install prompt: people add the page to the Home Screen by hand, so we show the steps. */
   readonly isIos = isIosDevice();
   readonly iosGuide = computed(() => this.isIos && !isStandalone() && !this.installed());

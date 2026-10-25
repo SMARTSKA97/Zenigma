@@ -70,6 +70,12 @@
   <router-outlet />
 </main>
 
+<app-pwa-update />
+@if (install.guide(); as g) {
+  @defer {
+    <app-ios-guide [start]="g" (closed)="install.guide.set(null)" />
+  }
+}
 <app-update-sheet />
 <app-whats-new />
 <app-support-sheet />

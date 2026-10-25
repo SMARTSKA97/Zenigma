@@ -536,3 +536,15 @@ small {
   gap: 0.35rem;
   font-size: 0.9rem;
 }
+
+.ios-pics {
+  margin-top: 0.7rem;
+  min-height: 0;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+}

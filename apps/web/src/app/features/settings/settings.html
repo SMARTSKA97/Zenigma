@@ -213,13 +213,28 @@
         <li>Scroll and tap <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li>
         <li>Open Zenigma from your Home Screen.</li>
       </ol>
+      <button type="button" class="ios-pics" (click)="install.guide.set('install')">Show me with pictures</button>
     </div>
-  } @else {
+  } @else if (install.available()) {
     <button type="button" class="item link" (click)="install.install()">
       <span class="tn" aria-hidden="true">⬇</span>
       <span class="lead">Install Zenigma<small>Opens like an app and works offline.</small></span>
       <span class="chev">›</span>
     </button>
+  }
+  @if (pwa.supported) {
+    <button type="button" class="item link" [disabled]="pwa.checking()" (click)="pwa.ready() ? pwa.apply() : pwa.check(true)">
+      <span class="tn" aria-hidden="true">🔄</span>
+      <span class="lead">{{ pwa.ready() ? 'Reload to update' : pwa.checking() ? 'Checking…' : 'Check for updates' }}<small>{{ pwa.ready() ? 'A new version is ready.' : pwa.upToDate() ? 'You have the latest version.' : 'Updates download quietly and need no server.' }}</small></span>
+      <span class="chev">›</span>
+    </button>
+    @if (install.isIos) {
+      <button type="button" class="item link" (click)="install.guide.set('update')">
+        <span class="tn" aria-hidden="true">❓</span>
+        <span class="lead">How updating works<small>Pictures for iPhone and iPad</small></span>
+        <span class="chev">›</span>
+      </button>
+    }
   }
   </section>
 </ng-template>
@@ -277,7 +292,7 @@
         @if (updater.supported && !updater.fromPlay()) {
         <button type="button" class="ri" [class.on]="cur() === 'updates'" (click)="select('updates')"><span class="tn" aria-hidden="true">⬇️</span><span>App updates</span></button>
         }
-        @if (install.canInstall()) {
+        @if (install.canInstall() || pwa.supported) {
         <button type="button" class="ri" [class.on]="cur() === 'install'" (click)="select('install')"><span class="tn" aria-hidden="true">📲</span><span>Install</span></button>
         }
       </div>
@@ -403,7 +418,7 @@
     </div>
   }
 
-  @if (install.canInstall()) {
+  @if (install.canInstall() || pwa.supported) {
     <div class="acc" [class.open]="open() === 'install'">
       <button type="button" class="acc-h" (click)="toggle('install')" [attr.aria-expanded]="open() === 'install'">
         <span class="tn" aria-hidden="true">📲</span>

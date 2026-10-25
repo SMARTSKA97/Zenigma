@@ -11,6 +11,7 @@ import { Loader } from '../../shared/loader';
 import { Segmented, SegmentOption } from '../../shared/segmented';
 import { Switch } from '../../shared/switch';
 import { InstallService } from '../../core/install.service';
+import { PwaUpdateService } from '../../core/pwa-update.service';
 import { HapticStrength, PrefsService } from '../../core/prefs.service';
 import { ThemeMode, ThemeService } from '../../core/theme.service';
 import { environment } from '../../../environments/environment';
@@ -47,6 +48,7 @@ export class Settings implements OnInit {
   protected readonly conn = inject(ConnectionService);
   protected readonly reminder = inject(ReminderService);
   protected readonly install = inject(InstallService);
+  protected readonly pwa = inject(PwaUpdateService);
   protected readonly support = inject(SupportService);
   protected readonly canDonate = this.support.canDonate;
   protected readonly wallet = inject(WalletService);

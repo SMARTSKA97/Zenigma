@@ -28,13 +28,17 @@ import { ReminderService } from './core/reminder.service';
 import { UpdaterService } from './core/updater.service';
 import { Loader } from './shared/loader';
 import { UpdateSheet } from './shared/update-sheet';
+import { IosGuide } from './shared/ios-guide';
+import { InstallService } from './core/install.service';
+import { PwaUpdate } from './shared/pwa-update';
+import { PwaUpdateService } from './core/pwa-update.service';
 import { WhatsNew } from './shared/whats-new';
 import { SupportService } from './core/support.service';
 import { SupportSheet } from './shared/support-sheet';
 
 @Component({
   selector: 'app-root',
-  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, WhatsNew, SupportSheet, ServerNotice, NotificationPrompt],
+  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, PwaUpdate, IosGuide, WhatsNew, SupportSheet, ServerNotice, NotificationPrompt],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -46,6 +50,8 @@ export class App {
   protected readonly back = inject(BackService);
   private readonly router = inject(Router);
   private readonly updater = inject(UpdaterService);
+  protected readonly install = inject(InstallService);
+  private readonly pwaUpdate = inject(PwaUpdateService);
   private readonly reminder = inject(ReminderService);
   protected readonly wallet = inject(WalletService);
   protected readonly hints = inject(HintsService);

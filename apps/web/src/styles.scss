@@ -145,6 +145,35 @@ body {
   /* Nothing may push the page sideways: a stray wide element is clipped, not scrolled. */
   overflow-x: clip;
   overscroll-behavior-x: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* The installed iPhone/iPad app should feel like the Android one: no rubber-band bounce, no text-selection or link callouts on the UI, no tap delay. */
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+  body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input,
+  textarea,
+  [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+/* iOS zooms the whole page when a text box under 16px is focused. */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
 }
 
 /* A game screen that fits the phone (PlayScreen): the page behind stays put. */
