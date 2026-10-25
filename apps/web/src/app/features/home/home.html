@@ -59,6 +59,20 @@
   </aside>
 }
 
+@if (install.iosGuide() && !install.iosHidden()) {
+  <aside class="promo" aria-label="Add Zenigma to your Home Screen">
+    <button type="button" class="close" (click)="install.hideIosPromo()" aria-label="Hide for now">×</button>
+    <div class="phone" aria-hidden="true">
+      <span class="screen"><i></i><i></i><i></i><i></i></span>
+    </div>
+    <div class="ptext">
+      <p class="eyebrow">iPhone and iPad</p>
+      <h2>Add Zenigma to your Home Screen</h2>
+      <p class="psub">In Safari tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>. It opens full screen and plays offline.</p>
+    </div>
+  </aside>
+}
+
 @if (!prefs.hideStreaks()) {
 <app-day-streak-card />
 <a class="streaks card" routerLink="/stats" aria-label="Your streaks and stats">

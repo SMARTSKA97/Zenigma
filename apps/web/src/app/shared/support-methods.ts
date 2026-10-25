@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { SupportService } from '../core/support.service';
+import { UpiPay } from './upi-pay';
 
 /** The ways to chip in, as one segmented list. Used by the Support sheet and the About page. */
 @Component({
   selector: 'app-support-methods',
+  imports: [UpiPay],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="group">
@@ -11,20 +13,11 @@ import { SupportService } from '../core/support.service';
         <div class="row">
           <span class="tn" style="--c: #22c55e" aria-hidden="true">₹</span>
           <span class="lead">UPI<small>{{ s.config.upiId }}</small></span>
-          @if (s.isIos) {
-            <button type="button" class="act primary" [attr.aria-expanded]="choosing()" (click)="choosing.set(!choosing())">Pay</button>
-          } @else {
-            <a class="act primary" [href]="s.upiLink">Pay</a>
-          }
+          <button type="button" class="act primary" [attr.aria-expanded]="s.paying()" (click)="s.paying.set(!s.paying())">Pay</button>
           <button type="button" class="act" (click)="copy(s.config.upiId)">{{ copied() ? 'Copied' : 'Copy' }}</button>
         </div>
-        @if (s.isIos && choosing()) {
-          <div class="apps" role="group" aria-label="Pay with">
-            <p>Pick the app you pay with. If it is not installed, nothing happens: copy the UPI ID and paste it into your app instead.</p>
-            @for (a of s.upiApps; track a.name) {
-              <a [href]="a.href" [style.--c]="a.color"><i aria-hidden="true"></i>{{ a.name }}<span aria-hidden="true">›</span></a>
-            }
-          </div>
+        @if (s.paying() || s.pending()) {
+          <app-upi-pay />
         }
       }
       @if (s.config.sponsorsUrl) {
@@ -165,7 +158,6 @@ import { SupportService } from '../core/support.service';
 export class SupportMethods {
   protected readonly s = inject(SupportService);
   protected readonly copied = signal(false);
-  protected readonly choosing = signal(false);
 
   protected async copy(text: string): Promise<void> {
     try {

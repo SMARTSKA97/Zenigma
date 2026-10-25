@@ -1,4 +1,14 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
+
+/** iPhone or iPad (iPadOS says it is a Mac, so touch points give it away). */
+export function isIosDevice(): boolean {
+  return typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+}
+
+function isStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (navigator as unknown as { standalone?: boolean }).standalone === true || window.matchMedia?.('(display-mode: standalone)').matches === true;
+}
 
 interface InstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -12,6 +22,30 @@ export class InstallService {
   /** True while the browser is offering to install the app. */
   readonly available = signal(false);
   readonly installed = signal(false);
+  /** iOS has no install prompt: people add the page to the Home Screen by hand, so we show the steps. */
+  readonly isIos = isIosDevice();
+  readonly iosGuide = computed(() => this.isIos && !isStandalone() && !this.installed());
+  readonly canInstall = computed(() => this.available() || this.iosGuide());
+  private readonly DISMISS = 'zenigma.iosInstall.dismissed';
+  readonly iosHidden = signal(this.wasHidden());
+
+  hideIosPromo(): void {
+    this.iosHidden.set(true);
+    try {
+      localStorage.setItem(this.DISMISS, String(Date.now()));
+    } catch {
+      /* private mode */
+    }
+  }
+
+  private wasHidden(): boolean {
+    try {
+      const at = Number(localStorage.getItem(this.DISMISS));
+      return at > 0 && Date.now() - at < 14 * 24 * 60 * 60 * 1000;
+    } catch {
+      return false;
+    }
+  }
 
   constructor() {
     if (typeof window === 'undefined') return;

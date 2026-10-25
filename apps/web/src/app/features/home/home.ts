@@ -3,6 +3,7 @@ import { PrefsService } from '../../core/prefs.service';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApkPromoService } from '../../core/apk-promo.service';
+import { InstallService } from '../../core/install.service';
 import { AuthService } from '../../core/auth.service';
 import { CommunityService } from '../../core/community.service';
 import { ConnectionService } from '../../core/connection.service';
@@ -27,6 +28,7 @@ export class Home implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly community = inject(CommunityService);
   protected readonly promo = inject(ApkPromoService);
+  protected readonly install = inject(InstallService);
   protected readonly updater = inject(UpdaterService);
   protected readonly support = inject(SupportService);
   protected readonly hints = inject(HintsService);

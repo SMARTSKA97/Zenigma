@@ -204,11 +204,23 @@
 
 <ng-template #pInstall>
 <section class="list">
+  @if (install.iosGuide()) {
+    <div class="item ios-steps">
+      <span class="lead">Add Zenigma to your {{ install.isIos ? 'Home Screen' : 'device' }}<small>Opens full screen like an app, works offline and keeps your streak.</small></span>
+      <ol>
+        <li>Open this page in <strong>Safari</strong>.</li>
+        <li>Tap the <strong>Share</strong> button (the square with an arrow).</li>
+        <li>Scroll and tap <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li>
+        <li>Open Zenigma from your Home Screen.</li>
+      </ol>
+    </div>
+  } @else {
     <button type="button" class="item link" (click)="install.install()">
       <span class="tn" aria-hidden="true">⬇</span>
       <span class="lead">Install Zenigma<small>Opens like an app and works offline.</small></span>
       <span class="chev">›</span>
     </button>
+  }
   </section>
 </ng-template>
 
@@ -265,7 +277,7 @@
         @if (updater.supported && !updater.fromPlay()) {
         <button type="button" class="ri" [class.on]="cur() === 'updates'" (click)="select('updates')"><span class="tn" aria-hidden="true">⬇️</span><span>App updates</span></button>
         }
-        @if (install.available()) {
+        @if (install.canInstall()) {
         <button type="button" class="ri" [class.on]="cur() === 'install'" (click)="select('install')"><span class="tn" aria-hidden="true">📲</span><span>Install</span></button>
         }
       </div>
@@ -391,7 +403,7 @@
     </div>
   }
 
-  @if (install.available()) {
+  @if (install.canInstall()) {
     <div class="acc" [class.open]="open() === 'install'">
       <button type="button" class="acc-h" (click)="toggle('install')" [attr.aria-expanded]="open() === 'install'">
         <span class="tn" aria-hidden="true">📲</span>

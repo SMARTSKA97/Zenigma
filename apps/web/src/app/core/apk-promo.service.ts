@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { isIosDevice } from './install.service';
 import { isNewer } from './updater.service';
 
 interface Release {
@@ -27,7 +28,7 @@ export class ApkPromoService {
   private readonly http = inject(HttpClient);
 
   /** Only the web shows the promo. */
-  readonly applicable = Capacitor.getPlatform() === 'web';
+  readonly applicable = Capacitor.getPlatform() === 'web' && !isIosDevice();
   readonly info = signal<ApkInfo | null>(null);
   readonly dismissed = signal(this.wasDismissed());
   readonly releasesPage = `https://github.com/${environment.githubRepo}/releases`;
