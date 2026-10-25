@@ -41,6 +41,31 @@ export class MindStore {
     return score > cur.best;
   }
 
+  /**
+   * Fills in what the account already knows (a new device, or the installed iPhone app, whose storage is apart from Safari's).
+   * The server keeps marks (0 to 100), so the best score is worked back from the mark. Never lowers anything already here.
+   */
+  restore(rows: { game: string; pct: number; plays: number }[]): void {
+    let changed = false;
+    const next = { ...this.all() };
+    for (const r of rows) {
+      const meta = MIND_META[r.game as MindGameId];
+      if (!meta || r.plays <= 0) continue;
+      const cur = next[r.game] ?? { best: 0, plays: 0, recent: [] };
+      const best = Math.max(cur.best, Math.round((r.pct / 100) * meta.scale));
+      const plays = Math.max(cur.plays, r.plays);
+      if (best === cur.best && plays === cur.plays) continue;
+      next[r.game] = { ...cur, best, plays };
+      changed = true;
+      try {
+        localStorage.setItem(KEY(r.game), JSON.stringify(next[r.game]));
+      } catch {
+        /* ignore */
+      }
+    }
+    if (changed) this.all.set(next);
+  }
+
   /** Saves today's skill marks (the last play of the day wins). */
   private snapshot(): void {
     const marks: Record<string, number> = {};

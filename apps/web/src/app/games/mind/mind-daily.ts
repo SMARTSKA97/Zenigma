@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { indiaDate } from '../../core/hints.service';
 import { SyncService } from '../../core/sync.service';
 import { MIND_LIVE, MindGameId, Skill, SKILLS } from '../catalog';
@@ -59,6 +59,42 @@ export class MindDailyService {
     }
     return n;
   });
+
+  constructor() {
+    // A finished day is in the event log, which comes back with the account: so a new device (or the installed iPhone app) shows it too.
+    effect(() => {
+      const events = this.sync.events();
+      untracked(() => this.hydrate(events));
+    });
+  }
+
+  private hydrate(events: { kind: string; payload: unknown }[]): void {
+    const finished = events.filter((e) => e.kind === 'mind.daily.completed').map((e) => e.payload as { date?: string; points?: number });
+    const known = new Set(this.days());
+    const add = finished.map((p) => p.date).filter((d): d is string => typeof d === 'string' && !known.has(d));
+    if (add.length) {
+      const days = [...new Set([...this.days(), ...add])].sort().slice(-400);
+      this.days.set(days);
+      this.write(DAYS_KEY, days);
+    }
+    const today = this.date();
+    const mine = finished.find((p) => p.date === today);
+    if (!mine || this.complete()) return;
+    const games = this.games();
+    const total = Math.max(0, Math.min(600, Math.round(mine.points ?? 0)));
+    const each = Math.floor(total / games.length);
+    let extra = total - each * games.length;
+    const current = this.state().date === today ? this.state() : { date: today, done: {} as DayState['done'] };
+    const done = { ...current.done };
+    for (const g of games) {
+      if (done[g]) continue;
+      const mark = Math.min(100, each + (extra-- > 0 ? 1 : 0));
+      done[g] = { score: 0, mark };
+    }
+    const next: DayState = { date: today, done };
+    this.state.set(next);
+    this.write(STATE_KEY, next);
+  }
 
   /** Checks the date again (the app may have stayed open past midnight in India). */
   refresh(): void {

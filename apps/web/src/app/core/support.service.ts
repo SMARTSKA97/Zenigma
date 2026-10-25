@@ -83,7 +83,9 @@ export class SupportService {
 
   /** A QR code (as an image address) for the UPI link, to scan with any UPI app. */
   async qr(amount?: number | null): Promise<string> {
-    const { toDataURL } = await import('qrcode');
+    const mod = await import('qrcode');
+    // The package is CommonJS: depending on the bundler its functions sit on the module or on its default export.
+    const toDataURL = mod.toDataURL ?? (mod as unknown as { default: typeof mod }).default.toDataURL;
     return toDataURL(this.upiUrl(amount), { margin: 1, width: 360, errorCorrectionLevel: 'M' });
   }
 

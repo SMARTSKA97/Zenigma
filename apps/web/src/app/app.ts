@@ -28,6 +28,8 @@ import { ReminderService } from './core/reminder.service';
 import { UpdaterService } from './core/updater.service';
 import { Loader } from './shared/loader';
 import { UpdateSheet } from './shared/update-sheet';
+import { Sheet } from './shared/sheet';
+import { UpiPay } from './shared/upi-pay';
 import { IosGuide } from './shared/ios-guide';
 import { InstallService } from './core/install.service';
 import { PwaUpdate } from './shared/pwa-update';
@@ -38,7 +40,7 @@ import { SupportSheet } from './shared/support-sheet';
 
 @Component({
   selector: 'app-root',
-  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, PwaUpdate, IosGuide, WhatsNew, SupportSheet, ServerNotice, NotificationPrompt],
+  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, PwaUpdate, IosGuide, Sheet, UpiPay, WhatsNew, SupportSheet, ServerNotice, NotificationPrompt],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

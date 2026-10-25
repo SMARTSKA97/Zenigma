@@ -1,11 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { SupportService } from '../core/support.service';
-import { UpiPay } from './upi-pay';
 
 /** The ways to chip in, as one segmented list. Used by the Support sheet and the About page. */
 @Component({
   selector: 'app-support-methods',
-  imports: [UpiPay],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="group">
@@ -13,12 +11,9 @@ import { UpiPay } from './upi-pay';
         <div class="row">
           <span class="tn" style="--c: #22c55e" aria-hidden="true">₹</span>
           <span class="lead">UPI<small>{{ s.config.upiId }}</small></span>
-          <button type="button" class="act primary" [attr.aria-expanded]="s.paying()" (click)="s.paying.set(!s.paying())">Pay</button>
+          <button type="button" class="act primary" (click)="s.paying.set(true)">Pay</button>
           <button type="button" class="act" (click)="copy(s.config.upiId)">{{ copied() ? 'Copied' : 'Copy' }}</button>
         </div>
-        @if (s.paying() || s.pending()) {
-          <app-upi-pay />
-        }
       }
       @if (s.config.sponsorsUrl) {
         <a class="row" [href]="s.config.sponsorsUrl" target="_blank" rel="noopener">

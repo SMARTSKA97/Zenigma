@@ -58,20 +58,22 @@ const CHIPS = [49, 99, 199, 499];
 
         @if (s.isAndroid) {
           <a class="pay" [href]="s.upiUrl(amount())" (click)="started()">Pay {{ amount() ? '₹' + amount() : '' }} with a UPI app</a>
-          <p class="hint">Android shows every UPI app on your phone. Come back here afterwards and I will ask how it went.</p>
+          <p class="hint">Android shows every UPI app on your phone in its own picker. Come back here afterwards and I will ask how it went.</p>
         } @else if (s.isIos) {
           <div class="apps" role="group" aria-label="Pay with">
             @for (a of s.upiApps(amount()); track a.name) {
               <a [href]="a.href" [style.--c]="a.color" (click)="started()"><i aria-hidden="true"></i>{{ a.name }}<span aria-hidden="true">›</span></a>
             }
           </div>
-          <p class="hint">Pick the app you pay with. If it is not installed nothing happens: use the QR code from another phone, or copy the UPI ID.</p>
+          <p class="hint">iPhone does not let websites list your installed apps, so pick yours here. If yours is not listed or does not open, choose “Any other UPI app”, or show the QR code and scan it with a UPI app on another phone, or copy the UPI ID.</p>
         }
 
         @if (!s.isMobile || showQr()) {
           <div class="qr">
             @if (qr(); as src) {
               <img [src]="src" alt="UPI QR code. Scan it with any UPI app." width="180" height="180" />
+            } @else if (qrFailed()) {
+              <span class="muted">Could not make the QR code here. Copy the UPI ID ({{ s.config.upiId }}) and paste it into your UPI app.</span>
             } @else {
               <span class="muted">Making the QR code…</span>
             }
@@ -222,6 +224,7 @@ export class UpiPay {
   protected readonly amount = signal<number | null>(99);
   protected readonly qr = signal('');
   protected readonly showQr = signal(false);
+  protected readonly qrFailed = signal(false);
   protected readonly busy = signal(false);
   protected readonly state = signal<'idle' | 'sent' | 'unavailable' | 'limit' | 'failed'>('idle');
 
@@ -230,7 +233,11 @@ export class UpiPay {
     effect(() => {
       const amount = this.amount();
       if (this.s.isMobile && !this.showQr()) return;
-      void this.s.qr(amount).then((src) => this.qr.set(src));
+      this.qrFailed.set(false);
+      void this.s
+        .qr(amount)
+        .then((src) => this.qr.set(src))
+        .catch(() => this.qrFailed.set(true));
     });
   }
 

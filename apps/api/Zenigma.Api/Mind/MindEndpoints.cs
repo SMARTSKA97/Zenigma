@@ -50,6 +50,15 @@ public static partial class MindEndpoints
             return Results.NoContent();
         });
 
+        // My own marks, so a new device (or the installed iPhone app, which keeps its storage apart from Safari) can show what I already played.
+        group.MapGet("/scores", async (ClaimsPrincipal principal, AppDbContext db, CancellationToken ct) =>
+        {
+            var userId = UserIds.Get(principal);
+            var rows = await db.MindScores.AsNoTracking().Where(s => s.UserId == userId)
+                .Select(s => new MindScoreDto(s.Game, s.Skill, s.Pct, s.Plays)).ToListAsync(ct);
+            return Results.Ok(rows);
+        });
+
         group.MapGet("/compare", async (ClaimsPrincipal principal, AppDbContext db, CancellationToken ct) =>
         {
             var userId = UserIds.Get(principal);

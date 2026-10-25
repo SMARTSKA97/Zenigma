@@ -71,6 +71,13 @@
 </main>
 
 <app-pwa-update />
+@if (support.paying()) {
+  @defer {
+    <app-sheet label="Pay by UPI" (closed)="support.paying.set(false)">
+      <app-upi-pay />
+    </app-sheet>
+  }
+}
 @if (install.guide(); as g) {
   @defer {
     <app-ios-guide [start]="g" (closed)="install.guide.set(null)" />

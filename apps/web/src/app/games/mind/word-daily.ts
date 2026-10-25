@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { indiaDate } from '../../core/hints.service';
 import { SyncService } from '../../core/sync.service';
 
@@ -39,6 +39,36 @@ export class WordDailyService {
   readonly results = computed(() => (this.state().date === this.date() ? this.state().done : {}) as Partial<Record<WordDailyGame, WordDailyResult>>);
   readonly doneCount = computed(() => this.games.filter((g) => this.results()[g]).length);
   readonly points = computed(() => this.games.reduce((n, g) => n + (this.results()[g]?.points ?? 0), 0));
+
+  constructor() {
+    // Today's results come back with the account (a new device, or the installed iPhone app with storage apart from Safari's).
+    effect(() => {
+      const events = this.sync.events();
+      untracked(() => this.hydrate(events));
+    });
+  }
+
+  private hydrate(events: { kind: string; payload: unknown }[]): void {
+    const today = this.date();
+    const current = this.state().date === today ? this.state() : { date: today, done: {} as DayState['done'] };
+    const done = { ...current.done };
+    let changed = false;
+    for (const e of events) {
+      if (e.kind !== 'wdaily.completed') continue;
+      const p = e.payload as { game?: string; date?: string; points?: number; ms?: number };
+      if (p.date !== today || !p.game || !isWordDaily(p.game) || done[p.game]) continue;
+      done[p.game] = { points: Number(p.points) || 0, ms: Number(p.ms) || 0 };
+      changed = true;
+    }
+    if (!changed) return;
+    const next: DayState = { date: today, done };
+    this.state.set(next);
+    try {
+      localStorage.setItem(STATE_KEY, JSON.stringify(next));
+    } catch {
+      /* the account still has them */
+    }
+  }
 
   /** Picks up a new day (the screen may have stayed open past the rollover). */
   refresh(): void {
