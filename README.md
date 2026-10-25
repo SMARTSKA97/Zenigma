@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="apps/web/public/icons/icon-192x192.png" width="96" height="96" alt="Zenigma" />
+<img src="apps/web/public/icons/icon-192x192.png?v=2" width="96" height="96" alt="Zenigma" />
 
 # Zenigma
 
@@ -11,9 +11,7 @@ Crowns · Eclipse · Sudoku · Zipline · Patchwork · Word Guess · 25 mind gam
 [![CI](https://github.com/SMARTSKA97/Zenigma/actions/workflows/ci.yml/badge.svg)](https://github.com/SMARTSKA97/Zenigma/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/SMARTSKA97/Zenigma?label=Android&color=3ddc84&logo=android&logoColor=white)](https://github.com/SMARTSKA97/Zenigma/releases)
 [![Play on the web](https://img.shields.io/badge/Play-on%20the%20web-6d5dfc?logo=googlechrome&logoColor=white)](https://zenigma.ska97homelab.uk)
-![Angular](https://img.shields.io/badge/Angular-22-dd0031?logo=angular&logoColor=white)
-![.NET](https://img.shields.io/badge/.NET-10-512bd4?logo=dotnet&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?logo=postgresql&logoColor=white)
+![Built with](https://img.shields.io/badge/built%20with-Angular%20%C2%B7%20.NET%20%C2%B7%20PostgreSQL-0f1618)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 [**Play now**](https://zenigma.ska97homelab.uk) · [**Download for Android**](https://github.com/SMARTSKA97/Zenigma/releases) · [**iPhone and iPad**](#iphone-and-ipad) · [Roadmap](docs/ROADMAP.md)
