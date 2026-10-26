@@ -1,4 +1,9 @@
+import { HttpClient } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { AuthService } from '../../core/auth.service';
+import { ConnectionService } from '../../core/connection.service';
 import { LocalStore } from '../../core/local-store';
 import { SyncService } from '../../core/sync.service';
 import { levelCountOf, trackOf } from '../catalog';
@@ -48,6 +53,10 @@ const saveKey = (game: string) => `puzzle.save.${game}`;
 export class PracticeStore {
   private readonly store = inject(LocalStore);
   private readonly sync = inject(SyncService);
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+  private readonly conn = inject(ConnectionService);
+  private pulled = false;
   private readonly all = signal<Partial<Record<string, Progress>>>({});
   private restoring = false;
   private again: { kind: string; payload: unknown }[] | null = null;
@@ -59,6 +68,38 @@ export class PracticeStore {
       const events = this.sync.events();
       untracked(() => void this.restore(events));
     });
+    // The server keeps every verified solve, so signed in and online, ask it too (once per session): it covers solves whose events
+    // this device never pulled, and it is what "Sync now" in Settings runs again.
+    effect(() => {
+      const ready = this.conn.serverReady() && this.auth.signedIn();
+      if (ready) untracked(() => void this.pullFromServer());
+    });
+  }
+
+  /** Brings the account's solved levels from the server into this device. Returns how many levels were new here, or null when it could not be reached. */
+  async pullFromServer(force = false): Promise<number | null> {
+    if (this.pulled && !force) return 0;
+    this.pulled = true;
+    try {
+      const res = await firstValueFrom(
+        this.http.get<{ solves: { game: string; variant: string | null; level: number; elapsedMs: number | null }[] }>(`${environment.apiBaseUrl}/practice/progress`),
+      );
+      const before = this.count();
+      await this.restore(
+        res.solves.map((s) => ({
+          kind: 'puzzle.practice.solved',
+          payload: { game: s.game, variant: s.variant ?? undefined, level: s.level, elapsedMs: s.elapsedMs ?? undefined, hinted: true },
+        })),
+      );
+      return Math.max(0, this.count() - before);
+    } catch {
+      this.pulled = false;
+      return null;
+    }
+  }
+
+  private count(): number {
+    return Object.values(this.all()).reduce((n, p) => n + (p?.solved.length ?? 0), 0);
   }
 
   /** Merges the solved levels found in the event log into this device's progress. Never removes or worsens anything. */

@@ -263,6 +263,7 @@ app.MapDaily();
 app.MapPuzzleDaily();
 app.MapLeaderboards();
 app.MapStats();
+app.MapPracticeProgress();
 app.MapCircles();
 app.MapCommunity();
 app.MapSupporters();

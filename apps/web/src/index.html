@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>Zenigma</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content">
     <meta name="theme-color" content="#f2f4f3" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0b1012" media="(prefers-color-scheme: dark)">
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
@@ -38,7 +38,13 @@
   <meta property="og:description" content="Crowns, Eclipse, Sudoku, Zipline, Patchwork and Word Guess. A new daily challenge every day, endless practice levels, works offline." />
   <meta property="og:image" content="https://zenigma.ska97homelab.uk/og.png" />
   <meta name="twitter:card" content="summary_large_image" />
-</head>
+    <script>
+      // iOS ignores user-scalable=no: stop the pinch and double-tap zoom that leaves the installed app zoomed in.
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) { document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false }); });
+      var lastTouch = 0;
+      document.addEventListener('touchend', function (e) { var n = Date.now(); if (n - lastTouch < 300 && !(e.target.closest && e.target.closest('input,textarea'))) e.preventDefault(); lastTouch = n; }, { passive: false });
+    </script>
+  </head>
   <body>
     <app-root>
       <!-- Shown instantly while the app starts; Angular replaces it. -->

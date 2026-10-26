@@ -50,8 +50,8 @@ export class MindSyncService {
   private restored = false;
 
   /** Once per session, signed in and online: bring back the marks the account already has. */
-  private async restore(): Promise<void> {
-    if (this.restored) return;
+  async restore(force = false): Promise<void> {
+    if (this.restored && !force) return;
     this.restored = true;
     try {
       const rows = await firstValueFrom(this.http.get<{ game: string; pct: number; plays: number }[]>(`${environment.apiBaseUrl}/mind/scores`));

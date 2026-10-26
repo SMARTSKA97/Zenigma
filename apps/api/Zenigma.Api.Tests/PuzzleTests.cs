@@ -292,6 +292,11 @@ public class PuzzleTests : IClassFixture<PuzzleFactory>
         });
         Assert.Equal(HttpStatusCode.OK, push.StatusCode);
 
+        var progress = await client.GetFromJsonAsync<JsonElement>("/practice/progress", Json);
+        var solves = progress.GetProperty("solves").EnumerateArray().ToList();
+        Assert.Contains(solves, s => s.GetProperty("game").GetString() == "queens" && s.GetProperty("variant").GetString() == "classic-easy" && s.GetProperty("level").GetInt32() == 1);
+        Assert.DoesNotContain(solves, s => s.GetProperty("level").GetInt32() == 2 && s.GetProperty("game").GetString() == "queens");
+
         var queens = await client.GetFromJsonAsync<JsonElement>("/leaderboards/queens?kind=practice&period=all", Json);
         var mine = queens.GetProperty("entries").EnumerateArray().First(e => e.GetProperty("isMe").GetBoolean());
         Assert.Equal(1, mine.GetProperty("value").GetInt64());

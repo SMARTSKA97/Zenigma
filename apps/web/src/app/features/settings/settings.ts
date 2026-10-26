@@ -6,6 +6,8 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { AuthService } from '../../core/auth.service';
 import { ConnectionService } from '../../core/connection.service';
 import { SyncService } from '../../core/sync.service';
+import { MindSyncService } from '../../core/mind-sync.service';
+import { PracticeStore } from '../../games/puzzle/practice.store';
 import { ReminderService } from '../../core/reminder.service';
 import { Loader } from '../../shared/loader';
 import { Segmented, SegmentOption } from '../../shared/segmented';
@@ -132,6 +134,25 @@ export class Settings implements OnInit {
   ];
 
   /** Everything Zenigma keeps on this device, as one JSON file. Sign-in tokens are left out. */
+  protected readonly syncing = signal(false);
+  protected readonly syncNote = signal('');
+  private readonly practice = inject(PracticeStore);
+  private readonly mindSync = inject(MindSyncService);
+
+  /** Pulls the account's events and its verified practice levels, so this device matches the other ones. */
+  protected async syncNow(): Promise<void> {
+    this.syncing.set(true);
+    this.syncNote.set('');
+    try {
+      await this.sync.sync();
+      const added = await this.practice.pullFromServer(true);
+      await this.mindSync.restore();
+      this.syncNote.set(added === null ? 'Could not reach the server. Try again in a minute.' : added ? `Brought back ${added} practice level${added === 1 ? '' : 's'}.` : 'Everything is up to date.');
+    } finally {
+      this.syncing.set(false);
+    }
+  }
+
   protected exportData(): void {
     const data: Record<string, unknown> = {};
     try {

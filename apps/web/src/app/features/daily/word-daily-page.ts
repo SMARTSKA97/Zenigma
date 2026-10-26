@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import { ScreenGuardService } from '../../core/screen-guard.service';
 import { AuthService } from '../../core/auth.service';
 import { BackService } from '../../core/back.service';
 import { ConnectionService } from '../../core/connection.service';
@@ -78,8 +79,17 @@ export class WordDailyPage {
     }
   });
 
+  private readonly guard = inject(ScreenGuardService);
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor() {
     this.daily.refresh();
+    // While today's challenge is open, keep the screen on and (on Android) block screenshots, as for the puzzle dailies.
+    effect(() => {
+      const playing = this.stage() === 'play';
+      untracked(() => (playing ? this.guard.enter(true) : this.guard.leave()));
+    });
+    this.destroyRef.onDestroy(() => this.guard.leave());
     // Already played today: straight to the result.
     effect(() => {
       if (this.stage() === 'intro' && this.result()) this.stage.set('result');

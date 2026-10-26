@@ -1,6 +1,6 @@
 import { WalletService } from '../../core/wallet.service';
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -70,6 +70,15 @@ export class MindPage implements CanLeave {
   protected readonly stage = signal<'intro' | 'play' | 'result'>('intro');
   protected readonly result = signal<MindResult | null>(null);
   protected readonly record = signal(false);
+  /** "Play next" keeps this page and only changes the route: the new game starts from its own intro, not the last result. */
+  private readonly reset = effect(() => {
+    this.id();
+    untracked(() => {
+      this.result.set(null);
+      this.record.set(false);
+      this.stage.set('intro');
+    });
+  });
   protected readonly best = computed(() => this.label(this.store.record(this.id()).best, true));
 
   protected label(score: number, short = false): string {

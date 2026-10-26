@@ -1,4 +1,4 @@
-<app-play-screen title="Pindown" [subtitle]="'Category ' + (round() + 1) + ' of ' + total()">
+<app-play-screen title="Pindown" [subtitle]="total() === 1 ? 'Today’s category' : 'Category ' + (round() + 1) + ' of ' + total()">
   <div end><span>{{ score() }} {{ score() === 1 ? 'point' : 'points' }}</span></div>
   <ol class="clues" [class.flash-bad]="bad()">
     @for (n of slots; track n) {

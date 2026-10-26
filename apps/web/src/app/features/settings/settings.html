@@ -248,6 +248,13 @@
       <small>When the app breaks, send the error message and screen name to Zenigma. No account, no device id, no third party.</small>
     </app-switch>
   </div>
+  @if (auth.signedIn()) {
+    <button type="button" class="item link" [disabled]="syncing()" (click)="syncNow()">
+      <span class="tn" aria-hidden="true">🔄</span>
+      <span class="lead">{{ syncing() ? 'Syncing…' : 'Sync now' }}<small>{{ syncNote() || 'Bring back every level and score your account has, on this device.' }}</small></span>
+      <span class="chev">›</span>
+    </button>
+  }
   <button type="button" class="item link" (click)="exportData()">
     <span class="tn" aria-hidden="true">📦</span>
     <span class="lead">Export my data<small>Download your progress, scores and settings from this device as a JSON file.</small></span>

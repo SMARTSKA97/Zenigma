@@ -149,6 +149,8 @@ body {
 }
 
 /* The installed iPhone/iPad app should feel like the Android one: no rubber-band bounce, no text-selection or link callouts on the UI, no tap delay. */
+html, body { touch-action: manipulation; }
+
 @media (display-mode: standalone) {
   html,
   body {
