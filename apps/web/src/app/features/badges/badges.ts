@@ -13,6 +13,7 @@ import { MindGameId } from '../../games/catalog';
 import { HintsService } from '../../core/hints.service';
 import { WalletService } from '../../core/wallet.service';
 import { SupportService } from '../../core/support.service';
+import { PlayerCard } from '../../shared/player-card';
 import { ChallengesService, activityFrom } from '../challenges/challenges.service';
 
 const CLAIMED_KEY = 'zenigma.badges.claimed';
@@ -36,7 +37,7 @@ interface Badge {
 /** Badges earned just by playing: streaks, levels and a few small firsts. Worked out on this device from your progress. */
 @Component({
   selector: 'app-badges',
-  imports: [RouterLink],
+  imports: [RouterLink, PlayerCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './badges.html',
   styleUrl: './badges.scss',
@@ -188,6 +189,11 @@ export class Badges implements OnInit {
       items.sort((a, b) => Number(b.have >= b.need) - Number(a.have >= a.need));
       return { name, items, earned: items.filter((b) => b.have >= b.need).length };
     }).filter((g) => g.items.length > 0);
+  });
+  /** The unearned badge you are closest to, as a share of what it needs. */
+  protected readonly next = computed(() => {
+    const open = this.badges().filter((b) => b.have < b.need && !b.id.startsWith('sup'));
+    return open.sort((a, b) => b.have / b.need - a.have / a.need)[0] ?? null;
   });
   protected readonly earned = computed(() => this.badges().filter((b) => b.have >= b.need).length);
 

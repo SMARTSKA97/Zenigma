@@ -1,6 +1,18 @@
 <a class="back" routerLink="/stats">‹ Stats</a>
 <h1>Badges</h1>
+<app-player-card class="pcard" />
 <p class="muted lede">{{ earned() }} of {{ badges().length }} earned. Streak badges need you to be signed in.</p>
+@if (next(); as n) {
+  <section class="next" aria-label="Next badge">
+    <span class="ring" [style.--p]="(min(n) / n.need) * 100"><span aria-hidden="true">{{ n.icon }}</span></span>
+    <div>
+      <small>Next up</small>
+      <b>{{ n.name }}</b>
+      <span class="text">{{ n.text }}</span>
+      <span class="num">{{ min(n) }} / {{ n.need }}</span>
+    </div>
+  </section>
+}
 @if (waiting() > 0) {
   <button type="button" class="collect-all" (click)="collectAll()">Collect {{ waiting() }} badge {{ waiting() === 1 ? 'reward' : 'rewards' }}</button>
 }
@@ -9,7 +21,7 @@
   <div class="grid">
   @for (b of g.items; track b.id) {
     <article class="badge" [class.on]="b.have >= b.need">
-      <span class="icon" aria-hidden="true">{{ b.icon }}</span>
+      <span class="icon" [style.--p]="(min(b) / b.need) * 100" aria-hidden="true"><i>{{ b.icon }}</i></span>
       <b>{{ b.name }}</b>
       <span class="text">{{ b.text }}</span>
       <span class="bar" role="progressbar" [attr.aria-valuenow]="min(b)" aria-valuemin="0" [attr.aria-valuemax]="b.need">

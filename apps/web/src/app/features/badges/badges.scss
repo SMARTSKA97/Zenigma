@@ -45,11 +45,80 @@ h1 {
   border-color: color-mix(in srgb, #f5b82e 55%, var(--border));
 }
 .icon {
-  font-size: 2rem;
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--border) 0);
+}
+.icon i {
+  display: grid;
+  place-items: center;
+  width: calc(100% - 7px);
+  height: calc(100% - 7px);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 1.6rem;
+  font-style: normal;
   filter: grayscale(1);
 }
 .badge.on .icon {
+  background: var(--good);
+}
+.badge.on .icon i {
   filter: none;
+}
+.pcard {
+  display: block;
+  margin: 0.75rem 0 1rem;
+}
+.next {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.next small {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+.next b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+.next .num {
+  display: block;
+  margin-top: 0.2rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.next .ring {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p) * 1%), color-mix(in srgb, var(--accent) 20%, transparent) 0);
+}
+.next .ring span {
+  display: grid;
+  place-items: center;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 1.8rem;
 }
 .text {
   color: var(--muted);

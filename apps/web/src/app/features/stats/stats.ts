@@ -11,11 +11,12 @@ import { CardInput, StreakCardInput } from '../../shared/share-card';
 import { streakShare } from '../../shared/streak-share';
 import { ShareSheet } from '../../shared/share-sheet';
 import { Insights } from './insights';
+import { PlayerCard } from '../../shared/player-card';
 
 /** Per-game streaks, times and a five-week calendar, plus the streak freezes each game has earned. */
 @Component({
   selector: 'app-stats',
-  imports: [RouterLink, Glyph, FreezeList, ShareSheet, Insights],
+  imports: [RouterLink, Glyph, FreezeList, ShareSheet, Insights, PlayerCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stats.html',
   styleUrl: './stats.scss',

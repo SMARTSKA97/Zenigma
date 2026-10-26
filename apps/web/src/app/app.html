@@ -80,6 +80,9 @@
 <app-update-sheet />
 <app-whats-new />
 <app-support-sheet />
+@defer (on idle) {
+  <app-support-nudge />
+}
 @if (support.paying()) {
   @defer {
     <app-sheet label="Pay by UPI" (closed)="support.paying.set(false)">

@@ -37,10 +37,11 @@ import { PwaUpdateService } from './core/pwa-update.service';
 import { WhatsNew } from './shared/whats-new';
 import { SupportService } from './core/support.service';
 import { SupportSheet } from './shared/support-sheet';
+import { SupportNudge } from './shared/support-nudge';
 
 @Component({
   selector: 'app-root',
-  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, PwaUpdate, IosGuide, Sheet, UpiPay, WhatsNew, SupportSheet, ServerNotice, NotificationPrompt],
+  imports: [CoinBurst, RouterOutlet, RouterLink, RouterLinkActive, Loader, UpdateSheet, PwaUpdate, IosGuide, Sheet, UpiPay, WhatsNew, SupportSheet, SupportNudge, ServerNotice, NotificationPrompt],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
