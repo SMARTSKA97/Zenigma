@@ -23,6 +23,7 @@ import {
   Running,
   RUN_SECONDS,
   Shot,
+  SWEET,
 } from './pocket-cricket-engine';
 
 /** The canvas is drawn on a 360 × 480 grid and scaled to the screen (and doubled, so it stays sharp). */
@@ -42,9 +43,10 @@ const hw = (y: number): number => HW_FAR + ((y - FAR_Y) / (NEAR_Y - FAR_Y)) * (H
 /** How big things are at screen height y, compared with the near end. */
 const depth = (y: number): number => hw(y) / HW_NEAR;
 /** Where the ball is on the ground at flight progress p. */
-const groundY = (p: number): number => FAR_Y + 10 + p * (NEAR_Y - 118 - FAR_Y);
+const HIT_Y = NEAR_Y - 44; // the batting crease, where the ball must be when the bat comes through
+const groundY = (p: number): number => FAR_Y + 10 + (p / SWEET) * (HIT_Y - FAR_Y - 10);
 /** How high above the pitch the ball is (in near-end pixels): released high, pitched at 0.6, then up off the pitch. */
-const height = (p: number): number => (p < 0.6 ? 70 * (1 - p / 0.6) ** 1.2 : 36 * Math.sin(((p - 0.6) / 0.5) * Math.PI));
+const height = (p: number): number => (p < 0.55 ? 70 * (1 - p / 0.55) ** 1.2 : 38 * Math.sin(Math.min(1, (p - 0.55) / 0.62) * Math.PI));
 
 /** A fixed scatter for the wear on the pitch and the crowd, so nothing flickers. */
 const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -98,6 +100,8 @@ export class PocketCricket implements OnInit, OnDestroy {
   private plan: FieldPlan | null = null;
   private running: Running | null = null;
   private resultFor = 0.9;
+  /** How far the fielding scene had got when the ball ended, so the result hold freezes it instead of replaying it. */
+  private fieldEnd = 0;
   private frame = 0;
   private last = 0;
   private clock = 0;
@@ -263,6 +267,7 @@ export class PocketCricket implements OnInit, OnDestroy {
   }
 
   private finishBall(runs: number, out: boolean, text: string, hold: number): void {
+    if (this.phase === 'field') this.fieldEnd = this.t;
     this.match.record(runs, out);
     this.runs.set(this.match.runs);
     this.balls.set(this.match.overs);
@@ -287,6 +292,11 @@ export class PocketCricket implements OnInit, OnDestroy {
     this.pad.set('bat');
     this.call.set('');
     this.enter('ready');
+  }
+
+  /** The fielding scene's clock: live while it plays, frozen once the ball is over. */
+  private get ft(): number {
+    return this.phase === 'field' ? this.t : this.fieldEnd;
   }
 
   // ---- drawing -------------------------------------------------------------------------------------------------------------------
@@ -380,7 +390,7 @@ export class PocketCricket implements OnInit, OnDestroy {
       c.fillRect(CX + hw(y) * 0.92 - depth(y) * 2, y - depth(y) * 24, Math.max(1.2, depth(y) * 2), depth(y) * 24);
     };
     crease(FAR_Y + 16);
-    crease(NEAR_Y - 80);
+    crease(HIT_Y + 4);
     // Faint lane marks, so the lanes can be seen.
     c.strokeStyle = 'rgba(90,60,20,0.14)';
     c.lineWidth = 1;
@@ -390,13 +400,22 @@ export class PocketCricket implements OnInit, OnDestroy {
       c.lineTo(CX + l * HW_NEAR * 0.4, NEAR_Y - 82);
       c.stroke();
     }
+    // The hit line: the ball is in the hitting zone when it reaches this bar on its lane.
+    c.strokeStyle = 'rgba(255,255,255,0.55)';
+    c.lineWidth = 2;
+    c.setLineDash([6, 5]);
+    c.beginPath();
+    c.moveTo(CX - hw(HIT_Y) * 0.95, HIT_Y);
+    c.lineTo(CX + hw(HIT_Y) * 0.95, HIT_Y);
+    c.stroke();
+    c.setLineDash([]);
     // The bowler's stumps, the bowler, and the ball.
     this.stumps(CX, FAR_Y + 16, 0.26);
     this.drawBowler();
-    if (this.phase === 'flight' || (this.phase === 'result' && !this.shot)) this.drawBall();
-    if (this.phase === 'swing') this.drawHitBall();
     this.stumps(CX, NEAR_Y - 56, 1);
     this.drawBatter();
+    if (this.phase === 'flight' || (this.phase === 'result' && !this.shot)) this.drawBall();
+    if (this.phase === 'swing') this.drawHitBall();
   }
 
   /** Three stumps and two bails, `s` times the near-end size, standing on y. */
@@ -492,9 +511,9 @@ export class PocketCricket implements OnInit, OnDestroy {
   private drawHitBall(): void {
     const shot = this.shot!;
     const u = Math.min(1, this.t / 0.4);
-    const x0 = this.laneX(this.batX, NEAR_Y - 90);
+    const x0 = this.laneX(this.batX, HIT_Y);
     const x = x0 + Math.sin(shot.angle) * 190 * u;
-    const y = NEAR_Y - 130 - (230 + (shot.outcome === 'six' ? 90 : 0)) * u + (shot.outcome === 'six' ? 0 : 60 * u * u);
+    const y = HIT_Y - 30 - (230 + (shot.outcome === 'six' ? 90 : 0)) * u + (shot.outcome === 'six' ? 0 : 60 * u * u);
     this.cherry(x, y, Math.max(2.4, 8 - 5.4 * u), this.clock * 20);
   }
 
@@ -605,14 +624,14 @@ export class PocketCricket implements OnInit, OnDestroy {
 
     // The fielders (in gold) and the batters (in blue).
     FIELDERS.forEach((_, i) => {
-      const p = fielderPoint(plan, i, this.t);
+      const p = fielderPoint(plan, i, this.ft);
       const chaser = i === plan.fielder && plan.kind !== 'boundary';
       this.person(sx(p), sy(p), chaser ? '#ffcf33' : '#e8a317', 7.5, chaser);
     });
     this.drawRunnersField(sx, sy);
 
     // The ball.
-    const t = this.t;
+    const t = this.ft;
     let b: Pt = { ...BAT_END };
     let air = 0;
     if (plan.kind === 'boundary' || plan.kind === 'caught') {
@@ -654,7 +673,7 @@ export class PocketCricket implements OnInit, OnDestroy {
     const from = swapped ? BOWL_END : BAT_END;
     const to = swapped ? BAT_END : BOWL_END;
     if (r && r.start !== null) {
-      const p = Math.max(0, Math.min(1, (this.t - r.start) / RUN_SECONDS));
+      const p = Math.max(0, Math.min(1, (this.ft - r.start) / RUN_SECONDS));
       const at = (s: Pt, e: Pt) => ({ x: s.x + (e.x - s.x) * p, y: s.y + (e.y - s.y) * p });
       const m = at(from, to);
       const o = at(to, from);
