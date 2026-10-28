@@ -5,7 +5,6 @@ import { MindResult } from './mind-util';
 import {
   BAT_END,
   BOWL_END,
-  clampLane,
   deliver,
   Delivery,
   FIELDERS,
@@ -13,7 +12,6 @@ import {
   fielderPoint,
   Match,
   MAX_BALLS,
-  MAX_LANE,
   OUTS_TO_END,
   planField,
   playShot,
@@ -60,8 +58,8 @@ const WEAR = (() => {
 })();
 
 /**
- * A pocket cricket game: the batter's view from behind, then the field from above. Slide the batter left or right along the crease so the bat
- * is in the ball's lane, and press Shot as the ball arrives. Miss and you are out. Hit it and the view cuts to the field: press Run to go
+ * A pocket cricket game in the spirit of Doodle Cricket: the batter's view from behind, one tap to swing as the ball arrives. Miss and you
+ * are out; an early swing goes to the leg side and a late one to the off side. Hit it and the view cuts to the field: press Run to go
  * for runs before the fielder's throw is back (a run out is an out too), or watch a boundary or a catch. Five outs end the game.
  */
 @Component({
@@ -93,9 +91,7 @@ export class PocketCricket implements OnInit, OnDestroy {
   private phase: Phase = 'ready';
   private t = 0;
   private flight = 0;
-  private delivery: Delivery = { lane: 0, seconds: 1.2 };
-  private lane = 0;
-  private batX = 0; // the batter's lane while it slides, 0 = centre
+  private delivery: Delivery = { seconds: 1.2 };
   private swung = false;
   private swingAt = 0;
   private shot: Shot | null = null;
@@ -137,22 +133,11 @@ export class PocketCricket implements OnInit, OnDestroy {
   @HostListener('document:keydown', ['$event'])
   protected key(event: KeyboardEvent): void {
     if (event.repeat) return;
-    if (event.key === 'ArrowLeft') this.shift(-1);
-    else if (event.key === 'ArrowRight') this.shift(1);
-    else if (event.key === ' ' || event.key === 'Enter') {
+    if (event.key === ' ' || event.key === 'Enter') {
       event.preventDefault();
       if (this.phase === 'field') this.run();
       else this.hit();
-    } else if (event.key === 'ArrowUp') this.run();
-  }
-
-  /** Move the batter one lane along the crease. */
-  protected shift(by: -1 | 1): void {
-    if (this.phase !== 'ready' && this.phase !== 'flight') return;
-    if (this.swung) return;
-    const next = clampLane(this.lane + by);
-    if (next !== this.lane) this.haptics.tick();
-    this.lane = next;
+    }
   }
 
   /** Swing the bat. */
@@ -163,10 +148,10 @@ export class PocketCricket implements OnInit, OnDestroy {
     this.swingAt = this.t;
     this.canShoot.set(false);
     this.haptics.tap();
-    const shot = playShot(this.flight, this.lane, this.delivery.lane, Math.random);
+    const shot = playShot(this.flight, Math.random);
     this.shot = shot;
     if (shot.outcome === 'miss') {
-      this.say(Math.abs(this.lane - this.delivery.lane) > 1 ? 'Wrong lane!' : this.flight < SWEET ? 'Too early!' : 'Too late!', 'miss');
+      this.say(this.flight < SWEET ? 'Too early!' : 'Too late!', 'miss');
       return;
     }
     this.plan = planField(shot);
@@ -178,6 +163,12 @@ export class PocketCricket implements OnInit, OnDestroy {
   /** Show a call on the screen; each new one pops in afresh. */
   private say(text: string, kind = 'info'): void {
     this.call.set({ id: this.call().id + 1, text, kind });
+  }
+
+  /** Tap the screen to swing, or to run once the ball is hit. */
+  protected tap(): void {
+    if (this.phase === 'field') this.run();
+    else this.hit();
   }
 
   protected run(): void {
@@ -212,8 +203,6 @@ export class PocketCricket implements OnInit, OnDestroy {
     this.flash = Math.max(0, this.flash - dt * 1.4);
     this.cheer = Math.max(0, this.cheer - dt);
     this.mood *= 1 - Math.min(1, dt * 0.9);
-    // The batter slides to the chosen lane.
-    this.batX += (this.lane - this.batX) * Math.min(1, dt * 14);
     switch (this.phase) {
       case 'ready':
         if (this.t >= 1.1) {
@@ -233,8 +222,8 @@ export class PocketCricket implements OnInit, OnDestroy {
         this.flight += dt / this.delivery.seconds;
         if (this.flight >= 1.12) {
           this.haptics.error();
-          this.stumpsHit = this.delivery.lane === 0 && !this.swung;
-          this.finishBall(0, true, this.stumpsHit ? 'Bowled!' : this.swung ? 'Missed!' : 'Bowled!', 1.1);
+          this.stumpsHit = !this.swung;
+          this.finishBall(0, true, this.swung ? 'Missed!' : 'Bowled!', 1.1);
         }
         break;
       case 'swing':
@@ -504,10 +493,6 @@ export class PocketCricket implements OnInit, OnDestroy {
     c.fill();
   }
 
-  private laneX(lane: number, y: number): number {
-    return CX + lane * hw(y) * 0.4;
-  }
-
   /** The view from behind the batter: stands, striped outfield, the pitch narrowing to the bowler, the ball coming down it. */
   private drawBatting(): void {
     const c = this.ctx;
@@ -563,15 +548,6 @@ export class PocketCricket implements OnInit, OnDestroy {
     };
     crease(FAR_Y + 16);
     crease(HIT_Y + 14);
-    // Faint lane marks, so the lanes can be seen.
-    c.strokeStyle = 'rgba(90,60,20,0.14)';
-    c.lineWidth = 1;
-    for (let l = -MAX_LANE + 0.5; l <= MAX_LANE - 0.5; l += 1) {
-      c.beginPath();
-      c.moveTo(CX + l * HW_FAR * 0.4, FAR_Y + 18);
-      c.lineTo(CX + l * HW_NEAR * 0.4, NEAR_Y - 82);
-      c.stroke();
-    }
     this.drawTarget();
     // The bowler's stumps, the bowler, and the ball.
     this.stumps(CX, FAR_Y + 16, 0.26, 0);
@@ -601,24 +577,17 @@ export class PocketCricket implements OnInit, OnDestroy {
     this.rect(x + broken * 18 * s, y - 51 * s - lift * 1.2, 12 * s, 3 * s, '#f3e3b0');
   }
 
-  /** Where the ball will arrive: a ring on its lane at the hitting line, and a wider ring closing in on it. Swing when they meet. */
+  /** Where the ball will arrive: a ring where the bat meets it, and a wider ring closing in on it. Swing when they meet. */
   private drawTarget(): void {
     if (this.phase !== 'flight' || this.swung) return;
     const c = this.ctx;
     const p = this.flight;
     if (p < 0.2 || p > SWEET + 0.2) return;
-    const x = this.laneX(this.delivery.lane, HIT_Y);
+    const x = CX;
     const y = HIT_Y + 2;
     const inside = Math.abs(p - SWEET) <= 0.08;
-    const matched = this.lane === this.delivery.lane;
-    const col = inside ? (matched ? '#7CFC9A' : '#ffd23f') : 'rgba(255,255,255,0.9)';
+    const col = inside ? '#7CFC9A' : 'rgba(255,255,255,0.9)';
     const k = depth(HIT_Y);
-    // The lane is lit while the bat is not in it.
-    if (!matched) {
-      c.globalAlpha = 0.16 + 0.1 * Math.sin(this.clock * 8);
-      this.poly([[x - 18 * k, y - 110 * k], [x + 18 * k, y - 110 * k], [x + 26 * k, y + 8], [x - 26 * k, y + 8]], '#fff');
-      c.globalAlpha = 1;
-    }
     c.lineWidth = 3;
     c.strokeStyle = col;
     c.beginPath();
@@ -670,14 +639,14 @@ export class PocketCricket implements OnInit, OnDestroy {
     const gy = groundY(p);
     const d = depth(gy);
     const lift = height(p) * d * 1.1;
-    const x = this.laneX(this.delivery.lane, gy);
+    const x = CX;
     const y = gy - lift;
     const r = 2.6 + d * 7.5;
     this.ellipse(x, gy + 1, r * 1.1, r * 0.38, 'rgba(0,0,0,0.32)');
     // A streak behind it.
     const pp = Math.max(0, p - 0.06);
     const gy2 = groundY(pp);
-    const x2 = this.laneX(this.delivery.lane, gy2);
+    const x2 = CX;
     const y2 = gy2 - height(pp) * depth(gy2) * 1.1;
     const streak = c.createLinearGradient(x2, y2, x, y);
     streak.addColorStop(0, 'rgba(255,255,255,0)');
@@ -711,7 +680,7 @@ export class PocketCricket implements OnInit, OnDestroy {
   private drawHitBall(): void {
     const shot = this.shot!;
     const u = Math.min(1, this.t / 0.4);
-    const x0 = this.laneX(this.batX, HIT_Y);
+    const x0 = CX;
     const x = x0 + Math.sin(shot.angle) * 190 * u;
     const y = HIT_Y - 30 - (230 + (shot.outcome === 'six' ? 90 : 0)) * u + (shot.outcome === 'six' ? 0 : 60 * u * u);
     this.cherry(x, y, Math.max(2.4, 8 - 5.4 * u), this.clock * 20);
@@ -720,7 +689,7 @@ export class PocketCricket implements OnInit, OnDestroy {
   /** The batter from behind: helmet with a grille, shirt, gloves, pads and the bat. */
   private drawBatter(): void {
     const c = this.ctx;
-    const x = this.laneX(this.batX, HIT_Y);
+    const x = CX;
     const y = NEAR_Y - 90;
     const swinging = this.swung && (this.phase === 'flight' || this.phase === 'swing');
     const elapsed = this.phase === 'flight' ? this.t - this.swingAt : 0.1 + this.t;

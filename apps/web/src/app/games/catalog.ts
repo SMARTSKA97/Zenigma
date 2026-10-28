@@ -85,7 +85,7 @@ export const GAMES: GameInfo[] = [
   { id: 'crossclimb', name: 'Word Climb', blurb: 'Climb a word ladder, one letter at a time.', hue: 95, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'wend', name: 'Wend', blurb: 'Four hidden words that use every letter.', hue: 275, live: true, daily: false, category: 'word', skill: 'language' },
   { id: 'comet-slice', name: 'Comet Slice', blurb: 'Slice the falling comets, avoid the skulls.', hue: 15, live: true, daily: false, category: 'mind', skill: 'speed' },
-  { id: 'pocket-cricket', name: 'Pocket Cricket', blurb: 'Slide into the ball’s lane, time your shot, then run. Five outs.', hue: 95, live: true, daily: false, category: 'mind', skill: 'speed' },
+  { id: 'pocket-cricket', name: 'Pocket Cricket', blurb: 'Time your swing, then run. Five outs.', hue: 95, live: true, daily: false, category: 'mind', skill: 'speed' },
   { id: 'switchyard', name: 'Switchyard', blurb: 'Switch the tracks so every train reaches its own station.', hue: 200, live: true, daily: false, category: 'mind', skill: 'attention' },
   { id: 'echo-sequence', name: 'Echo Sequence', blurb: 'Watch a pattern of lights, then repeat it. It grows by one each round.', hue: 120, live: true, daily: false, category: 'mind', skill: 'memory' },
   { id: 'grid-recall', name: 'Grid Recall', blurb: 'Memorise which tiles lit up, then tap them from memory.', hue: 140, live: true, daily: false, category: 'mind', skill: 'memory' },

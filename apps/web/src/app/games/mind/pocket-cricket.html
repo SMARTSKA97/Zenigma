@@ -11,22 +11,20 @@
         </b>
       </span>
     </div>
-    <div class="lcd">
+    <div class="lcd" (pointerdown)="tap()">
       <canvas #screen role="img" aria-label="Cricket. A batter's view of the ball coming down the pitch, then the field from above after a hit."></canvas>
       <div class="callbox" aria-live="assertive">
         @for (c of [call()]; track c.id) {
           @if (c.text) { <p class="call {{ c.kind }}">{{ c.text }}</p> }
         }
       </div>
-      @if (hint()) { <p class="hint">◀ ▶ slide under the ball's lane · <b>SHOT</b> when the rings meet</p> }
+      @if (hint()) { <p class="hint">Tap <b>SWING</b> when the rings meet</p> }
     </div>
   </section>
   <div dock class="pads">
     @switch (pad()) {
       @case ('bat') {
-        <button type="button" class="move" aria-label="Move the batter left" (pointerdown)="shift(-1)">◀</button>
-        <button type="button" class="shotbtn" [disabled]="!canShoot()" (pointerdown)="hit()">Shot</button>
-        <button type="button" class="move" aria-label="Move the batter right" (pointerdown)="shift(1)">▶</button>
+        <button type="button" class="shotbtn" [disabled]="!canShoot()" (pointerdown)="hit()">Swing</button>
       }
       @case ('run') {
         <button type="button" class="runbtn" [disabled]="!canRun()" (pointerdown)="run()">Run</button>

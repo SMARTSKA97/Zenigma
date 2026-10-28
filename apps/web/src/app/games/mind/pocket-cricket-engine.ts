@@ -2,10 +2,6 @@
 export const OUTS_TO_END = 5;
 export const MAX_BALLS = 60;
 
-/** The batter stands in one of five lanes across the crease (-2 far left … 2 far right). */
-export const LANES = 5;
-export const MAX_LANE = 2;
-
 /** How far along its flight (0 to 1) the ball is at the sweet spot, and how far either side of it a swing still makes contact. */
 export const SWEET = 0.86;
 export const WINDOW = 0.16;
@@ -14,18 +10,14 @@ export const WINDOW = 0.16;
 export const RUN_SECONDS = 0.7;
 
 export interface Delivery {
-  /** The lane the ball arrives in (-2 to 2). */
-  lane: number;
   /** How long it takes to reach the bat: every ball is a different speed. */
   seconds: number;
 }
 
-/** The next ball: a random lane at a random speed. */
+/** The next ball: straight down the pitch, at a random speed. */
 export function deliver(random: () => number): Delivery {
-  return { lane: Math.floor(random() * LANES) - MAX_LANE, seconds: 0.9 + random() * 0.6 };
+  return { seconds: 0.9 + random() * 0.6 };
 }
-
-export const clampLane = (lane: number): number => Math.max(-MAX_LANE, Math.min(MAX_LANE, lane));
 
 /** How well-timed a swing at flight position `t` is: 1 at the sweet spot, falling to 0 at the edge of the window, -1 outside it (a miss). */
 export function timingQuality(t: number): number {
@@ -37,7 +29,7 @@ export type Outcome = 'miss' | 'caught' | 'runs' | 'four' | 'six';
 
 export interface Shot {
   outcome: Outcome;
-  /** 0 to 1: timing, cut down when the bat is a lane off the ball. */
+  /** 0 to 1: how well the swing was timed. */
   power: number;
   /** How far the ball travels when it stays in the field. */
   dist: number;
@@ -46,16 +38,15 @@ export interface Shot {
 }
 
 /**
- * What a swing does. The bat must be in the ball's lane, or the lane next to it (a weaker, edged shot); two lanes away is a miss. The
- * timing sets the power: the best timing is a six, good timing a four, ordinary timing runs. Only a badly mistimed hit (an edge) is
- * in danger, and even then half of them drop safe for a single.
+ * What a swing does. Only the timing matters: the best timing is a six, good timing a four, ordinary timing runs. An early swing sends the
+ * ball to the leg side (left), a late one to the off side (right). Only a badly mistimed hit (an edge) is in danger, and even then half of
+ * them drop safe for a single.
  */
-export function playShot(t: number, batLane: number, ballLane: number, random: () => number): Shot {
-  const off = batLane - ballLane;
+export function playShot(t: number, random: () => number): Shot {
   const q = timingQuality(t);
-  if (q < 0 || Math.abs(off) > 1) return { outcome: 'miss', power: 0, dist: 0, angle: 0 };
-  const power = q * (off === 0 ? 1 : 0.75);
-  const angle = Math.max(-1.35, Math.min(1.35, off * 0.5 + (SWEET - t) * 3 + (random() - 0.5) * 0.3));
+  if (q < 0) return { outcome: 'miss', power: 0, dist: 0, angle: 0 };
+  const power = q;
+  const angle = Math.max(-1.35, Math.min(1.35, (t - SWEET) * 5 + (random() - 0.5) * 0.5));
   if (power >= 0.93) return { outcome: 'six', power, dist: ROPE, angle };
   if (power >= 0.7) return { outcome: 'four', power, dist: ROPE, angle };
   if (power >= 0.15) return { outcome: 'runs', power, dist: 14 + power * 40, angle };

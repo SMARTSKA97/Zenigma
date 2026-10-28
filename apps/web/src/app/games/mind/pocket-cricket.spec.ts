@@ -1,4 +1,4 @@
-import { clampLane, deliver, FIELDERS, fielderPoint, Match, MAX_BALLS, OUTS_TO_END, planField, playShot, ROPE, rollPoint, Running, RUN_SECONDS, SWEET, timingQuality } from './pocket-cricket-engine';
+import { deliver, FIELDERS, fielderPoint, Match, MAX_BALLS, OUTS_TO_END, planField, playShot, ROPE, rollPoint, Running, RUN_SECONDS, SWEET, timingQuality } from './pocket-cricket-engine';
 
 const fixed = (v: number) => () => v;
 
@@ -10,29 +10,23 @@ describe('Pocket Cricket', () => {
     expect(timingQuality(1.05)).toBe(-1);
   });
 
-  it('bowls random lanes at random speeds', () => {
-    const lanes = new Set<number>();
+  it('bowls at random speeds', () => {
     for (let i = 0; i < 300; i++) {
       const d = deliver(Math.random);
-      lanes.add(d.lane);
       expect(d.seconds).toBeGreaterThanOrEqual(0.9);
       expect(d.seconds).toBeLessThanOrEqual(1.5);
     }
-    expect([...lanes].sort((a, b) => a - b)).toEqual([-2, -1, 0, 1, 2]);
-    expect(clampLane(5)).toBe(2);
-    expect(clampLane(-9)).toBe(-2);
   });
 
-  it('needs the bat in the ball\'s lane or the next one, and the right moment', () => {
-    expect(playShot(SWEET, 1, 1, fixed(0.5)).outcome).toBe('six');
-    expect(playShot(SWEET, 0, 1, fixed(0.5)).outcome).toBe('four'); // a lane off: at most 0.75
-    expect(playShot(SWEET, -1, 1, fixed(0.5)).outcome).toBe('miss'); // two lanes off
-    expect(playShot(0.3, 1, 1, fixed(0.5)).outcome).toBe('miss'); // too early
-    expect(playShot(SWEET + 0.04, 0, 0, fixed(0.5)).outcome).toBe('four');
-    expect(playShot(SWEET + 0.08, 0, 0, fixed(0.5)).outcome).toBe('runs');
+  it('needs the right moment', () => {
+    expect(playShot(SWEET, fixed(0.5)).outcome).toBe('six');
+    expect(playShot(0.3, fixed(0.5)).outcome).toBe('miss'); // too early
+    expect(playShot(1.05, fixed(0.5)).outcome).toBe('miss'); // too late
+    expect(playShot(SWEET + 0.04, fixed(0.5)).outcome).toBe('four');
+    expect(playShot(SWEET + 0.08, fixed(0.5)).outcome).toBe('runs');
     // A badly mistimed edge: half are caught, half drop short for a single.
-    expect(playShot(SWEET + 0.15, 0, 0, fixed(0.4)).outcome).toBe('caught');
-    expect(playShot(SWEET + 0.15, 0, 0, fixed(0.6)).outcome).toBe('runs');
+    expect(playShot(SWEET + 0.15, fixed(0.4)).outcome).toBe('caught');
+    expect(playShot(SWEET + 0.15, fixed(0.6)).outcome).toBe('runs');
   });
 
   it('is not mostly catches: most hits that make contact score', () => {
@@ -40,16 +34,16 @@ describe('Pocket Cricket', () => {
     const counts: Record<string, number> = {};
     for (let i = 0; i < 4000; i++) {
       const t = 0.7 + (i / 4000) * 0.32; // every moment inside the window
-      const o = playShot(t, 0, i % 3 === 0 ? 1 : 0, () => (n = (n * 7919 + 104729) % 100003) / 100003).outcome;
+      const o = playShot(t, () => (n = (n * 7919 + 104729) % 100003) / 100003).outcome;
       counts[o] = (counts[o] ?? 0) + 1;
     }
     expect((counts['caught'] ?? 0) / 4000).toBeLessThan(0.12);
     expect(((counts['runs'] ?? 0) + (counts['four'] ?? 0) + (counts['six'] ?? 0)) / 4000).toBeGreaterThan(0.75);
   });
 
-  it('sends the ball to either side depending on the lane and the timing', () => {
-    expect(playShot(SWEET, 1, 0, fixed(0.5)).angle).toBeGreaterThan(0);
-    expect(playShot(SWEET, -1, 0, fixed(0.5)).angle).toBeLessThan(0);
+  it('sends an early swing to the left and a late one to the right', () => {
+    expect(playShot(SWEET - 0.1, fixed(0.5)).angle).toBeLessThan(0);
+    expect(playShot(SWEET + 0.1, fixed(0.5)).angle).toBeGreaterThan(0);
   });
 
   it('plans a boundary, a catch or a chase', () => {

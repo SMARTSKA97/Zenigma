@@ -206,8 +206,8 @@ export const MIND_DEMOS: Record<string, Demo> = {
   },
   'pocket-cricket': {
     frames: [
-      F([['.', '⚾', '.'], ['.', '.', '.'], ['.', '🏏', '.']], 'The ball comes down the pitch at a random speed, in one of five lanes. You bat from behind.'),
-      F([['.', '.', '.'], ['.', '?⚾', '.'], ['?◀', '🏏', '?▶']], 'Tap the arrows to slide the batter into the ball\'s lane, then press Shot as it reaches the bat. Miss and you are out.', 'If the ball is wide of you → slide over first, then wait for it.', [1, 1], [2, 0]),
+      F([['.', '⚾', '.'], ['.', '.', '.'], ['.', '🏏', '.']], 'The ball comes down the pitch at a random speed. You bat from behind.'),
+      F([['.', '.', '.'], ['.', '?⚾', '.'], ['.', '🏏', '.']], 'Tap Swing just as the ball reaches the bat. Miss and you are out.', 'If you keep swinging early → wait for the rings to meet.', [1, 1], [2, 1]),
       F([['.', '.', '.'], ['.', '🏃', '.'], ['.', '?⚡', '.']], 'Hit it and the view cuts to the field. Press Run before the fielder throws the ball back. Caught, or still running when it is back, and you are out. Five outs end the game.', 'If the fielder is close to the ball → take one run, not two.', [2, 1]),
     ],
   },
