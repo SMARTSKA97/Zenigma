@@ -39,12 +39,26 @@ const CX = W / 2;
 type Phase = 'ready' | 'flight' | 'swing' | 'field' | 'result';
 
 const hw = (y: number): number => HW_FAR + ((y - FAR_Y) / (NEAR_Y - FAR_Y)) * (HW_NEAR - HW_FAR);
-/** The ball's height on the screen at progress p: the ball is pitched at 0.6 and bounces up and on. */
-const ballY = (p: number): number => FAR_Y + 18 + p * (NEAR_Y - 130 - FAR_Y);
-const bounce = (p: number): number => (p < 0.6 ? Math.sin((p / 0.6) * Math.PI) * 0.0 + (1 - p / 0.6) * 38 : Math.sin(((p - 0.6) / 0.4) * Math.PI) * 26);
+/** How big things are at screen height y, compared with the near end. */
+const depth = (y: number): number => hw(y) / HW_NEAR;
+/** Where the ball is on the ground at flight progress p. */
+const groundY = (p: number): number => FAR_Y + 10 + p * (NEAR_Y - 118 - FAR_Y);
+/** How high above the pitch the ball is (in near-end pixels): released high, pitched at 0.6, then up off the pitch. */
+const height = (p: number): number => (p < 0.6 ? 70 * (1 - p / 0.6) ** 1.2 : 36 * Math.sin(((p - 0.6) / 0.5) * Math.PI));
+
+/** A fixed scatter for the wear on the pitch and the crowd, so nothing flickers. */
+const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const CROWD = (() => {
+  const r = rng(7);
+  return Array.from({ length: 260 }, () => ({ x: r() * W, y: 58 + r() * 52, c: ['#e5484d', '#f5b82e', '#f4f4f4', '#3e63dd', '#30a46c', '#d6409f'][Math.floor(r() * 6)] }));
+})();
+const WEAR = (() => {
+  const r = rng(21);
+  return Array.from({ length: 22 }, () => ({ p: r(), dx: (r() - 0.5) * 1.6, s: 0.4 + r() * 0.8, a: 0.05 + r() * 0.08 }));
+})();
 
 /**
- * A pocket cricket game: the batter's view from behind, then the field from above. Shift the batter left or right along the crease so the bat
+ * A pocket cricket game: the batter's view from behind, then the field from above. Slide the batter left or right along the crease so the bat
  * is in the ball's lane, and press Shot as the ball arrives. Miss and you are out. Hit it and the view cuts to the field: press Run to go
  * for runs before the fielder's throw is back (a run out is an out too), or watch a boundary or a catch. Five outs end the game.
  */
@@ -64,11 +78,13 @@ export class PocketCricket implements OnInit, OnDestroy {
   protected readonly balls = signal('0.0');
   protected readonly outs = signal(0);
   protected readonly call = signal('Get ready');
-  protected readonly view = signal<'bat' | 'field'>('bat');
+  /** Which buttons show: the batting ones, the Run button after a hit that can be run, or nothing to press while a boundary or a catch plays out. */
+  protected readonly pad = signal<'bat' | 'run' | 'watch'>('bat');
   protected readonly canShoot = signal(false);
   protected readonly canRun = signal(false);
   protected readonly outList = Array.from({ length: OUTS_TO_END }, (_, i) => i);
 
+  private view: 'bat' | 'field' = 'bat';
   private readonly match = new Match();
   private phase: Phase = 'ready';
   private t = 0;
@@ -183,13 +199,13 @@ export class PocketCricket implements OnInit, OnDestroy {
         break;
       case 'flight':
         this.flight += dt / this.delivery.seconds;
-        if (this.flight >= 1.05) {
+        if (this.flight >= 1.12) {
           this.haptics.error();
           this.finishBall(0, true, 'Bowled!', 1);
         }
         break;
       case 'swing':
-        if (this.t >= 0.35) this.startField();
+        if (this.t >= 0.4) this.startField();
         break;
       case 'field':
         this.updateField();
@@ -203,17 +219,22 @@ export class PocketCricket implements OnInit, OnDestroy {
   private startField(): void {
     const shot = this.shot!;
     const plan = this.plan!;
-    this.view.set('field');
+    this.view = 'field';
     this.enter('field');
     if (plan.kind === 'play') {
       this.running = new Running(plan.returned);
+      this.pad.set('run');
       this.canRun.set(true);
       this.call.set('Run!');
-    } else if (plan.kind === 'boundary') {
-      this.call.set(shot.outcome === 'six' ? 'SIX!' : 'FOUR!');
-      shot.outcome === 'six' ? this.haptics.success() : this.haptics.place();
     } else {
-      this.call.set('In the air...');
+      this.pad.set('watch');
+      if (plan.kind === 'boundary') {
+        this.call.set(shot.outcome === 'six' ? 'SIX!' : 'FOUR!');
+        if (shot.outcome === 'six') this.haptics.success();
+        else this.haptics.place();
+      } else {
+        this.call.set('Up in the air...');
+      }
     }
   }
 
@@ -221,11 +242,11 @@ export class PocketCricket implements OnInit, OnDestroy {
     const plan = this.plan!;
     const shot = this.shot!;
     if (plan.kind === 'boundary') {
-      if (this.t >= 1.1) this.finishBall(shot.outcome === 'six' ? 6 : 4, false, shot.outcome === 'six' ? 'SIX!' : 'FOUR!', 0.7);
+      if (this.t >= plan.ballTime + 0.4) this.finishBall(shot.outcome === 'six' ? 6 : 4, false, shot.outcome === 'six' ? 'SIX!' : 'FOUR!', 0.6);
     } else if (plan.kind === 'caught') {
       if (this.t >= plan.returned) {
         this.haptics.error();
-        this.finishBall(0, true, 'Caught!', 1);
+        this.finishBall(0, true, 'Caught!', 0.9);
       }
     } else if (this.running) {
       this.running.tick(this.t);
@@ -233,9 +254,9 @@ export class PocketCricket implements OnInit, OnDestroy {
         const r = this.running;
         if (r.out) {
           this.haptics.error();
-          this.finishBall(r.runs, true, 'Run out!', 1);
+          this.finishBall(r.runs, true, 'Run out!', 0.9);
         } else {
-          this.finishBall(r.runs, false, r.runs === 0 ? 'No run' : r.runs === 1 ? '1 run' : `${r.runs} runs`, 0.8);
+          this.finishBall(r.runs, false, r.runs === 0 ? 'No run' : r.runs === 1 ? '1 run' : `${r.runs} runs`, 0.7);
         }
       }
     }
@@ -248,6 +269,8 @@ export class PocketCricket implements OnInit, OnDestroy {
     this.outs.set(this.match.outs);
     this.call.set(out ? `OUT! ${text}` : text);
     this.resultFor = hold;
+    this.canRun.set(false);
+    this.pad.set('watch');
     this.enter('result');
   }
 
@@ -260,7 +283,8 @@ export class PocketCricket implements OnInit, OnDestroy {
       this.done.emit({ score: m.runs, detail: `${m.runs} runs, ${m.outs} ${m.outs === 1 ? 'out' : 'outs'} · ${why}` });
       return;
     }
-    this.view.set('bat');
+    this.view = 'bat';
+    this.pad.set('bat');
     this.call.set('');
     this.enter('ready');
   }
@@ -268,11 +292,11 @@ export class PocketCricket implements OnInit, OnDestroy {
   // ---- drawing -------------------------------------------------------------------------------------------------------------------
 
   private draw(): void {
-    if (this.view() === 'field') this.drawField();
+    if (this.view === 'field') this.drawField();
     else this.drawBatting();
   }
 
-  private poly(points: [number, number][], fill: string): void {
+  private poly(points: [number, number][], fill: string | CanvasGradient): void {
     const c = this.ctx;
     c.beginPath();
     points.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
@@ -281,7 +305,7 @@ export class PocketCricket implements OnInit, OnDestroy {
     c.fill();
   }
 
-  private ellipse(x: number, y: number, rx: number, ry: number, fill: string): void {
+  private ellipse(x: number, y: number, rx: number, ry: number, fill: string | CanvasGradient): void {
     const c = this.ctx;
     c.beginPath();
     c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
@@ -289,186 +313,277 @@ export class PocketCricket implements OnInit, OnDestroy {
     c.fill();
   }
 
-  /** The view from behind the batter: stands, striped outfield, the pitch narrowing to the bowler, the ball coming down it. */
-  private drawBatting(): void {
+  private rect(x: number, y: number, w: number, h: number, fill: string, r = 0): void {
     const c = this.ctx;
-    // Sky and stands.
-    const sky = c.createLinearGradient(0, 0, 0, 110);
-    sky.addColorStop(0, '#5aa9e6');
-    sky.addColorStop(1, '#cfe9fb');
-    c.fillStyle = sky;
-    c.fillRect(0, 0, W, 112);
-    c.fillStyle = '#4b4f6b';
-    c.fillRect(0, 62, W, 52);
-    for (let i = 0; i < 160; i++) {
-      c.fillStyle = ['#e5484d', '#f5b82e', '#ffffff', '#3e63dd', '#30a46c'][i % 5];
-      c.fillRect((i * 37) % W, 66 + ((i * 17) % 44), 3, 3);
-    }
-    // Floodlight posts.
-    c.fillStyle = '#2a2d40';
-    c.fillRect(30, 20, 5, 60);
-    c.fillRect(W - 35, 20, 5, 60);
-    // Outfield, in stripes that widen towards us.
-    c.fillStyle = '#2e7d32';
-    c.fillRect(0, 112, W, H - 112);
-    for (let i = 0; i < 9; i++) {
-      const y0 = 112 + i * i * 4.6;
-      const y1 = 112 + (i + 1) * (i + 1) * 4.6;
-      if (i % 2 === 0) {
-        c.fillStyle = '#3a8f3f';
-        c.fillRect(0, y0, W, y1 - y0);
-      }
-    }
-    // The boundary rope across the far end.
-    c.fillStyle = '#f5f5f5';
-    c.fillRect(0, 112, W, 3);
-    // The pitch.
-    this.poly([[CX - HW_FAR, FAR_Y], [CX + HW_FAR, FAR_Y], [CX + HW_NEAR, NEAR_Y], [CX - HW_NEAR, NEAR_Y]], '#cdb58a');
-    const crease = (y: number) => {
-      c.fillStyle = 'rgba(255,255,255,0.85)';
-      c.fillRect(CX - hw(y), y, hw(y) * 2, 2);
-    };
-    crease(FAR_Y + 14);
-    crease(NEAR_Y - 82);
-    // Lane marks (faint), so the batter's lanes can be seen.
-    c.strokeStyle = 'rgba(120,90,40,0.18)';
-    c.lineWidth = 1;
-    for (let l = -MAX_LANE + 0.5; l <= MAX_LANE - 0.5; l += 1) {
-      c.beginPath();
-      c.moveTo(CX + l * HW_FAR * 0.4, FAR_Y);
-      c.lineTo(CX + l * HW_NEAR * 0.4, NEAR_Y);
-      c.stroke();
-    }
-    // The stumps at the far end, and the bowler.
-    for (const dx of [-5, 0, 5]) {
-      c.fillStyle = '#f4e7c5';
-      c.fillRect(CX + dx - 1, FAR_Y + 4, 2, 15);
-    }
-    this.drawBowler();
-    // The ball.
-    if (this.phase === 'flight' || (this.phase === 'result' && !this.shot)) this.drawBall();
-    // The stumps behind the batter, then the batter.
-    for (const dx of [-14, 0, 14]) {
-      c.fillStyle = '#f4e7c5';
-      c.fillRect(CX + dx - 2.5, NEAR_Y - 70, 5, 52);
-    }
-    this.drawBatter();
-    // A lane marker under the ball's next lane isn't shown: finding the lane is the game.
+    c.beginPath();
+    if (r > 0 && c.roundRect) c.roundRect(x, y, w, h, r);
+    else c.rect(x, y, w, h);
+    c.fillStyle = fill;
+    c.fill();
   }
 
   private laneX(lane: number, y: number): number {
     return CX + lane * hw(y) * 0.4;
   }
 
+  /** The view from behind the batter: stands, striped outfield, the pitch narrowing to the bowler, the ball coming down it. */
+  private drawBatting(): void {
+    const c = this.ctx;
+    // Sky.
+    const sky = c.createLinearGradient(0, 0, 0, 112);
+    sky.addColorStop(0, '#3f8fdc');
+    sky.addColorStop(1, '#bfe0f7');
+    c.fillStyle = sky;
+    c.fillRect(0, 0, W, 114);
+    // Two tiers of stands with the crowd, and the floodlight towers.
+    this.rect(0, 52, W, 62, '#3b3e57');
+    this.rect(0, 52, W, 5, '#2a2c41');
+    for (const d of CROWD) this.rect(d.x, d.y, 3, 3, d.c);
+    c.fillStyle = 'rgba(0,0,0,0.18)';
+    c.fillRect(0, 84, W, 2);
+    for (const x of [26, W - 31]) {
+      this.rect(x + 1, 8, 3, 56, '#23253a');
+      this.rect(x - 8, 2, 21, 10, '#d8dde6', 2);
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) this.ellipse(x - 3 + i * 7, 5 + j * 4, 2, 1.6, '#fffbe0');
+    }
+    // The sightscreen, behind the bowler's arm, and the advertising boards along the rope.
+    this.rect(CX - 46, 66, 92, 46, '#f1f1ec', 2);
+    const ads = ['#e5484d', '#1e6fd9', '#f5b82e', '#30a46c', '#8e4ec6', '#12a594'];
+    for (let i = 0; i < 12; i++) this.rect(i * 30, 108, 30, 8, ads[i % ads.length]);
+    // Outfield: mown stripes that widen towards us, with a little shading at the far edge.
+    const grass = c.createLinearGradient(0, 116, 0, H);
+    grass.addColorStop(0, '#2a7030');
+    grass.addColorStop(1, '#3d9442');
+    c.fillStyle = grass;
+    c.fillRect(0, 116, W, H - 116);
+    for (let i = 0; i < 8; i++) {
+      const y0 = 116 + i * i * 5.2;
+      const y1 = 116 + (i + 1) * (i + 1) * 5.2;
+      if (i % 2 === 0) this.rect(0, y0, W, y1 - y0, 'rgba(255,255,255,0.05)');
+    }
+    // The pitch: a worn strip with a grass fringe either side.
+    this.poly([[CX - HW_FAR - 5, FAR_Y - 8], [CX + HW_FAR + 5, FAR_Y - 8], [CX + HW_NEAR + 22, NEAR_Y], [CX - HW_NEAR - 22, NEAR_Y]], 'rgba(20,70,25,0.35)');
+    const dirt = c.createLinearGradient(0, FAR_Y, 0, NEAR_Y);
+    dirt.addColorStop(0, '#d9c495');
+    dirt.addColorStop(0.6, '#cbb283');
+    dirt.addColorStop(1, '#bda070');
+    this.poly([[CX - HW_FAR, FAR_Y], [CX + HW_FAR, FAR_Y], [CX + HW_NEAR, NEAR_Y], [CX - HW_NEAR, NEAR_Y]], dirt);
+    for (const w of WEAR) {
+      const y = FAR_Y + 8 + w.p * (NEAR_Y - FAR_Y - 30);
+      this.ellipse(CX + w.dx * hw(y) * 0.8, y, hw(y) * 0.5 * w.s, 3 + depth(y) * 6 * w.s, `rgba(110,80,40,${w.a})`);
+    }
+    // Creases: the bowling crease far away, the batting crease near, with the return creases.
+    c.fillStyle = 'rgba(255,255,255,0.9)';
+    const crease = (y: number) => {
+      c.fillRect(CX - hw(y) * 0.92, y, hw(y) * 1.84, Math.max(1.2, depth(y) * 2.4));
+      c.fillRect(CX - hw(y) * 0.92, y - depth(y) * 24, Math.max(1.2, depth(y) * 2), depth(y) * 24);
+      c.fillRect(CX + hw(y) * 0.92 - depth(y) * 2, y - depth(y) * 24, Math.max(1.2, depth(y) * 2), depth(y) * 24);
+    };
+    crease(FAR_Y + 16);
+    crease(NEAR_Y - 80);
+    // Faint lane marks, so the lanes can be seen.
+    c.strokeStyle = 'rgba(90,60,20,0.14)';
+    c.lineWidth = 1;
+    for (let l = -MAX_LANE + 0.5; l <= MAX_LANE - 0.5; l += 1) {
+      c.beginPath();
+      c.moveTo(CX + l * HW_FAR * 0.4, FAR_Y + 18);
+      c.lineTo(CX + l * HW_NEAR * 0.4, NEAR_Y - 82);
+      c.stroke();
+    }
+    // The bowler's stumps, the bowler, and the ball.
+    this.stumps(CX, FAR_Y + 16, 0.26);
+    this.drawBowler();
+    if (this.phase === 'flight' || (this.phase === 'result' && !this.shot)) this.drawBall();
+    if (this.phase === 'swing') this.drawHitBall();
+    this.stumps(CX, NEAR_Y - 56, 1);
+    this.drawBatter();
+  }
+
+  /** Three stumps and two bails, `s` times the near-end size, standing on y. */
+  private stumps(x: number, y: number, s: number): void {
+    const c = this.ctx;
+    this.ellipse(x, y + 1, 16 * s, 3 * s, 'rgba(0,0,0,0.25)');
+    for (const dx of [-9, 0, 9]) {
+      const g = c.createLinearGradient(x + (dx - 2.4) * s, 0, x + (dx + 2.4) * s, 0);
+      g.addColorStop(0, '#fff3cf');
+      g.addColorStop(1, '#c9ad6e');
+      this.rect(x + (dx - 2.4) * s, y - 48 * s, 4.8 * s, 48 * s, '#e8d29a', 1);
+      c.fillStyle = g;
+      c.fillRect(x + (dx - 2.4) * s, y - 48 * s, 4.8 * s, 48 * s);
+    }
+    this.rect(x - 12 * s, y - 51 * s, 12 * s, 3 * s, '#f3e3b0');
+    this.rect(x + 0, y - 51 * s, 12 * s, 3 * s, '#f3e3b0');
+  }
+
   private drawBowler(): void {
     const c = this.ctx;
     const run = this.phase === 'ready' ? Math.min(1, this.t / 1.1) : 1;
-    const y = FAR_Y - 36 + run * 24 + Math.sin(this.clock * 14) * (this.phase === 'ready' ? 1.2 : 0);
+    const s = 0.34 + 0.12 * run; // grows a touch as he runs in
+    const y0 = FAR_Y - 20 + run * 22;
+    const bob = this.phase === 'ready' ? Math.sin(this.clock * 16) * 1.4 * s : 0;
     const x = CX;
-    this.ellipse(x, y + 34, 9, 3, 'rgba(0,0,0,0.25)');
-    c.fillStyle = '#f2f2f2'; // trousers
-    c.fillRect(x - 5, y + 16, 4, 18);
-    c.fillRect(x + 1, y + 16, 4, 18);
-    c.fillStyle = '#1e6fd9'; // shirt
-    c.fillRect(x - 6, y, 12, 18);
-    this.ellipse(x, y - 5, 5, 5.5, '#c98d62');
-    c.fillStyle = '#1e6fd9';
-    c.fillRect(x - 5, y - 10, 10, 4);
-    // The bowling arm swings over as the ball is released.
-    const arm = this.phase === 'ready' ? (run > 0.7 ? -Math.PI * 1.5 * ((run - 0.7) / 0.3) : 0) : -Math.PI * 1.5;
+    this.ellipse(x, y0 + 56 * s, 16 * s, 4 * s, 'rgba(0,0,0,0.28)');
+    // Legs in whites, striding.
+    const stride = this.phase === 'ready' ? Math.sin(this.clock * 16) * 7 * s : 0;
+    this.rect(x - 9 * s + stride, y0 + 28 * s, 8 * s, 28 * s, '#f4f4f4', 2);
+    this.rect(x + 1 * s - stride, y0 + 28 * s, 8 * s, 28 * s, '#e8e8e8', 2);
+    this.rect(x - 10 * s + stride, y0 + 53 * s, 10 * s, 4 * s, '#222');
+    this.rect(x + 0 * s - stride, y0 + 53 * s, 10 * s, 4 * s, '#222');
+    // Shirt, head, cap.
+    this.rect(x - 11 * s, y0 + 6 * s + bob, 22 * s, 26 * s, '#1e6fd9', 4);
+    this.ellipse(x, y0 - 2 * s + bob, 7 * s, 8 * s, '#c58c5d');
+    this.rect(x - 8 * s, y0 - 10 * s + bob, 16 * s, 6 * s, '#12306b', 3);
+    // The bowling arm: it goes right over as the ball is released.
+    const release = this.phase === 'ready' ? Math.max(0, (run - 0.72) / 0.28) : 1;
     c.save();
-    c.translate(x + 6, y + 3);
-    c.rotate(arm + Math.PI * 0.9);
-    c.fillStyle = '#c98d62';
-    c.fillRect(-1.5, 0, 3, 13);
+    c.translate(x + 11 * s, y0 + 10 * s + bob);
+    c.rotate(Math.PI * 0.95 - release * Math.PI * 1.9);
+    this.rect(-2.2 * s, 0, 4.4 * s, 24 * s, '#c58c5d', 2);
+    if (release < 0.5 && this.phase === 'ready') this.ellipse(0, 25 * s, 3.2 * s, 3.2 * s, '#c1121f');
     c.restore();
+    this.rect(x - 11 * s - 2 * s, y0 + 8 * s + bob, 5 * s, 14 * s, '#1e6fd9', 2);
   }
 
+  /** The ball: released from the bowler's hand, pitching on the track and coming up at the bat, with its shadow on the ground. */
   private drawBall(): void {
     const c = this.ctx;
-    const p = Math.min(1.05, this.flight);
-    const y = ballY(p);
-    const lift = bounce(p) * (0.35 + p);
-    const x = this.laneX(this.delivery.lane, y);
-    const r = 2.5 + p * 8;
-    this.ellipse(x, y + 4, r * 1.1, r * 0.4, 'rgba(0,0,0,0.3)');
-    // A short streak behind it.
-    c.strokeStyle = 'rgba(255,255,255,0.35)';
-    c.lineWidth = r * 0.8;
+    const p = Math.min(1.12, this.flight);
+    const gy = groundY(p);
+    const d = depth(gy);
+    const lift = height(p) * d * 1.1;
+    const x = this.laneX(this.delivery.lane, gy);
+    const y = gy - lift;
+    const r = 2.6 + d * 7.5;
+    this.ellipse(x, gy + 1, r * 1.1, r * 0.38, 'rgba(0,0,0,0.32)');
+    // A streak behind it.
+    const pp = Math.max(0, p - 0.06);
+    const gy2 = groundY(pp);
+    const x2 = this.laneX(this.delivery.lane, gy2);
+    const y2 = gy2 - height(pp) * depth(gy2) * 1.1;
+    const streak = c.createLinearGradient(x2, y2, x, y);
+    streak.addColorStop(0, 'rgba(255,255,255,0)');
+    streak.addColorStop(1, 'rgba(255,255,255,0.45)');
+    c.strokeStyle = streak;
+    c.lineWidth = r * 1.5;
+    c.lineCap = 'round';
     c.beginPath();
-    c.moveTo(this.laneX(this.delivery.lane, y - 20), y - lift - 20 * 0.8);
-    c.lineTo(x, y - lift);
+    c.moveTo(x2, y2);
+    c.lineTo(x, y);
     c.stroke();
-    this.ellipse(x, y - lift, r, r, '#c1121f');
-    c.strokeStyle = 'rgba(255,255,255,0.8)';
-    c.lineWidth = 1;
+    this.cherry(x, y, r, this.clock * 14);
+  }
+
+  /** A red cricket ball with its seam and a highlight. */
+  private cherry(x: number, y: number, r: number, spin: number): void {
+    const c = this.ctx;
+    const g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+    g.addColorStop(0, '#ff6b6b');
+    g.addColorStop(0.55, '#c1121f');
+    g.addColorStop(1, '#6b0710');
+    this.ellipse(x, y, r, r, g);
+    c.strokeStyle = 'rgba(255,246,220,0.85)';
+    c.lineWidth = Math.max(0.7, r * 0.14);
     c.beginPath();
-    c.arc(x, y - lift, r * 0.7, 0.4, 2.2);
+    c.ellipse(x, y, r * 0.78, r * 0.3, spin, 0, Math.PI * 2);
     c.stroke();
   }
 
-  /** The batter from behind: helmet, shirt, pads and the bat. */
+  /** The ball leaving the bat after a hit, towards the side it was hit to, getting smaller as it goes. */
+  private drawHitBall(): void {
+    const shot = this.shot!;
+    const u = Math.min(1, this.t / 0.4);
+    const x0 = this.laneX(this.batX, NEAR_Y - 90);
+    const x = x0 + Math.sin(shot.angle) * 190 * u;
+    const y = NEAR_Y - 130 - (230 + (shot.outcome === 'six' ? 90 : 0)) * u + (shot.outcome === 'six' ? 0 : 60 * u * u);
+    this.cherry(x, y, Math.max(2.4, 8 - 5.4 * u), this.clock * 20);
+  }
+
+  /** The batter from behind: helmet with a grille, shirt, gloves, pads and the bat. */
   private drawBatter(): void {
     const c = this.ctx;
-    const x = this.laneX(this.batX, NEAR_Y - 44);
-    const y = NEAR_Y - 44;
-    const swing = this.swung ? Math.min(1, (this.phase === 'flight' ? this.t - this.swingAt : this.phase === 'swing' ? 0.2 + this.t : 0.6) / 0.28) : 0;
-    this.ellipse(x, y + 62, 36, 8, 'rgba(0,0,0,0.3)');
-    // Pads and boots.
-    c.fillStyle = '#f5f5f5';
-    c.fillRect(x - 17, y + 6, 13, 52);
-    c.fillRect(x + 4, y + 6, 13, 52);
-    c.fillStyle = '#d9d9d9';
-    c.fillRect(x - 17, y + 24, 13, 3);
-    c.fillRect(x + 4, y + 24, 13, 3);
-    c.fillStyle = '#222';
-    c.fillRect(x - 18, y + 56, 15, 6);
-    c.fillRect(x + 3, y + 56, 15, 6);
-    // Shirt, with a number across the back.
-    c.fillStyle = '#1e6fd9';
-    this.poly([[x - 21, y - 36], [x + 21, y - 36], [x + 17, y + 10], [x - 17, y + 10]], '#1e6fd9');
+    const x = this.laneX(this.batX, NEAR_Y - 46);
+    const y = NEAR_Y - 46;
+    const swinging = this.swung && (this.phase === 'flight' || this.phase === 'swing');
+    const elapsed = this.phase === 'flight' ? this.t - this.swingAt : 0.1 + this.t;
+    const swing = this.swung ? Math.min(1, Math.max(0, elapsed) / 0.28) : 0;
+    const side = (this.shot?.angle ?? 0) < 0 ? -1 : 1;
+    this.ellipse(x, y + 66, 40, 9, 'rgba(0,0,0,0.3)');
+    // Boots, pads (with straps) and thigh guards.
+    this.rect(x - 20, y + 58, 17, 8, '#1d1d1d', 3);
+    this.rect(x + 3, y + 58, 17, 8, '#1d1d1d', 3);
+    this.rect(x - 18, y + 8, 14, 52, '#f6f6f2', 5);
+    this.rect(x + 4, y + 8, 14, 52, '#f6f6f2', 5);
+    for (const dy of [22, 36, 48]) {
+      this.rect(x - 18, y + dy, 14, 2.5, '#cfcfc8');
+      this.rect(x + 4, y + dy, 14, 2.5, '#cfcfc8');
+    }
+    this.rect(x - 18, y + 6, 14, 6, '#e9e9e2', 3);
+    this.rect(x + 4, y + 6, 14, 6, '#e9e9e2', 3);
+    // Shirt with shoulders, a stripe and the number.
+    const shirt = c.createLinearGradient(x - 24, 0, x + 24, 0);
+    shirt.addColorStop(0, '#2a7be8');
+    shirt.addColorStop(0.5, '#1e6fd9');
+    shirt.addColorStop(1, '#1757ad');
+    this.poly([[x - 24, y - 34], [x + 24, y - 34], [x + 19, y + 12], [x - 19, y + 12]], shirt);
+    this.rect(x - 24, y - 34, 48, 6, '#f5b82e');
     c.fillStyle = '#fff';
-    c.font = '700 14px Geist, system-ui, sans-serif';
+    c.font = '800 16px Geist, system-ui, sans-serif';
     c.textAlign = 'center';
-    c.fillText('7', x, y - 12);
-    // Helmet and neck.
-    this.ellipse(x, y - 46, 11, 12, '#12306b');
-    c.fillStyle = '#c98d62';
-    c.fillRect(x - 5, y - 38, 10, 5);
-    // The bat: held low and back, swinging through in an arc.
+    c.fillText('7', x, y - 6);
+    // Helmet with a grille.
+    this.ellipse(x, y - 46, 12.5, 13, '#12306b');
+    this.ellipse(x - 3, y - 51, 5, 3.5, 'rgba(255,255,255,0.28)');
+    this.rect(x - 7, y - 38, 14, 6, '#c58c5d', 2);
+    c.strokeStyle = 'rgba(255,255,255,0.35)';
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(x - 12, y - 42);
+    c.lineTo(x + 12, y - 42);
+    c.stroke();
+    // The bat: held low behind the pads, then swung through towards the side the ball goes to.
     c.save();
-    c.translate(x + 14, y - 8);
-    c.rotate(-0.9 + swing * (this.shotSide() * 2.4));
-    c.fillStyle = '#d9b26f';
-    c.fillRect(-3, -4, 6, 46);
-    c.fillStyle = '#8a5a2b';
-    c.fillRect(-1.5, -20, 3, 17);
+    c.translate(x + 15, y - 10);
+    c.rotate(swinging ? -0.85 + side * swing * 2.5 : swing > 0 ? side * 1.65 : -0.85);
+    const blade = c.createLinearGradient(-4, 0, 4, 0);
+    blade.addColorStop(0, '#e6c98d');
+    blade.addColorStop(1, '#c9a366');
+    this.rect(-4, 4, 8, 48, '#d9b26f', 2);
+    c.fillStyle = blade;
+    c.fillRect(-4, 4, 8, 48);
+    this.rect(-2, -16, 4, 21, '#2d2d2d', 2);
+    this.rect(-5, -17, 10, 9, '#f5b82e', 3); // gloves on the handle
     c.restore();
   }
 
-  /** Which way the bat swings, from where the ball is going (right-hand batter: through the on side for lefts). */
-  private shotSide(): number {
-    const a = this.shot?.angle ?? 0;
-    return a < 0 ? -1 : 1;
-  }
+  // ---- fielding mode ---------------------------------------------------------------------------------------------------------------
 
-  /** Fielding mode: the whole ground from above, with the ball, the fielders and the batters running. */
+  /** The whole ground from above, with the ball, the fielders and the batters running. */
   private drawField(): void {
     const c = this.ctx;
     const plan = this.plan!;
     const shot = this.shot!;
     const cx = W / 2;
-    const cy = 238;
+    const cy = 240;
     const k = 1.78; // field units to screen pixels
     const sx = (p: Pt) => cx + p.x * k;
     const sy = (p: Pt) => cy + p.y * k;
-    // Outside the rope: the stands.
-    c.fillStyle = '#4b4f6b';
-    c.fillRect(0, 0, W, H);
-    // The ground, in mown rings.
-    for (let i = 0; i < 6; i++) {
-      this.ellipse(cx, cy, (ROPE + 6 - i * 16) * k, (ROPE + 6 - i * 16) * k, i % 2 ? '#3a8f3f' : '#2e7d32');
+    // The stands all round, with the crowd in the seats.
+    this.rect(0, 0, W, H, '#3b3e57');
+    for (let i = 0; i < 300; i++) {
+      const a = (i * 2.399963) % (Math.PI * 2);
+      const rr = (ROPE + 12 + ((i * 37) % 60) * 0.5) * k;
+      const px = cx + Math.cos(a) * rr;
+      const py = cy + Math.sin(a) * rr;
+      if (px > 2 && px < W - 2 && py > 2 && py < H - 2) this.rect(px, py, 3, 3, CROWD[i % CROWD.length].c);
     }
+    // The ground: mown stripes inside the rope.
+    c.save();
+    c.beginPath();
+    c.arc(cx, cy, (ROPE + 8) * k, 0, Math.PI * 2);
+    c.clip();
+    this.rect(0, 0, W, H, '#2f7d34');
+    for (let i = -8; i < 9; i++) if (i % 2 === 0) this.rect(cx + i * 20 * 1.0 - 10, 0, 20, H, '#3a8f3f');
+    c.restore();
     c.strokeStyle = '#fff';
     c.lineWidth = 3;
     c.beginPath();
@@ -476,40 +591,35 @@ export class PocketCricket implements OnInit, OnDestroy {
     c.stroke();
     c.setLineDash([5, 6]);
     c.lineWidth = 1.5;
-    c.strokeStyle = 'rgba(255,255,255,0.5)';
+    c.strokeStyle = 'rgba(255,255,255,0.55)';
     c.beginPath();
     c.arc(cx, cy, 58 * k, 0, Math.PI * 2);
     c.stroke();
     c.setLineDash([]);
-    // The pitch and its stumps.
-    c.fillStyle = '#cdb58a';
-    c.fillRect(cx - 5 * k, sy(BOWL_END) - 4 * k, 10 * k, (BAT_END.y - BOWL_END.y + 8) * k);
-    for (const e of [BOWL_END, BAT_END]) {
-      c.fillStyle = '#f4e7c5';
-      c.fillRect(cx - 3, sy(e) - 3, 6, 6);
-    }
+    // The pitch with its creases and stumps.
+    this.rect(cx - 5 * k, sy(BOWL_END) - 4 * k, 10 * k, (BAT_END.y - BOWL_END.y + 8) * k, '#cbb283', 2);
+    c.fillStyle = 'rgba(255,255,255,0.8)';
+    c.fillRect(cx - 6 * k, sy(BOWL_END) + 1 * k, 12 * k, 1.5);
+    c.fillRect(cx - 6 * k, sy(BAT_END) - 1 * k, 12 * k, 1.5);
+    for (const e of [BOWL_END, BAT_END]) for (const dx of [-3, 0, 3]) this.rect(cx + dx - 1, sy(e) - 2, 2, 4, '#f4e7c5');
 
-    // The fielders.
+    // The fielders (in gold) and the batters (in blue).
     FIELDERS.forEach((_, i) => {
       const p = fielderPoint(plan, i, this.t);
-      this.person(sx(p), sy(p), i === plan.fielder && plan.kind !== 'boundary' ? '#ffd23f' : '#e5484d', 7);
+      const chaser = i === plan.fielder && plan.kind !== 'boundary';
+      this.person(sx(p), sy(p), chaser ? '#ffcf33' : '#e8a317', 7.5, chaser);
     });
-
-    // The batters.
     this.drawRunnersField(sx, sy);
 
     // The ball.
     const t = this.t;
     let b: Pt = { ...BAT_END };
     let air = 0;
-    if (plan.kind === 'boundary') {
+    if (plan.kind === 'boundary' || plan.kind === 'caught') {
       const p = Math.min(1, t / plan.ballTime);
       b = { x: BAT_END.x + (plan.end.x - BAT_END.x) * p, y: BAT_END.y + (plan.end.y - BAT_END.y) * p };
-      air = shot.outcome === 'six' ? Math.sin(p * Math.PI) * 22 : 0;
-    } else if (plan.kind === 'caught') {
-      const p = Math.min(1, t / plan.ballTime);
-      b = { x: BAT_END.x + (plan.end.x - BAT_END.x) * p, y: BAT_END.y + (plan.end.y - BAT_END.y) * p };
-      air = Math.sin(p * Math.PI) * 26;
+      air = Math.sin(p * Math.PI) * (shot.outcome === 'six' ? 26 : plan.kind === 'caught' ? 22 : 4);
+      if (plan.kind === 'caught' && t > plan.ballTime) air = 8; // held in the fielder's hands
     } else if (t <= plan.tMeet) {
       b = rollPoint(plan, t);
     } else {
@@ -517,49 +627,58 @@ export class PocketCricket implements OnInit, OnDestroy {
       const meet = rollPoint(plan, plan.tMeet);
       const p = Math.min(1, (t - plan.tMeet) / Math.max(0.01, plan.returned - plan.tMeet));
       b = { x: meet.x + (BOWL_END.x - meet.x) * p, y: meet.y + (BOWL_END.y - meet.y) * p };
+      air = Math.sin(p * Math.PI) * 6;
     }
-    this.ellipse(sx(b), sy(b) + 2, 4, 2, 'rgba(0,0,0,0.35)');
-    this.ellipse(sx(b), sy(b) - air, 4.5, 4.5, '#c1121f');
-    c.strokeStyle = 'rgba(255,255,255,0.6)';
-    c.lineWidth = 1;
-    c.beginPath();
-    c.arc(sx(b), sy(b) - air, 3, 0.4, 2.2);
-    c.stroke();
     if (plan.kind === 'play' && t < plan.tMeet) {
-      // A faint track behind the rolling ball.
-      c.strokeStyle = 'rgba(255,255,255,0.3)';
-      c.lineWidth = 1.5;
+      c.strokeStyle = 'rgba(255,255,255,0.32)';
+      c.lineWidth = 2;
       c.beginPath();
       c.moveTo(sx(BAT_END), sy(BAT_END));
       c.lineTo(sx(b), sy(b));
+      c.stroke();
+    }
+    this.ellipse(sx(b), sy(b) + 2, 4.5, 2, 'rgba(0,0,0,0.38)');
+    this.cherry(sx(b), sy(b) - air, 4.6, this.clock * 12);
+    if (plan.kind === 'caught' && t >= plan.ballTime) {
+      c.strokeStyle = 'rgba(255,255,255,0.85)';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.arc(sx(plan.end), sy(plan.end), 14 + Math.sin(this.clock * 12) * 2, 0, Math.PI * 2);
       c.stroke();
     }
   }
 
   private drawRunnersField(sx: (p: Pt) => number, sy: (p: Pt) => number): void {
     const r = this.running;
-    const a = { ...BAT_END };
-    const b = { ...BOWL_END };
     const swapped = (r?.runs ?? 0) % 2 === 1;
-    const from = swapped ? b : a;
-    const to = swapped ? a : b;
+    const from = swapped ? BOWL_END : BAT_END;
+    const to = swapped ? BAT_END : BOWL_END;
     if (r && r.start !== null) {
       const p = Math.max(0, Math.min(1, (this.t - r.start) / RUN_SECONDS));
-      const at = (s: Pt, e: Pt) => ({ x: s.x + (e.x - s.x) * p + 0, y: s.y + (e.y - s.y) * p });
+      const at = (s: Pt, e: Pt) => ({ x: s.x + (e.x - s.x) * p, y: s.y + (e.y - s.y) * p });
       const m = at(from, to);
       const o = at(to, from);
-      this.person(sx(m) - 5, sy(m), '#1e6fd9', 7);
-      this.person(sx(o) + 5, sy(o), '#7aa7f0', 7);
+      this.person(sx(m) - 6, sy(m), '#1e6fd9', 7, false);
+      this.person(sx(o) + 6, sy(o), '#6fa0f0', 7, false);
     } else {
-      this.person(sx(from) - 5, sy(from), '#1e6fd9', 7);
-      this.person(sx(to) + 5, sy(to), '#7aa7f0', 7);
+      this.person(sx(from) - 6, sy(from), '#1e6fd9', 7, false);
+      this.person(sx(to) + 6, sy(to), '#6fa0f0', 7, false);
     }
   }
 
-  /** A fielder or batter seen from above: a shadow, a body and a head. */
-  private person(x: number, y: number, shirt: string, r: number): void {
-    this.ellipse(x, y + 2.5, r * 0.9, r * 0.45, 'rgba(0,0,0,0.3)');
-    this.ellipse(x, y, r, r * 0.85, shirt);
-    this.ellipse(x, y - r * 0.15, r * 0.5, r * 0.5, '#c98d62');
+  /** A fielder or batter seen from above: a shadow, shoulders, a head, and a ring on the one who is chasing the ball. */
+  private person(x: number, y: number, shirt: string, r: number, ring: boolean): void {
+    const c = this.ctx;
+    this.ellipse(x + 1.5, y + 3, r * 0.95, r * 0.5, 'rgba(0,0,0,0.3)');
+    this.ellipse(x, y, r, r * 0.8, shirt);
+    this.ellipse(x, y - r * 0.15, r * 0.52, r * 0.52, '#c58c5d');
+    this.ellipse(x, y - r * 0.28, r * 0.5, r * 0.32, 'rgba(18,48,107,0.9)');
+    if (ring) {
+      c.strokeStyle = 'rgba(255,255,255,0.8)';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x, y, r + 4, 0, Math.PI * 2);
+      c.stroke();
+    }
   }
 }

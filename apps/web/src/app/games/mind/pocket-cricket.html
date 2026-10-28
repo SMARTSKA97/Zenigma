@@ -17,12 +17,18 @@
     </div>
   </section>
   <div dock class="pads">
-    @if (view() === 'bat') {
-      <button type="button" class="move" aria-label="Move the batter left" (pointerdown)="shift(-1)">◀</button>
-      <button type="button" class="shotbtn" [disabled]="!canShoot()" (pointerdown)="hit()">Shot</button>
-      <button type="button" class="move" aria-label="Move the batter right" (pointerdown)="shift(1)">▶</button>
-    } @else {
-      <button type="button" class="runbtn" [disabled]="!canRun()" (pointerdown)="run()">Run</button>
+    @switch (pad()) {
+      @case ('bat') {
+        <button type="button" class="move" aria-label="Move the batter left" (pointerdown)="shift(-1)">◀</button>
+        <button type="button" class="shotbtn" [disabled]="!canShoot()" (pointerdown)="hit()">Shot</button>
+        <button type="button" class="move" aria-label="Move the batter right" (pointerdown)="shift(1)">▶</button>
+      }
+      @case ('run') {
+        <button type="button" class="runbtn" [disabled]="!canRun()" (pointerdown)="run()">Run</button>
+      }
+      @default {
+        <p class="watch">Watch the ball…</p>
+      }
     }
   </div>
 </app-play-screen>

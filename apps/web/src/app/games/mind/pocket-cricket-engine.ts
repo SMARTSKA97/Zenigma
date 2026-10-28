@@ -47,18 +47,21 @@ export interface Shot {
 
 /**
  * What a swing does. The bat must be in the ball's lane, or the lane next to it (a weaker, edged shot); two lanes away is a miss. The
- * timing sets the power, and the lane and timing set where the ball goes.
+ * timing sets the power: the best timing is a six, good timing a four, ordinary timing runs. Only a badly mistimed hit (an edge) is
+ * in danger, and even then half of them drop safe for a single.
  */
 export function playShot(t: number, batLane: number, ballLane: number, random: () => number): Shot {
   const off = batLane - ballLane;
   const q = timingQuality(t);
   if (q < 0 || Math.abs(off) > 1) return { outcome: 'miss', power: 0, dist: 0, angle: 0 };
-  const power = q * (off === 0 ? 1 : 0.6);
+  const power = q * (off === 0 ? 1 : 0.75);
   const angle = Math.max(-1.35, Math.min(1.35, off * 0.5 + (SWEET - t) * 3 + (random() - 0.5) * 0.3));
-  if (power < 0.3) return { outcome: 'caught', power, dist: 20, angle };
-  if (power >= 0.88) return { outcome: 'six', power, dist: ROPE, angle };
-  if (power >= 0.68) return { outcome: 'four', power, dist: ROPE, angle };
-  return { outcome: 'runs', power, dist: 14 + power * 40, angle };
+  if (power >= 0.93) return { outcome: 'six', power, dist: ROPE, angle };
+  if (power >= 0.7) return { outcome: 'four', power, dist: ROPE, angle };
+  if (power >= 0.15) return { outcome: 'runs', power, dist: 14 + power * 40, angle };
+  // An edge: it either carries to a fielder or drops short.
+  if (random() < 0.5) return { outcome: 'caught', power, dist: 20, angle };
+  return { outcome: 'runs', power, dist: 10, angle };
 }
 
 // ---- the field, seen from above ---------------------------------------------------------------------------------------------------
@@ -126,8 +129,8 @@ export function planField(shot: Shot): FieldPlan {
       if (s > score) (score = s, (best = i));
     });
     const end = FIELDERS[best];
-    const t = dist(BAT_END, end) / 45 + 0.25;
-    return { kind: 'caught', dir, end, ballTime: t, fielder: best, tMeet: t, returned: t + 0.4 };
+    const t = dist(BAT_END, end) / 80 + 0.3;
+    return { kind: 'caught', dir, end, ballTime: t, fielder: best, tMeet: t, returned: t + 0.5 };
   }
   const end = { x: BAT_END.x + dir.x * shot.dist, y: BAT_END.y + dir.y * shot.dist };
   const plan: FieldPlan = { kind: 'play', dir, end, ballTime: 0.7 + shot.dist / 40, fielder: 0, tMeet: Infinity, returned: 0 };
