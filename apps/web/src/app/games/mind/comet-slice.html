@@ -1,4 +1,4 @@
-<div class="arena" [class.boom]="boom()" [class.hurt]="hit()" [class.hot]="hot()">
+<div class="arena" [class.boom]="boom()" [class.hurt]="hit()">
   <canvas
     #field
     class="field"
@@ -30,8 +30,6 @@
   @if (timed()) {
     <div class="time" aria-hidden="true"><i [style.width.%]="pct()"></i></div>
   }
-
-  <div class="pace" aria-hidden="true">Speed ×{{ pace() }}</div>
 
   @if (count() > 0) {
     @for (n of [count()]; track n) {

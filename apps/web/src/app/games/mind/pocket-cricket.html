@@ -1,0 +1,24 @@
+<app-play-screen title="Pocket Cricket" subtitle="2 overs · 2 wickets">
+  <div end><span>{{ runs() }} runs</span></div>
+  <section class="cricket" (pointerdown)="$event.stopPropagation()">
+    <div class="board" role="status">
+      <span class="stat"><small>Runs</small><b>{{ runs() }}</b></span>
+      <span class="stat"><small>Overs</small><b>{{ overs() }}</b></span>
+      <span class="stat">
+        <small>Wickets</small>
+        <b class="wkts" [attr.aria-label]="wickets() + ' out'">
+          @for (i of wicketList; track i) { <i [class.out]="i < wickets()"></i> }
+        </b>
+      </span>
+    </div>
+    <div class="lcd">
+      <canvas #screen role="img" aria-label="Cricket field. The bowler runs in, the ball comes down the pitch."></canvas>
+      <p class="call" aria-live="assertive">{{ call() }}</p>
+    </div>
+  </section>
+  <div dock class="pads">
+    <button type="button" class="shot" [disabled]="!canShoot()" (pointerdown)="swing('left')"><span aria-hidden="true">◀</span> Left shot</button>
+    <button type="button" class="run" [disabled]="!canRun()" (pointerdown)="run()">Run</button>
+    <button type="button" class="shot" [disabled]="!canShoot()" (pointerdown)="swing('right')">Right shot <span aria-hidden="true">▶</span></button>
+  </div>
+</app-play-screen>

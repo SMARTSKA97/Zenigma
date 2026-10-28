@@ -204,11 +204,18 @@ export const MIND_DEMOS: Record<string, Demo> = {
       F([['.', '.', '.'], ['.', '⦿', '.'], ['!🟥', '.', '🟦']], 'A train at the wrong station costs a life. You have three.', 'If two trains need opposite ways → switch right after the first one has passed.'),
     ],
   },
+  'pocket-cricket': {
+    frames: [
+      F([['.', '⚾', '.'], ['.', '.', '.'], ['.', '🏏', '.']], 'The ball comes down the pitch at a random speed, on the left, the middle or the right.'),
+      F([['.', '.', '.'], ['.', '?⚾', '.'], ['?◀', '🏏', '?▶']], 'Tap Left shot or Right shot just as the ball reaches the bat. The right side and the right moment make fours and sixes.', 'If the ball is on the left → play the left shot.', [1, 1], [2, 0]),
+      F([['.', '.', '.'], ['.', '🏃', '.'], ['.', '?⚡', '.']], 'Hit it short? Tap Run to go for runs before the fielder throws it back. Caught out, bowled or run out and a wicket is gone. You have two.', 'If the fielder is close to the ball → take one run, not two.', [2, 1]),
+    ],
+  },
   'comet-slice': {
     frames: [
-      F([['☄', '.', '.'], ['.', '.', '☄'], ['.', '💀', '.']], 'Comets and skulls fall from the sky, each at its own speed.'),
+      F([['☄', '.', '.'], ['.', '.', '☄'], ['.', '💀', '.']], 'Comets and skulls fall from the sky in random patterns: one at a time, in fans, in rain.'),
       F([['?☄', '.', '.'], ['.', '.', '?☄'], ['.', '💀', '.']], 'Press and drag through the comets to slice them. Several in one swipe is a combo.', 'If a skull is in the way → swipe around it. Slicing a skull ends the run at once.', [0, 0], [1, 2]),
-      F([['.', '.', '.'], ['.', '.', '.'], ['!☄', '.', '.']], 'A comet that reaches the ground costs a heart. You have three.', 'If the comets speed up → keep your swipes short and aim for the middle of each one.'),
+      F([['.', '.', '.'], ['.', '.', '.'], ['!☄', '.', '.']], 'A comet that reaches the ground costs a heart. You have three.', 'If a whole row falls at once → swipe straight across it in one go for a big combo.'),
     ],
   },
 };

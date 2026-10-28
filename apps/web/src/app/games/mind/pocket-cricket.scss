@@ -1,0 +1,106 @@
+:host {
+  display: block;
+  width: 100%;
+}
+.cricket {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  width: 100%;
+}
+.board {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+  width: 100%;
+  max-width: 22rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.stat {
+  display: grid;
+  justify-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.stat small {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stat b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+.wkts {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  height: 1.4rem;
+}
+.wkts i {
+  width: 0.8rem;
+  height: 1.1rem;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.wkts i.out {
+  background: var(--border);
+  transform: rotate(18deg);
+}
+/* The old phone screen: a green-grey panel in a dark bezel. */
+.lcd {
+  position: relative;
+  width: min(100%, 22rem, calc((100dvh - 19rem) * 0.75));
+  padding: 0.55rem;
+  border-radius: 1.4rem;
+  background: #1b2216;
+  box-shadow: var(--shadow-lift);
+}
+canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 120 / 160;
+  border-radius: 0.8rem;
+  image-rendering: pixelated;
+  background: #cfe0a8;
+}
+.call {
+  position: absolute;
+  inset: auto 0.55rem 1rem;
+  margin: 0;
+  text-align: center;
+  font: 800 1.25rem/1 var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #223314;
+  pointer-events: none;
+}
+.pads {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+}
+.pads button {
+  min-height: 4.2rem;
+  padding: 0.5rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pads .run {
+  background: var(--good);
+  color: #fff;
+  font-size: 1.15rem;
+}
+.pads button:disabled {
+  opacity: 0.45;
+}

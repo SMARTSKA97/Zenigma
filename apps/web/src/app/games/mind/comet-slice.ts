@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, OnDestroy, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
 import { BackService } from '../../core/back.service';
 import { HapticsService } from '../../core/haptics.service';
-import { advance, Body, H, HEARTS, RUN_SECONDS, segmentHitsCircle, setFieldHeight, speedUp, heat, throwBody, throwGap, W } from './comet-slice-engine';
+import { advance, Body, H, HEARTS, RUN_SECONDS, segmentHitsCircle, setFieldHeight, throwGap, throwWave, W } from './comet-slice-engine';
 import { MindResult, seeded } from './mind-util';
 
 interface Pop {
@@ -33,7 +33,7 @@ const GET_READY = 2.4;
 
 /**
  * Comet Slice fills the whole screen: a night sky with a slow aurora, drifting stars and dark ridges. Comets and skulls fall from
- * the top, each at its own speed, and everything gets faster the longer you last. Swipe through the comets to collect them (several
+ * the top at random speeds and in random patterns (singles, fans, rain, traps), with no ramp-up. Swipe through the comets to collect them (several
  * in one swipe is a combo). A comet that reaches the ground costs a heart, and three hearts is the end. A skull is the end at once:
  * slice one and the run is over, with a huge jolt. Practice has no clock: keep going and beat your best. The daily (`seed`) has a
  * one-minute clock and throws the same comets and skulls at everyone.
@@ -66,8 +66,6 @@ export class CometSlice implements OnInit, OnDestroy {
   protected readonly count = signal(3);
   /** The current combo (2 or more in one swipe), shown big for a moment. `key` restarts the pop animation. */
   protected readonly combo = signal<{ n: number; key: number } | null>(null);
-  protected readonly pace = signal('1.0');
-  protected readonly hot = signal(false);
   protected readonly pct = computed(() => (this.left() / RUN_SECONDS) * 100);
 
   private random: () => number = Math.random;
@@ -150,10 +148,9 @@ export class CometSlice implements OnInit, OnDestroy {
     this.seconds += dt;
     if (!this.ended) this.untilThrow -= dt;
     if (!this.ended && this.untilThrow <= 0) {
-      // Later throws sometimes come in pairs.
-      const n = this.seconds > 20 && this.random() < 0.35 ? 2 : 1;
-      for (let i = 0; i < n; i++) this.bodies.push(throwBody(this.seconds, this.random));
-      this.untilThrow = throwGap(this.seconds, this.random);
+      // Every throw is picked at random (a single, a pair, a fan, a rain, a trap...); nothing builds up over the run.
+      this.bodies.push(...throwWave(this.random).bodies);
+      this.untilThrow = throwGap(this.random);
     }
     for (const b of this.bodies) {
       advance(b, dt);
@@ -177,10 +174,6 @@ export class CometSlice implements OnInit, OnDestroy {
     // How close the nearest comet is to the ground, for the glowing edge that warns of a miss.
     const lowest = this.bodies.reduce((m, b) => (b.kind === 'comet' && !b.sliced ? Math.max(m, b.y) : m), -999);
     this.danger = Math.max(0, Math.min(1, (lowest - (H - 150)) / 130));
-    const pace = speedUp(this.seconds).toFixed(1);
-    if (pace !== this.pace()) this.pace.set(pace);
-    const hot = heat(this.seconds) > 0.6;
-    if (hot !== this.hot()) this.hot.set(hot);
   }
 
   /** Things that animate whether or not a run is on: sparks, rings, shake, flash, pop-ups, the swipe trail, shooting stars. */
@@ -401,7 +394,7 @@ export class CometSlice implements OnInit, OnDestroy {
    * aurora, and three layers of stars that drift down faster the nearer they are.
    */
   private drawSky(ctx: CanvasRenderingContext2D, cw: number, ch: number): void {
-    const warm = heat(this.seconds);
+    const warm = 0.3;
     const sky = ctx.createLinearGradient(0, 0, 0, ch);
     sky.addColorStop(0, warm > 0 ? `rgb(${5 + 20 * warm},11,${31 + 18 * warm})` : '#050b1f');
     sky.addColorStop(0.55, `rgb(${11 + 40 * warm},${42 - 14 * warm},${74 + 10 * warm})`);
@@ -433,8 +426,8 @@ export class CometSlice implements OnInit, OnDestroy {
     glow.addColorStop(1, 'rgba(90,255,200,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, cw, ch);
-    // Stars, falling gently past (faster as the run speeds up).
-    const drift = (8 + 18 * Math.min(1, (speedUp(this.seconds) - 1) / 2.2)) * 1;
+    // Stars, falling gently past.
+    const drift = 14;
     ctx.fillStyle = '#fff';
     for (const s of STARS) {
       const y = (((s.y * ch + this.clock * drift * s.depth * 0.5) % ch) + ch) % ch;

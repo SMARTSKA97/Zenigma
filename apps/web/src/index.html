@@ -39,10 +39,8 @@
   <meta property="og:image" content="https://zenigma.ska97homelab.uk/og.png" />
   <meta name="twitter:card" content="summary_large_image" />
     <script>
-      // iOS ignores user-scalable=no: stop the pinch and double-tap zoom that leaves the installed app zoomed in.
-      ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) { document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false }); });
-      var lastTouch = 0;
-      document.addEventListener('touchend', function (e) { var n = Date.now(); if (n - lastTouch < 300 && !(e.target.closest && e.target.closest('input,textarea'))) e.preventDefault(); lastTouch = n; }, { passive: false });
+      // iOS ignores user-scalable=no: stop the pinch zoom that leaves the installed app zoomed in (Safari-only events; passive-safe, no tap handling).
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) { document.addEventListener(t, function (e) { e.preventDefault(); }); });
     </script>
   </head>
   <body>
