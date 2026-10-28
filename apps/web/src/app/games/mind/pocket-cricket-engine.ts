@@ -116,7 +116,10 @@ export function rollPoint(plan: FieldPlan, t: number): Pt {
 export function planField(shot: Shot): FieldPlan {
   const dir = { x: Math.sin(shot.angle), y: -Math.cos(shot.angle) };
   if (shot.outcome === 'four' || shot.outcome === 'six') {
-    const end = { x: BAT_END.x + dir.x * ROPE, y: BAT_END.y + dir.y * ROPE };
+    // Follow the ball from the bat to where it crosses the rope (a six carries a little past it).
+    const b = BAT_END.x * dir.x + BAT_END.y * dir.y;
+    const reach = -b + Math.sqrt(b * b - (BAT_END.x ** 2 + BAT_END.y ** 2 - ROPE ** 2)) + (shot.outcome === 'six' ? 8 : 0);
+    const end = { x: BAT_END.x + dir.x * reach, y: BAT_END.y + dir.y * reach };
     return { kind: 'boundary', dir, end, ballTime: 0.8, fielder: -1, tMeet: 0.8, returned: 0.8 };
   }
   if (shot.outcome === 'caught') {

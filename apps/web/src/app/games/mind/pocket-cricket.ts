@@ -43,7 +43,7 @@ const hw = (y: number): number => HW_FAR + ((y - FAR_Y) / (NEAR_Y - FAR_Y)) * (H
 /** How big things are at screen height y, compared with the near end. */
 const depth = (y: number): number => hw(y) / HW_NEAR;
 /** Where the ball is on the ground at flight progress p. */
-const HIT_Y = NEAR_Y - 44; // the batting crease, where the ball must be when the bat comes through
+const HIT_Y = NEAR_Y - 40; // the batting crease, where the ball must be when the bat comes through
 const groundY = (p: number): number => FAR_Y + 10 + (p / SWEET) * (HIT_Y - FAR_Y - 10);
 /** How high above the pitch the ball is (in near-end pixels): released high, pitched at 0.6, then up off the pitch. */
 const height = (p: number): number => (p < 0.55 ? 70 * (1 - p / 0.55) ** 1.2 : 38 * Math.sin(Math.min(1, (p - 0.55) / 0.62) * Math.PI));
@@ -79,10 +79,12 @@ export class PocketCricket implements OnInit, OnDestroy {
   protected readonly runs = signal(0);
   protected readonly balls = signal('0.0');
   protected readonly outs = signal(0);
-  protected readonly call = signal('Get ready');
+  protected readonly call = signal<{ id: number; text: string; kind: string }>({ id: 0, text: 'Get ready', kind: 'info' });
   /** Which buttons show: the batting ones, the Run button after a hit that can be run, or nothing to press while a boundary or a catch plays out. */
   protected readonly pad = signal<'bat' | 'run' | 'watch'>('bat');
   protected readonly canShoot = signal(false);
+  /** Instructions shown over the first ball only. */
+  protected readonly hint = signal(true);
   protected readonly canRun = signal(false);
   protected readonly outList = Array.from({ length: OUTS_TO_END }, (_, i) => i);
 
@@ -102,6 +104,16 @@ export class PocketCricket implements OnInit, OnDestroy {
   private resultFor = 0.9;
   /** How far the fielding scene had got when the ball ended, so the result hold freezes it instead of replaying it. */
   private fieldEnd = 0;
+  private stumpsHit = false;
+  private lastRuns = 0;
+  private particles: { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string; size: number }[] = [];
+  private floaters: { x: number; y: number; text: string; life: number; color: string; size: number }[] = [];
+  private shake = 0;
+  private flash = 0;
+  private flashColor = '#ffd23f';
+  private cheer = 0;
+  /** The mascot's mood: 1 = cheering, -1 = glum, fading back to 0. */
+  private mood = 0;
   private frame = 0;
   private last = 0;
   private clock = 0;
@@ -147,19 +159,25 @@ export class PocketCricket implements OnInit, OnDestroy {
   protected hit(): void {
     if (this.phase !== 'flight' || this.swung) return;
     this.swung = true;
+    this.hint.set(false);
     this.swingAt = this.t;
     this.canShoot.set(false);
     this.haptics.tap();
     const shot = playShot(this.flight, this.lane, this.delivery.lane, Math.random);
     this.shot = shot;
     if (shot.outcome === 'miss') {
-      this.call.set(Math.abs(this.lane - this.delivery.lane) > 1 ? 'Wrong lane!' : this.flight < 0.7 ? 'Too early!' : 'Too late!');
+      this.say(Math.abs(this.lane - this.delivery.lane) > 1 ? 'Wrong lane!' : this.flight < SWEET ? 'Too early!' : 'Too late!', 'miss');
       return;
     }
     this.plan = planField(shot);
     this.enter('swing');
-    this.call.set(shot.outcome === 'six' ? 'Smashed!' : 'Hit!');
+    this.say(shot.outcome === 'six' ? 'Smashed!' : shot.outcome === 'caught' ? 'Edged!' : 'Hit!', 'hit');
     this.haptics.place();
+  }
+
+  /** Show a call on the screen; each new one pops in afresh. */
+  private say(text: string, kind = 'info'): void {
+    this.call.set({ id: this.call().id + 1, text, kind });
   }
 
   protected run(): void {
@@ -186,6 +204,14 @@ export class PocketCricket implements OnInit, OnDestroy {
 
   private update(dt: number): void {
     this.t += dt;
+    for (const p of this.particles) (p.life -= dt), (p.x += p.vx * dt), (p.y += p.vy * dt), (p.vy += 520 * dt), (p.vx *= 1 - dt * 0.8);
+    this.particles = this.particles.filter((p) => p.life > 0);
+    for (const f of this.floaters) (f.life -= dt), (f.y -= 34 * dt);
+    this.floaters = this.floaters.filter((f) => f.life > 0);
+    this.shake = Math.max(0, this.shake - dt);
+    this.flash = Math.max(0, this.flash - dt * 1.4);
+    this.cheer = Math.max(0, this.cheer - dt);
+    this.mood *= 1 - Math.min(1, dt * 0.9);
     // The batter slides to the chosen lane.
     this.batX += (this.lane - this.batX) * Math.min(1, dt * 14);
     switch (this.phase) {
@@ -197,7 +223,9 @@ export class PocketCricket implements OnInit, OnDestroy {
           this.shot = null;
           this.plan = null;
           this.running = null;
-          this.call.set('');
+          this.stumpsHit = false;
+          this.lastRuns = 0;
+          this.say('');
           this.enter('flight');
         }
         break;
@@ -205,7 +233,8 @@ export class PocketCricket implements OnInit, OnDestroy {
         this.flight += dt / this.delivery.seconds;
         if (this.flight >= 1.12) {
           this.haptics.error();
-          this.finishBall(0, true, 'Bowled!', 1);
+          this.stumpsHit = this.delivery.lane === 0 && !this.swung;
+          this.finishBall(0, true, this.stumpsHit ? 'Bowled!' : this.swung ? 'Missed!' : 'Bowled!', 1.1);
         }
         break;
       case 'swing':
@@ -229,15 +258,13 @@ export class PocketCricket implements OnInit, OnDestroy {
       this.running = new Running(plan.returned);
       this.pad.set('run');
       this.canRun.set(true);
-      this.call.set('Run!');
+      this.say('Run! Tap Run', 'run');
     } else {
       this.pad.set('watch');
       if (plan.kind === 'boundary') {
-        this.call.set(shot.outcome === 'six' ? 'SIX!' : 'FOUR!');
-        if (shot.outcome === 'six') this.haptics.success();
-        else this.haptics.place();
+        this.say(shot.outcome === 'six' ? 'Up and away…' : 'Racing to the rope…', 'hit');
       } else {
-        this.call.set('Up in the air...');
+        this.say('Up in the air…', 'hit');
       }
     }
   }
@@ -246,7 +273,7 @@ export class PocketCricket implements OnInit, OnDestroy {
     const plan = this.plan!;
     const shot = this.shot!;
     if (plan.kind === 'boundary') {
-      if (this.t >= plan.ballTime + 0.4) this.finishBall(shot.outcome === 'six' ? 6 : 4, false, shot.outcome === 'six' ? 'SIX!' : 'FOUR!', 0.6);
+      if (this.t >= plan.ballTime + 0.05) this.finishBall(shot.outcome === 'six' ? 6 : 4, false, shot.outcome === 'six' ? 'SIX!' : 'FOUR!', 1.5);
     } else if (plan.kind === 'caught') {
       if (this.t >= plan.returned) {
         this.haptics.error();
@@ -254,6 +281,11 @@ export class PocketCricket implements OnInit, OnDestroy {
       }
     } else if (this.running) {
       this.running.tick(this.t);
+      if (this.running.runs > this.lastRuns) {
+        this.lastRuns = this.running.runs;
+        this.floaters.push({ x: W / 2, y: 215, text: '+1', life: 1, color: '#7CFC9A', size: 30 });
+        this.haptics.tick();
+      }
       if (this.running.done) {
         const r = this.running;
         if (r.out) {
@@ -268,15 +300,69 @@ export class PocketCricket implements OnInit, OnDestroy {
 
   private finishBall(runs: number, out: boolean, text: string, hold: number): void {
     if (this.phase === 'field') this.fieldEnd = this.t;
+    this.hint.set(false);
     this.match.record(runs, out);
     this.runs.set(this.match.runs);
     this.balls.set(this.match.overs);
     this.outs.set(this.match.outs);
-    this.call.set(out ? `OUT! ${text}` : text);
+    const kind = out ? 'out' : runs === 6 ? 'six' : runs === 4 ? 'four' : runs > 0 ? 'run' : 'info';
+    this.say(out ? `OUT! ${text}` : text, kind);
+    this.celebrate(kind, runs);
     this.resultFor = hold;
     this.canRun.set(false);
     this.pad.set('watch');
     this.enter('result');
+  }
+
+  /** Confetti, flashes and a mascot's reaction for the end of a ball. */
+  private celebrate(kind: string, runs: number): void {
+    const palettes: Record<string, string[]> = {
+      six: ['#ffd23f', '#ff7a1a', '#ffffff', '#ff3d81', '#4dd2ff'],
+      four: ['#7CFC9A', '#ffffff', '#4dd2ff', '#ffd23f'],
+      run: ['#7CFC9A', '#ffffff'],
+      out: ['#ff5a5f', '#7a1d22'],
+    };
+    const palette = palettes[kind];
+    if (kind === 'six' || kind === 'four') {
+      this.burst(W / 2, 190, kind === 'six' ? 110 : 60, palette, kind === 'six' ? 330 : 240);
+      this.burst(70, 120, 20, palette, 200);
+      this.burst(W - 70, 120, 20, palette, 200);
+      this.floaters.push({ x: W / 2, y: 300, text: `+${runs}`, life: 1.4, color: kind === 'six' ? '#ffd23f' : '#7CFC9A', size: 64 });
+      this.flash = 0.5;
+      this.flashColor = kind === 'six' ? '#ffd23f' : '#7CFC9A';
+      this.cheer = 2;
+      this.mood = 1;
+      if (kind === 'six') (this.shake = 0.3), this.haptics.success();
+      else this.haptics.place();
+    } else if (kind === 'out') {
+      this.burst(W / 2, 220, 24, palette, 160);
+      this.shake = 0.35;
+      this.flash = 0.35;
+      this.flashColor = '#ff5a5f';
+      this.mood = -1;
+    } else if (kind === 'run') {
+      this.floaters.push({ x: W / 2, y: 300, text: `+${runs}`, life: 1.1, color: '#7CFC9A', size: 48 });
+      this.burst(W / 2, 260, 22, palette, 170);
+      this.cheer = 1;
+      this.mood = 0.6;
+    }
+  }
+
+  private burst(x: number, y: number, n: number, palette: string[], speed: number): void {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const v = speed * (0.3 + Math.random() * 0.7);
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v - speed * 0.5,
+        life: 1.1 + Math.random() * 0.7,
+        max: 1.8,
+        color: palette[i % palette.length],
+        size: 3 + Math.random() * 4,
+      });
+    }
   }
 
   private next(): void {
@@ -290,7 +376,7 @@ export class PocketCricket implements OnInit, OnDestroy {
     }
     this.view = 'bat';
     this.pad.set('bat');
-    this.call.set('');
+    this.say('');
     this.enter('ready');
   }
 
@@ -302,8 +388,94 @@ export class PocketCricket implements OnInit, OnDestroy {
   // ---- drawing -------------------------------------------------------------------------------------------------------------------
 
   private draw(): void {
+    const c = this.ctx;
+    c.save();
+    if (this.shake > 0) c.translate((Math.random() - 0.5) * this.shake * 22, (Math.random() - 0.5) * this.shake * 22);
     if (this.view === 'field') this.drawField();
     else this.drawBatting();
+    this.drawMascot();
+    c.restore();
+    // A colour flash, confetti, and the floating numbers sit on top of everything.
+    if (this.flash > 0) {
+      c.globalAlpha = Math.min(0.4, this.flash * 0.5);
+      c.fillStyle = this.flashColor;
+      c.fillRect(0, 0, W, H);
+      c.globalAlpha = 1;
+    }
+    for (const p of this.particles) {
+      c.globalAlpha = Math.max(0, Math.min(1, p.life / 0.6));
+      c.fillStyle = p.color;
+      c.save();
+      c.translate(p.x, p.y);
+      c.rotate(p.life * 9);
+      c.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      c.restore();
+    }
+    c.globalAlpha = 1;
+    for (const f of this.floaters) {
+      const age = 1 - Math.min(1, f.life / 1.2);
+      const pop = age < 0.15 ? 0.4 + (age / 0.15) * 0.8 : 1.2 - Math.min(0.2, (age - 0.15) * 0.6);
+      c.globalAlpha = Math.min(1, f.life * 2);
+      c.font = `900 ${f.size * pop}px Geist, system-ui, sans-serif`;
+      c.textAlign = 'center';
+      c.lineWidth = 6;
+      c.strokeStyle = 'rgba(0,0,0,0.55)';
+      c.strokeText(f.text, f.x, f.y);
+      c.fillStyle = f.color;
+      c.fillText(f.text, f.x, f.y);
+    }
+    c.globalAlpha = 1;
+  }
+
+  /** The cricket (the insect) who keeps score in the corner: hops and cheers on boundaries, droops on an out. */
+  private drawMascot(): void {
+    const c = this.ctx;
+    const hop = this.mood > 0.15 ? Math.abs(Math.sin(this.clock * 11)) * 14 * Math.min(1, this.mood) : 0;
+    const x = 40;
+    const y = 54 - hop;
+    const sad = this.mood < -0.15;
+    c.save();
+    c.translate(x, y);
+    this.ellipse(0, 22 + hop, 14, 3.5, 'rgba(0,0,0,0.25)');
+    // Legs, body, head with antennae.
+    c.strokeStyle = '#2f8a3e';
+    c.lineWidth = 2.2;
+    c.lineCap = 'round';
+    for (const [dx, dy] of [[-9, 16], [9, 16], [-5, 18], [5, 18]]) {
+      c.beginPath();
+      c.moveTo(dx * 0.4, 6);
+      c.lineTo(dx, dy + 4);
+      c.stroke();
+    }
+    this.ellipse(0, 2, 12, 15, '#5fcf55');
+    this.ellipse(-3, -2, 4, 9, 'rgba(255,255,255,0.22)');
+    this.ellipse(0, -13, 9, 8, '#7be06e');
+    c.strokeStyle = '#2f8a3e';
+    c.lineWidth = 1.6;
+    const wave = this.mood > 0.15 ? Math.sin(this.clock * 12) * 4 : 0;
+    c.beginPath();
+    c.moveTo(-4, -19);
+    c.quadraticCurveTo(-12 - wave, -30, -16 - wave, -26);
+    c.moveTo(4, -19);
+    c.quadraticCurveTo(12 + wave, -30, 16 + wave, -26);
+    c.stroke();
+    this.ellipse(-3.2, -14, 2.4, 2.8, '#fff');
+    this.ellipse(3.2, -14, 2.4, 2.8, '#fff');
+    this.ellipse(-3.2 + (sad ? 0 : 0.4), -13.5 + (sad ? 1 : 0), 1.2, 1.4, '#15210f');
+    this.ellipse(3.2 + (sad ? 0 : 0.4), -13.5 + (sad ? 1 : 0), 1.2, 1.4, '#15210f');
+    c.strokeStyle = '#15210f';
+    c.lineWidth = 1.2;
+    c.beginPath();
+    if (sad) c.arc(0, -7.5, 2.6, Math.PI * 1.1, Math.PI * 1.9);
+    else c.arc(0, -10, 3, Math.PI * 0.15, Math.PI * 0.85);
+    c.stroke();
+    // A tiny bat, raised when happy.
+    c.save();
+    c.translate(11, 4);
+    c.rotate(this.mood > 0.15 ? -0.9 - Math.sin(this.clock * 12) * 0.25 : 0.5);
+    this.rect(-2, -14, 4, 22, '#d9b26f', 2);
+    c.restore();
+    c.restore();
   }
 
   private poly(points: [number, number][], fill: string | CanvasGradient): void {
@@ -348,7 +520,7 @@ export class PocketCricket implements OnInit, OnDestroy {
     // Two tiers of stands with the crowd, and the floodlight towers.
     this.rect(0, 52, W, 62, '#3b3e57');
     this.rect(0, 52, W, 5, '#2a2c41');
-    for (const d of CROWD) this.rect(d.x, d.y, 3, 3, d.c);
+    for (const d of CROWD) this.rect(d.x, d.y - (this.cheer > 0 ? Math.abs(Math.sin(this.clock * 13 + d.x)) * 5 * Math.min(1, this.cheer) : 0), 3, 3, d.c);
     c.fillStyle = 'rgba(0,0,0,0.18)';
     c.fillRect(0, 84, W, 2);
     for (const x of [26, W - 31]) {
@@ -390,7 +562,7 @@ export class PocketCricket implements OnInit, OnDestroy {
       c.fillRect(CX + hw(y) * 0.92 - depth(y) * 2, y - depth(y) * 24, Math.max(1.2, depth(y) * 2), depth(y) * 24);
     };
     crease(FAR_Y + 16);
-    crease(HIT_Y + 4);
+    crease(HIT_Y + 14);
     // Faint lane marks, so the lanes can be seen.
     c.strokeStyle = 'rgba(90,60,20,0.14)';
     c.lineWidth = 1;
@@ -400,38 +572,66 @@ export class PocketCricket implements OnInit, OnDestroy {
       c.lineTo(CX + l * HW_NEAR * 0.4, NEAR_Y - 82);
       c.stroke();
     }
-    // The hit line: the ball is in the hitting zone when it reaches this bar on its lane.
-    c.strokeStyle = 'rgba(255,255,255,0.55)';
-    c.lineWidth = 2;
-    c.setLineDash([6, 5]);
-    c.beginPath();
-    c.moveTo(CX - hw(HIT_Y) * 0.95, HIT_Y);
-    c.lineTo(CX + hw(HIT_Y) * 0.95, HIT_Y);
-    c.stroke();
-    c.setLineDash([]);
+    this.drawTarget();
     // The bowler's stumps, the bowler, and the ball.
-    this.stumps(CX, FAR_Y + 16, 0.26);
+    this.stumps(CX, FAR_Y + 16, 0.26, 0);
     this.drawBowler();
-    this.stumps(CX, NEAR_Y - 56, 1);
+    this.stumps(CX, NEAR_Y - 2, 0.95, this.stumpsHit ? Math.min(1, this.t / 0.5) : 0);
     this.drawBatter();
     if (this.phase === 'flight' || (this.phase === 'result' && !this.shot)) this.drawBall();
     if (this.phase === 'swing') this.drawHitBall();
   }
 
   /** Three stumps and two bails, `s` times the near-end size, standing on y. */
-  private stumps(x: number, y: number, s: number): void {
+  private stumps(x: number, y: number, s: number, broken: number): void {
     const c = this.ctx;
     this.ellipse(x, y + 1, 16 * s, 3 * s, 'rgba(0,0,0,0.25)');
-    for (const dx of [-9, 0, 9]) {
-      const g = c.createLinearGradient(x + (dx - 2.4) * s, 0, x + (dx + 2.4) * s, 0);
-      g.addColorStop(0, '#fff3cf');
-      g.addColorStop(1, '#c9ad6e');
-      this.rect(x + (dx - 2.4) * s, y - 48 * s, 4.8 * s, 48 * s, '#e8d29a', 1);
-      c.fillStyle = g;
-      c.fillRect(x + (dx - 2.4) * s, y - 48 * s, 4.8 * s, 48 * s);
+    [-9, 0, 9].forEach((dx, i) => {
+      c.save();
+      c.translate(x + dx * s, y);
+      c.rotate(broken * [-0.9, 0.35, 1.1][i]);
+      c.translate(broken * [-6, 0, 8][i] * s, -broken * 3);
+      this.rect(-2.4 * s, -48 * s, 4.8 * s, 48 * s, '#e8d29a', 1);
+      this.rect(-2.4 * s, -48 * s, 1.8 * s, 48 * s, 'rgba(255,255,255,0.45)', 1);
+      c.restore();
+    });
+    // The bails pop off when the stumps are hit.
+    const lift = broken > 0 ? Math.sin(broken * Math.PI) * 26 * s : 0;
+    this.rect(x - 12 * s - broken * 14 * s, y - 51 * s - lift, 12 * s, 3 * s, '#f3e3b0');
+    this.rect(x + broken * 18 * s, y - 51 * s - lift * 1.2, 12 * s, 3 * s, '#f3e3b0');
+  }
+
+  /** Where the ball will arrive: a ring on its lane at the hitting line, and a wider ring closing in on it. Swing when they meet. */
+  private drawTarget(): void {
+    if (this.phase !== 'flight' || this.swung) return;
+    const c = this.ctx;
+    const p = this.flight;
+    if (p < 0.2 || p > SWEET + 0.2) return;
+    const x = this.laneX(this.delivery.lane, HIT_Y);
+    const y = HIT_Y + 2;
+    const inside = Math.abs(p - SWEET) <= 0.08;
+    const matched = this.lane === this.delivery.lane;
+    const col = inside ? (matched ? '#7CFC9A' : '#ffd23f') : 'rgba(255,255,255,0.9)';
+    const k = depth(HIT_Y);
+    // The lane is lit while the bat is not in it.
+    if (!matched) {
+      c.globalAlpha = 0.16 + 0.1 * Math.sin(this.clock * 8);
+      this.poly([[x - 18 * k, y - 110 * k], [x + 18 * k, y - 110 * k], [x + 26 * k, y + 8], [x - 26 * k, y + 8]], '#fff');
+      c.globalAlpha = 1;
     }
-    this.rect(x - 12 * s, y - 51 * s, 12 * s, 3 * s, '#f3e3b0');
-    this.rect(x + 0, y - 51 * s, 12 * s, 3 * s, '#f3e3b0');
+    c.lineWidth = 3;
+    c.strokeStyle = col;
+    c.beginPath();
+    c.ellipse(x, y, 24 * k, 8 * k, 0, 0, Math.PI * 2);
+    c.stroke();
+    const closing = Math.max(0, (SWEET - p) / SWEET);
+    c.globalAlpha = Math.min(1, (p - 0.2) * 5);
+    c.lineWidth = 2;
+    c.strokeStyle = col;
+    c.beginPath();
+    c.ellipse(x, y, (24 + closing * 70) * k, (8 + closing * 24) * k, 0, 0, Math.PI * 2);
+    c.stroke();
+    c.globalAlpha = 1;
   }
 
   private drawBowler(): void {
@@ -520,8 +720,8 @@ export class PocketCricket implements OnInit, OnDestroy {
   /** The batter from behind: helmet with a grille, shirt, gloves, pads and the bat. */
   private drawBatter(): void {
     const c = this.ctx;
-    const x = this.laneX(this.batX, NEAR_Y - 46);
-    const y = NEAR_Y - 46;
+    const x = this.laneX(this.batX, HIT_Y);
+    const y = NEAR_Y - 90;
     const swinging = this.swung && (this.phase === 'flight' || this.phase === 'swing');
     const elapsed = this.phase === 'flight' ? this.t - this.swingAt : 0.1 + this.t;
     const swing = this.swung ? Math.min(1, Math.max(0, elapsed) / 0.28) : 0;
@@ -593,7 +793,7 @@ export class PocketCricket implements OnInit, OnDestroy {
       const rr = (ROPE + 12 + ((i * 37) % 60) * 0.5) * k;
       const px = cx + Math.cos(a) * rr;
       const py = cy + Math.sin(a) * rr;
-      if (px > 2 && px < W - 2 && py > 2 && py < H - 2) this.rect(px, py, 3, 3, CROWD[i % CROWD.length].c);
+      if (px > 2 && px < W - 2 && py > 2 && py < H - 2) this.rect(px, py - (this.cheer > 0 ? Math.abs(Math.sin(this.clock * 13 + i)) * 5 * Math.min(1, this.cheer) : 0), 3, 3, CROWD[i % CROWD.length].c);
     }
     // The ground: mown stripes inside the rope.
     c.save();

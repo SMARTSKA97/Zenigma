@@ -65,17 +65,94 @@ canvas {
   width: 100%;
   aspect-ratio: 360 / 480;
 }
-.call {
+.callbox {
   position: absolute;
-  inset: auto 0 0.9rem;
+  inset: auto 0 1.1rem;
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+.call {
   margin: 0;
+  padding: 0.25rem 0.9rem;
   text-align: center;
-  font: 800 1.5rem/1 var(--font-display);
-  letter-spacing: 0.04em;
+  font: 900 1.6rem/1.1 var(--font-display);
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #fff;
-  text-shadow: 0 2px 8px rgb(0 0 0 / 0.6);
+  text-shadow: 0 2px 10px rgb(0 0 0 / 0.65);
+  animation: pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+.call.four,
+.call.six {
+  font-size: 3rem;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 1.2rem;
+  border-radius: 0.9rem;
+  -webkit-text-stroke: 2px rgb(0 0 0 / 0.45);
+  animation: slam 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both, glow 0.6s 0.6s ease-in-out infinite alternate;
+}
+.call.four {
+  color: #7cfc9a;
+}
+.call.six {
+  color: #ffd23f;
+  font-size: 3.6rem;
+}
+.call.out {
+  color: #ff5a5f;
+  font-size: 2rem;
+  animation: shakex 0.5s both;
+}
+.call.run {
+  color: #7cfc9a;
+  font-size: 2rem;
+}
+.call.miss,
+.call.hit {
+  font-size: 1.35rem;
+  color: #fff6d6;
+}
+.hint {
+  position: absolute;
+  inset: 0.6rem 0.6rem auto;
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.7rem;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 0.75rem;
+  text-align: center;
   pointer-events: none;
+}
+.stat b.pop {
+  animation: scorepop 0.4s cubic-bezier(0.2, 1.8, 0.4, 1);
+}
+@keyframes pop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes slam {
+  0% { transform: scale(2.6) rotate(-6deg); opacity: 0; }
+  60% { transform: scale(0.92) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes glow {
+  to { transform: scale(1.06); }
+}
+@keyframes shakex {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes scorepop {
+  from { transform: scale(1.7); color: var(--good); }
+  to { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .call, .stat b.pop { animation: none; }
 }
 .pads {
   display: grid;
@@ -99,7 +176,9 @@ canvas {
   color: var(--text);
 }
 .pads .shotbtn {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  border-radius: 1.4rem;
+  box-shadow: 0 6px 0 rgb(0 0 0 / 0.25);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }

@@ -55,7 +55,7 @@ describe('Pocket Cricket', () => {
   it('plans a boundary, a catch or a chase', () => {
     const four = planField({ outcome: 'four', power: 0.7, dist: ROPE, angle: 0.5 });
     expect(four.kind).toBe('boundary');
-    expect(Math.hypot(four.end.x, four.end.y - 24)).toBeCloseTo(ROPE, 3);
+    expect(Math.hypot(four.end.x, four.end.y)).toBeCloseTo(ROPE, 3); // the ball is taken all the way to the rope
     const caught = planField({ outcome: 'caught', power: 0.1, dist: 20, angle: 0.7 });
     expect(caught.kind).toBe('caught');
     expect(caught.returned).toBeLessThan(2);

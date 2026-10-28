@@ -2,7 +2,7 @@
   <div end><span>{{ runs() }} runs</span></div>
   <section class="cricket">
     <div class="board" role="status">
-      <span class="stat"><small>Runs</small><b>{{ runs() }}</b></span>
+      <span class="stat"><small>Runs</small>@for (r of [runs()]; track r) { <b class="pop">{{ r }}</b> }</span>
       <span class="stat"><small>Overs</small><b>{{ balls() }}</b></span>
       <span class="stat">
         <small>Outs</small>
@@ -13,7 +13,12 @@
     </div>
     <div class="lcd">
       <canvas #screen role="img" aria-label="Cricket. A batter's view of the ball coming down the pitch, then the field from above after a hit."></canvas>
-      <p class="call" aria-live="assertive">{{ call() }}</p>
+      <div class="callbox" aria-live="assertive">
+        @for (c of [call()]; track c.id) {
+          @if (c.text) { <p class="call {{ c.kind }}">{{ c.text }}</p> }
+        }
+      </div>
+      @if (hint()) { <p class="hint">◀ ▶ slide under the ball's lane · <b>SHOT</b> when the rings meet</p> }
     </div>
   </section>
   <div dock class="pads">
