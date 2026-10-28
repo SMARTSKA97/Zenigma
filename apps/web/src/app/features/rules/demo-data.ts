@@ -206,9 +206,9 @@ export const MIND_DEMOS: Record<string, Demo> = {
   },
   'pocket-cricket': {
     frames: [
-      F([['.', '⚾', '.'], ['.', '.', '.'], ['.', '🏏', '.']], 'The ball comes down the pitch at a random speed, on the left, the middle or the right.'),
-      F([['.', '.', '.'], ['.', '?⚾', '.'], ['?◀', '🏏', '?▶']], 'Tap Left shot or Right shot just as the ball reaches the bat. The right side and the right moment make fours and sixes.', 'If the ball is on the left → play the left shot.', [1, 1], [2, 0]),
-      F([['.', '.', '.'], ['.', '🏃', '.'], ['.', '?⚡', '.']], 'Hit it short? Tap Run to go for runs before the fielder throws it back. Caught out, bowled or run out and a wicket is gone. You have two.', 'If the fielder is close to the ball → take one run, not two.', [2, 1]),
+      F([['.', '⚾', '.'], ['.', '.', '.'], ['.', '🏏', '.']], 'The ball comes down the pitch at a random speed, in one of five lanes. You bat from behind.'),
+      F([['.', '.', '.'], ['.', '?⚾', '.'], ['?◀', '🏏', '?▶']], 'Tap the arrows to slide the batter into the ball\'s lane, then press Shot as it reaches the bat. Miss and you are out.', 'If the ball is wide of you → slide over first, then wait for it.', [1, 1], [2, 0]),
+      F([['.', '.', '.'], ['.', '🏃', '.'], ['.', '?⚡', '.']], 'Hit it and the view cuts to the field. Press Run before the fielder throws the ball back. Caught, or still running when it is back, and you are out. Five outs end the game.', 'If the fielder is close to the ball → take one run, not two.', [2, 1]),
     ],
   },
   'comet-slice': {

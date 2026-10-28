@@ -1,4 +1,4 @@
-import { BALLS_PER_INNINGS, BOUNDARY, deliver, fieldTimes, Match, playShot, RUN_SECONDS, Running, SWEET, sideMatches, timingQuality, WICKETS } from './pocket-cricket-engine';
+import { clampLane, deliver, FIELDERS, fielderPoint, Match, MAX_BALLS, OUTS_TO_END, planField, playShot, ROPE, rollPoint, Running, RUN_SECONDS, SWEET, timingQuality } from './pocket-cricket-engine';
 
 const fixed = (v: number) => () => v;
 
@@ -10,37 +10,49 @@ describe('Pocket Cricket', () => {
     expect(timingQuality(1.05)).toBe(-1);
   });
 
-  it('bowls random lines at random speeds', () => {
-    const lines = new Set<number>();
-    for (let i = 0; i < 200; i++) {
+  it('bowls random lanes at random speeds', () => {
+    const lanes = new Set<number>();
+    for (let i = 0; i < 300; i++) {
       const d = deliver(Math.random);
-      lines.add(d.line);
-      expect(d.seconds).toBeGreaterThanOrEqual(0.95);
-      expect(d.seconds).toBeLessThanOrEqual(1.6);
+      lanes.add(d.lane);
+      expect(d.seconds).toBeGreaterThanOrEqual(0.9);
+      expect(d.seconds).toBeLessThanOrEqual(1.5);
     }
-    expect(lines.size).toBe(3);
+    expect([...lanes].sort((a, b) => a - b)).toEqual([-2, -1, 0, 1, 2]);
+    expect(clampLane(5)).toBe(2);
+    expect(clampLane(-9)).toBe(-2);
   });
 
-  it('matches the shot to the side of the ball', () => {
-    expect(sideMatches('left', -1)).toBe(true);
-    expect(sideMatches('left', 1)).toBe(false);
-    expect(sideMatches('right', 0)).toBe(true);
+  it('needs the bat in the ball\'s lane or the next one, and the right moment', () => {
+    expect(playShot(SWEET, 1, 1, fixed(0.5)).outcome).toBe('six');
+    expect(playShot(SWEET, 0, 1, fixed(0.5)).outcome).toBe('runs'); // a lane off: at most 0.6
+    expect(playShot(SWEET, -1, 1, fixed(0.5)).outcome).toBe('miss'); // two lanes off
+    expect(playShot(0.3, 1, 1, fixed(0.5)).outcome).toBe('miss'); // too early
+    expect(playShot(SWEET + 0.04, 0, 0, fixed(0.5)).outcome).toBe('four');
+    expect(playShot(SWEET + 0.15, 0, 0, fixed(0.5)).outcome).toBe('caught');
   });
 
-  it('turns timing and side into runs, fours, sixes, catches and misses', () => {
-    expect(playShot(SWEET, 'left', -1, fixed(0.5)).outcome).toBe('six');
-    expect(playShot(SWEET, 'left', 1, fixed(0.5)).outcome).toBe('runs'); // wrong side: at most 0.65
-    expect(playShot(SWEET + 0.04, 'right', 1, fixed(0.5)).outcome).toBe('four');
-    expect(playShot(SWEET + 0.15, 'right', 1, fixed(0.5)).outcome).toBe('caught');
-    expect(playShot(0.2, 'right', 1, fixed(0.5)).outcome).toBe('miss');
-    const four = playShot(SWEET + 0.04, 'left', -1, fixed(0.5));
-    expect(four.dist).toBe(BOUNDARY);
-    expect(four.angle).toBeLessThan(0);
-    expect(playShot(SWEET, 'right', 0, fixed(0.5)).angle).toBeGreaterThan(0);
+  it('sends the ball to either side depending on the lane and the timing', () => {
+    expect(playShot(SWEET, 1, 0, fixed(0.5)).angle).toBeGreaterThan(0);
+    expect(playShot(SWEET, -1, 0, fixed(0.5)).angle).toBeLessThan(0);
   });
 
-  it('gives a faraway ball more time before the fielder returns it', () => {
-    expect(fieldTimes(40).returned).toBeGreaterThan(fieldTimes(10).returned);
+  it('plans a boundary, a catch or a chase', () => {
+    const four = planField({ outcome: 'four', power: 0.7, dist: ROPE, angle: 0.5 });
+    expect(four.kind).toBe('boundary');
+    expect(Math.hypot(four.end.x, four.end.y - 24)).toBeCloseTo(ROPE, 3);
+    const caught = planField({ outcome: 'caught', power: 0.1, dist: 20, angle: 0.7 });
+    expect(caught.kind).toBe('caught');
+    expect(FIELDERS).toContainEqual(caught.end);
+    const near = planField({ outcome: 'runs', power: 0.4, dist: 20, angle: 0.2 });
+    const far = planField({ outcome: 'runs', power: 0.6, dist: 40, angle: 0.2 });
+    expect(near.kind).toBe('play');
+    expect(Number.isFinite(near.tMeet)).toBe(true);
+    expect(far.returned).toBeGreaterThan(0);
+    // The ball slows to a stop where it was heading, and the chasing fielder ends up there.
+    expect(rollPoint(far, 99)).toEqual(far.end);
+    const f = fielderPoint(far, far.fielder, far.tMeet + 1);
+    expect(Math.hypot(f.x - rollPoint(far, far.tMeet).x, f.y - rollPoint(far, far.tMeet).y)).toBeLessThan(0.01);
   });
 
   it('counts runs that finish before the ball is back, and a run out when one does not', () => {
@@ -68,7 +80,7 @@ describe('Pocket Cricket', () => {
   it('saves a second tap for the next run, and ignores taps once the ball is back', () => {
     const r = new Running(3);
     r.tap(0);
-    r.tap(0.2); // queued
+    r.tap(0.2);
     r.tick(RUN_SECONDS);
     expect(r.runs).toBe(1);
     expect(r.start).toBeCloseTo(RUN_SECONDS, 5);
@@ -82,16 +94,16 @@ describe('Pocket Cricket', () => {
     expect(late.runs).toBe(0);
   });
 
-  it('ends the innings after twelve balls or two wickets', () => {
+  it('ends after five outs, or ten overs', () => {
     const a = new Match();
-    for (let i = 0; i < BALLS_PER_INNINGS - 1; i++) a.record(1, false);
+    for (let i = 0; i < OUTS_TO_END - 1; i++) a.record(3, true);
     expect(a.over).toBe(false);
-    a.record(4, false);
+    a.record(0, true);
     expect(a.over).toBe(true);
-    expect(a.runs).toBe(15);
-    expect(a.overs).toBe('2.0');
+    expect(a.runs).toBe(12);
     const b = new Match();
-    for (let i = 0; i < WICKETS; i++) b.record(0, true);
+    for (let i = 0; i < MAX_BALLS; i++) b.record(1, false);
     expect(b.over).toBe(true);
+    expect(b.overs).toBe('10.0');
   });
 });

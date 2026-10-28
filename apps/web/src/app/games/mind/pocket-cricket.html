@@ -1,24 +1,28 @@
-<app-play-screen title="Pocket Cricket" subtitle="2 overs · 2 wickets">
+<app-play-screen title="Pocket Cricket" subtitle="5 outs · most runs wins">
   <div end><span>{{ runs() }} runs</span></div>
-  <section class="cricket" (pointerdown)="$event.stopPropagation()">
+  <section class="cricket">
     <div class="board" role="status">
       <span class="stat"><small>Runs</small><b>{{ runs() }}</b></span>
-      <span class="stat"><small>Overs</small><b>{{ overs() }}</b></span>
+      <span class="stat"><small>Overs</small><b>{{ balls() }}</b></span>
       <span class="stat">
-        <small>Wickets</small>
-        <b class="wkts" [attr.aria-label]="wickets() + ' out'">
-          @for (i of wicketList; track i) { <i [class.out]="i < wickets()"></i> }
+        <small>Outs</small>
+        <b class="wkts" [attr.aria-label]="outs() + ' of 5 out'">
+          @for (i of outList; track i) { <i [class.out]="i < outs()"></i> }
         </b>
       </span>
     </div>
     <div class="lcd">
-      <canvas #screen role="img" aria-label="Cricket field. The bowler runs in, the ball comes down the pitch."></canvas>
+      <canvas #screen role="img" aria-label="Cricket. A batter's view of the ball coming down the pitch, then the field from above after a hit."></canvas>
       <p class="call" aria-live="assertive">{{ call() }}</p>
     </div>
   </section>
   <div dock class="pads">
-    <button type="button" class="shot" [disabled]="!canShoot()" (pointerdown)="swing('left')"><span aria-hidden="true">◀</span> Left shot</button>
-    <button type="button" class="run" [disabled]="!canRun()" (pointerdown)="run()">Run</button>
-    <button type="button" class="shot" [disabled]="!canShoot()" (pointerdown)="swing('right')">Right shot <span aria-hidden="true">▶</span></button>
+    @if (view() === 'bat') {
+      <button type="button" class="move" aria-label="Move the batter left" (pointerdown)="shift(-1)">◀</button>
+      <button type="button" class="shotbtn" [disabled]="!canShoot()" (pointerdown)="hit()">Shot</button>
+      <button type="button" class="move" aria-label="Move the batter right" (pointerdown)="shift(1)">▶</button>
+    } @else {
+      <button type="button" class="runbtn" [disabled]="!canRun()" (pointerdown)="run()">Run</button>
+    }
   </div>
 </app-play-screen>
