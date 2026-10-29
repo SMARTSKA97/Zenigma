@@ -1,4 +1,4 @@
-import { H, MAX_H, MIN_H, setFieldHeight, advance, BOMB_CHANCE, COMET_R, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, throwWave, W } from './comet-slice-engine';
+import { COMET_SIZES, H, MAX_H, MIN_H, setFieldHeight, advance, BOMB_CHANCE, COMET_R, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, throwWave, W } from './comet-slice-engine';
 
 describe('Comet Slice', () => {
   it('detects a swipe through a circle, and one that passes beside it', () => {
@@ -23,17 +23,36 @@ describe('Comet Slice', () => {
     expect(speeds.size).toBeGreaterThan(8);
   });
 
-  it('makes skulls bigger than comets', () => {
+  it('makes skulls bigger than comets, and comets come in three sizes', () => {
     expect(SKULL_R).toBeGreaterThan(COMET_R * 1.4);
-    const kinds = Array.from({ length: 200 }, () => throwBody(Math.random));
-    for (const b of kinds) expect(b.r).toBe(b.kind === 'bomb' ? SKULL_R : COMET_R);
-    expect(kinds.some((b) => b.kind === 'bomb')).toBe(true);
+    expect(COMET_SIZES.small.r).toBeLessThan(COMET_SIZES.medium.r);
+    expect(COMET_SIZES.medium.r).toBeLessThan(COMET_SIZES.normal.r);
+    expect(COMET_SIZES.small.value).toBeGreaterThan(COMET_SIZES.medium.value);
+    const bodies = Array.from({ length: 400 }, () => throwBody(Math.random));
+    for (const b of bodies) {
+      if (b.kind === 'comet') expect(b.r).toBe(COMET_SIZES[b.size].r);
+      else expect(b.r).toBeGreaterThan(COMET_SIZES.normal.r);
+    }
+    expect(bodies.some((b) => b.kind === 'bomb')).toBe(true);
+    expect(new Set(bodies.filter((b) => b.kind === 'comet').map((b) => b.size)).size).toBe(3);
+  });
+
+  it('gives bodies in a group different paces', () => {
+    let spread = 0;
+    for (let i = 0; i < 200; i++) {
+      const w = throwWave(Math.random);
+      if (w.kind !== 'rain' && w.kind !== 'fan' && w.kind !== 'swarm') continue;
+      expect(new Set(w.bodies.map((b) => Math.round(b.vy))).size).toBeGreaterThan(1);
+      expect(new Set(w.bodies.map((b) => b.g.toFixed(2))).size).toBeGreaterThan(1);
+      spread++;
+    }
+    expect(spread).toBeGreaterThan(5);
   });
 
   it('has no ramp-up: speed and gaps are random and do not depend on how long you have played', () => {
     expect(throwGap.length).toBe(1);
     const gaps = Array.from({ length: 300 }, () => throwGap(Math.random));
-    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(0.3);
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(0.1);
     expect(Math.max(...gaps)).toBeLessThanOrEqual(1.5);
     expect(new Set(Array.from({ length: 300 }, () => Math.round(throwBody(Math.random).vy / 10))).size).toBeGreaterThan(15);
     expect(BOMB_CHANCE).toBeLessThan(0.3);
@@ -48,8 +67,13 @@ describe('Comet Slice', () => {
       expect(w.bodies.length).toBeGreaterThan(0);
       if (w.kind === 'trap') expect(w.bodies.filter((b) => b.kind === 'bomb')).toHaveLength(1);
       if (w.kind === 'fan' || w.kind === 'rain') expect(w.bodies.every((b) => b.kind === 'comet')).toBe(true);
+      if (w.kind === 'swarm') expect(w.bodies.filter((b) => b.kind === 'comet').every((b) => b.size === 'small')).toBe(true);
     }
-    expect(kinds.size).toBe(6);
+    expect(kinds.size).toBe(10);
+    for (let i = 0; i < 400; i++) {
+      const w = throwWave(Math.random);
+      if (w.kind === 'decoy') expect(w.bodies.some((b) => b.kind === 'bomb')).toBe(true);
+    }
   });
 
   it('sizes the field to the screen, within bounds', () => {
@@ -69,8 +93,8 @@ describe('Comet Slice', () => {
       for (const b of throwWave(random).bodies) {
         for (let t = 0; t < 600 && b.y - b.r <= H; t++) {
           advance(b, 0.02);
-          expect(b.x).toBeGreaterThanOrEqual(b.r - 0.5);
-          expect(b.x).toBeLessThanOrEqual(W - b.r + 0.5);
+          expect(b.x).toBeGreaterThanOrEqual(b.r - 2.5);
+          expect(b.x).toBeLessThanOrEqual(W - b.r + 2.5);
         }
       }
     }

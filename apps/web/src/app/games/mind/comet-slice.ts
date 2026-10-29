@@ -262,11 +262,12 @@ export class CometSlice implements OnInit, OnDestroy {
       body.sliced = true;
       body.slicedAt = body.age;
       if (body.kind === 'comet') {
-        // The second comet in one swipe is worth 2, the third 3, and so on.
+        // Each comet is worth its size (1, 2 or 3), plus a combo bonus: the second one in a swipe adds 1, the third 2, and so on.
         this.swipeHits++;
-        this.score.update((s) => s + this.swipeHits);
+        const points = this.swipeHits + body.value - 1;
+        this.score.update((s) => s + points);
         this.haptics.place();
-        this.pops.push({ x: body.x, y: body.y, text: `+${this.swipeHits}`, age: 0, big: false });
+        this.pops.push({ x: body.x, y: body.y, text: `+${points}`, age: 0, big: false });
         if (this.swipeHits > 1) this.showCombo(this.swipeHits);
         this.burst(body.x, body.y, 12);
         this.ring(body.x, body.y, 'rgba(255,255,255,0.85)', 34, 0.35);
@@ -523,23 +524,25 @@ export class CometSlice implements OnInit, OnDestroy {
     const ux = -b.vx / speed;
     const uy = -b.vy / speed;
     const head = b.r * 0.72;
-    const length = 70 + speed * 0.55;
+    const length = (45 + b.r * 0.9 + speed * 0.45) * (b.size === 'small' ? 0.9 : 1);
     const tx = b.x + ux * length;
     const ty = b.y + uy * length;
     const nx = -uy;
     const ny = ux;
     const halo = ctx.createRadialGradient(b.x, b.y, head * 0.6, b.x, b.y, head * 2.6);
-    halo.addColorStop(0, 'rgba(255,190,110,0.45)');
-    halo.addColorStop(1, 'rgba(255,190,110,0)');
+    // Small comets run blue-white, medium ones pink, normal ones orange, so the size reads at a glance.
+    const hue = b.size === 'small' ? ['110,220,255', '90,170,255', '70,90,255'] : b.size === 'medium' ? ['255,150,220', '255,90,170', '150,60,230'] : ['255,170,60', '255,100,200', '110,60,220'];
+    halo.addColorStop(0, `rgba(${hue[0]},0.45)`);
+    halo.addColorStop(1, `rgba(${hue[0]},0)`);
     ctx.fillStyle = halo;
     ctx.fillRect(b.x - head * 2.6, b.y - head * 2.6, head * 5.2, head * 5.2);
     const tail = ctx.createLinearGradient(b.x, b.y, tx, ty);
-    tail.addColorStop(0, 'rgba(255,170,60,0.95)');
-    tail.addColorStop(0.35, 'rgba(255,100,200,0.8)');
-    tail.addColorStop(1, 'rgba(110,60,220,0)');
+    tail.addColorStop(0, `rgba(${hue[0]},0.95)`);
+    tail.addColorStop(0.35, `rgba(${hue[1]},0.8)`);
+    tail.addColorStop(1, `rgba(${hue[2]},0)`);
     for (const [spread, alpha] of [[1.18, 0.35], [1, 1]] as const) {
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = spread > 1 ? 'rgba(255,190,90,0.55)' : tail;
+      ctx.fillStyle = spread > 1 ? `rgba(${hue[0]},0.5)` : tail;
       ctx.beginPath();
       ctx.moveTo(b.x + nx * head * spread, b.y + ny * head * spread);
       ctx.lineTo(tx, ty);
@@ -548,7 +551,7 @@ export class CometSlice implements OnInit, OnDestroy {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#ffc861';
+    ctx.fillStyle = `rgb(${hue[0]})`;
     ctx.beginPath();
     ctx.arc(b.x, b.y, head * 1.12, 0, Math.PI * 2);
     ctx.fill();
