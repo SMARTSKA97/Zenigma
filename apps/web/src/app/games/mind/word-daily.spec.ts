@@ -18,8 +18,9 @@ describe('word dailies', () => {
     expect(dailyPoints('crossclimb', 2)).toBe(50);
     expect(dailyPoints('wend', 400)).toBe(100);
     expect(dailyPoints('wend', -3)).toBe(0);
-    expect(dailyPoints('comet-slice', 30)).toBe(50);
-    expect(dailyPoints('comet-slice', 500)).toBe(100);
+    expect(dailyPoints('comet-slice', 60, '2026-10-30')).toBe(50); // a hard day: 120 is full marks
+    expect(dailyPoints('comet-slice', 500, '2026-10-30')).toBe(100);
+    expect(dailyPoints('comet-slice', 15, '2026-10-26')).toBe(50); // an easy day: 30 is full marks
   });
 
   it('knows its games and gives one seed per game and day', () => {

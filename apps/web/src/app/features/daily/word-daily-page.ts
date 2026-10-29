@@ -112,7 +112,7 @@ export class WordDailyPage {
   protected finish(r: MindResult): void {
     const game = this.game();
     if (!game) return;
-    const points = dailyPoints(game, r.score);
+    const points = dailyPoints(game, r.score, this.daily.date());
     this.detail.set(r.detail ?? '');
     this.daily.record(game, points, Date.now() - this.startedAt);
     this.haptics.success();

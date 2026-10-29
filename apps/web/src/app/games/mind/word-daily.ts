@@ -1,3 +1,4 @@
+import { DAILY_TARGET, levelForDate } from './comet-slice-engine';
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { indiaDate } from '../../core/hints.service';
 import { SyncService } from '../../core/sync.service';
@@ -8,8 +9,8 @@ export type WordDailyGame = (typeof WORD_DAILY_GAMES)[number];
 export const isWordDaily = (id: string): id is WordDailyGame => (WORD_DAILY_GAMES as readonly string[]).includes(id);
 
 /** What the game's own score means out of the day's board, turned into 0 to 100 points. */
-export function dailyPoints(game: WordDailyGame, score: number): number {
-  const out = game === 'chain-link' ? (score / 7) * 100 /* the daily chain has 7 links */ : game === 'pinpoint' ? (score / 5) * 100 /* one category a day */ : game === 'crossclimb' ? (score / 4) * 100 : game === 'comet-slice' ? (score / 60) * 100 : score;
+export function dailyPoints(game: WordDailyGame, score: number, date?: string): number {
+  const out = game === 'chain-link' ? (score / 7) * 100 /* the daily chain has 7 links */ : game === 'pinpoint' ? (score / 5) * 100 /* one category a day */ : game === 'crossclimb' ? (score / 4) * 100 : game === 'comet-slice' ? (score / DAILY_TARGET[levelForDate(date ?? '')]) * 100 : score;
   return Math.max(0, Math.min(100, Math.round(out)));
 }
 

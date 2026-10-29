@@ -52,8 +52,102 @@ export function segmentHitsCircle(ax: number, ay: number, bx: number, by: number
   return (cx - px) ** 2 + (cy - py) ** 2 <= r * r;
 }
 
+export type Level = 'easy' | 'medium' | 'hard';
+export const LEVELS: Level[] = ['easy', 'medium', 'hard'];
+
+/** The daily gets harder through the week: Monday and Tuesday easy, Wednesday and Thursday medium, Friday to Sunday hard. */
+export function levelForDate(date: string): Level {
+  const d = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return 'medium';
+  const weekday = (d.getUTCDay() + 6) % 7;
+  return weekday < 2 ? 'easy' : weekday < 4 ? 'medium' : 'hard';
+}
+
+/** What a daily run scores in points for a full 100 on each level (the levels' points are multiplied, so the harder ones run higher). */
+export const DAILY_TARGET: Record<Level, number> = { easy: 30, medium: 70, hard: 120 };
+
+export interface Tune {
+  /** Hearts at the start. */
+  hearts: number;
+  /** What a comet is worth is multiplied by this, so a harder level earns more. */
+  points: number;
+  /** Multiplies every fall speed, and the fastest start speed allowed. */
+  speed: number;
+  maxSpeed: number;
+  /** The range of each body's own pull (see Body.g). */
+  pull: [number, number];
+  /** Chances of a normal and a medium comet (the rest are small); small skulls' chance. */
+  normal: number;
+  medium: number;
+  smallSkull: number;
+  /** Average chance that a thrown body is a skull. */
+  bombs: number;
+  /** Gap between throws, and how often a throw comes right on the heels of the last one. */
+  gap: [number, number];
+  burst: number;
+  /** How crowded a throw is (1 = the full count). */
+  crowd: number;
+  /** How likely each pattern is. */
+  waves: Partial<Record<WaveKind, number>>;
+}
+
+/** Easy is gentle: slow, big comets, few skulls and simple patterns. Hard is the full set. */
+export const TUNES: Record<Level, Tune> = {
+  easy: {
+    hearts: 5,
+    points: 1,
+    speed: 0.62,
+    maxSpeed: 210,
+    pull: [0.8, 1.15],
+    normal: 0.62,
+    medium: 0.38,
+    smallSkull: 0,
+    bombs: 0.07,
+    gap: [0.9, 2.1],
+    burst: 0,
+    crowd: 0.6,
+    waves: { single: 40, pair: 22, fan: 18, rain: 20 },
+  },
+  medium: {
+    hearts: 4,
+    points: 2,
+    speed: 0.82,
+    maxSpeed: 320,
+    pull: [0.6, 1.35],
+    normal: 0.45,
+    medium: 0.4,
+    smallSkull: 0.2,
+    bombs: 0.13,
+    gap: [0.55, 1.7],
+    burst: 0.05,
+    crowd: 0.8,
+    waves: { single: 24, pair: 16, fan: 14, rain: 14, trap: 12, ladder: 8, mixed: 6, cross: 6 },
+  },
+  hard: {
+    hearts: 3,
+    points: 3,
+    speed: 1,
+    maxSpeed: 430,
+    pull: [0.45, 1.65],
+    normal: 0.4,
+    medium: 0.32,
+    smallSkull: 0.4,
+    bombs: 0.2,
+    gap: [0.3, 1.5],
+    burst: 0.15,
+    crowd: 1,
+    waves: { single: 18, pair: 12, fan: 11, rain: 11, trap: 10, decoy: 10, cross: 8, swarm: 8, ladder: 6, mixed: 6 },
+  },
+};
+
+/** The level in play: set once at the start of a run. */
+export let tune: Tune = TUNES.hard;
+export function setLevel(level: Level): void {
+  tune = TUNES[level];
+}
+
 /** Seconds until the next throw: mostly quick to leisurely, sometimes right on the heels of the last one. Nothing builds up over the run. */
-export const throwGap = (random: () => number): number => (random() < 0.15 ? 0.1 + random() * 0.2 : 0.3 + random() * 1.2);
+export const throwGap = (random: () => number): number => (random() < tune.burst ? 0.1 + random() * 0.2 : tune.gap[0] + random() * (tune.gap[1] - tune.gap[0]));
 
 /** Average chance that a thrown body is a skull. Each throw varies around it, so some are clean and some are skull-heavy. */
 export const BOMB_CHANCE = 0.2;
@@ -82,7 +176,7 @@ let nextId = 1;
 /** A random comet size: normal most often, small the least. */
 export function randomSize(random: () => number): Size {
   const r = random();
-  return r < 0.4 ? 'normal' : r < 0.72 ? 'medium' : 'small';
+  return r < tune.normal ? 'normal' : r < tune.normal + tune.medium ? 'medium' : 'small';
 }
 
 /** A random fall speed: mostly a medium drift, now and then a lazy float or a fast streak. */
@@ -91,7 +185,7 @@ export function randomSpeed(random: () => number): number {
 }
 
 /** A random pull between a floaty and a heavy fall, so even two comets thrown at the same speed do not stay together. */
-export const randomPull = (random: () => number): number => 0.45 + random() * 1.2;
+export const randomPull = (random: () => number): number => tune.pull[0] + random() * (tune.pull[1] - tune.pull[0]);
 
 export interface BodyOptions {
   /** Higher up by this much, so a group can arrive staggered. */
@@ -123,10 +217,10 @@ export function makeBody(kind: 'comet' | 'bomb', x: number, vy: number, random: 
 }
 
 /** The speed to throw a body of this size at: its own random pace, quicker for the small ones. */
-const paceFor = (size: Size, random: () => number): number => Math.min(430, randomSpeed(random) * COMET_SIZES[size].speed);
+const paceFor = (size: Size, random: () => number): number => Math.min(tune.maxSpeed, randomSpeed(random) * tune.speed * COMET_SIZES[size].speed);
 
 /** A single body at a random place, size, speed and pull. */
-export function throwBody(random: () => number, bombChance = BOMB_CHANCE): Body {
+export function throwBody(random: () => number, bombChance = tune.bombs): Body {
   const kind = random() < bombChance ? 'bomb' : 'comet';
   const size = randomSize(random);
   const r = kind === 'bomb' ? SKULL_SIZES[size === 'small' ? 'small' : 'normal'] : COMET_SIZES[size].r;
@@ -139,7 +233,7 @@ export type WaveKind = 'single' | 'pair' | 'fan' | 'rain' | 'trap' | 'mixed' | '
 const comet = (x: number, random: () => number, lift = 0, lean?: number, size = randomSize(random)): Body =>
   makeBody('comet', x, paceFor(size, random), random, { lift, size, g: randomPull(random), lean });
 const skull = (x: number, random: () => number, lift = 0, lean?: number): Body => {
-  const size = random() < 0.4 ? 'small' : 'normal';
+  const size = random() < tune.smallSkull ? 'small' : 'normal';
   return makeBody('bomb', x, paceFor(size, random), random, { lift, size, g: randomPull(random), lean });
 };
 
@@ -150,69 +244,85 @@ const skull = (x: number, random: () => number, lift = 0, lean?: number): Body =
  * own size, pace and pull, so a group never falls in step.
  */
 export function throwWave(random: () => number): { kind: WaveKind; bodies: Body[] } {
-  const roll = random();
-  const x = () => COMET_R + random() * (W - 2 * COMET_R);
-  // This throw's own chance of a skull: sometimes none to speak of, sometimes plenty.
-  const bombs = BOMB_CHANCE * (0.4 + random() * 1.4);
-  if (roll < 0.2) return { kind: 'single', bodies: [throwBody(random, bombs)] };
-  if (roll < 0.32) return { kind: 'pair', bodies: [throwBody(random, bombs), throwBody(random, bombs)] };
-  if (roll < 0.43) {
-    // A fan: comets from the same spot, spreading out as they fall, each at its own pace.
-    const n = 3 + Math.floor(random() * 3);
-    const cx = x();
-    return { kind: 'fan', bodies: Array.from({ length: n }, (_, i) => comet(cx, random, i * 14)) };
-  }
-  if (roll < 0.54) {
-    // Rain: a row of comets across the width, staggered, no two at the same pace.
-    const n = 4 + Math.floor(random() * 3);
-    return { kind: 'rain', bodies: Array.from({ length: n }, (_, i) => comet(COMET_R + ((W - 2 * COMET_R) * (i + 0.5)) / n, random, random() * 90)) };
-  }
-  if (roll < 0.64) {
-    // A trap: a skull with comets right beside it, so a careless swipe costs a heart.
-    const cx = SKULL_R + 60 + random() * (W - 2 * SKULL_R - 120);
-    const vy = Math.min(300, randomSpeed(random));
-    const g = randomPull(random);
-    const side = (dx: number, lift: number) => makeBody('comet', cx + dx, vy, random, { lift, g, size: randomSize(random) });
-    return { kind: 'trap', bodies: [makeBody('bomb', cx, vy, random, { g }), side(-70, 20), side(70, 40)] };
-  }
-  if (roll < 0.74) {
-    // A decoy: a rain like any other, but one or two of its bodies are skulls.
-    const n = 5 + Math.floor(random() * 2);
-    const bad = new Set([Math.floor(random() * n), Math.floor(random() * n)]);
-    return {
-      kind: 'decoy',
-      bodies: Array.from({ length: n }, (_, i) => {
-        const bx = COMET_R + ((W - 2 * COMET_R) * (i + 0.5)) / n;
-        return bad.has(i) ? skull(bx, random, random() * 90) : comet(bx, random, random() * 90);
-      }),
-    };
-  }
-  if (roll < 0.82) {
-    // Two streams crossing: comets from each side slanting across, with a skull down the middle.
-    const n = 2 + Math.floor(random() * 2);
-    const bodies: Body[] = [];
-    for (let i = 0; i < n; i++) {
-      bodies.push(comet(COMET_R + random() * 70, random, i * 55, 1));
-      bodies.push(comet(W - COMET_R - random() * 70, random, i * 55 + 25, 0));
+  const entries = Object.entries(tune.waves) as [WaveKind, number][];
+  let roll = random() * entries.reduce((s, [, n]) => s + n, 0);
+  let kind: WaveKind = entries[0][0];
+  for (const [k, n] of entries) {
+    if ((roll -= n) < 0) {
+      kind = k;
+      break;
     }
-    if (random() < 0.7) bodies.push(skull(W / 2 + (random() - 0.5) * 60, random, 30));
-    return { kind: 'cross', bodies };
   }
-  if (roll < 0.9) {
-    // A swarm: a handful of small, fast comets, sometimes with a skull among them.
-    const n = 5 + Math.floor(random() * 3);
-    const bodies = Array.from({ length: n }, () => comet(COMET_R + random() * (W - 2 * COMET_R), random, random() * 120, undefined, 'small'));
-    if (random() < 0.5) bodies.push(skull(x(), random, random() * 60));
-    return { kind: 'swarm', bodies };
+  const x = () => COMET_R + random() * (W - 2 * COMET_R);
+  /** How many bodies in a group: the full count on hard, fewer on the gentler levels. */
+  const count = (min: number, extra: number) => Math.max(2, Math.round((min + Math.floor(random() * (extra + 1))) * tune.crowd));
+  // This throw's own chance of a skull: sometimes none to speak of, sometimes plenty.
+  const bombs = tune.bombs * (0.4 + random() * 1.4);
+  switch (kind) {
+    case 'single':
+      return { kind, bodies: [throwBody(random, bombs)] };
+    case 'pair':
+      return { kind, bodies: [throwBody(random, bombs), throwBody(random, bombs)] };
+    case 'fan': {
+      // A fan: comets from the same spot, spreading out as they fall, each at its own pace.
+      const n = count(3, 2);
+      const cx = x();
+      return { kind, bodies: Array.from({ length: n }, (_, i) => comet(cx, random, i * 14)) };
+    }
+    case 'rain': {
+      // Rain: a row of comets across the width, staggered, no two at the same pace.
+      const n = count(4, 2);
+      return { kind, bodies: Array.from({ length: n }, (_, i) => comet(COMET_R + ((W - 2 * COMET_R) * (i + 0.5)) / n, random, random() * 90)) };
+    }
+    case 'trap': {
+      // A trap: a skull with comets right beside it, so a careless swipe costs the run.
+      const cx = SKULL_R + 60 + random() * (W - 2 * SKULL_R - 120);
+      const vy = Math.min(tune.maxSpeed * 0.75, randomSpeed(random) * tune.speed);
+      const g = randomPull(random);
+      const side = (dx: number, lift: number) => makeBody('comet', cx + dx, vy, random, { lift, g, size: randomSize(random) });
+      return { kind, bodies: [makeBody('bomb', cx, vy, random, { g }), side(-70, 20), side(70, 40)] };
+    }
+    case 'decoy': {
+      // A decoy: a rain like any other, but one or two of its bodies are skulls.
+      const n = count(5, 1);
+      const bad = new Set([Math.floor(random() * n), Math.floor(random() * n)]);
+      return {
+        kind,
+        bodies: Array.from({ length: n }, (_, i) => {
+          const bx = COMET_R + ((W - 2 * COMET_R) * (i + 0.5)) / n;
+          return bad.has(i) ? skull(bx, random, random() * 90) : comet(bx, random, random() * 90);
+        }),
+      };
+    }
+    case 'cross': {
+      // Two streams crossing: comets from each side slanting across, with a skull down the middle.
+      const n = tune.crowd < 1 ? 2 : 2 + Math.floor(random() * 2);
+      const bodies: Body[] = [];
+      for (let i = 0; i < n; i++) {
+        bodies.push(comet(COMET_R + random() * 70, random, i * 55, 1));
+        bodies.push(comet(W - COMET_R - random() * 70, random, i * 55 + 25, 0));
+      }
+      if (random() < 0.7) bodies.push(skull(W / 2 + (random() - 0.5) * 60, random, 30));
+      return { kind, bodies };
+    }
+    case 'swarm': {
+      // A swarm: a handful of small, fast comets, sometimes with a skull among them.
+      const n = count(5, 2);
+      const bodies = Array.from({ length: n }, () => comet(COMET_R + random() * (W - 2 * COMET_R), random, random() * 120, undefined, 'small'));
+      if (random() < 0.5) bodies.push(skull(x(), random, random() * 60));
+      return { kind, bodies };
+    }
+    case 'ladder': {
+      // A ladder: a column of bodies one above the other, each falling at its own pace, so they bunch up and spread out.
+      const cx = x();
+      const n = count(3, 1);
+      return { kind, bodies: Array.from({ length: n }, (_, i) => (random() < bombs ? skull(cx, random, i * 50) : comet(cx, random, i * 50))) };
+    }
+    default: {
+      const n = count(3, 2);
+      return { kind: 'mixed', bodies: Array.from({ length: n }, () => throwBody(random, bombs * 1.4)) };
+    }
   }
-  if (roll < 0.95) {
-    // A ladder: a column of bodies one above the other, each falling at its own pace, so they bunch up and spread out.
-    const cx = x();
-    const n = 3 + Math.floor(random() * 2);
-    return { kind: 'ladder', bodies: Array.from({ length: n }, (_, i) => (random() < bombs ? skull(cx, random, i * 50) : comet(cx, random, i * 50))) };
-  }
-  const n = 3 + Math.floor(random() * 3);
-  return { kind: 'mixed', bodies: Array.from({ length: n }, () => throwBody(random, bombs * 1.4)) };
 }
 
 /** Moves a body forward by `dt` seconds. */

@@ -1,4 +1,4 @@
-import { COMET_SIZES, H, MAX_H, MIN_H, setFieldHeight, advance, BOMB_CHANCE, COMET_R, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, throwWave, W } from './comet-slice-engine';
+import { COMET_SIZES, DAILY_TARGET, H, levelForDate, setLevel, TUNES, MAX_H, MIN_H, setFieldHeight, advance, BOMB_CHANCE, COMET_R, RUN_SECONDS, segmentHitsCircle, SKULL_R, throwBody, throwGap, throwWave, W } from './comet-slice-engine';
 
 describe('Comet Slice', () => {
   it('detects a swipe through a circle, and one that passes beside it', () => {
@@ -98,5 +98,51 @@ describe('Comet Slice', () => {
         }
       }
     }
+  });
+
+  it('has easy, medium and hard: gentler levels are slower, with bigger comets, fewer skulls and simpler patterns', () => {
+    expect(TUNES.easy.speed).toBeLessThan(TUNES.medium.speed);
+    expect(TUNES.medium.speed).toBeLessThan(TUNES.hard.speed);
+    expect(TUNES.easy.hearts).toBeGreaterThan(TUNES.hard.hearts);
+    expect(TUNES.easy.bombs).toBeLessThan(TUNES.hard.bombs);
+    try {
+      setLevel('easy');
+      const sizes = new Set<string>();
+      const kinds = new Set<string>();
+      let fastest = 0;
+      for (let i = 0; i < 600; i++) {
+        const w = throwWave(Math.random);
+        kinds.add(w.kind);
+        for (const b of w.bodies) {
+          if (b.kind === 'comet') sizes.add(b.size);
+          else expect(b.r).toBe(SKULL_R); // no small skulls on easy
+          fastest = Math.max(fastest, b.vy);
+        }
+        expect(w.bodies.length).toBeLessThanOrEqual(5);
+      }
+      expect(sizes.has('small')).toBe(false);
+      expect([...kinds].sort()).toEqual(['fan', 'pair', 'rain', 'single']);
+      expect(fastest).toBeLessThanOrEqual(TUNES.easy.maxSpeed + 1);
+      const gaps = Array.from({ length: 200 }, () => throwGap(Math.random));
+      expect(Math.min(...gaps)).toBeGreaterThanOrEqual(0.9);
+      setLevel('medium');
+      const mk = new Set(Array.from({ length: 800 }, () => throwWave(Math.random).kind));
+      expect(mk.has('decoy')).toBe(false);
+      expect(mk.has('swarm')).toBe(false);
+      expect(mk.has('trap')).toBe(true);
+    } finally {
+      setLevel('hard');
+    }
+  });
+
+  it('sets the daily level by the day of the week', () => {
+    expect(levelForDate('2026-10-26')).toBe('easy'); // Monday
+    expect(levelForDate('2026-10-27')).toBe('easy');
+    expect(levelForDate('2026-10-28')).toBe('medium');
+    expect(levelForDate('2026-10-29')).toBe('medium');
+    expect(levelForDate('2026-10-30')).toBe('hard');
+    expect(levelForDate('2026-11-01')).toBe('hard'); // Sunday
+    expect(levelForDate('nonsense')).toBe('medium');
+    expect(DAILY_TARGET.easy).toBeLessThan(DAILY_TARGET.hard);
   });
 });

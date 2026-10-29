@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, OnDestroy, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
 import { BackService } from '../../core/back.service';
 import { HapticsService } from '../../core/haptics.service';
-import { advance, Body, H, HEARTS, RUN_SECONDS, segmentHitsCircle, setFieldHeight, throwGap, throwWave, W } from './comet-slice-engine';
+import { advance, Body, H, Level, LEVELS, levelForDate, RUN_SECONDS, segmentHitsCircle, setFieldHeight, setLevel, throwGap, throwWave, TUNES, tune, W } from './comet-slice-engine';
 import { MindResult, seeded } from './mind-util';
 
 interface Pop {
@@ -54,8 +54,18 @@ export class CometSlice implements OnInit, OnDestroy {
 
   protected readonly score = signal(0);
   protected readonly left = signal(RUN_SECONDS);
-  protected readonly lives = signal(HEARTS);
-  protected readonly hearts = Array.from({ length: HEARTS }, (_, i) => i);
+  protected readonly lives = signal(3);
+  protected readonly hearts = signal([0, 1, 2]);
+  /** Easy, medium or hard. The daily's is set by the day of the week; in practice you choose it before each run. */
+  protected readonly level = signal<Level | null>(null);
+  /** The level the chooser starts on (the one used last time). */
+  protected readonly lastLevel = signal<Level>('easy');
+  protected readonly levels = LEVELS.map((id) => ({
+    id,
+    name: id[0].toUpperCase() + id.slice(1),
+    blurb: id === 'easy' ? 'Slow comets, few skulls, five hearts.' : id === 'medium' ? 'Faster, more patterns, four hearts.' : 'Fast, small comets, hidden skulls, three hearts.',
+    stars: id === 'easy' ? 1 : id === 'medium' ? 2 : 3,
+  }));
   /** Practice counts up from the start (it has no end but the hearts). */
   protected readonly elapsed = signal('0:00');
   protected readonly boom = signal(false);
@@ -63,7 +73,7 @@ export class CometSlice implements OnInit, OnDestroy {
   protected readonly hit = signal(false);
   protected readonly timed = computed(() => this.seed() !== null);
   /** 3, 2, 1 before the run starts; 0 once it has. */
-  protected readonly count = signal(3);
+  protected readonly count = signal(0);
   /** The current combo (2 or more in one swipe), shown big for a moment. `key` restarts the pop animation. */
   protected readonly combo = signal<{ n: number; key: number } | null>(null);
   protected readonly pct = computed(() => (this.left() / RUN_SECONDS) * 100);
@@ -75,7 +85,7 @@ export class CometSlice implements OnInit, OnDestroy {
   private trail: { x: number; y: number; age: number }[] = [];
   private seconds = 0;
   private untilThrow = 0.5;
-  private ready = GET_READY;
+  private ready = 0;
   private frame = 0;
   private last = 0;
   private clock = 0;
@@ -97,6 +107,14 @@ export class CometSlice implements OnInit, OnDestroy {
   ngOnInit(): void {
     const seed = this.seed();
     if (seed !== null) this.random = seeded(seed);
+    try {
+      const saved = localStorage.getItem('zenigma.comet.level');
+      if (saved === 'easy' || saved === 'medium' || saved === 'hard') this.lastLevel.set(saved);
+    } catch {
+      /* no storage: the chooser starts on easy */
+    }
+    // The daily's level comes from the date in its seed; in practice the chooser sets it.
+    if (seed !== null) this.begin(levelForDate(/\d{4}-\d{2}-\d{2}/.exec(seed)?.[0] ?? ''));
     // The screen is for swiping: the page behind must not scroll, pull to refresh or go back while a run is on.
     document.documentElement.classList.add('no-pan');
     this.layout();
@@ -110,6 +128,22 @@ export class CometSlice implements OnInit, OnDestroy {
     clearTimeout(this.comboTimer);
     removeEventListener('resize', this.onResize);
     document.documentElement.classList.remove('no-pan');
+  }
+
+  /** Starts a run at this level: its hearts, its speed and its patterns, then "3, 2, 1". */
+  protected begin(level: Level): void {
+    setLevel(level);
+    this.level.set(level);
+    this.lastLevel.set(level);
+    try {
+      localStorage.setItem('zenigma.comet.level', level);
+    } catch {
+      /* no storage: the choice is not remembered */
+    }
+    this.lives.set(tune.hearts);
+    this.hearts.set(Array.from({ length: tune.hearts }, (_, i) => i));
+    this.ready = GET_READY;
+    this.count.set(3);
   }
 
   private readonly onResize = (): void => this.layout();
@@ -138,6 +172,11 @@ export class CometSlice implements OnInit, OnDestroy {
 
   private update(dt: number): void {
     this.clock += dt;
+    if (this.level() === null) {
+      // Waiting for a level to be chosen.
+      this.fade(dt);
+      return;
+    }
     if (this.ready > 0) {
       // "3, 2, 1" while the sky settles; nothing falls and no clock runs yet.
       this.ready -= dt;
@@ -224,7 +263,7 @@ export class CometSlice implements OnInit, OnDestroy {
     setTimeout(() => {
       this.finished = true;
       cancelAnimationFrame(this.frame);
-      this.done.emit({ score: n, detail: text === 'Time!' ? 'Time is up' : text === 'Boom!' ? 'A skull ended the run' : 'Out of hearts' });
+      this.done.emit({ score: n, detail: `${this.level()![0].toUpperCase()}${this.level()!.slice(1)} · ${text === 'Time!' ? 'Time is up' : text === 'Boom!' ? 'A skull ended the run' : 'Out of hearts'}` });
     }, text === 'Boom!' ? 1100 : 700);
   }
 
@@ -264,7 +303,7 @@ export class CometSlice implements OnInit, OnDestroy {
       if (body.kind === 'comet') {
         // Each comet is worth its size (1, 2 or 3), plus a combo bonus: the second one in a swipe adds 1, the third 2, and so on.
         this.swipeHits++;
-        const points = this.swipeHits + body.value - 1;
+        const points = (this.swipeHits + body.value - 1) * tune.points;
         this.score.update((s) => s + points);
         this.haptics.place();
         this.pops.push({ x: body.x, y: body.y, text: `+${points}`, age: 0, big: false });
