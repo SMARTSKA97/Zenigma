@@ -1,6 +1,6 @@
 # Build context: apps/api
 # The SDK is pinned to the version in global.json (and CI), so Render and CI build the same way.
-FROM mcr.microsoft.com/dotnet/sdk:10.0.100 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.403 AS build
 WORKDIR /src
 COPY global.json Directory.Build.props ./
 COPY Zenigma.Api/Zenigma.Api.csproj Zenigma.Api/
