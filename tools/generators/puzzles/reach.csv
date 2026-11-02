@@ -1,11 +1,14 @@
 patches,89
 patches-classic-easy,30
+patches-classic-insane,969
 queens,50
+queens-classic-challenging,5
 queens-classic-easy,102
 queens-classic-hard,9
 queens-classic-insane,2
-queens-classic-medium,17
+queens-classic-medium,21
 sudoku,1
+sudoku-classic-hard,1
 sudoku-mini,1
 tango,10
 tango-classic-easy,11
