@@ -242,9 +242,20 @@ main {
 
 /* Tablets: the status shrinks to its dot so the header never crowds the tabs. */
 @media (min-width: 721px) and (max-width: 1000px) {
+  header {
+    grid-template-columns: auto 1fr auto;
+    gap: 0.6rem;
+  }
+  nav {
+    justify-self: center;
+  }
   nav a {
     padding: 0.45rem 0.75rem;
   }
+  .support-chip b {
+    display: none;
+  }
+
   .status {
     min-width: 0;
   }
@@ -260,6 +271,13 @@ main {
 .coin-chip {
   flex: none;
   white-space: nowrap;
+}
+
+/* Narrow tablets: only the open tab keeps its name. */
+@media (min-width: 721px) and (max-width: 860px) {
+  nav a:not(.active) > span:not(.badge) {
+    display: none;
+  }
 }
 
 /* Phones: brand and status on top, navigation as a floating tab bar within thumb reach. */
