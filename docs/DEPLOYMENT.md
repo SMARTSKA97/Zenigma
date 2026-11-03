@@ -43,6 +43,7 @@ The Android app ships its own web files and only talks to the API, so web deploy
 | `Jwt__Key` | 64+ random characters (`openssl rand -base64 48`) |
 | `Jwt__Issuer` / `Jwt__Audience` | `zenigma-api` / `zenigma-app` (defaults) |
 | `Cors__Origins__0` | `https://zenigma.ska97homelab.uk` |
+| `Edge__Secret` | Optional. The value `scripts/cloudflare_setup.py` prints; makes Cloudflare the only way in. See `docs/CLOUDFLARE.md`. |
 | `ASPNETCORE_HTTP_PORTS` | `8080` |
 
 5. Create a **Deploy Hook** (Settings) and keep its URL for GitHub.

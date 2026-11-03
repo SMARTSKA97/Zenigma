@@ -155,6 +155,19 @@ builder.Services.AddRateLimiter(o =>
             return sub is not null
                 ? RateLimitPartition.GetSlidingWindowLimiter("u:" + sub, _ => new SlidingWindowRateLimiterOptions { PermitLimit = 400, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6 })
                 : RateLimitPartition.GetSlidingWindowLimiter("ip:" + (ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown"), _ => new SlidingWindowRateLimiterOptions { PermitLimit = 600, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6 });
+        }),
+        // Anything that changes data is limited per person: a client that posts results, claims coins or pushes sync in a loop is slowed down.
+        // Coin actions (earn, wheel, buy) get a tighter allowance than the rest.
+        PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        {
+            var m = ctx.Request.Method;
+            var path = ctx.Request.Path;
+            if (HttpMethods.IsGet(m) || HttpMethods.IsHead(m) || HttpMethods.IsOptions(m) || path.StartsWithSegments("/health") || path.StartsWithSegments("/auth") || path.StartsWithSegments("/webhooks"))
+                return RateLimitPartition.GetNoLimiter("read");
+            var who = ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            return path.StartsWithSegments("/store")
+                ? RateLimitPartition.GetSlidingWindowLimiter("coin:" + who, _ => new SlidingWindowRateLimiterOptions { PermitLimit = 40, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6 })
+                : RateLimitPartition.GetSlidingWindowLimiter("write:" + who, _ => new SlidingWindowRateLimiterOptions { PermitLimit = 150, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6 });
         }));
     o.AddPolicy("auth", ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -194,6 +207,8 @@ var forwarded = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeader
 forwarded.KnownIPNetworks.Clear();
 forwarded.KnownProxies.Clear();
 app.UseForwardedHeaders(forwarded);
+// Only Cloudflare may reach the API once Edge:Secret is set; also gives the real visitor address to the limiters below.
+app.UseMiddleware<Zenigma.Api.Infrastructure.EdgeGuard>();
 
 app.UseExceptionHandler();
 
