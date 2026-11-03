@@ -37,6 +37,25 @@ export class DayStreakService {
     }
   }
 
+  /**
+   * Past days when every puzzle on offer today was solved (or covered by a freeze), taken from the server's last five weeks of results.
+   * This restores the puzzle half of the streak on days the app was not open to note it (or on a new device).
+   */
+  backfill(games: { recent: string[]; frozen: string[] }[]): void {
+    if (!games.length) return;
+    const common = commonDays(games);
+    const known = new Set(this.puzzleDays());
+    const add = common.filter((d) => !known.has(d));
+    if (!add.length) return;
+    const next = [...known, ...add].sort().slice(-400);
+    this.puzzleDays.set(next);
+    try {
+      localStorage.setItem(KEY, JSON.stringify(next));
+    } catch {
+      /* no storage */
+    }
+  }
+
   private read(): string[] {
     try {
       const raw = JSON.parse(localStorage.getItem(KEY) ?? '[]') as unknown;
@@ -55,4 +74,11 @@ export function countBack(done: Set<string>, today: string): number {
     day = shift(day, -1);
   }
   return n;
+}
+
+/** Days on which every game was solved or covered by a freeze. */
+export function commonDays(games: { recent: string[]; frozen: string[] }[]): string[] {
+  if (!games.length) return [];
+  const days = games.map((g) => new Set([...g.recent, ...g.frozen]));
+  return [...days[0]].filter((d) => days.every((set) => set.has(d)));
 }

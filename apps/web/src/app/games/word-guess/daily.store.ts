@@ -9,6 +9,7 @@ import { HapticsService } from '../../core/haptics.service';
 import { PrefsService } from '../../core/prefs.service';
 import { LeaderboardService } from '../../core/leaderboard.service';
 import { WidgetService } from '../../core/widget.service';
+import { UpNextService } from '../../core/up-next.service';
 import { SyncService } from '../../core/sync.service';
 import { BoardController, BoardRow, BoardStats } from './board';
 import { Guess, keyboardMarks, marksFromString, MAX_GUESSES, Mark, shareText, Status, WORD_LENGTH } from './engine';
@@ -65,6 +66,7 @@ export class DailyStore implements BoardController {
   private readonly haptics = inject(HapticsService);
   private readonly wordList = inject(WordListService);
   private readonly widget = inject(WidgetService);
+  private readonly upNext = inject(UpNextService);
   private readonly boards = inject(LeaderboardService);
 
   private readonly url = `${environment.apiBaseUrl}/daily/word-guess`;
@@ -198,6 +200,7 @@ export class DailyStore implements BoardController {
           void this.sync.sync(); // the server logged the result; pull it into this device's history
           this.boards.clearBoards(); // the boards just changed
           setTimeout(() => void this.widget.refresh(), 1500);
+        setTimeout(() => void this.upNext.refresh(), 1800); // notes the day's puzzle half of the streak once the server has the result
         }
       }, reduce ? 0 : REVEAL_MS);
     } catch (error) {

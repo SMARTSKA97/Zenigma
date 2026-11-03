@@ -64,6 +64,6 @@ export function shareCard(input: ShareInput): string {
     for (let r = 0; r < puzzle.size; r++) lines.push(colour.slice(r * puzzle.size, r * puzzle.size + puzzle.size).join(''));
   }
 
-  lines.push('zenigma.ska97homelab.uk');
+  lines.push('https://zenigma.ska97homelab.uk');
   return lines.join('\n');
 }

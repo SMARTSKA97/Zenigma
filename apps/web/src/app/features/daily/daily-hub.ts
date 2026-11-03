@@ -124,7 +124,11 @@ export class DailyHub implements OnInit, OnDestroy {
       // Every puzzle that is ready today finished: that is the puzzle half of the daily streak.
       const ready = hub.games.filter((g) => g.available);
       if (ready.length > 0 && ready.every((g) => ['solved', 'won', 'lost'].includes(g.status))) this.dayStreak.markPuzzlesDone(hub.date);
-      void statsLoaded.then(() => this.armStreakAlert());
+      void statsLoaded.then(() => {
+        const st = this.stats();
+        if (st) this.dayStreak.backfill(st.games.filter((g) => ready.some((r) => r.game === g.game)));
+        this.armStreakAlert();
+      });
     } catch {
       this.failed.set(true);
     } finally {

@@ -7,6 +7,7 @@ import { PrefsService } from '../../core/prefs.service';
 import { LeaderboardService } from '../../core/leaderboard.service';
 import { HintsSyncService } from '../../core/hints-sync.service';
 import { WidgetService } from '../../core/widget.service';
+import { UpNextService } from '../../core/up-next.service';
 import { HapticsService } from '../../core/haptics.service';
 import { BackService } from '../../core/back.service';
 import { AuthService } from '../../core/auth.service';
@@ -60,6 +61,7 @@ export class PuzzlePage {
   private readonly route = inject(ActivatedRoute);
   protected readonly nav = inject(BackService);
   private readonly widgetSvc = inject(WidgetService);
+  private readonly upNext = inject(UpNextService);
   private readonly hintsSync = inject(HintsSyncService);
   private readonly boards = inject(LeaderboardService);
   private readonly haptics = inject(HapticsService);
@@ -595,6 +597,7 @@ export class PuzzlePage {
         void this.store.deleteMeta(this.dailyKey());
         this.boards.clearBoards(); // the boards just changed
         setTimeout(() => void this.widgetSvc.refresh(), 1500);
+        setTimeout(() => void this.upNext.refresh(), 1800); // notes the day's puzzle half of the streak once the server has the result
         setTimeout(() => this.resultOpen.set(true), 900);
       } else {
         this.flash(

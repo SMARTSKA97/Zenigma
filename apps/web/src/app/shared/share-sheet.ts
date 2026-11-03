@@ -22,6 +22,8 @@ interface Slide {
  * Shows the picture to share and sends it (or saves or copies it), with the emoji text as a fallback. A result is one card;
  * a streak is two to swipe between: a solid card and a clear sticker to lay over a photo.
  */
+const APP_LINK = 'https://zenigma.ska97homelab.uk';
+
 @Component({
   selector: 'app-share-sheet',
   imports: [Sheet],
@@ -39,6 +41,11 @@ export class ShareSheet {
   readonly streakCard = input<StreakCardInput | null>(null);
   /** The emoji text, used as the caption and as the copy fallback. */
   readonly text = input.required<string>();
+  /** The text that leaves the app: every share carries the link, so a result on someone's feed or chat leads back here. */
+  private readonly outgoing = computed(() => {
+    const t = this.text().trimEnd();
+    return t.includes(APP_LINK) ? t : `${t}\n${APP_LINK}`;
+  });
   /** The game's id in /stats, to add the streak (daily results only). */
   readonly game = input<string | null>(null);
   readonly closed = output<void>();
@@ -106,7 +113,7 @@ export class ShareSheet {
   protected async send(): Promise<void> {
     const slide = this.current();
     if (!slide) return;
-    const text = this.text();
+    const text = this.outgoing();
     try {
       if (Capacitor.isNativePlatform()) {
         await ShareCard.share({ data: await toBase64(slide.blob), text, title: 'Share' });
@@ -145,7 +152,7 @@ export class ShareSheet {
 
   protected async copy(): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.text());
+      await navigator.clipboard.writeText(this.outgoing());
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 1800);
     } catch {
