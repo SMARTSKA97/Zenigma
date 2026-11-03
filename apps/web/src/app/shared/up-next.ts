@@ -52,13 +52,16 @@ export class UpNext implements OnInit {
   readonly exclude = input<string | null>(null);
   readonly go = output<void>();
   /**
-   * What is still to play. Inside a game it lists only the games that come after it: if it listed every other unplayed game, two unplayed
-   * games would send you back and forth between them. Games before it are still on the Challenges page.
+   * What is still to play, in play order starting after the game that is open (a finished game keeps its place in the order, so the next one
+   * is always the next unplayed one after it; earlier unplayed games come last).
    */
   protected readonly list = computed(() => {
-    const all = this.upNext.items();
-    const at = all.findIndex((g) => g.id === this.exclude());
-    return at < 0 ? all : all.slice(at + 1);
+    const all = this.upNext.items().filter((g) => g.id !== this.exclude());
+    const order = this.upNext.order();
+    const at = order.indexOf(this.exclude() ?? '');
+    if (at < 0) return all;
+    const pos = (id: string) => order.indexOf(id);
+    return [...all.filter((g) => pos(g.id) > at), ...all.filter((g) => pos(g.id) < at)];
   });
 
   ngOnInit(): void {

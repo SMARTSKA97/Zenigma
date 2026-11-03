@@ -48,6 +48,13 @@ export class UpNextService {
     return out;
   });
 
+  /** Every daily of today in play order, finished or not: a finished game keeps its place, so "what comes after it" stays well defined. */
+  readonly order = computed<string[]>(() => [
+    ...(this.hub()?.games ?? []).filter((g) => g.available).map((g) => g.game),
+    ...this.mind.games(),
+    ...this.word.games,
+  ]);
+
   /** Asks the server which puzzles are still open (quietly: offline or signed out, the mind set and extras still show). */
   async refresh(): Promise<void> {
     if (!this.auth.signedIn() || this.conn.offlineMode() || !navigator.onLine) return;
