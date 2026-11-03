@@ -67,14 +67,15 @@ public class MailTests : IClassFixture<ApiFactory>
         var weak = await client.PostAsJsonAsync("/auth/reset", new { email, code, newPassword = "short" });
         Assert.Equal(HttpStatusCode.BadRequest, weak.StatusCode);
 
-        var reset = await client.PostAsJsonAsync("/auth/reset", new { email, code, newPassword = NewPassword, deviceId = Guid.NewGuid() });
+        var device = Guid.NewGuid();
+        var reset = await client.PostAsJsonAsync("/auth/reset", new { email, code, newPassword = NewPassword, deviceId = device });
         Assert.Equal(HttpStatusCode.OK, reset.StatusCode);
         var second = (await reset.Content.ReadFromJsonAsync<Session>(Json))!;
         Assert.True(second.User.GetProperty("emailVerified").GetBoolean());
 
         // The old password and the old session are gone; the new password works; the code cannot be used twice.
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/login", new { email, password = Password })).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/login", new { email, password = NewPassword })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/login", new { email, password = NewPassword, deviceId = device })).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/refresh", new { refreshToken = first.RefreshToken })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/auth/reset", new { email, code, newPassword = NewPassword })).StatusCode);
     }

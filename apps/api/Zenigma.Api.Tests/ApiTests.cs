@@ -98,9 +98,11 @@ public class ApiTests : IClassFixture<ApiFactory>
     {
         var client = _factory.CreateClient();
         var email = $"{Guid.NewGuid():N}@example.com";
-        await client.PostAsJsonAsync("/auth/register", new { email, password = ValidPassword });
+        var device = Guid.NewGuid();
+        await client.PostAsJsonAsync("/auth/register", new { email, password = ValidPassword, deviceId = device });
 
-        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/login", new { email, password = ValidPassword })).StatusCode);
+        // The same device signing in again is not a second device.
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/auth/login", new { email, password = ValidPassword, deviceId = device })).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/auth/login", new { email, password = ValidPassword + "x" })).StatusCode);
     }
 
