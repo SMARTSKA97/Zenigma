@@ -82,6 +82,17 @@ export class LeaderboardService {
     return this.cached(`mindp:${game}`, `${environment.apiBaseUrl}/leaderboards/mind-practice`, { game });
   }
 
+  /**
+   * Practice by level: the fastest hint-free times on one level of a grid puzzle (value in ms). For Word Guess there are no fixed levels,
+   * so it is the fewest guesses on average (value is the average times 100, secondary the words solved).
+   */
+  practiceLevelBoard(game: string, level: number | null, variant: string | null): Promise<Leaderboard> {
+    const params: Record<string, string> = { game };
+    if (game !== 'word-guess' && level !== null) params['level'] = String(level);
+    if (game !== 'word-guess' && variant) params['variant'] = variant;
+    return this.cached(`plevel:${game}:${variant ?? ''}:${level ?? ''}`, `${environment.apiBaseUrl}/leaderboards/practice-level`, params);
+  }
+
   /** The featured level of a week (its Monday as yyyy-mm-dd): fewest mistakes first, then fastest. Players who used hints are not ranked. */
   featuredBoard(week: string): Promise<Leaderboard> {
     return this.cached(`featured:${week}`, `${environment.apiBaseUrl}/leaderboards/featured`, { week });

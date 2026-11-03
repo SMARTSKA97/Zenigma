@@ -231,6 +231,53 @@ public static class LeaderboardEndpoints
             return Results.Ok(new LeaderboardDto(game, "practice", "all", null, entries, meDto));
         }).RequireAuthorization();
 
+        // Practice by level. A grid puzzle level: the fastest hint-free times on that one level. Word Guess has no fixed levels, so its board is the
+        // fewest guesses on average (Value is the average times 100; Secondary the words solved), for players with at least five wins.
+        // The times are reported by the app (the solution itself is checked), so like the mind boards this one is for fun.
+        app.MapGet("/leaderboards/practice-level", async (string? game, int? level, string? variant, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, CancellationToken ct) =>
+        {
+            if (game is null || !AllGames.Contains(game)) return Results.NotFound();
+            var me = principal.Identity?.IsAuthenticated == true ? UserIds.Get(principal) : "";
+            string sql;
+            NpgsqlParameter[] parameters;
+            string key;
+            if (game == "word-guess")
+            {
+                key = "avg";
+                parameters = [];
+                sql = $"""
+                    WITH ranked AS (
+                        SELECT p.user_id AS "UserId", {NameSql} AS "Name", ROUND(AVG(p.tries) * 100)::bigint AS "Value", COUNT(*)::bigint AS "Secondary",
+                               ROW_NUMBER() OVER (ORDER BY AVG(p.tries), COUNT(*) DESC, p.user_id) AS "Rank"
+                        FROM practice_solves p JOIN "AspNetUsers" u ON u."Id" = p.user_id
+                        WHERE p.game = 'word-guess' AND p.tries IS NOT NULL
+                        GROUP BY p.user_id, u."Id", u."DisplayName"
+                        HAVING COUNT(*) >= 5
+                    )
+                    """;
+            }
+            else
+            {
+                if (level is not (>= 1 and <= 100_000)) return Results.BadRequest(new { error = "level must be between 1 and 100000." });
+                if (variant is not null && (variant.Length is < 1 or > 16 || !variant.All(char.IsAsciiLetterLower))) return Results.BadRequest(new { error = "Unknown variant." });
+                key = variant is null ? level.Value.ToString() : $"{variant}:{level}";
+                parameters = [new NpgsqlParameter("game", game), new NpgsqlParameter("key", key)];
+                sql = $"""
+                    WITH ranked AS (
+                        SELECT p.user_id AS "UserId", {NameSql} AS "Name", p.best_ms::bigint AS "Value", 0::bigint AS "Secondary",
+                               ROW_NUMBER() OVER (ORDER BY p.best_ms, p.solved_at, p.user_id) AS "Rank"
+                        FROM practice_solves p JOIN "AspNetUsers" u ON u."Id" = p.user_id
+                        WHERE p.game = @game AND p.level_key = @key AND p.best_ms IS NOT NULL
+                    )
+                    """;
+            }
+            var rows = await RowsAsync(db, cache, $"plevel|{game}|{key}", sql, parameters, me, ct);
+            var entries = rows.Where(r => r.Rank <= PageSize).Select(r => new LeaderEntryDto(r.Rank, r.Name, r.Value, r.Secondary, r.UserId == me)).ToList();
+            var mine = rows.FirstOrDefault(r => r.UserId == me);
+            var meDto = mine is null ? null : new LeaderEntryDto(mine.Rank, mine.Name, mine.Value, mine.Secondary, true);
+            return Results.Ok(new LeaderboardDto(game, "practice", "all", key, entries, meDto));
+        });
+
         // The featured level of a week (`week` is its Monday). Fewest mistakes wins, then the fastest time; a solve that used hints is not ranked.
         // The mistakes are reported by the app, so like the mind board this one is for fun.
         app.MapGet("/leaderboards/featured", async (string? week, ClaimsPrincipal principal, AppDbContext db, BoardCache cache, CancellationToken ct) =>

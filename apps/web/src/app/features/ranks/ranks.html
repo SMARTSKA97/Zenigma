@@ -25,6 +25,27 @@
   }
 }
 
+@if (showViews()) {
+  <app-segmented class="seg" label="View" [options]="viewOptions()" [value]="view()" (valueChange)="pickView($event)" />
+}
+
+@if (levelView() && !wordView()) {
+  @if (variants().length > 1) {
+    <div class="chips" role="tablist" aria-label="Kind">
+      @for (v of variants(); track v.id) {
+        <button type="button" role="tab" class="chip plain" [class.on]="variant() === v.id" [attr.aria-selected]="variant() === v.id" (click)="pickVariant(v.id)">{{ v.name }}</button>
+      }
+    </div>
+  }
+  <div class="stepper" role="group" aria-label="Level">
+    <button type="button" class="step" aria-label="Previous level" [disabled]="level() <= 1" (click)="goLevel(level() - 1)">‹</button>
+    <label class="lvl">Level
+      <input type="number" inputmode="numeric" min="1" [max]="maxLevel()" [value]="level()" (change)="goLevel(+$any($event.target).value)" />
+    </label>
+    <button type="button" class="step" aria-label="Next level" [disabled]="level() >= maxLevel()" (click)="goLevel(level() + 1)">›</button>
+  </div>
+}
+
 @if (periods().length > 1) {
   <app-segmented class="seg" label="Period" [options]="periods()" [value]="period()" (valueChange)="period.set($event)" />
 }
@@ -46,7 +67,7 @@
   @if (b.entries.length === 0) {
     <section class="card empty">
       <h2>No one yet</h2>
-      <p class="muted">{{ kind() === 'daily' ? 'Be the first to finish today.' : group() === 'mind' ? 'Play it to set the first mark.' : 'Solve a level to get on the board.' }}</p>
+      <p class="muted">{{ levelView() ? (wordView() ? 'Win five words in practice to get on this board.' : 'Be the first to set a time on this level.') : kind() === 'daily' ? 'Be the first to finish today.' : group() === 'mind' ? 'Play it to set the first mark.' : 'Solve a level to get on the board.' }}</p>
       @if (group() === 'mind') {
         <a class="button" [routerLink]="kind() === 'daily' ? ['/challenges'] : ['/mind', game()]">{{ kind() === 'daily' ? 'Go to Challenges' : 'Play ' + gameName() }}</a>
       } @else {
@@ -54,8 +75,19 @@
       }
     </section>
   } @else {
+    @if (podium().length) {
+      <ol class="podium" aria-label="Fastest three">
+        @for (e of podium(); track e.rank) {
+          <li [class.me]="e.isMe" [attr.data-rank]="e.rank">
+            <span class="medal" aria-hidden="true">{{ e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : '🥉' }}</span>
+            <span class="pname">{{ e.name }}@if (e.isMe) { <em>you</em> }</span>
+            <b>{{ valueOf(e.value, e.secondary) }}</b>
+          </li>
+        }
+      </ol>
+    }
     <ol class="list">
-      @for (e of b.entries; track e.rank) {
+      @for (e of rest(); track e.rank) {
         <li class="line" [class.me]="e.isMe" [style.--i]="$index">
           <span class="pos" [attr.data-top]="e.rank <= 3 ? e.rank : null">{{ e.rank }}</span>
           <span class="who">{{ e.name }}@if (e.isMe) { <em>you</em> }</span>
