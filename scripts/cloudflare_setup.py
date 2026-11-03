@@ -15,6 +15,10 @@ API = os.environ.get("CF_API_BASE", "https://api.cloudflare.com/client/v4")
 TAG = "zenigma:"
 
 
+class CFError(Exception):
+    pass
+
+
 def call(token, method, path, body=None, ok_404=False):
     req = urllib.request.Request(API + path, method=method, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
     data = json.dumps(body).encode() if body is not None else None
@@ -24,7 +28,7 @@ def call(token, method, path, body=None, ok_404=False):
     except urllib.error.HTTPError as e:
         if e.code == 404 and ok_404:
             return {"result": {"rules": []}}
-        sys.exit(f"Cloudflare said {e.code} for {method} {path}: {e.read().decode()[:600]}")
+        raise CFError(f"Cloudflare said {e.code} for {method} {path}: {e.read().decode()[:600]}")
 
 
 def merge(existing, ours):
@@ -94,29 +98,55 @@ def main():
         print("\nNothing was changed. Run again with --apply to make these changes.")
         return
 
-    zones = call(token, "GET", f"/zones?name={a.zone}")["result"]
+    try:
+        zones = call(token, "GET", f"/zones?name={a.zone}")["result"]
+    except CFError as e:
+        sys.exit(str(e))
     if not zones:
         sys.exit(f"No zone called {a.zone} on this token.")
     zid = zones[0]["id"]
+    # The Free plan allows one rate limiting rule in total.
+    limits = {"http_ratelimit": 1}
+    problems, transform_ok = [], False
     for phase, rules in plan:
-        path = f"/zones/{zid}/rulesets/phases/{phase}/entrypoint"
-        cur = call(token, "GET", path, ok_404=True)["result"].get("rules") or []
-        if phase == "http_request_late_transform" and not a.edge_secret:
-            # Running again keeps the secret that is already in place (and already in Render) unless you pass a new one.
-            for r in cur:
-                old = str(r.get("description", "")).startswith(TAG) and r.get("action_parameters", {}).get("headers", {}).get("X-Zenigma-Edge", {}).get("value")
-                if old:
-                    secret = old
-                    rules[0]["action_parameters"]["headers"]["X-Zenigma-Edge"]["value"] = old
-        keep = [{k: v for k, v in r.items() if k not in ("last_updated", "version")} for r in merge(cur, [])]
-        call(token, "PUT", path, {"rules": keep + rules})
-        print(f"updated {phase}")
+        try:
+            path = f"/zones/{zid}/rulesets/phases/{phase}/entrypoint"
+            cur = call(token, "GET", path, ok_404=True)["result"].get("rules") or []
+            if phase == "http_request_late_transform" and not a.edge_secret:
+                # Running again keeps the secret that is already in place (and already in Render) unless you pass a new one.
+                for r in cur:
+                    old = str(r.get("description", "")).startswith(TAG) and r.get("action_parameters", {}).get("headers", {}).get("X-Zenigma-Edge", {}).get("value")
+                    if old:
+                        secret = old
+                        rules[0]["action_parameters"]["headers"]["X-Zenigma-Edge"]["value"] = old
+            keep = [{k: v for k, v in r.items() if k not in ("last_updated", "version")} for r in merge(cur, [])]
+            if phase in limits and len(keep) + len(rules) > limits[phase]:
+                problems.append(f"{phase}: skipped, because you already have {len(keep)} rule of your own there and the Free plan allows {limits[phase]}. "
+                                f"In Security, Rate limiting rules, edit it to cover host {a.api} (or delete it) and run this again.")
+                continue
+            call(token, "PUT", path, {"rules": keep + rules})
+            print(f"updated {phase}")
+            transform_ok = transform_ok or phase == "http_request_late_transform"
+        except CFError as e:
+            problems.append(f"{phase}: {e}")
     for key, value in settings.items():
-        call(token, "PATCH", f"/zones/{zid}/settings/{key}", {"value": value})
-        print(f"set {key}")
+        try:
+            call(token, "PATCH", f"/zones/{zid}/settings/{key}", {"value": value})
+            print(f"set {key}")
+        except CFError as e:
+            problems.append(f"setting {key}: {e}")
     if a.bot_fight != "leave":
-        call(token, "PUT", f"/zones/{zid}/bot_management", {"fight_mode": a.bot_fight == "on"})
-        print(f"bot fight mode {a.bot_fight}")
+        try:
+            call(token, "PUT", f"/zones/{zid}/bot_management", {"fight_mode": a.bot_fight == "on"})
+            print(f"bot fight mode {a.bot_fight}")
+        except CFError as e:
+            problems.append(f"bot fight mode: {e}")
+    if problems:
+        print("\nNeeds attention:")
+        for p in problems:
+            print("  -", p)
+    if not transform_ok:
+        sys.exit("\nThe request header rule was not saved, so do NOT set Edge__Secret in Render yet.")
     print("\nDone. Put this in Render as the environment variable Edge__Secret (only after this run, so the API accepts the header):")
     print(f"  Edge__Secret={secret}")
 
