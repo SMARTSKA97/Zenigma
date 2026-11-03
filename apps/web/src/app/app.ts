@@ -73,6 +73,7 @@ export class App {
       },
       { passive: true },
     );
+    this.fastTap();
     this.back.listen();
     inject(HintsService).visit();
     inject(HintsSyncService);
@@ -81,6 +82,43 @@ export class App {
     // Android: look for a new version when the app opens (the update sheet appears only if there is one).
     this.updater.startAutoCheck();
   }
+  /**
+   * Keys, grid cells and tiles answer the moment a finger lands, not when it lifts. A button shrinks a little while it is pressed, so a
+   * finger that lifted near its edge came up over the gap, the tap became no tap, and it took a harder, more careful press. The click that
+   * follows on release is swallowed so nothing happens twice. Mouse and keyboard clicks are untouched.
+   */
+  private fastTap(): void {
+    const sel = 'app-tango-board button.cell, app-sudoku-board button.cell, app-sudoku-board button.key, .kb button.key, .keyboard button.key, button.tile, button.opt';
+    let tapped: Element | null = null;
+    let at = 0;
+    document.addEventListener(
+      'pointerdown',
+      (e) => {
+        if (e.pointerType === 'mouse' || !e.isPrimary) return;
+        const el = (e.target as Element | null)?.closest?.(sel);
+        if (!(el instanceof HTMLButtonElement) || el.disabled) return;
+        el.click();
+        tapped = el;
+        at = performance.now();
+      },
+      { capture: true },
+    );
+    document.addEventListener(
+      'click',
+      (e) => {
+        if (!tapped || !e.isTrusted) return;
+        const fresh = performance.now() - at < 900;
+        const same = tapped.contains(e.target as Node);
+        tapped = null;
+        if (fresh && same) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      },
+      { capture: true },
+    );
+  }
+
   private readonly url = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),

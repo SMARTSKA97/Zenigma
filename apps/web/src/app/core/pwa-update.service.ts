@@ -30,6 +30,10 @@ export class PwaUpdateService {
 
   constructor() {
     if (!this.sw.isEnabled) return;
+    // If the worker breaks (a file it needs was refused, so its cache no longer matches the site), start over with a clean copy: the same as a
+    // hard refresh, done once, by itself.
+    this.sw.unrecoverable.subscribe(() => void this.hardRefresh(true));
+    this.sw.versionUpdates.pipe(filter((e) => e.type === 'VERSION_INSTALLATION_FAILED')).subscribe(() => void this.hardRefresh(true));
     this.sw.versionUpdates.pipe(filter((e) => e.type === 'VERSION_READY')).subscribe(() => {
       this.ready.set(true);
       // Just opened and nothing started yet: switch over now.
@@ -70,6 +74,25 @@ export class PwaUpdateService {
     } finally {
       this.checking.set(false);
     }
+  }
+
+  /** Forget everything the service worker cached and load the site fresh (what Ctrl+Shift+R does). `auto` allows it once per session. */
+  async hardRefresh(auto = false): Promise<void> {
+    try {
+      if (auto) {
+        if (sessionStorage.getItem('zenigma.hardRefresh')) return;
+        sessionStorage.setItem('zenigma.hardRefresh', '1');
+      }
+    } catch {
+      /* no storage: allow it */
+    }
+    try {
+      for (const reg of await navigator.serviceWorker.getRegistrations()) await reg.unregister();
+      for (const key of await caches.keys()) await caches.delete(key);
+    } catch {
+      /* the reload below still asks the network */
+    }
+    location.reload();
   }
 
   async apply(): Promise<void> {

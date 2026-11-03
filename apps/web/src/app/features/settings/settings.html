@@ -228,6 +228,11 @@
       <span class="lead">{{ pwa.ready() ? 'Reload to update' : pwa.checking() ? 'Checking…' : 'Check for updates' }}<small>{{ pwa.ready() ? 'A new version is ready.' : pwa.upToDate() ? 'You have the latest version.' : 'Updates download quietly and need no server.' }}</small></span>
       <span class="chev">›</span>
     </button>
+    <button type="button" class="item link" (click)="pwa.hardRefresh()">
+      <span class="tn" aria-hidden="true">🧹</span>
+      <span class="lead">Reload fresh<small>Clears the saved copy of the app and loads the newest one. Your progress stays.</small></span>
+      <span class="chev">›</span>
+    </button>
     @if (install.isIos) {
       <button type="button" class="item link" (click)="install.guide.set('update')">
         <span class="tn" aria-hidden="true">❓</span>
