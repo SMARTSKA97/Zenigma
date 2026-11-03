@@ -7,7 +7,8 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { PreloadAllModules, provideRouter, withInMemoryScrolling, withPreloading, withViewTransitions } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withPreloading } from '@angular/router';
+import { IdlePreload } from './core/idle-preload';
 import { provideServiceWorker } from '@angular/service-worker';
 import { Capacitor } from '@capacitor/core';
 import { ReportingErrorHandler } from './core/error-reporter';
@@ -27,8 +28,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     { provide: ErrorHandler, useClass: ReportingErrorHandler },
-    // Screens are fetched in the background once the app is idle, so moving between them never waits on the network.
-    provideRouter(routes, withViewTransitions(), withPreloading(PreloadAllModules), withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
+    // Screens are fetched in the background, one at a time, once the app is idle, so moving between them never waits on the network and
+    // start-up is not crowded. There are no view transitions: they freeze the page for taps while they run, which felt like lag.
+    provideRouter(routes, withPreloading(IdlePreload), withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
     provideHttpClient(withInterceptors([offlineInterceptor, authInterceptor])),
     {
       provide: LocalStore,

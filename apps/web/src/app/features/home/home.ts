@@ -50,6 +50,9 @@ export class Home implements OnInit {
 
   ngOnInit(): void {
     void this.promo.load();
+    // The home screen is where a session starts: wake the sleeping server now (quietly, in the background) so the daily, boards and sync are ready by the time they are opened.
+    const wake = setTimeout(() => void this.connection.wake(), 600);
+    this.destroyRef.onDestroy(() => clearTimeout(wake));
     // Keep the counts fresh while this screen is open and visible, but only while the server is awake anyway, and not often.
     const timer = setInterval(() => {
       if (!document.hidden && this.connection.serverReady() && this.auth.signedIn()) void this.community.load();

@@ -56,6 +56,14 @@ export class WordDailyPage {
     const r = this.result();
     const info = this.info();
     if (!r || !info) return null;
+    // Comet Slice is scored in points (and has no time worth sharing); the others in marks out of 100 with their time.
+    if (this.game() === 'comet-slice' && r.score !== undefined) {
+      const score = `${r.score} points`;
+      return {
+        text: `Zenigma ${info.name} ${this.daily.date()}: ${score}\nhttps://zenigma.ska97homelab.uk`,
+        card: { name: info.name, label: `Daily ${this.daily.date()}`, hue: info.hue, grid: [], score, streak: this.ds.streak() },
+      };
+    }
     const score = `${r.points} / 100`;
     return {
       text: `Zenigma ${info.name} ${this.daily.date()}: ${score} in ${formatDuration(r.ms)}\nhttps://zenigma.ska97homelab.uk`,
@@ -114,10 +122,13 @@ export class WordDailyPage {
     if (!game) return;
     const points = dailyPoints(game, r.score, this.daily.date());
     this.detail.set(r.detail ?? '');
-    this.daily.record(game, points, Date.now() - this.startedAt);
+    this.daily.record(game, points, Date.now() - this.startedAt, game === 'comet-slice' ? r.score : undefined);
     this.haptics.success();
     this.stage.set('result');
   }
+
+  /** Comet Slice shows its points, not a time. */
+  protected readonly byPoints = computed(() => this.game() === 'comet-slice');
 
   protected time(ms: number): string {
     return formatDuration(ms);

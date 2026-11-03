@@ -5,6 +5,9 @@
   z-index: 90;
   display: block;
   width: auto;
+  /* mind.scss narrows hosts to a column; this one owns the whole screen. */
+  max-width: none;
+  margin: 0;
   background: #050b1f;
   color: #fff;
   overflow: hidden;

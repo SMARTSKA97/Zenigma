@@ -150,8 +150,10 @@ export class CometSlice implements OnInit, OnDestroy {
 
   /** Fits the field to the screen: as wide as it can be (320 units), as tall as the screen allows. */
   private layout(): void {
-    const w = Math.max(1, innerWidth);
-    const h = Math.max(1, innerHeight);
+    // The size of the canvas itself, so the field fits however the page lays it out.
+    const box = this.canvasRef().nativeElement.getBoundingClientRect();
+    const w = Math.max(1, box.width || innerWidth);
+    const h = Math.max(1, box.height || innerHeight);
     this.scale = Math.min(w / W, h / 440);
     this.offsetX = (w - W * this.scale) / 2;
     setFieldHeight(h / this.scale);

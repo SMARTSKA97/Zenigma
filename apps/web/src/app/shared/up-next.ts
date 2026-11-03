@@ -48,10 +48,18 @@ import { Glyph } from './glyph';
 })
 export class UpNext implements OnInit {
   private readonly upNext = inject(UpNextService);
-  /** The game that is open now, so it never lists itself while the server catches up. */
+  /** The game that is open now: it never lists itself, and only the games after it are offered. */
   readonly exclude = input<string | null>(null);
   readonly go = output<void>();
-  protected readonly list = computed(() => this.upNext.items().filter((g) => g.id !== this.exclude()));
+  /**
+   * What is still to play. Inside a game it lists only the games that come after it: if it listed every other unplayed game, two unplayed
+   * games would send you back and forth between them. Games before it are still on the Challenges page.
+   */
+  protected readonly list = computed(() => {
+    const all = this.upNext.items();
+    const at = all.findIndex((g) => g.id === this.exclude());
+    return at < 0 ? all : all.slice(at + 1);
+  });
 
   ngOnInit(): void {
     void this.upNext.refresh();

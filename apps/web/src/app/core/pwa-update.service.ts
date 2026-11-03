@@ -1,18 +1,27 @@
 import { ApplicationRef, inject, Injectable, signal } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { filter } from 'rxjs';
 
-const HOUR = 60 * 60 * 1000;
+/** How often at most it looks for a new build when the app comes to the foreground. */
+const EVERY = 2 * 60 * 1000;
+/** A new version found in the first seconds after opening is applied at once, before the player has started anything. */
+const FRESH_START = 25_000;
 
 /**
  * Updates for the installed web app, with no server of ours involved: the service worker re-reads the static build files
  * from the website host, downloads the new version quietly, and this offers a "Reload" when it is ready.
- * It looks when the app opens and when it comes back to the foreground (at most hourly). Nothing is polled in the background.
+ * It looks when the app opens and whenever it comes back to the foreground (at most every two minutes), and applies a new version by
+ * itself at a safe moment: right away if the app has only just opened, otherwise on the next screen change or when the app returns from
+ * the background. So nobody has to hard-refresh to see a new build. Nothing is polled in the background.
  */
 @Injectable({ providedIn: 'root' })
 export class PwaUpdateService {
   private readonly sw = inject(SwUpdate);
   private readonly app = inject(ApplicationRef);
+  private readonly router = inject(Router);
+  private readonly opened = Date.now();
+  private hiddenAt = 0;
   /** A new version is downloaded and waiting for a reload. */
   readonly ready = signal(false);
   readonly checking = signal(false);
@@ -21,10 +30,24 @@ export class PwaUpdateService {
 
   constructor() {
     if (!this.sw.isEnabled) return;
-    this.sw.versionUpdates.pipe(filter((e) => e.type === 'VERSION_READY')).subscribe(() => this.ready.set(true));
-    void this.app.whenStable().then(() => setTimeout(() => void this.check(false), 3000));
+    this.sw.versionUpdates.pipe(filter((e) => e.type === 'VERSION_READY')).subscribe(() => {
+      this.ready.set(true);
+      // Just opened and nothing started yet: switch over now.
+      if (Date.now() - this.opened < FRESH_START) void this.apply();
+    });
+    void this.app.whenStable().then(() => setTimeout(() => void this.check(false), 1500));
+    // The next screen change is a safe moment to switch: the new screen simply loads from the new build.
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
+      if (this.ready()) void this.apply();
+    });
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') void this.check(false);
+      if (document.visibilityState === 'hidden') {
+        this.hiddenAt = Date.now();
+        return;
+      }
+      // Back from the background for a while: switch to a waiting version, and look for a newer one.
+      if (this.ready() && Date.now() - this.hiddenAt > 20_000) void this.apply();
+      else void this.check(false);
     });
   }
 
@@ -35,7 +58,7 @@ export class PwaUpdateService {
   /** Looks for a new build. `force` (the Settings button) ignores the hourly limit and reports "up to date". */
   async check(force: boolean): Promise<void> {
     if (!this.sw.isEnabled || this.checking() || this.ready()) return;
-    if (!force && Date.now() - this.last < HOUR) return;
+    if (!force && Date.now() - this.last < EVERY) return;
     this.last = Date.now();
     this.checking.set(true);
     this.upToDate.set(false);

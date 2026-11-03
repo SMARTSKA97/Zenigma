@@ -10,17 +10,27 @@ const DAYS_KEY = 'zenigma.mind.daily.days';
 /** Comet Slice has a daily of its own (one timed run), so it is not part of the daily set. */
 const HAS_OWN_DAILY: readonly MindGameId[] = ['comet-slice'];
 
+/** Games played over several rounds (the pattern grows, or there are several tries). Only one of them is in a day's set, so the set stays quick. */
+export const MULTI_ROUND: readonly MindGameId[] = ['spot-change', 'quick-reflex', 'echo-sequence', 'grid-recall', 'number-recall', 'word-recall'];
+
 /** Today's mind-training set: one random game from each skill category (six games), the same for everyone on a given (India) day. */
 export function mindSetFor(date: string): MindGameId[] {
   const rand = seeded(`mind-daily:${date}`);
   const pool = MIND_LIVE.filter((g) => !HAS_OWN_DAILY.includes(g));
   // Skills keep their catalogue order; each one gets one live game picked by the day's seed.
-  return SKILLS.map((s) => s.id)
-    .filter((id) => pool.some((g) => MIND_META[g]?.skill === id))
-    .map((skill: Skill) => {
-      const games = pool.filter((g) => MIND_META[g]?.skill === skill);
-      return games[Math.floor(rand() * games.length)];
-    });
+  const skills = SKILLS.map((s) => s.id).filter((id) => pool.some((g) => MIND_META[g]?.skill === id));
+  const picks = skills.map((skill: Skill) => {
+    const games = pool.filter((g) => MIND_META[g]?.skill === skill);
+    return games[Math.floor(rand() * games.length)];
+  });
+  // At most one multi-round game: the day's pick keeps its place, any other swaps for a one-go game from the same skill.
+  const multi = picks.filter((g) => MULTI_ROUND.includes(g));
+  const keep = multi.length ? multi[Math.floor(rand() * multi.length)] : null;
+  return picks.map((g, i) => {
+    if (!MULTI_ROUND.includes(g) || g === keep) return g;
+    const same = pool.filter((x) => MIND_META[x]?.skill === skills[i] && !MULTI_ROUND.includes(x));
+    return same.length ? same[Math.floor(rand() * same.length)] : g;
+  });
 }
 
 interface DayState {

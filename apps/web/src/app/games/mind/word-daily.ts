@@ -22,6 +22,8 @@ const STATE_KEY = 'zenigma.wdaily';
 export interface WordDailyResult {
   points: number;
   ms: number;
+  /** The game's own score, for the games shown in points (Comet Slice). */
+  score?: number;
 }
 
 interface DayState {
@@ -56,9 +58,9 @@ export class WordDailyService {
     let changed = false;
     for (const e of events) {
       if (e.kind !== 'wdaily.completed') continue;
-      const p = e.payload as { game?: string; date?: string; points?: number; ms?: number };
+      const p = e.payload as { game?: string; date?: string; points?: number; ms?: number; score?: number };
       if (p.date !== today || !p.game || !isWordDaily(p.game) || done[p.game]) continue;
-      done[p.game] = { points: Number(p.points) || 0, ms: Number(p.ms) || 0 };
+      done[p.game] = { points: Number(p.points) || 0, ms: Number(p.ms) || 0, ...(p.score === undefined ? {} : { score: Number(p.score) || 0 }) };
       changed = true;
     }
     if (!changed) return;
@@ -81,19 +83,19 @@ export class WordDailyService {
   }
 
   /** Keeps the first result of the day: one try, as in the other dailies. Returns false if today's was already done. */
-  record(game: WordDailyGame, points: number, ms: number): boolean {
+  record(game: WordDailyGame, points: number, ms: number, score?: number): boolean {
     this.refresh();
     const today = this.date();
     const current = this.state().date === today ? this.state() : { date: today, done: {} };
     if (current.done[game]) return false;
-    const next: DayState = { date: today, done: { ...current.done, [game]: { points, ms } } };
+    const next: DayState = { date: today, done: { ...current.done, [game]: { points, ms, ...(score === undefined ? {} : { score }) } } };
     this.state.set(next);
     try {
       localStorage.setItem(STATE_KEY, JSON.stringify(next));
     } catch {
       /* the result still reaches the server through the event log */
     }
-    void this.sync.record('wdaily.completed', { game, date: today, points, ms });
+    void this.sync.record('wdaily.completed', { game, date: today, points, ms, ...(score === undefined ? {} : { score }) });
     return true;
   }
 

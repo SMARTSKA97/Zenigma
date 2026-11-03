@@ -16,7 +16,7 @@
         <span class="art"><app-glyph [game]="g" /></span>
         <span class="text">
           <b>{{ info(g)?.name }}</b>
-          <span class="muted">{{ r ? r.points + ' / 100 · ' + time(r.ms) : info(g)?.blurb }}</span>
+          <span class="muted">{{ r ? (g === 'comet-slice' && r.score !== undefined ? r.score + ' points' : r.points + ' / 100 · ' + time(r.ms)) : info(g)?.blurb }}</span>
         </span>
         @if (r) {
           <a class="button secondary" [routerLink]="['/ranks']" [queryParams]="{ group: 'mind', kind: 'daily', game: g }">Ranks</a>

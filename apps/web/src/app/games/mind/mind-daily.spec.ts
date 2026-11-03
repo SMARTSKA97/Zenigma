@@ -1,4 +1,4 @@
-import { mindSetFor } from './mind-daily';
+import { MULTI_ROUND, mindSetFor } from './mind-daily';
 import { MIND_META } from './mind-meta';
 
 describe('mind daily set', () => {
@@ -16,5 +16,14 @@ describe('mind daily set', () => {
 
   it('never puts Comet Slice in the daily set, as it has a daily of its own', () => {
     for (let i = 1; i <= 28; i++) expect(mindSetFor(`2026-10-${String(i).padStart(2, '0')}`)).not.toContain('comet-slice');
+  });
+
+  it('has at most one multi-round game in a day, and still one game per skill', () => {
+    for (let i = 1; i <= 60; i++) {
+      const set = mindSetFor(`2026-11-${String((i % 28) + 1).padStart(2, '0')}-${i}`);
+      expect(set.filter((g) => MULTI_ROUND.includes(g)).length).toBeLessThanOrEqual(1);
+      expect(set).toHaveLength(6);
+      expect(new Set(set.map((g) => MIND_META[g]!.skill)).size).toBe(6);
+    }
   });
 });

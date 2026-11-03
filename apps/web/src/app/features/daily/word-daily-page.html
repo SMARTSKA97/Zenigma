@@ -41,8 +41,13 @@
     @case ('result') {
       <section class="card result" [style.--h]="info()?.hue">
         @if (result(); as r) {
-          <p class="big">{{ r.points }} <small>/ 100</small></p>
-          <p class="muted">{{ detail() || 'Done for today' }} · {{ time(r.ms) }}</p>
+          @if (byPoints() && r.score !== undefined) {
+            <p class="big">{{ r.score }} <small>points</small></p>
+            <p class="muted">{{ detail() || 'Done for today' }}</p>
+          } @else {
+            <p class="big">{{ r.points }} <small>/ 100</small></p>
+            <p class="muted">{{ detail() || 'Done for today' }} · {{ time(r.ms) }}</p>
+          }
         }
         <p class="muted">Come back tomorrow for a new one.</p>
         @if (shareData(); as sd) {
@@ -58,7 +63,7 @@
               @if (b.entries.length) {
                 <ol>
                   @for (e of b.entries.slice(0, 10); track e.rank) {
-                    <li [class.me]="e.isMe"><span class="rk">{{ e.rank }}</span><span class="nm">{{ e.name }}</span><span class="pt">{{ e.value }} · {{ time(e.secondary) }}</span></li>
+                    <li [class.me]="e.isMe"><span class="rk">{{ e.rank }}</span><span class="nm">{{ e.name }}</span><span class="pt">@if (byPoints()) { {{ e.value }} / 100 } @else { {{ e.value }} · {{ time(e.secondary) }} }</span></li>
                   }
                 </ol>
                 @if (b.me && b.me.rank > 10) {
