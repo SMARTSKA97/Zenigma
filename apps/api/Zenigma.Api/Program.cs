@@ -72,7 +72,9 @@ builder.Services
 
 // OWASP's current guidance for PBKDF2-HMAC-SHA512. Existing hashes stay valid and are upgraded the next time someone signs in.
 builder.Services.Configure<PasswordHasherOptions>(o => o.IterationCount = 210_000);
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<EmailCodeService>();
 builder.Services.Configure<BrevoOptions>(builder.Configuration.GetSection(BrevoOptions.Section));
 builder.Services.AddHttpClient<IEmailSender, BrevoEmailSender>(c => c.Timeout = TimeSpan.FromSeconds(8));
@@ -269,6 +271,7 @@ app.MapGet("/time", (TimeProvider clock) =>
 });
 
 app.MapAuth();
+app.MapDevices();
 app.MapSync();
 app.MapProfile();
 app.MapHints();

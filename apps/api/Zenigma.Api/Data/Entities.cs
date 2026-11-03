@@ -42,6 +42,11 @@ public class RefreshToken
     public DateTimeOffset ExpiresAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }
     public Guid? ReplacedBy { get; set; }
+    /// <summary>A readable name for the device ("iPhone · Safari"), taken from its user agent when the session starts.</summary>
+    public string? DeviceName { get; set; }
+    public DateTimeOffset? LastUsedAt { get; set; }
+    /// <summary>The player ended this session (signed out, or removed the device). Such a token coming back is refused, not treated as theft.</summary>
+    public bool EndedByUser { get; set; }
 }
 
 public class EmailCode

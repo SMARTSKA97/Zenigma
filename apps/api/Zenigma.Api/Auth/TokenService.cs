@@ -14,7 +14,7 @@ public record AuthUserDto(string Id, string Email, string? DisplayName, bool Ema
 
 public record AuthSessionDto(string AccessToken, DateTimeOffset AccessTokenExpiresAt, string RefreshToken, AuthUserDto User);
 
-public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimeProvider clock, ILogger<TokenService> logger)
+public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimeProvider clock, ILogger<TokenService> logger, IHttpContextAccessor http)
 {
     private readonly JwtOptions _options = options.Value;
 
@@ -53,6 +53,8 @@ public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimePro
             TokenHash = Hash(refresh),
             CreatedAt = now,
             ExpiresAt = now.AddDays(_options.RefreshTokenDays),
+            DeviceName = DeviceNames.From(http.HttpContext?.Request.Headers.UserAgent.ToString()),
+            LastUsedAt = now,
         });
         await db.SaveChangesAsync(ct);
 
@@ -75,6 +77,8 @@ public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimePro
 
         if (stored.RevokedAt is { } revokedAt)
         {
+            // The player signed this device out: it is simply refused.
+            if (stored.EndedByUser) return null;
             if (now - revokedAt > ReuseGrace)
             {
                 await RevokeAllAsync(stored.UserId, ct);
@@ -97,7 +101,7 @@ public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimePro
         var now = clock.GetUtcNow();
         var keep = exceptRefreshToken is { Length: > 0 } ? Hash(exceptRefreshToken) : null;
         await db.RefreshTokens.Where(t => t.UserId == userId && t.RevokedAt == null && t.TokenHash != keep)
-            .ExecuteUpdateAsync(set => set.SetProperty(t => t.RevokedAt, now), ct);
+            .ExecuteUpdateAsync(set => set.SetProperty(t => t.RevokedAt, now).SetProperty(t => t.EndedByUser, true), ct);
     }
 
     public async Task RevokeAsync(string refreshToken, CancellationToken ct)
@@ -106,6 +110,7 @@ public class TokenService(AppDbContext db, IOptions<JwtOptions> options, TimePro
         var stored = await db.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == hash && t.RevokedAt == null, ct);
         if (stored is null) return;
         stored.RevokedAt = clock.GetUtcNow();
+        stored.EndedByUser = true;
         await db.SaveChangesAsync(ct);
     }
 }

@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { afterNextRender, Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../core/auth.service';
+import { AuthService, DeviceInfo, DeviceLimitError } from '../../core/auth.service';
+import { Devices } from '../../shared/devices';
 import { ConnectionService } from '../../core/connection.service';
 import { GoogleService } from '../../core/google.service';
 import { AGE_GROUPS, GENDERS, ProfilePatch, ProfileService } from '../../core/profile.service';
@@ -13,7 +14,7 @@ import { Switch } from '../../shared/switch';
 /** Sign in or create an account (email or Google), and once signed in: your profile, how you sign in, and what Zenigma may use. */
 @Component({
   selector: 'app-account',
-  imports: [Loader, Segmented, RouterLink, Switch],
+  imports: [Loader, Segmented, RouterLink, Switch, Devices],
   templateUrl: './account.html',
   styleUrl: './account.scss',
 })
@@ -35,6 +36,9 @@ export class Account implements OnInit {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly reveal = signal(false);
+  /** Set when the account is already signed in on as many devices as it may have: the player picks one to sign out. */
+  protected readonly deviceChoice = signal<{ limit: number; devices: DeviceInfo[] } | null>(null);
+  private pendingGoogle: string | null = null;
   protected readonly signingOut = signal(false);
   protected readonly modes: SegmentOption<'signin' | 'register'>[] = [
     { value: 'signin', label: 'Sign in' },
@@ -110,7 +114,30 @@ export class Account implements OnInit {
       this.password.set('');
       this.afterSignIn();
     } catch (error) {
-      this.error.set(this.message(error));
+      if (error instanceof DeviceLimitError) this.deviceChoice.set({ limit: error.limit, devices: error.devices });
+      else this.error.set(this.message(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** Signs the chosen device out and signs in here, with what was already typed (or the Google token already received). */
+  protected async replace(deviceId: string): Promise<void> {
+    this.busy.set(true);
+    this.error.set(null);
+    try {
+      if (this.pendingGoogle) await this.auth.loginWithGoogle(this.pendingGoogle, deviceId);
+      else await this.auth.login(this.email().trim(), this.password(), deviceId);
+      this.pendingGoogle = null;
+      this.deviceChoice.set(null);
+      this.password.set('');
+      this.afterSignIn();
+    } catch (error) {
+      if (error instanceof DeviceLimitError) this.deviceChoice.set({ limit: error.limit, devices: error.devices });
+      else {
+        this.deviceChoice.set(null);
+        this.error.set(this.message(error));
+      }
     } finally {
       this.busy.set(false);
     }
@@ -213,10 +240,16 @@ export class Account implements OnInit {
         await this.profileApi.linkGoogle(token);
         this.notice.set('Google is connected. You can sign in with it from now on.');
       } else {
+        this.pendingGoogle = token;
         await this.auth.loginWithGoogle(token);
+        this.pendingGoogle = null;
         this.afterSignIn();
       }
     } catch (error) {
+      if (error instanceof DeviceLimitError) {
+        this.deviceChoice.set({ limit: error.limit, devices: error.devices });
+        return;
+      }
       (linking ? this.notice : this.error).set(this.message(error));
     }
   }

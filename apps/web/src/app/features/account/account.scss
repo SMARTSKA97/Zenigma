@@ -422,3 +422,17 @@ small {
   margin: 0;
   font-size: 1.1rem;
 }
+
+/* The account is full: pick the device to sign out. */
+.choose {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+  border-color: var(--accent);
+}
+.choose p {
+  margin: 0;
+}
+.choose .pick {
+  text-align: left;
+}

@@ -6,6 +6,29 @@ import { DeviceService, KEEP_ON_SIGN_OUT } from './device.service';
 import { LocalStore } from './local-store';
 import { AuthSession } from './types';
 
+/** A device that holds a live session for the account. */
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  lastUsedAt: string;
+  current: boolean;
+}
+
+/** The account is already signed in on as many devices as it may have; the player picks one to sign out. */
+export class DeviceLimitError extends Error {
+  constructor(
+    readonly limit: number,
+    readonly devices: DeviceInfo[],
+  ) {
+    super('device-limit');
+  }
+}
+
+const asLimit = (error: unknown): unknown =>
+  error instanceof HttpErrorResponse && error.status === 409 && error.error?.code === 'device-limit'
+    ? new DeviceLimitError(Number(error.error.limit) || 1, (error.error.devices ?? []) as DeviceInfo[])
+    : error;
+
 const SESSION_KEY = 'auth';
 const OWNER_KEY = 'ownerId';
 
@@ -39,12 +62,17 @@ export class AuthService {
     await this.adopt(response);
   }
 
-  async login(email: string, password: string): Promise<void> {
+  /** Throws DeviceLimitError when the account is full; call again with the id of a device to sign out. */
+  async login(email: string, password: string, replaceDeviceId?: string): Promise<void> {
     const deviceId = await this.device.deviceId();
-    const response = await firstValueFrom(
-      this.http.post<AuthSession>(`${environment.apiBaseUrl}/auth/login`, { email, password, deviceId }),
-    );
-    await this.adopt(response);
+    try {
+      const response = await firstValueFrom(
+        this.http.post<AuthSession>(`${environment.apiBaseUrl}/auth/login`, { email, password, deviceId, replaceDeviceId }),
+      );
+      await this.adopt(response);
+    } catch (error) {
+      throw asLimit(error);
+    }
   }
 
   /** Emails a reset code. The server answers the same for any address, so this never says whether an account exists. */
@@ -77,10 +105,33 @@ export class AuthService {
   }
 
   /** Signs in (or creates the account) with a Google ID token from Google Identity Services. */
-  async loginWithGoogle(idToken: string): Promise<void> {
+  async loginWithGoogle(idToken: string, replaceDeviceId?: string): Promise<void> {
     const deviceId = await this.device.deviceId();
-    const response = await firstValueFrom(this.http.post<AuthSession>(`${environment.apiBaseUrl}/auth/google`, { idToken, deviceId }));
-    await this.adopt(response);
+    try {
+      const response = await firstValueFrom(this.http.post<AuthSession>(`${environment.apiBaseUrl}/auth/google`, { idToken, deviceId, replaceDeviceId }));
+      await this.adopt(response);
+    } catch (error) {
+      throw asLimit(error);
+    }
+  }
+
+  /** The devices this account is signed in on, and how many it may have. */
+  async devices(): Promise<{ limit: number; devices: DeviceInfo[] }> {
+    const current = await this.device.deviceId();
+    return firstValueFrom(this.http.get<{ limit: number; devices: DeviceInfo[] }>(`${environment.apiBaseUrl}/auth/devices`, { params: { current } }));
+  }
+
+  /** Signs one device out. If it is this one, this device is signed out here too. */
+  async signOutDevice(id: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/devices/${id}/signout`, null));
+    if (id === (await this.device.deviceId())) await this.logout();
+  }
+
+  /** Signs out every other device, or (with keepThis false) every device including this one. */
+  async signOutDevices(keepThis: boolean): Promise<void> {
+    const keep = keepThis ? await this.device.deviceId() : undefined;
+    await firstValueFrom(this.http.post(`${environment.apiBaseUrl}/auth/devices/signout-all`, null, { params: keep ? { keep } : {} }));
+    if (!keepThis) await this.logout();
   }
 
   /** Keeps the stored session's name in step after the profile changes it. */

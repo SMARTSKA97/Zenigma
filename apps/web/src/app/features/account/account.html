@@ -169,6 +169,9 @@
     </div>
     <a class="button secondary stats-link" routerLink="/stats">Streaks and stats</a>
 
+    <h2 class="group">Signed-in devices</h2>
+    <div class="card"><app-devices /></div>
+
     @if (sync.pendingCount() > 0) {
       <p class="error warning">Signing out deletes {{ sync.pendingCount() }} item(s) that have not synced yet.</p>
     }
@@ -204,6 +207,16 @@
       <p class="notice">Offline mode is on, so signing in is paused. Turn it off in Settings to sign in.</p>
     }
 
+    @if (deviceChoice(); as dc) {
+      <div class="card choose" role="alertdialog" aria-label="Too many devices">
+        <b>This account is already signed in on {{ dc.devices.length }} device{{ dc.devices.length === 1 ? '' : 's' }}</b>
+        <p class="muted">A free account can use {{ dc.limit }} device at a time, a supporter up to 5. Sign one out to continue here.</p>
+        @for (d of dc.devices; track d.id) {
+          <button type="button" class="secondary pick" [disabled]="busy()" (click)="replace(d.id)">Sign out {{ d.name }}</button>
+        }
+        <button type="button" class="link" (click)="deviceChoice.set(null)">Cancel</button>
+      </div>
+    }
     <div class="card form" [class.busy]="busy()">
       @if (googleOffered() !== false) {
         @if (googleNative) {

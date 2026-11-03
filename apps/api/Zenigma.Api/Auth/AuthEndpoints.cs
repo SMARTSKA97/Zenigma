@@ -7,14 +7,14 @@ using Zenigma.Api.Data;
 namespace Zenigma.Api.Auth;
 
 public record RegisterRequest(string? Email, string? Password, string? DisplayName, Guid? DeviceId);
-public record LoginRequest(string? Email, string? Password, Guid? DeviceId);
+public record LoginRequest(string? Email, string? Password, Guid? DeviceId, Guid? ReplaceDeviceId = null);
 public record RefreshRequest(string? RefreshToken, Guid? DeviceId);
 public record LogoutRequest(string? RefreshToken);
 public record DeleteAccountRequest(string? Password, bool? Confirm);
 public record ForgotRequest(string? Email);
 public record ResetRequest(string? Email, string? Code, string? NewPassword, Guid? DeviceId);
 public record VerifyRequest(string? Code);
-public record GoogleLoginRequest(string? IdToken, Guid? DeviceId, string? DisplayName);
+public record GoogleLoginRequest(string? IdToken, Guid? DeviceId, string? DisplayName, Guid? ReplaceDeviceId = null);
 
 public static class AuthEndpoints
 {
@@ -66,6 +66,7 @@ public static class AuthEndpoints
             LoginRequest request,
             UserManager<ApplicationUser> users,
             TokenService tokens,
+            DeviceService devices,
             ILoggerFactory loggers,
             HttpContext http,
             CancellationToken ct) =>
@@ -95,6 +96,8 @@ public static class AuthEndpoints
             }
 
             await users.ResetAccessFailedCountAsync(user);
+            // The right password, but this account is already signed in on as many devices as it may have: the app lists them to pick one.
+            if (await devices.GateAsync(user.Id, request.DeviceId, request.ReplaceDeviceId, ct) is { } full) return full;
             return Results.Ok(await tokens.IssueAsync(user, request.DeviceId, ct));
         });
 
@@ -222,6 +225,7 @@ public static class AuthEndpoints
             IGoogleTokenVerifier google,
             Microsoft.Extensions.Options.IOptions<GoogleOptions> options,
             TokenService tokens,
+            DeviceService devices,
             ILoggerFactory loggers,
             CancellationToken ct) =>
         {
@@ -258,6 +262,7 @@ public static class AuthEndpoints
                 if (!linked.Succeeded) return Results.Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Could not connect Google.");
             }
 
+            if (await devices.GateAsync(user.Id, request.DeviceId, request.ReplaceDeviceId, ct) is { } full) return full;
             return Results.Ok(await tokens.IssueAsync(user, request.DeviceId, ct));
         });
 

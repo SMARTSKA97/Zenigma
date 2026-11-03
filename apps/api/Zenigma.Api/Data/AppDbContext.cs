@@ -68,6 +68,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             e.Property(x => x.ExpiresAt).HasColumnName("expires_at");
             e.Property(x => x.RevokedAt).HasColumnName("revoked_at");
             e.Property(x => x.ReplacedBy).HasColumnName("replaced_by");
+            e.Property(x => x.DeviceName).HasColumnName("device_name");
+            e.Property(x => x.LastUsedAt).HasColumnName("last_used_at");
+            e.Property(x => x.EndedByUser).HasColumnName("ended_by_user");
         });
 
         b.Entity<EmailCode>(e =>
