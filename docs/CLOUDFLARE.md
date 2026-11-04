@@ -32,6 +32,7 @@ python scripts/cloudflare_setup.py --apply --bot-fight off   # only if step 1 sh
 What it sets (rules are all named `zenigma: …`, and re-running updates them; your own rules are untouched):
 
 - **Skip rule** for the web hostname's update files (`/ngsw.json`, `/ngsw-worker.js`, `/index.html`, `/manifest.webmanifest`, `/assets`, `/icons`, `/levels`, `/fonts`): bypasses Browser Integrity Check, Security Level and user-agent blocking so the app's background updater is never challenged.
+- **Skip** challenges for the API hostname: the app's own API calls cannot solve a challenge page, so a challenge (common on phone mobile data, where many people share one address) shows up in the app as "Could not load".
 - **Block** probes for files we never serve (`/wp-…`, `/.env`, `/.git`, `.php`, `.sql`, `phpmyadmin`).
 - **Block** API calls with no user agent.
 - **Rate limit** (the one rule the Free plan allows): at most 60 API requests per 10 seconds from one address.
@@ -47,6 +48,12 @@ From then on the API refuses (403) any request that did not come through Cloudfl
 limits count each visitor by their real address (`CF-Connecting-IP`) instead of Cloudflare's. `/health` stays open for Render's checks.
 
 Order matters: run the script first so Cloudflare is already adding the header. To undo, delete `Edge__Secret` in Render.
+
+## If the app says "Could not load" but the site opens
+
+On the phone, open `https://zenigma-api.ska97homelab.uk/time` in the browser. A date means the API is fine. A Cloudflare "checking your browser" page means a
+challenge is hitting the API (run the script again, it now skips them). A blank 403 means the edge secret is not being added (see step 4). Then look at
+Security → Events for the same minute: the Service column names the rule.
 
 ## 5. Check
 

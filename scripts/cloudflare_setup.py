@@ -66,6 +66,10 @@ def main():
     custom = [
         {"description": TAG + " let the app fetch its own update files", "expression": f"{web} and ({static})", "action": "skip",
          "action_parameters": {"products": ["bic", "securityLevel", "uaBlock"]}, "logging": {"enabled": True}},
+        # The app's own calls to the API cannot solve a challenge page, so a challenge there just looks like "could not load". The API protects
+        # itself (sign-in, per-player limits, the edge secret, and the rate limit below), so these checks are skipped for it.
+        {"description": TAG + " never challenge the app's API calls", "expression": api, "action": "skip",
+         "action_parameters": {"products": ["bic", "securityLevel", "uaBlock"]}, "logging": {"enabled": True}},
         {"description": TAG + " block probes for files we never serve", "expression": junk, "action": "block"},
         {"description": TAG + " API calls need a user agent", "expression": f'{api} and http.user_agent eq ""', "action": "block"},
     ]
