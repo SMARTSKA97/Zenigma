@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, OnDestroy, OnInit, inject, input, output, signal, viewChild } from '@angular/core';
 import { BackService } from '../../core/back.service';
 import { HapticsService } from '../../core/haptics.service';
-import { advance, Body, H, Level, LEVELS, levelForDate, RUN_SECONDS, segmentHitsCircle, setFieldHeight, setLevel, throwGap, throwWave, TUNES, tune, W } from './comet-slice-engine';
+import { advance, paceAt, Body, H, Level, LEVELS, levelForDate, RUN_SECONDS, segmentHitsCircle, setFieldHeight, setLevel, throwGap, throwWave, TUNES, tune, W } from './comet-slice-engine';
 import { MindResult, seeded } from './mind-util';
 
 interface Pop {
@@ -191,14 +191,15 @@ export class CometSlice implements OnInit, OnDestroy {
       return;
     }
     this.seconds += dt;
+    const pace = paceAt(this.seconds);
     if (!this.ended) this.untilThrow -= dt;
     if (!this.ended && this.untilThrow <= 0) {
       // Every throw is picked at random (a single, a pair, a fan, a rain, a trap...); nothing builds up over the run.
       this.bodies.push(...throwWave(this.random).bodies);
-      this.untilThrow = throwGap(this.random);
+      this.untilThrow = throwGap(this.random) / pace;
     }
     for (const b of this.bodies) {
-      advance(b, dt);
+      advance(b, dt * pace);
       if (b.missed && b.kind === 'comet' && !b.counted && !this.ended) {
         b.counted = true;
         this.ring(Math.min(W - 20, Math.max(20, b.x)), H - 8, 'rgba(255,140,90,0.9)', 46, 0.5);

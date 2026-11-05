@@ -142,8 +142,15 @@ export const TUNES: Record<Level, Tune> = {
 
 /** The level in play: set once at the start of a run. */
 export let tune: Tune = TUNES.hard;
+
+/** How much faster a run gets as it goes on (at most this much extra, approached gradually), per level. */
+const RAMP: Record<Level, number> = { easy: 0.6, medium: 0.8, hard: 1 };
+let rampLevel: Level = 'hard';
+/** 1 at the start of a run, rising towards 1 + the level's ramp: falls and throws both speed up with it. */
+export const paceAt = (seconds: number): number => 1 + RAMP[rampLevel] * (1 - Math.exp(-seconds / 50));
 export function setLevel(level: Level): void {
   tune = TUNES[level];
+  rampLevel = level;
 }
 
 /** Seconds until the next throw: mostly quick to leisurely, sometimes right on the heels of the last one. Nothing builds up over the run. */
