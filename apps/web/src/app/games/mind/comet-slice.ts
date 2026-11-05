@@ -69,6 +69,8 @@ export class CometSlice implements OnInit, OnDestroy {
   /** Practice counts up from the start (it has no end but the hearts). */
   protected readonly elapsed = signal('0:00');
   protected readonly boom = signal(false);
+  /** Set once a skull ends the run: the "You lost" scene waits here for a tap before the result goes on. */
+  protected readonly over = signal<MindResult | null>(null);
   /** True for a moment after a heart is lost, so the hearts shake and the screen edges flash. */
   protected readonly hit = signal(false);
   protected readonly timed = computed(() => this.seed() !== null);
@@ -97,6 +99,8 @@ export class CometSlice implements OnInit, OnDestroy {
   private streaks: { x: number; y: number; age: number; life: number }[] = [];
   private shake = 0;
   private flash = 0;
+  private wrecked = false;
+  private blast: { x: number; y: number } | null = null;
   private danger = 0;
   private finished = false;
   private pointer: { x: number; y: number } | null = null;
@@ -265,8 +269,16 @@ export class CometSlice implements OnInit, OnDestroy {
     setTimeout(() => {
       this.finished = true;
       cancelAnimationFrame(this.frame);
-      this.done.emit({ score: n, detail: `${this.level()![0].toUpperCase()}${this.level()!.slice(1)} · ${text === 'Time!' ? 'Time is up' : text === 'Boom!' ? 'A skull ended the run' : 'Out of hearts'}` });
-    }, text === 'Boom!' ? 1100 : 700);
+      const result: MindResult = { score: n, detail: `${this.level()![0].toUpperCase()}${this.level()!.slice(1)} · ${text === 'Time!' ? 'Time is up' : text === 'Boom!' ? 'A skull ended the run' : 'Out of hearts'}` };
+      if (text === 'Boom!') this.over.set(result);
+      else this.done.emit(result);
+    }, text === 'Boom!' ? 1300 : 700);
+  }
+
+  /** The tap on the "You lost" scene: hand the result on. */
+  protected proceed(): void {
+    const result = this.over();
+    if (result) this.done.emit(result);
   }
 
   protected down(event: PointerEvent): void {
@@ -320,6 +332,8 @@ export class CometSlice implements OnInit, OnDestroy {
         this.ring(body.x, body.y, 'rgba(255,90,60,0.8)', 90, 0.5);
         this.shake = 16;
         this.flash = 1;
+        this.wrecked = true;
+        this.blast = { x: body.x, y: body.y };
         this.boom.set(true);
         this.lives.set(0);
         this.end('Boom!');
@@ -389,6 +403,23 @@ export class CometSlice implements OnInit, OnDestroy {
     }
     ctx.globalAlpha = 1;
     this.drawSwipe(ctx);
+    if (this.blast && this.flash > 0.02) {
+      ctx.save();
+      ctx.translate(this.blast.x, this.blast.y);
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2 + 0.2;
+        const len = 260 * (1.1 - this.flash * 0.3);
+        const half = 0.07 + (i % 2) * 0.03;
+        ctx.fillStyle = `rgba(255,240,200,${this.flash * 0.55})`;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a - half) * len, Math.sin(a - half) * len);
+        ctx.lineTo(Math.cos(a + half) * len, Math.sin(a + half) * len);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
     ctx.font = '800 20px system-ui, sans-serif';
     ctx.textAlign = 'center';
     for (const p of this.pops) {
@@ -401,7 +432,7 @@ export class CometSlice implements OnInit, OnDestroy {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.drawDanger(ctx, cw, ch);
     if (this.flash > 0) {
-      ctx.fillStyle = `rgba(255,230,180,${this.flash * 0.7})`;
+      ctx.fillStyle = `rgba(255,255,255,${this.flash * 0.85})`;
       ctx.fillRect(0, 0, cw, ch);
     }
   }
@@ -431,49 +462,25 @@ export class CometSlice implements OnInit, OnDestroy {
     ctx.drawImage(layer, 0, 0, cw, ch);
   }
 
-  /**
-   * Night sky of our own, full screen: midnight blue deepening to teal (and warming towards violet as things speed up), a slow
-   * aurora, and three layers of stars that drift down faster the nearer they are.
-   */
+  /** Dusk sky, full screen: deep indigo into violet and a pink haze low down, with twinkling stars drifting past. */
   private drawSky(ctx: CanvasRenderingContext2D, cw: number, ch: number): void {
-    const warm = 0.3;
+    const dead = this.wrecked;
     const sky = ctx.createLinearGradient(0, 0, 0, ch);
-    sky.addColorStop(0, warm > 0 ? `rgb(${5 + 20 * warm},11,${31 + 18 * warm})` : '#050b1f');
-    sky.addColorStop(0.55, `rgb(${11 + 40 * warm},${42 - 14 * warm},${74 + 10 * warm})`);
-    sky.addColorStop(1, `rgb(${18 + 70 * warm},${122 - 50 * warm},${128 - 20 * warm})`);
+    sky.addColorStop(0, dead ? '#1b1830' : '#0d0a3a');
+    sky.addColorStop(0.55, dead ? '#2d2742' : '#3b1a7a');
+    sky.addColorStop(1, dead ? '#4a3d57' : '#a04bc4');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, cw, ch);
-    // Aurora: three slow ribbons of light.
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    for (let k = 0; k < 3; k++) {
-      const y0 = ch * (0.22 + k * 0.12);
-      const hue = 150 + k * 38 + warm * 90;
-      const band = ctx.createLinearGradient(0, y0 - 70, 0, y0 + 90);
-      band.addColorStop(0, `hsla(${hue},90%,60%,0)`);
-      band.addColorStop(0.5, `hsla(${hue},90%,60%,${0.11 - k * 0.02})`);
-      band.addColorStop(1, `hsla(${hue},90%,60%,0)`);
-      ctx.fillStyle = band;
-      ctx.beginPath();
-      ctx.moveTo(0, y0 + 90);
-      for (let x = 0; x <= cw; x += 24) ctx.lineTo(x, y0 + Math.sin(x / 90 + this.clock * (0.35 + k * 0.1) + k * 2) * 34);
-      ctx.lineTo(cw, y0 + 90);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-    // A soft glow low on the horizon.
-    const glow = ctx.createRadialGradient(cw * 0.3, ch, 10, cw * 0.3, ch, ch * 0.6);
-    glow.addColorStop(0, 'rgba(90,255,200,0.26)');
-    glow.addColorStop(1, 'rgba(90,255,200,0)');
-    ctx.fillStyle = glow;
+    const haze = ctx.createRadialGradient(cw * 0.5, ch, 10, cw * 0.5, ch, ch * 0.55);
+    haze.addColorStop(0, dead ? 'rgba(200,190,210,0.18)' : 'rgba(255,140,210,0.32)');
+    haze.addColorStop(1, 'rgba(255,140,210,0)');
+    ctx.fillStyle = haze;
     ctx.fillRect(0, 0, cw, ch);
-    // Stars, falling gently past.
-    const drift = 14;
+    const drift = 10;
     ctx.fillStyle = '#fff';
     for (const s of STARS) {
       const y = (((s.y * ch + this.clock * drift * s.depth * 0.5) % ch) + ch) % ch;
-      ctx.globalAlpha = (0.3 + 0.12 * s.depth) + 0.3 * Math.sin(this.clock * 1.6 + s.phase);
+      ctx.globalAlpha = 0.3 + 0.12 * s.depth + 0.3 * Math.sin(this.clock * 1.8 + s.phase);
       ctx.beginPath();
       ctx.arc(s.x * cw, y, s.r * (0.7 + s.depth * 0.2), 0, Math.PI * 2);
       ctx.fill();
@@ -481,37 +488,45 @@ export class CometSlice implements OnInit, OnDestroy {
     ctx.globalAlpha = 1;
   }
 
-  /** A low moon and two ridges of dark hills along the ground, in field units. */
+  /** A cratered purple planet surface along the bottom. After a skull it turns grey and cracked. */
   private drawRidges(ctx: CanvasRenderingContext2D): void {
-    const moon = ctx.createRadialGradient(W * 0.8, H - 150, 4, W * 0.8, H - 150, 60);
-    moon.addColorStop(0, 'rgba(214,238,255,0.55)');
-    moon.addColorStop(1, 'rgba(214,238,255,0)');
-    ctx.fillStyle = moon;
-    ctx.fillRect(W * 0.8 - 60, H - 210, 120, 120);
-    ctx.fillStyle = 'rgba(224,242,255,0.95)';
+    const dead = this.wrecked;
+    const reach = this.offsetX / this.scale + 60;
+    const top = H - 46;
+    const ground = ctx.createLinearGradient(0, top, 0, H);
+    ground.addColorStop(0, dead ? '#6b6475' : '#8b3fc7');
+    ground.addColorStop(1, dead ? '#3f3a49' : '#4a1d86');
+    ctx.fillStyle = ground;
     ctx.beginPath();
-    ctx.arc(W * 0.8, H - 150, 18, 0, Math.PI * 2);
+    ctx.moveTo(-reach, H);
+    ctx.lineTo(-reach, top + 8);
+    for (let x = -reach; x <= W + reach; x += 20) ctx.lineTo(x, top + Math.sin(x / 47) * 6 + Math.sin(x / 19) * 2);
+    ctx.lineTo(W + reach, H);
     ctx.fill();
-    ctx.fillStyle = 'rgba(160,190,215,0.5)';
-    for (const [dx, dy, r] of [[-5, -4, 4], [5, 3, 3], [-1, 8, 2.5]]) {
+    ctx.fillStyle = dead ? 'rgba(30,26,40,0.55)' : 'rgba(40,10,80,0.45)';
+    for (const [cx, cy, rx] of [[30, 20, 16], [112, 30, 12], [190, 18, 18], [262, 32, 13], [-40, 28, 14], [350, 24, 15]]) {
       ctx.beginPath();
-      ctx.arc(W * 0.8 + dx, H - 150 + dy, r, 0, Math.PI * 2);
+      ctx.ellipse(cx, H - cy, rx, rx * 0.32, 0, 0, Math.PI * 2);
       ctx.fill();
     }
-    const ridge = (colour: string, base: number, peaks: number[]): void => {
-      ctx.fillStyle = colour;
+    if (dead) {
+      ctx.strokeStyle = 'rgba(20,16,28,0.8)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      // On a wide screen the hills run on past the 320-unit field, out to the edges.
-      const reach = this.offsetX / this.scale + 60;
-      const tiles = Math.max(1, Math.ceil((W + 2 * reach) / (W + 120)));
-      const step = (W + 120) / (peaks.length - 1);
-      ctx.moveTo(-reach, H);
-      for (let t = 0; t < tiles; t++) peaks.forEach((p, i) => ctx.lineTo(-reach + (t * (peaks.length - 1) + i) * step, H - base - p));
-      ctx.lineTo(W + reach, H);
-      ctx.fill();
-    };
-    ridge('#0a4a56', 26, [30, 58, 24, 66, 28, 52, 30]);
-    ridge('#06303a', 6, [20, 36, 14, 34, 18, 30, 16]);
+      ctx.moveTo(60, top + 4); ctx.lineTo(74, top + 18); ctx.lineTo(66, top + 30); ctx.lineTo(82, H);
+      ctx.moveTo(210, top + 2); ctx.lineTo(198, top + 16); ctx.lineTo(214, top + 28); ctx.lineTo(204, H);
+      ctx.stroke();
+    } else {
+      for (const [cx, cy, c] of [[70, 40, '#ffb3ec'], [230, 38, '#9be7ff']] as const) {
+        const orb = ctx.createRadialGradient(cx, H - cy, 0, cx, H - cy, 9);
+        orb.addColorStop(0, c);
+        orb.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = orb;
+        ctx.globalAlpha = 0.6 + 0.3 * Math.sin(this.clock * 2 + cx);
+        ctx.fillRect(cx - 9, H - cy - 9, 18, 18);
+      }
+      ctx.globalAlpha = 1;
+    }
   }
 
   /** The ground glows and then flashes red as a comet nears it, and the screen edges flash when a heart goes. */
@@ -540,23 +555,33 @@ export class CometSlice implements OnInit, OnDestroy {
     ctx.stroke();
   }
 
-  /** A glowing stroke that thins out towards where the swipe began. */
+  /** A white blade that thins out towards where the swipe began, with a soft violet glow and a few sparkles along it. */
   private drawSwipe(ctx: CanvasRenderingContext2D): void {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    for (const [width, colour, extra] of [[1.8, 'rgba(120,230,255,', 10], [1, 'rgba(255,255,255,', 0]] as const) {
+    for (const [glow, colour] of [[true, 'rgba(190,140,255,'], [false, 'rgba(255,255,255,']] as const) {
       for (let i = 1; i < this.trail.length; i++) {
         const p = this.trail[i - 1];
         const q = this.trail[i];
-        const fade = Math.max(0, 1 - q.age / 0.22);
-        ctx.strokeStyle = `${colour}${(width > 1 ? 0.35 : 1) * fade})`;
-        ctx.lineWidth = (3 + 11 * (i / this.trail.length) * fade) * width + extra * fade * (width > 1 ? 1 : 0);
+        const fade = Math.max(0, 1 - q.age / 0.24);
+        ctx.strokeStyle = `${colour}${(glow ? 0.35 : 1) * fade})`;
+        ctx.lineWidth = glow ? 6 + 16 * (i / this.trail.length) * fade : 1.5 + 6 * (i / this.trail.length) * fade;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(q.x, q.y);
         ctx.stroke();
       }
     }
+    ctx.fillStyle = '#fff';
+    for (let i = 2; i < this.trail.length; i += 3) {
+      const q = this.trail[i];
+      const fade = Math.max(0, 1 - q.age / 0.3);
+      ctx.globalAlpha = fade;
+      ctx.beginPath();
+      ctx.arc(q.x + Math.sin(i * 12.9) * 6, q.y + Math.cos(i * 7.3) * 6, 1.2 + fade, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
   /** A pale cratered rock with a long tapering tail: orange where it is hot, pink, then fading into violet. */

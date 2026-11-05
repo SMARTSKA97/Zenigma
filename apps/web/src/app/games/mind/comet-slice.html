@@ -57,5 +57,15 @@
       <div class="combo" aria-hidden="true"><small>Combo</small><b>×{{ c.n }}</b></div>
     }
   }
+  @if (over(); as r) {
+    <div class="lost" role="dialog" aria-label="You lost">
+      <i class="rock r1"></i><i class="rock r2"></i><i class="rock r3"></i>
+      <h2>You lost!</h2>
+      <p>You swiped on a skull</p>
+      <div class="final"><small>Score</small><b>{{ r.score }}</b></div>
+      <button type="button" class="next" (click)="proceed()">Continue</button>
+      <div class="dune" aria-hidden="true"></div>
+    </div>
+  }
   <p class="sr-only" aria-live="polite">{{ score() }} points</p>
 </div>

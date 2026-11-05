@@ -8,7 +8,7 @@
   /* mind.scss narrows hosts to a column; this one owns the whole screen. */
   max-width: none;
   margin: 0;
-  background: #050b1f;
+  background: #0d0a3a;
   color: #fff;
   overflow: hidden;
   overscroll-behavior: none;
@@ -105,8 +105,8 @@
   min-width: 5.6rem;
   padding: 0.25rem 1rem 0.3rem;
   border-radius: 1.2rem;
-  border: 2px solid rgba(170, 235, 240, 0.85);
-  background: rgba(20, 100, 130, 0.5);
+  border: 2px solid rgba(215, 180, 255, 0.8);
+  background: rgba(90, 40, 160, 0.55);
   backdrop-filter: blur(6px);
   font-variant-numeric: tabular-nums;
   b {
@@ -151,7 +151,7 @@
   i {
     display: block;
     height: 100%;
-    background: linear-gradient(90deg, #7be0ff, #b7f7c6);
+    background: linear-gradient(90deg, #ff8bd8, #b58cff);
     transition: width 0.12s linear;
   }
 }
@@ -290,3 +290,59 @@
 .stars i.on {
   color: #ffd23f;
 }
+
+/* The "You lost" scene after a skull: a sunset, floating rocks, the score and one big button. */
+.lost {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  overflow: hidden;
+  text-align: center;
+  background: linear-gradient(180deg, #2a1466 0%, #8a3bb8 45%, #ff9a7a 100%);
+  animation: lost-in 0.45s ease-out both;
+  h2 { margin: 0; font: 800 2.6rem/1 var(--font-display); text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35); }
+  p { margin: 0; opacity: 0.9; font-weight: 600; }
+}
+.final {
+  display: grid;
+  margin: 1rem 0 1.2rem;
+  small { letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700; opacity: 0.85; }
+  b { font: 800 4.2rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+}
+.next {
+  min-width: 14rem;
+  padding: 0.95rem 2rem;
+  border: 0;
+  border-radius: 2rem;
+  background: linear-gradient(90deg, #ff4fb8, #7a4dff);
+  color: #fff;
+  font: 800 1.15rem/1 var(--font-display);
+  box-shadow: 0 8px 28px rgba(122, 77, 255, 0.55);
+  &:active { transform: scale(0.97); }
+}
+.dune {
+  position: absolute;
+  inset: auto -10% -18% -10%;
+  height: 28%;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(180deg, #d96a8e, #7a2f73);
+  pointer-events: none;
+}
+.rock {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #ffd2a8 55%, #ff8f5a);
+  box-shadow: 0 0 24px rgba(255, 200, 150, 0.7);
+  animation: float 4s ease-in-out infinite;
+  &.r1 { width: 2.2rem; height: 2.2rem; top: 14%; left: 14%; }
+  &.r2 { width: 1.4rem; height: 1.4rem; top: 22%; right: 16%; animation-delay: -1.5s; }
+  &.r3 { width: 1rem; height: 1rem; top: 62%; left: 22%; animation-delay: -2.4s; }
+}
+@keyframes float { 50% { transform: translateY(-14px); } }
+@keyframes lost-in { from { opacity: 0; transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) { .lost, .rock { animation: none; } }
