@@ -1,5 +1,7 @@
 import { ACCENTS, Cosmetic, SKINS, WalletService } from '../../core/wallet.service';
 import { NgTemplateOutlet } from '@angular/common';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { SupportService } from '../../core/support.service';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -51,6 +53,39 @@ export class Settings implements OnInit {
   protected readonly reminder = inject(ReminderService);
   protected readonly install = inject(InstallService);
   protected readonly pwa = inject(PwaUpdateService);
+  private readonly http = inject(HttpClient);
+  protected readonly probing = signal(false);
+  protected readonly probe = signal<string[] | null>(null);
+
+  /** Asks the server a few simple questions and says in plain words what went wrong, so "Could not load" can be traced from the phone itself. */
+  protected async checkServer(): Promise<void> {
+    this.probing.set(true);
+    const api = environment.apiBaseUrl;
+    const lines: string[] = [];
+    const plain = async (label: string, path: string): Promise<void> => {
+      const t = performance.now();
+      try {
+        const r = await fetch(`${api}${path}`, { cache: 'no-store' });
+        const ms = Math.round(performance.now() - t);
+        const html = (r.headers.get('content-type') ?? '').includes('text/html');
+        lines.push(html ? `${label}: a web page came back (${r.status}), most likely a Cloudflare check.` : r.ok ? `${label}: OK (${ms} ms)` : `${label}: the server answered ${r.status}.`);
+      } catch {
+        lines.push(`${label}: could not connect. Blocked (a Cloudflare check or rule), no signal, or the server is down.`);
+      }
+    };
+    await plain('Server', '/time');
+    if (this.auth.signedIn()) {
+      try {
+        await firstValueFrom(this.http.get(`${api}/daily`));
+        lines.push('Your account: OK');
+      } catch (e) {
+        lines.push(e instanceof HttpErrorResponse ? `Your account: the server answered ${e.status || 'nothing'}${e.status === 401 ? ' (sign in again)' : e.status === 403 ? ' (refused by the server or Cloudflare)' : ''}.` : 'Your account: failed.');
+      }
+    }
+    lines.push(`Online: ${navigator.onLine ? 'yes' : 'no'}. App address: ${location.host}.`);
+    this.probe.set(lines);
+    this.probing.set(false);
+  }
   protected readonly support = inject(SupportService);
   protected readonly canDonate = this.support.canDonate;
   protected readonly wallet = inject(WalletService);

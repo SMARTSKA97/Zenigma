@@ -233,6 +233,16 @@
       <span class="lead">Reload fresh<small>Clears the saved copy of the app and loads the newest one. Your progress stays.</small></span>
       <span class="chev">›</span>
     </button>
+    <button type="button" class="item link" [disabled]="probing()" (click)="checkServer()">
+      <span class="tn" aria-hidden="true">📡</span>
+      <span class="lead">{{ probing() ? 'Checking…' : 'Check server connection' }}<small>Tests whether this device can reach the Zenigma server, and says what stops it if not.</small></span>
+      <span class="chev">›</span>
+    </button>
+    @if (probe(); as lines) {
+      <ul class="probe">
+        @for (l of lines; track $index) { <li>{{ l }}</li> }
+      </ul>
+    }
     @if (install.isIos) {
       <button type="button" class="item link" (click)="install.guide.set('update')">
         <span class="tn" aria-hidden="true">❓</span>
