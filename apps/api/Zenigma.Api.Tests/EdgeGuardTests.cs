@@ -28,6 +28,13 @@ public class EdgeGuardTests
         var wrong = new HttpRequestMessage(HttpMethod.Get, "/time");
         wrong.Headers.Add("X-Zenigma-Edge", "nope");
         Assert.Equal(HttpStatusCode.Forbidden, (await c.SendAsync(wrong)).StatusCode);
+
+        // A refused browser request still carries the CORS headers, so the app sees a readable 403 and not a bare network failure.
+        var browser = new HttpRequestMessage(HttpMethod.Get, "/time");
+        browser.Headers.Add("Origin", "https://localhost");
+        var refused = await c.SendAsync(browser);
+        Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
+        Assert.True(refused.Headers.Contains("Access-Control-Allow-Origin"));
     }
 
     [DbFact]

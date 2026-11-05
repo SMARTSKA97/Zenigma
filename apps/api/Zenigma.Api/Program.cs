@@ -209,8 +209,6 @@ var forwarded = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeader
 forwarded.KnownIPNetworks.Clear();
 forwarded.KnownProxies.Clear();
 app.UseForwardedHeaders(forwarded);
-// Only Cloudflare may reach the API once Edge:Secret is set; also gives the real visitor address to the limiters below.
-app.UseMiddleware<Zenigma.Api.Infrastructure.EdgeGuard>();
 
 app.UseExceptionHandler();
 
@@ -236,6 +234,9 @@ app.Use(async (ctx, next) =>
 
 app.UseResponseCompression();
 app.UseCors();
+// Only Cloudflare may reach the API once Edge:Secret is set; also gives the real visitor address to the limiters below.
+// After CORS on purpose: a refused request still carries the CORS headers, so the app can read the 403 instead of seeing a bare network failure.
+app.UseMiddleware<Zenigma.Api.Infrastructure.EdgeGuard>();
 // Authentication comes first so the limiter can count requests per user.
 app.UseAuthentication();
 app.UseRateLimiter();
