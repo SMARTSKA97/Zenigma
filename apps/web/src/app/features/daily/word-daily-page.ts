@@ -98,6 +98,18 @@ export class WordDailyPage {
       untracked(() => (playing ? this.guard.enter(true) : this.guard.leave()));
     });
     this.destroyRef.onDestroy(() => this.guard.leave());
+    // "Play next" opens another game on this same page (the router keeps the component), so everything of the last game is cleared:
+    // without this the next game showed the old "Come back tomorrow" screen, and its own "Play next" led straight back.
+    effect(() => {
+      this.id();
+      untracked(() => {
+        this.stage.set('intro');
+        this.detail.set('');
+        this.sharing.set(false);
+        this.board.set(null);
+        this.boardFailed.set(false);
+      });
+    });
     // Already played today: straight to the result.
     effect(() => {
       if (this.stage() === 'intro' && this.result()) this.stage.set('result');
