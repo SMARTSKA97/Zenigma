@@ -241,7 +241,7 @@ export class CometSlice implements OnInit, OnDestroy {
     for (const p of this.pops) p.age += dt;
     this.pops = this.pops.filter((p) => p.age < 0.8);
     for (const t of this.trail) t.age += dt;
-    this.trail = this.trail.filter((t) => t.age < 0.22);
+    this.trail = this.trail.filter((t) => t.age < 0.18);
   }
 
   private ring(x: number, y: number, colour: string, size: number, life: number): void {
@@ -288,14 +288,19 @@ export class CometSlice implements OnInit, OnDestroy {
     (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
     this.pointer = this.toField(event);
     this.swipeHits = 0;
+    this.ring(this.pointer.x, this.pointer.y, 'rgba(255,255,255,0.8)', 22, 0.28);
     if (this.ready <= 0) this.slice(this.pointer, this.pointer);
   }
 
   protected move(event: PointerEvent): void {
     if (!this.pointer || this.ended || this.ready > 0) return;
-    const to = this.toField(event);
-    this.slice(this.pointer, to);
-    this.pointer = to;
+    // iOS reports touches in coarse steps; the in-between samples keep a fast swipe from skipping over a comet.
+    const samples = event.getCoalescedEvents?.() ?? [];
+    for (const e of samples.length ? samples : [event]) {
+      const to = this.toField(e);
+      this.slice(this.pointer, to);
+      this.pointer = to;
+    }
   }
 
   protected up(): void {
@@ -312,7 +317,9 @@ export class CometSlice implements OnInit, OnDestroy {
     if (this.ended) return;
     this.trail.push({ x: b.x, y: b.y, age: 0 });
     for (const body of this.bodies) {
-      if (body.sliced || !segmentHitsCircle(a.x, a.y, b.x, b.y, body.x, body.y, body.r)) continue;
+      // A fingertip is wider than a point: comets get a little extra reach, skulls are judged on the skull itself.
+      const reach = body.kind === 'comet' ? body.r + 8 : body.r - 4;
+      if (body.sliced || !segmentHitsCircle(a.x, a.y, b.x, b.y, body.x, body.y, reach)) continue;
       body.sliced = true;
       body.slicedAt = body.age;
       if (body.kind === 'comet') {
@@ -564,7 +571,7 @@ export class CometSlice implements OnInit, OnDestroy {
       for (let i = 1; i < this.trail.length; i++) {
         const p = this.trail[i - 1];
         const q = this.trail[i];
-        const fade = Math.max(0, 1 - q.age / 0.24);
+        const fade = Math.max(0, 1 - q.age / 0.17);
         ctx.strokeStyle = `${colour}${(glow ? 0.35 : 1) * fade})`;
         ctx.lineWidth = glow ? 6 + 16 * (i / this.trail.length) * fade : 1.5 + 6 * (i / this.trail.length) * fade;
         ctx.beginPath();
@@ -590,8 +597,8 @@ export class CometSlice implements OnInit, OnDestroy {
     const speed = Math.hypot(b.vx, b.vy) || 1;
     const ux = -b.vx / speed;
     const uy = -b.vy / speed;
-    const head = b.r * 0.72;
-    const length = (45 + b.r * 0.9 + speed * 0.45) * (b.size === 'small' ? 0.9 : 1);
+    const head = b.r * 0.52;
+    const length = (62 + b.r * 1.3 + speed * 0.5) * (b.size === 'small' ? 0.9 : 1);
     const tx = b.x + ux * length;
     const ty = b.y + uy * length;
     const nx = -uy;
@@ -657,7 +664,7 @@ export class CometSlice implements OnInit, OnDestroy {
     aura.addColorStop(1, 'rgba(255,60,60,0)');
     ctx.fillStyle = aura;
     ctx.fillRect(x - r * 2.1, y - r * 2.1, r * 4.2, r * 4.2);
-    for (const [scale, colour] of [[1.25, 'rgba(255,140,40,0.75)'], [1.02, 'rgba(255,214,90,0.95)']] as const) {
+    for (const [scale, colour] of [[1.12, 'rgba(255,140,40,0.75)'], [0.95, 'rgba(255,214,90,0.95)']] as const) {
       ctx.fillStyle = colour;
       ctx.beginPath();
       const tongues = 7;

@@ -24,7 +24,7 @@ describe('Comet Slice', () => {
   });
 
   it('makes skulls bigger than comets, and comets come in three sizes', () => {
-    expect(SKULL_R).toBeGreaterThan(COMET_R * 1.4);
+    expect(SKULL_R).toBeGreaterThan(COMET_R * 1.25);
     expect(COMET_SIZES.small.r).toBeLessThan(COMET_SIZES.medium.r);
     expect(COMET_SIZES.medium.r).toBeLessThan(COMET_SIZES.normal.r);
     expect(COMET_SIZES.small.value).toBeGreaterThan(COMET_SIZES.medium.value);

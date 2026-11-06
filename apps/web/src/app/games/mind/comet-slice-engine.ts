@@ -167,7 +167,7 @@ export const HEARTS = 3;
 
 /** Normal comets, and a skull (the biggest, so it is easy to see and to avoid). Small and medium comets are in COMET_SIZES. */
 export const COMET_R = 28;
-export const SKULL_R = 42;
+export const SKULL_R = 36;
 
 /** The three comet sizes: smaller ones are worth more and fall faster. */
 export const COMET_SIZES: Record<Size, { r: number; value: number; speed: number }> = {
@@ -176,7 +176,7 @@ export const COMET_SIZES: Record<Size, { r: number; value: number; speed: number
   normal: { r: COMET_R, value: 1, speed: 1 },
 };
 /** Skulls come in two sizes too: a small one is quicker and harder to read. */
-export const SKULL_SIZES: Record<'small' | 'normal', number> = { small: 32, normal: SKULL_R };
+export const SKULL_SIZES: Record<'small' | 'normal', number> = { small: 27, normal: SKULL_R };
 
 let nextId = 1;
 
