@@ -22,7 +22,7 @@
     <span class="icon" aria-hidden="true">!</span>
     <div class="text">
       <b>Can’t reach the server</b>
-      <span>You are playing offline. Your progress is saved here and syncs when the server is back.</span>
+      <span>You are playing offline. Your progress is saved here and syncs when the server is back.@if (conn.problem()) { ({{ conn.problem() }}) }</span>
     </div>
     <button type="button" class="link" (click)="retry()">Try again</button>
   </div>

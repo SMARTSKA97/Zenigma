@@ -21,6 +21,8 @@ export class ConnectionService {
   readonly server = signal<ServerState>('idle');
   /** Seconds spent waiting for the server in this wake-up, for the notice. */
   readonly waited = signal(0);
+  /** Why the last wake-up failed, in plain words ("the server refused the request (403)"), for the notice. Empty when it did not. */
+  readonly problem = signal('');
   readonly online = signal(typeof navigator === 'undefined' ? true : navigator.onLine);
   /** Screens that must not touch the server (practice play) each hold the connection; it is back the moment the last one lets go. */
   private readonly holds = signal(0);
@@ -111,7 +113,9 @@ export class ConnectionService {
           this.server.set('idle');
           return false;
         }
-        if (await this.ping()) {
+        const result = await this.ping();
+        if (result.ok) {
+          this.problem.set('');
           this.server.set('ready');
           const waiting = this.onReady;
           this.onReady = [];
@@ -119,6 +123,9 @@ export class ConnectionService {
           this.listeners.forEach((fn) => fn());
           return true;
         }
+        this.problem.set(result.reason);
+        // A sleeping host answers with nothing or a 5xx. Any other answer means it is awake and refusing us: waiting longer cannot fix that.
+        if (result.refused) break;
         await new Promise((r) => setTimeout(r, PAUSE_MS));
       }
       this.server.set('down');
@@ -129,14 +136,17 @@ export class ConnectionService {
     }
   }
 
-  private async ping(): Promise<boolean> {
+  private async ping(): Promise<{ ok: boolean; refused: boolean; reason: string }> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const response = await fetch(`${environment.apiBaseUrl}/health`, { signal: controller.signal, cache: 'no-store' });
-      return response.ok;
-    } catch {
-      return false;
+      // ngsw-bypass keeps the service worker out of it: it cannot turn a slow or refused answer into a fake 504.
+      const response = await fetch(`${environment.apiBaseUrl}/health?ngsw-bypass=true`, { signal: controller.signal, cache: 'no-store' });
+      if (response.ok) return { ok: true, refused: false, reason: '' };
+      const refused = response.status < 500 && response.status !== 408 && response.status !== 429;
+      return { ok: false, refused, reason: refused ? `the server refused the request (${response.status})` : `the server is still starting (${response.status})` };
+    } catch (e) {
+      return { ok: false, refused: false, reason: (e as Error)?.name === 'AbortError' ? 'the server did not answer in time' : 'the request could not be sent' };
     } finally {
       clearTimeout(timer);
     }

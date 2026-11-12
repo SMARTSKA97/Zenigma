@@ -15,6 +15,8 @@ export const offlineInterceptor: HttpInterceptorFn = (req, next) => {
   const conn = inject(ConnectionService);
   const failure = () => throwError(() => new HttpErrorResponse({ status: 0, statusText: conn.offlineMode() ? 'Offline mode' : conn.paused() ? 'Practice (no connection used)' : 'Server unreachable', url: req.url }));
   if (conn.offlineMode() || (conn.paused() && !req.url.endsWith('/health'))) return failure();
-  if (conn.server() === 'ready' || req.url.endsWith('/health')) return next(req);
-  return from(conn.wake()).pipe(switchMap((up) => (up ? next(req) : failure())));
+  // The service worker never needs to see an API call (nothing is cached there): ngsw-bypass keeps it from turning a failure into a fake 504.
+  const send = () => next(req.params.has('ngsw-bypass') ? req : req.clone({ setParams: { 'ngsw-bypass': 'true' } }));
+  if (conn.server() === 'ready' || req.url.endsWith('/health')) return send();
+  return from(conn.wake()).pipe(switchMap((up) => (up ? send() : failure())));
 };
