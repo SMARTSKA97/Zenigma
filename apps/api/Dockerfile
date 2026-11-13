@@ -9,7 +9,7 @@ RUN dotnet restore Zenigma.Api/Zenigma.Api.csproj -r linux-x64 -p:PublishReadyTo
 COPY Zenigma.Api/ Zenigma.Api/
 RUN dotnet publish Zenigma.Api/Zenigma.Api.csproj -c Release -o /app --no-restore -r linux-x64 --self-contained false -p:PublishReadyToRun=true
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:11.0
 WORKDIR /app
 COPY --from=build /app .
 # A small instance: workstation GC without a background thread, and no profile-guided re-JIT (saves memory and CPU).
