@@ -1,0 +1,23 @@
+<header class="top">
+  <a class="round" routerLink="/maths" aria-label="Back">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  </a>
+  <div class="title">
+    <h1>{{ topic()?.emoji }} {{ topic()?.name }}</h1>
+    <p class="muted">{{ topic()?.blurb }}</p>
+  </div>
+</header>
+
+<div class="tricks">
+  @for (t of tricks(); track t.id) {
+    <a class="trick" [routerLink]="['/maths', t.topic, t.id]">
+      <span class="name">{{ t.name }}</span>
+      <span class="blurb">{{ t.when }}</span>
+      <span class="dots" [attr.aria-label]="store.got(t.id) + ' of 3 levels got'">
+        @for (d of dots; track d) {
+          <i [class.on]="d <= store.got(t.id)"></i>
+        }
+      </span>
+    </a>
+  }
+</div>

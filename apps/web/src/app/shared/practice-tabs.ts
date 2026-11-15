@@ -10,6 +10,7 @@ import { RouterLink } from '@angular/router';
     <nav class="tabs" aria-label="Practice type">
       <a routerLink="/practice" replaceUrl [attr.aria-current]="active() === 'puzzles' ? 'page' : null"><span aria-hidden="true">🧩</span> Puzzles</a>
       <a routerLink="/mind" replaceUrl [attr.aria-current]="active() === 'mind' ? 'page' : null"><span aria-hidden="true">🧠</span> Mind</a>
+      <a routerLink="/maths" replaceUrl [attr.aria-current]="active() === 'maths' ? 'page' : null"><span aria-hidden="true">➗</span> Maths</a>
     </nav>
   `,
   styles: `
@@ -19,7 +20,7 @@ import { RouterLink } from '@angular/router';
     }
     .tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 0.25rem;
       padding: 0.25rem;
       border-radius: 999px;
@@ -41,5 +42,5 @@ import { RouterLink } from '@angular/router';
   `,
 })
 export class PracticeTabs {
-  readonly active = input.required<'puzzles' | 'mind'>();
+  readonly active = input.required<'puzzles' | 'mind' | 'maths'>();
 }

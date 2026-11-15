@@ -1,0 +1,204 @@
+:host {
+  display: block;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding-bottom: 6rem;
+}
+h1 {
+  margin: 0;
+}
+.sub {
+  margin: 0.2rem 0 1rem;
+}
+.sec {
+  margin: 1.6rem 0 0.6rem;
+  font-size: 1.1rem;
+}
+.card {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.1rem;
+}
+.summary {
+  grid-auto-flow: column;
+  justify-content: start;
+  align-items: center;
+  .num {
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+}
+.mix {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+  text-decoration: none;
+  .tt {
+    display: grid;
+  }
+  small {
+    color: var(--muted);
+  }
+}
+.topics,
+.tricks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.7rem;
+}
+.tricks {
+  grid-template-columns: 1fr;
+  margin-top: 1rem;
+}
+.topic,
+.trick {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  text-decoration: none;
+  .emoji {
+    font-size: 1.6rem;
+  }
+  .name {
+    font: 800 1.05rem var(--font-display);
+  }
+  .blurb {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  .tag {
+    justify-self: start;
+    padding: 0.1rem 0.6rem;
+    border-radius: 99px;
+    background: var(--surface-2);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+}
+.dots {
+  display: flex;
+  gap: 0.3rem;
+  i {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    &.on {
+      background: var(--good);
+      border-color: transparent;
+    }
+  }
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.4rem;
+  .round {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--text);
+    svg {
+      width: 1.2rem;
+      height: 1.2rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+  h1 {
+    font-size: 1.3rem;
+  }
+  p {
+    margin: 0;
+  }
+}
+.lesson {
+  margin-top: 0.8rem;
+  p {
+    margin: 0;
+  }
+  .rule,
+  .example ol {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.25rem;
+  }
+}
+.example {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  b {
+    font: 800 1.4rem var(--font-display);
+  }
+  small {
+    color: var(--muted);
+    font-weight: 700;
+  }
+}
+.levels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+.level {
+  display: grid;
+  aspect-ratio: auto;
+  width: 100%;
+  padding: 0.6rem 0.4rem;
+  border-radius: var(--radius);
+  overflow-wrap: normal;
+  gap: 0.2rem;
+  min-height: 4.2rem;
+  small {
+    font-weight: 600;
+    opacity: 0.85;
+  }
+}
+.result {
+  justify-items: center;
+  text-align: center;
+  margin-top: 0.8rem;
+  .num {
+    font: 800 3.6rem/1 var(--font-display);
+    small {
+      font-size: 1.4rem;
+      color: var(--muted);
+    }
+  }
+  h2,
+  p {
+    margin: 0;
+  }
+  button {
+    width: min(100%, 18rem);
+  }
+}

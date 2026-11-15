@@ -1,0 +1,48 @@
+@if (q(); as question) {
+  <div class="top">
+    <span class="count">{{ index() + 1 }} / {{ total }}</span>
+    <span class="bar" aria-hidden="true"><i [style.width.%]="((index() + (verdict() !== null ? 1 : 0)) / total) * 100"></i></span>
+    <span class="right">{{ correct() }} right</span>
+  </div>
+  @if (trickName()) {
+    <p class="from muted">{{ trickName() }}</p>
+  }
+  <div class="prompt" [class.ok]="verdict() === true" [class.no]="verdict() === false" aria-live="polite">
+    <span class="text">{{ question.text }}</span>
+    @if (!question.options) {
+      <span class="answer" [class.empty]="!typed() && verdict() === null">{{ verdict() === null ? (typed() || '?') : (verdict() ? typed() : question.answer) }}</span>
+    }
+  </div>
+
+  @if (verdict() !== null) {
+    <section class="how" [class.ok]="verdict()" role="status">
+      <b>{{ verdict() ? 'Right!' : 'Not quite.' }}</b>
+      @if (question.options) {
+        <span>The answer is {{ question.labels?.[question.options.indexOf(question.answer)] }}.</span>
+      } @else if (!verdict()) {
+        <span>The answer is {{ question.answer }}.</span>
+      }
+      <ol>
+        @for (s of question.steps; track $index) {
+          <li>{{ s }}</li>
+        }
+      </ol>
+    </section>
+    <button type="button" class="go" (click)="advance()">{{ index() + 1 >= total ? 'See my result' : 'Next' }}</button>
+  } @else if (question.options) {
+    <div class="choices">
+      @for (o of question.options; track o; let i = $index) {
+        <button type="button" class="choice" (click)="submit(o)">{{ question.labels?.[i] ?? o }}</button>
+      }
+    </div>
+  } @else {
+    <div class="pad" role="group" aria-label="Number pad">
+      @for (d of pad; track d) {
+        <button type="button" class="key" (click)="press(d)">{{ d }}</button>
+      }
+      <button type="button" class="key alt" aria-label="Delete" (click)="back()">⌫</button>
+      <button type="button" class="key" (click)="press(0)">0</button>
+      <button type="button" class="key ok" aria-label="Check the answer" [disabled]="!typed()" (click)="submit()">✓</button>
+    </div>
+  }
+}

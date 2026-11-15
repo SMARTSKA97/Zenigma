@@ -1,0 +1,74 @@
+<header class="top">
+  <a class="round" [routerLink]="mix() ? '/maths' : ['/maths', params().topic]" aria-label="Back">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  </a>
+  <div class="title">
+    <h1>{{ mix() ? 'Mixed drill' : trick()?.name }}</h1>
+    <p class="muted">{{ mix() ? 'Every trick, one set' : topic()?.name }}</p>
+  </div>
+</header>
+
+@if (!mix() && !trick()) {
+  <p class="muted">That trick is not here. <a routerLink="/maths">Back to Maths</a></p>
+} @else {
+  @switch (stage()) {
+    @case ('learn') {
+      @if (trick(); as t) {
+        <section class="card lesson">
+          <p class="when"><b>Use it for:</b> {{ t.when }}</p>
+          <ol class="rule">
+            @for (s of t.rule; track $index) {
+              <li>{{ s }}</li>
+            }
+          </ol>
+          <p class="why muted">Why it works: {{ t.why }}</p>
+          @if (example(); as e) {
+            <div class="example">
+              <small>Example</small>
+              <b>{{ e.text }}</b>
+              <ol>
+                @for (s of e.steps; track $index) {
+                  <li>{{ s }}</li>
+                }
+              </ol>
+            </div>
+          }
+        </section>
+      } @else {
+        <section class="card lesson">
+          <p>Ten questions, picked from every trick. Use whichever trick fits each one.</p>
+        </section>
+      }
+      <h2 class="sec">Start a drill</h2>
+      <div class="levels">
+        @for (l of levels; track l.id) {
+          <button type="button" class="level" (click)="start(l.id)">
+            <b>{{ l.name }}</b>
+            @if (trick(); as t) {
+              <small>{{ store.record(t.id, l.id).best }} / 10 best</small>
+            } @else {
+              <small>10 questions</small>
+            }
+          </button>
+        }
+      </div>
+    }
+    @case ('drill') {
+      <app-maths-drill [tricks]="ids()" [level]="level()" (finished)="done($event)" />
+    }
+    @case ('result') {
+      @if (result(); as r) {
+        <section class="card result" role="status">
+          <span class="num">{{ r.correct }}<small> / {{ r.total }}</small></span>
+          <h2>{{ verdict(r.correct) }}</h2>
+          <p class="muted">{{ seconds(r.ms) }} for ten questions{{ newBest() ? ' · new best!' : '' }}</p>
+          <button type="button" (click)="start(level())">Again</button>
+          @if (level() < 3 && r.correct >= mastery) {
+            <button type="button" class="secondary" (click)="start(level() === 1 ? 2 : 3)">Next level</button>
+          }
+          <button type="button" class="secondary" (click)="stage.set('learn')">Back to the lesson</button>
+        </section>
+      }
+    }
+  }
+}

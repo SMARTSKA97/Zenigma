@@ -1,0 +1,26 @@
+<h1>Practice</h1>
+<app-practice-tabs active="maths" />
+<p class="muted sub">Learn a trick in a minute, then drill it. Every wrong answer shows how the trick gets there. Works offline.</p>
+
+<section class="card summary">
+  <span class="num">{{ store.totalGot() }}</span>
+  <span class="muted">of {{ store.totalPossible }} trick levels got<br />(8 right out of 10 counts)</span>
+</section>
+
+<a class="mix" routerLink="/maths/mix">
+  <span aria-hidden="true">🎲</span>
+  <span class="tt"><b>Mixed drill</b><small>Ten questions from every trick</small></span>
+  <span aria-hidden="true">›</span>
+</a>
+
+<h2 class="sec">Topics</h2>
+<div class="topics">
+  @for (t of topics; track t.id) {
+    <a class="topic" [routerLink]="['/maths', t.id]">
+      <span class="emoji" aria-hidden="true">{{ t.emoji }}</span>
+      <span class="name">{{ t.name }}</span>
+      <span class="blurb">{{ t.blurb }}</span>
+      <span class="tag">{{ store.topicGot(t.id) }} / {{ t.tricks * 3 }}</span>
+    </a>
+  }
+</div>
